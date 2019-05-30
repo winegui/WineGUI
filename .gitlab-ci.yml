@@ -1,0 +1,30 @@
+stages:
+  - build
+#  - test
+
+build:
+  stage: build
+  script: ./build.sh
+  tags:
+    - shell
+  artifacts:
+    name: "Documentation"
+    expire_in: 1 week
+    paths:
+    - doc/doxygen/
+  cache:
+      key: "$CI_PIPELINE_ID"
+      policy: push
+      paths:
+        - build/bin/
+
+#test:
+#  stage: test
+#  script: ./build/bin/runTests
+#  tags:
+#    - shell
+#  cache:
+#      key: "$CI_PIPELINE_ID"
+#      policy: pull
+#      paths:
+#        - build/bin/

@@ -10,7 +10,7 @@ Dependencies should be met before build:
 * cmake
 * GTK3.0+
 * pkg-config
-
+* Doxygen
 
 ### Build
 
@@ -21,7 +21,7 @@ Run: `./build.sh`
 Execute:
 `./build/bin/winegui`
 
-Or go to `build` directory and execute:
+Or go to the `build` directory and execute:
 
 ```
 ninja run
