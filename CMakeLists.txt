@@ -1,0 +1,47 @@
+set(PROJECT_NAME WineGUI)
+project(${PROJECT_NAME})
+
+cmake_minimum_required(VERSION 2.8.8)
+
+set(CMAKE_CXX_FLAGS "-g -Wall")
+
+if (CMAKE_VERSION VERSION_LESS "3.1")
+  add_definitions(-std=c++14)
+else()
+  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  if(NOT CYGWIN)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+  endif()
+endif()
+
+
+# Use the package PkgConfig to detect GTK+ headers/library files
+FIND_PACKAGE(PkgConfig REQUIRED)
+PKG_CHECK_MODULES(GTK REQUIRED gtk+-3.0)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+################################
+# Normal Libraries & Executables
+################################
+
+# Add GTK libs and local include
+include_directories(
+  ${GTK_INCLUDE_DIRS}
+  ${PROJECT_SOURCE_DIR}/include
+)
+link_directories(${GTK_LIBRARY_DIRS})
+add_definitions (${GTK_CFLAGS_OTHER})
+
+#add_library(test_lib src/test.cc)
+
+add_executable(winegui src/main.cc)
+
+target_link_libraries(winegui ${CMAKE_THREAD_LIBS_INIT} ${GTK_LIBRARIES}) # test_lib
+
+# To create 'make run'
+add_custom_target( run
+  COMMAND "bin/winegui" 
+  COMMENT "Starting up..." )
+
