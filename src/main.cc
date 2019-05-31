@@ -35,16 +35,16 @@ static GtkWidget* create_image_menu_item(const gchar* label_text, const gchar* i
   GtkWidget *helper_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
   GtkWidget *icon = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_MENU);
   GtkWidget *label = gtk_label_new(label_text);
-  gtk_container_add (GTK_CONTAINER (helper_box), icon);
-  gtk_label_set_xalign (GTK_LABEL (label), 0.0);
-  gtk_box_pack_end (GTK_BOX (helper_box), label, TRUE, TRUE, 0);  
-  gtk_container_add (GTK_CONTAINER (item), helper_box);
+  gtk_container_add(GTK_CONTAINER (helper_box), icon);
+  gtk_label_set_xalign(GTK_LABEL (label), 0.0);
+  gtk_box_pack_end(GTK_BOX (helper_box), label, TRUE, TRUE, 0);  
+  gtk_container_add(GTK_CONTAINER (item), helper_box);
   return item;
 }
 
 /**
  * \brief Create the whole menu
- * \param[in] Window - Pointer to the main window
+ * \param[in] window - Pointer to the main window
  * \return GTKWidget menu pointer
  */
 static GtkWidget* setup_menu(GtkWidget *window) {
@@ -59,7 +59,7 @@ static GtkWidget* setup_menu(GtkWidget *window) {
   GtkWidget *open_item = create_image_menu_item("Open", "document-open");
   GtkWidget *save_item = create_image_menu_item("Save", "document-save");
   GtkWidget *quit = create_image_menu_item("Quit", "application-exit");
-  // Add destroy signal to quit button
+  // Add window destroy signal to quit button
   g_signal_connect_swapped(quit, "activate", G_CALLBACK (gtk_widget_destroy), window);
   
   // Add items to sub-menu
@@ -68,7 +68,6 @@ static GtkWidget* setup_menu(GtkWidget *window) {
   gtk_menu_shell_append(GTK_MENU_SHELL (submenu1), gtk_separator_menu_item_new());
   gtk_menu_shell_append(GTK_MENU_SHELL (submenu1), quit);
   
-
   // Add sub-menu to menu
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (file_menu), submenu1);
   // Add menu items to menu bar
@@ -96,20 +95,40 @@ static void activate(GtkApplication *app,
   vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);  
   gtk_container_add(GTK_CONTAINER (window), vbox);
 
-  // Create menu
+  // Create top menu
   menu_bar = setup_menu(window);  
-  // Add menu to box
+  // Add menu to box (top)
   gtk_box_pack_start(GTK_BOX (vbox), menu_bar, FALSE, FALSE, 0);
 
-  // Add random button  
+  // Add paned container
+  GtkWidget *paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+
+  GtkWidget *scrolledWindow = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (scrolledWindow), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  //gtk_box_pack_start (GTK_BOX (vbox), scrolledWindow, TRUE, TRUE, 0);
+  // Don't add to box, use paned
+  gtk_paned_add1(GTK_PANED(paned), scrolledWindow);
+  GtkWidget *listbox = gtk_list_box_new();
+  for (int i=1; i<100; i++)
+  {
+    gchar *name = g_strdup_printf("Label %i", i);
+    GtkWidget *label = gtk_label_new(name);
+    gtk_widget_set_halign(GTK_WIDGET(label), GTK_ALIGN_START);
+    gtk_container_add(GTK_CONTAINER(listbox), label);
+  }
+
+  gtk_container_add(GTK_CONTAINER (scrolledWindow), listbox);
+  
+
   GtkWidget *button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);  
   GtkWidget *button = gtk_button_new_with_label("Hello World");
   g_signal_connect(button, "clicked", G_CALLBACK (print_hello), NULL);
   g_signal_connect_swapped(button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
   gtk_container_add(GTK_CONTAINER (button_box), button);
+  gtk_paned_add2(GTK_PANED(paned), button_box);
 
-  // Add button to box
-  gtk_box_pack_start(GTK_BOX (vbox), button_box, TRUE, TRUE, 0);
+  // Add paned to box (below menu)
+  gtk_box_pack_start(GTK_BOX (vbox), paned, TRUE, TRUE, 0);
 
   // Show!
   gtk_widget_show_all(window);
