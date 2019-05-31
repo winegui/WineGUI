@@ -1,5 +1,5 @@
 # Wine GUI
-Finally, an user-interface friendly WINE manager.
+Finally, an user-interface friendly WINE Manager.
 
 ## Development
 
@@ -37,4 +37,6 @@ Clean the build via: `ninja clean`
 
 *Hint:* Run `ninja help` for all available targets.
 
+## Coding standard
 
+We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
