@@ -29,12 +29,56 @@ static GtkWidget* CreateImageMenuItem(const gchar* label_text, const gchar* icon
   GtkWidget *helper_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
   GtkWidget *icon = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_MENU);
   GtkWidget *label = gtk_label_new(label_text);
-  gtk_container_add(GTK_CONTAINER (helper_box), icon);
-  gtk_label_set_xalign(GTK_LABEL (label), 0.0);
-  gtk_box_pack_end(GTK_BOX (helper_box), label, TRUE, TRUE, 0);  
-  gtk_container_add(GTK_CONTAINER (item), helper_box);
+  gtk_container_add(GTK_CONTAINER(helper_box), icon);
+  gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+  gtk_box_pack_end(GTK_BOX(helper_box), label, TRUE, TRUE, 0);  
+  gtk_container_add(GTK_CONTAINER(item), helper_box);
   return item;
 }
+
+void showDialog(GtkWindow *parent, const gchar *message)
+{
+  GtkWidget *dialog, *label, *content_area;
+  GtkDialogFlags flags;
+
+  // Create the widgets
+  flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+  dialog = gtk_dialog_new_with_buttons("Message",
+                                        parent,
+                                        flags,
+                                        "_CLOSE",
+                                        GTK_RESPONSE_NONE,
+                                        NULL);
+  content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+  label = gtk_label_new(message);
+
+  // Ensure that the dialog box is destroyed when the user responds
+  g_signal_connect_swapped (dialog,
+                            "response",
+                            G_CALLBACK (gtk_widget_destroy),
+                            dialog);
+  // Add the label, and show everything we’ve added
+  gtk_container_add(GTK_CONTAINER(content_area), label);
+  gtk_widget_show_all(dialog);
+}
+
+static void cbShowAbout(GtkButton *btn, gpointer parent_window) {
+  GdkPixbuf *example_logo = gdk_pixbuf_new_from_file("./logo.png", NULL);
+  gchar const *authors[] = {
+    "Melroy van den Berg <melroy@melroy.org>",
+    NULL
+  };
+  gtk_show_about_dialog(GTK_WINDOW(parent_window),
+                       "program-name", "WineGUI",
+                       "logo", example_logo,
+                       "title", "About WineGUI",
+                       "authors", authors,
+                       "version", "v1.0",
+                       "copyright", "Copyright © 2019 Melroy van den Berg",
+                       "license-type", GTK_LICENSE_AGPL_3_0,
+                       NULL);
+}
+
 
 /**
  * \brief Create the whole menu
@@ -46,9 +90,10 @@ static GtkWidget* SetupMenu(GtkWidget *window) {
   GtkWidget *menu_bar = gtk_menu_bar_new();
   // Create menu item
   GtkWidget *file_menu = gtk_menu_item_new_with_mnemonic("_File");
+  GtkWidget *help_menu = gtk_menu_item_new_with_mnemonic("_Help");
 
-  // Create sub-menu
-  GtkWidget *submenu1 = gtk_menu_new();
+  // Create file sub-menu
+  GtkWidget *file_sub_menu = gtk_menu_new();
   // Create Menu item with label & image, using a box
   GtkWidget *preferences = CreateImageMenuItem("Preferences", "preferences-other");
   GtkWidget *save_item = CreateImageMenuItem("Save", "document-save");
@@ -56,17 +101,27 @@ static GtkWidget* SetupMenu(GtkWidget *window) {
   // Add window destroy signal to exit button
   g_signal_connect_swapped(exit, "activate", G_CALLBACK (gtk_widget_destroy), window);
   
+  // Create Help sub-menu
+  GtkWidget *help_sub_menu = gtk_menu_new();
+  GtkWidget *about = CreateImageMenuItem("About WineGUI...", "help-about");
+  g_signal_connect (about, "activate", G_CALLBACK(cbShowAbout), window);
+
   // Add items to sub-menu
-  gtk_menu_shell_append(GTK_MENU_SHELL(submenu1), preferences);
-  gtk_menu_shell_append(GTK_MENU_SHELL(submenu1), gtk_separator_menu_item_new());
-  gtk_menu_shell_append(GTK_MENU_SHELL(submenu1), save_item);
-  gtk_menu_shell_append(GTK_MENU_SHELL(submenu1), gtk_separator_menu_item_new());
-  gtk_menu_shell_append(GTK_MENU_SHELL(submenu1), exit);
+  gtk_menu_shell_append(GTK_MENU_SHELL(file_sub_menu), preferences);
+  gtk_menu_shell_append(GTK_MENU_SHELL(file_sub_menu), gtk_separator_menu_item_new());
+  gtk_menu_shell_append(GTK_MENU_SHELL(file_sub_menu), save_item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(file_sub_menu), gtk_separator_menu_item_new());
+  gtk_menu_shell_append(GTK_MENU_SHELL(file_sub_menu), exit);
+
+  gtk_menu_shell_append(GTK_MENU_SHELL(help_sub_menu), about);
   
-  // Add sub-menu to menu
-  gtk_menu_item_set_submenu (GTK_MENU_ITEM (file_menu), submenu1);
+  // Add sub-menu's to menu's
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(file_menu), file_sub_menu);
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(help_menu), help_sub_menu);
+
   // Add menu items to menu bar
-  gtk_menu_shell_append (GTK_MENU_SHELL (menu_bar), file_menu);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), file_menu);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), help_menu);
   return menu_bar;
 }
 
@@ -88,23 +143,23 @@ static void activate(GtkApplication *app,
 
   // Main Application Window + some settings
   window = gtk_application_window_new(app);
-  gtk_window_set_title(GTK_WINDOW (window), "WineGUI - WINE Manager");
-  gtk_window_set_default_size(GTK_WINDOW (window), 1000, 600);
+  gtk_window_set_title(GTK_WINDOW(window), "WineGUI - WINE Manager");
+  gtk_window_set_default_size(GTK_WINDOW(window), 1000, 600);
   gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER_ALWAYS);
 
   // Vertical box container
   vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);  
-  gtk_container_add(GTK_CONTAINER (window), vbox);
+  gtk_container_add(GTK_CONTAINER(window), vbox);
 
   // Create top menu
   GtkWidget *menu_bar = SetupMenu(window);  
   // Add menu to box (top)
-  gtk_box_pack_start(GTK_BOX (vbox), menu_bar, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
 
   // Add paned container
   GtkWidget *paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 
-  GtkWidget *scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   // Vertical scroll only
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   // Add scrolled window with listbox to paned
@@ -124,12 +179,12 @@ static void activate(GtkApplication *app,
   GtkWidget *button = gtk_button_new_with_label("Hello World");
   g_signal_connect(button, "clicked", G_CALLBACK (print_hello), NULL);
   g_signal_connect_swapped(button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
-  gtk_container_add(GTK_CONTAINER (button_box), button);
+  gtk_container_add(GTK_CONTAINER(button_box), button);
   // Add random button to paned
   gtk_paned_add2(GTK_PANED(paned), button_box);
 
   // Add paned to box (below menu)
-  gtk_box_pack_start(GTK_BOX (vbox), paned, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), paned, TRUE, TRUE, 0);
 
   // Show!
   gtk_widget_show_all(window);

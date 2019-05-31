@@ -6,7 +6,8 @@
 	],
 	"settings": {
 		"files.associations": {
-			"typeinfo": "cpp"
+			"typeinfo": "cpp",
+			"system_error": "cpp"
 		}
 	}
 }
