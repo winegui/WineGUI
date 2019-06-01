@@ -1,5 +1,5 @@
 # Wine GUI
-Finally, an user-interface friendly WINE Manager.
+Finally, an user-interface friendly [WINE](https://www.winehq.org/) Manager.
 
 ## Development
 

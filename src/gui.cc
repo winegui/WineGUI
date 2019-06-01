@@ -198,16 +198,23 @@ void GUI::activate(GtkApplication *app, gpointer user_data)
 
   // Add paned container
   GtkWidget *paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+  // Add paned to box (below menu)
+  gtk_box_pack_start(GTK_BOX(vbox), paned, TRUE, TRUE, 0);
 
+  /*************************
+   * Left side             *
+   *************************/
+
+  // Use a scrolled window
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-
   // Vertical scroll only
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);  
   // Add scrolled window with listbox to paned
   gtk_paned_pack1(GTK_PANED(paned), scrolled_window, FALSE, TRUE);
   gtk_widget_set_size_request(scrolled_window, 275, -1);
 
   GtkWidget *listbox = gtk_list_box_new();
+  // Set function that will add seperators between each item
   gtk_list_box_set_header_func(GTK_LIST_BOX(listbox), cc_list_box_update_header_func, NULL, NULL);
   for (int i=1; i<20; i++)
   {
@@ -218,6 +225,7 @@ void GUI::activate(GtkApplication *app, gpointer user_data)
     gtk_widget_set_margin_end(image, 8);
 
     GtkWidget *name = gtk_label_new(NULL);
+    // CSS text
     gtk_label_set_markup(GTK_LABEL(name), "<span size=\"medium\"><b>Windows 10 (64bit)</b></span>");
     gtk_label_set_xalign(GTK_LABEL(name), 0.0);
     gchar *created_text = g_strdup_printf("Created: 07-07-2019 4:25AM");;
@@ -232,24 +240,47 @@ void GUI::activate(GtkApplication *app, gpointer user_data)
     gtk_grid_attach_next_to(GTK_GRID(row), name, image, GTK_POS_RIGHT, 1, 1);
     gtk_grid_attach(GTK_GRID(row), created_date, 1, 1, 1, 1); 
     gtk_widget_show(GTK_WIDGET(row));
-
+    // Add the whole grid to the listbox
     gtk_container_add(GTK_CONTAINER(listbox), GTK_WIDGET(row));
   }
   // Add list box to scrolled window
   gtk_container_add(GTK_CONTAINER(scrolled_window), listbox);
   
+  /*************************
+   * Right side            *
+   *************************/
+  GtkWidget *right_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  GtkWidget *toolbar = gtk_toolbar_new();
+  gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_BOTH);
+
+  // Buttons in toolbar
+  GtkWidget *add_image = gtk_image_new_from_icon_name("list-add", GTK_ICON_SIZE_LARGE_TOOLBAR);
+  GtkToolItem *add_button = gtk_tool_button_new(add_image, "New");
+  gtk_toolbar_insert(GTK_TOOLBAR(toolbar), add_button, 0);
+
+  GtkWidget *perf_image = gtk_image_new_from_icon_name("preferences-other", GTK_ICON_SIZE_LARGE_TOOLBAR);
+  GtkToolItem *per_button = gtk_tool_button_new(perf_image, "Settings");
+  gtk_toolbar_insert(GTK_TOOLBAR(toolbar), per_button, 1);
+
+  GtkWidget *reboot_image = gtk_image_new_from_icon_name("view-refresh", GTK_ICON_SIZE_LARGE_TOOLBAR);
+  GtkToolItem *reboot_button = gtk_tool_button_new(reboot_image, "Reboot");
+  gtk_toolbar_insert(GTK_TOOLBAR(toolbar), reboot_button, 2);
+
+  // Add toolbar to box
+  gtk_container_add(GTK_CONTAINER(right_box), toolbar);
+
   GtkWidget *button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);  
   GtkWidget *button = gtk_button_new_with_label("Hello World");
   g_signal_connect(button, "clicked", G_CALLBACK (print_hello), NULL);
   g_signal_connect_swapped(button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
   gtk_container_add(GTK_CONTAINER(button_box), button);
-  // Add random button to paned
-  gtk_paned_add2(GTK_PANED(paned), button_box);
 
-  // Add paned to box (below menu)
-  gtk_box_pack_start(GTK_BOX(vbox), paned, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(right_box), button_box, FALSE, FALSE, 0);
 
-  // Show!
+  // Add box to paned
+  gtk_paned_add2(GTK_PANED(paned), right_box);
+
+  // Finally, show!
   gtk_widget_show_all(window);
 }
 
