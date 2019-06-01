@@ -218,7 +218,7 @@ void GUI::activate(GtkApplication *app, gpointer user_data)
   gtk_list_box_set_header_func(GTK_LIST_BOX(listbox), cc_list_box_update_header_func, NULL, NULL);
   for (int i=1; i<20; i++)
   {
-    GtkWidget *image = gtk_image_new_from_file("../images/win64.png");
+    GtkWidget *image = gtk_image_new_from_file("../images/windows/10_64.png");
     gtk_widget_set_margin_top(image, 8);
     gtk_widget_set_margin_bottom(image, 8);
     gtk_widget_set_margin_start(image, 8);
