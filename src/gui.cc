@@ -97,7 +97,7 @@ GtkWidget* GUI::SetupMenu(GtkWidget *window) {
   GtkWidget *save_item = CreateImageMenuItem("Save", "document-save");
   GtkWidget *exit = CreateImageMenuItem("Exit", "application-exit");
   // Add window destroy signal to exit button
-  g_signal_connect_swapped(exit, "activate", G_CALLBACK (gtk_widget_destroy), window);
+  g_signal_connect_swapped(exit, "activate", G_CALLBACK(gtk_widget_destroy), window);
   
   // Create Help sub-menu
   GtkWidget *help_sub_menu = gtk_menu_new();
@@ -128,6 +128,49 @@ void GUI::print_hello (GtkWidget *widget, gpointer data)
   g_print ("Hello World\n");
 }
 
+void GUI::add_css()
+{
+  char const *css =
+    ".box { border-style: solid; border-width: 4px; }\n"
+    ".border_solid    { border-style: solid; }\n"
+    ;
+  /* CSS */
+  GError *error = NULL;
+  GtkCssProvider *provider = gtk_css_provider_new ();
+  gtk_css_provider_load_from_data (provider, css, strlen (css), &error);
+  if (error != NULL)
+  {
+    fprintf (stderr, "CSS: %s\n", error->message);
+  }
+
+  gtk_style_context_add_provider_for_screen(
+    gdk_screen_get_default(),
+    GTK_STYLE_PROVIDER(provider),
+    GTK_STYLE_PROVIDER_PRIORITY_USER);
+}
+
+void GUI::cc_list_box_update_header_func(GtkListBoxRow *row,
+                                GtkListBoxRow *before,
+                                gpointer user_data)
+{
+  GtkWidget *current;
+
+  if (before == NULL)
+    {
+      gtk_list_box_row_set_header(row, NULL);
+      return;
+    }
+
+  current = gtk_list_box_row_get_header(row);
+  if (current == NULL)
+    {
+      current = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+      gtk_widget_show (current);
+      gtk_list_box_row_set_header(row, current);
+    }
+}
+
+
 /**
  * \brief Create GUI in the activate signal trigger from the GTK app
  */
@@ -143,8 +186,10 @@ void GUI::activate(GtkApplication *app, gpointer user_data)
   gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER_ALWAYS);
 
   // Vertical box container
-  vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);  
+  vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);  
   gtk_container_add(GTK_CONTAINER(window), vbox);
+  // Add CSS classes
+  add_css();
 
   // Create top menu
   GtkWidget *menu_bar = SetupMenu(window);  
@@ -155,17 +200,40 @@ void GUI::activate(GtkApplication *app, gpointer user_data)
   GtkWidget *paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+
   // Vertical scroll only
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   // Add scrolled window with listbox to paned
-  gtk_paned_add1(GTK_PANED(paned), scrolled_window);
+  gtk_paned_pack1(GTK_PANED(paned), scrolled_window, FALSE, TRUE);
+  gtk_widget_set_size_request(scrolled_window, 275, -1);
+
   GtkWidget *listbox = gtk_list_box_new();
-  for (int i=1; i<100; i++)
+  gtk_list_box_set_header_func(GTK_LIST_BOX(listbox), cc_list_box_update_header_func, NULL, NULL);
+  for (int i=1; i<20; i++)
   {
-    gchar *name = g_strdup_printf("Label %i", i);
-    GtkWidget *label = gtk_label_new(name);
-    gtk_widget_set_halign(GTK_WIDGET(label), GTK_ALIGN_START);
-    gtk_container_add(GTK_CONTAINER(listbox), label);
+    GtkWidget *image = gtk_image_new_from_file("../images/win64.png");
+    gtk_widget_set_margin_top(image, 8);
+    gtk_widget_set_margin_bottom(image, 8);
+    gtk_widget_set_margin_start(image, 8);
+    gtk_widget_set_margin_end(image, 8);
+
+    GtkWidget *name = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(name), "<span size=\"medium\"><b>Windows 10 (64bit)</b></span>");
+    gtk_label_set_xalign(GTK_LABEL(name), 0.0);
+    gchar *created_text = g_strdup_printf("Created: 07-07-2019 4:25AM");;
+    GtkWidget *created_date = gtk_label_new(created_text);
+    gtk_label_set_xalign(GTK_LABEL(created_date), 0.0);
+
+    GtkWidget *row = gtk_grid_new();
+    gtk_grid_set_column_spacing(GTK_GRID(row), 10);
+    gtk_grid_set_row_spacing(GTK_GRID(row), 5);
+    gtk_container_set_border_width(GTK_CONTAINER(row), 4);
+    gtk_grid_attach(GTK_GRID(row), image, 0, 0, 1, 2);
+    gtk_grid_attach_next_to(GTK_GRID(row), name, image, GTK_POS_RIGHT, 1, 1);
+    gtk_grid_attach(GTK_GRID(row), created_date, 1, 1, 1, 1); 
+    gtk_widget_show(GTK_WIDGET(row));
+
+    gtk_container_add(GTK_CONTAINER(listbox), GTK_WIDGET(row));
   }
   // Add list box to scrolled window
   gtk_container_add(GTK_CONTAINER(scrolled_window), listbox);
@@ -184,4 +252,6 @@ void GUI::activate(GtkApplication *app, gpointer user_data)
   // Show!
   gtk_widget_show_all(window);
 }
+
+
 

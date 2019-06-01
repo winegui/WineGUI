@@ -38,6 +38,10 @@ private:
   static void cbShowAbout(GtkButton *btn, gpointer parent_window);
   static GtkWidget* SetupMenu(GtkWidget *window);
   static void print_hello(GtkWidget *widget, gpointer data);
+  static void add_css();
+  static void cc_list_box_update_header_func(GtkListBoxRow *row,
+                                GtkListBoxRow *before,
+                                gpointer user_data);
   static void activate(GtkApplication *app, gpointer user_data);
 };
 
