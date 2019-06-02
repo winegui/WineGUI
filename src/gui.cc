@@ -228,25 +228,59 @@ void GUI::CreateRightPanel(GtkWidget *paned)
 
   // Add toolbar to box
   gtk_container_add(GTK_CONTAINER(box), toolbar);
+  gtk_container_add(GTK_CONTAINER(box), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
 
   // Add detail section below toolbar
   GtkWidget *detail_grid = gtk_grid_new();
-  gtk_grid_set_column_spacing(GTK_GRID(detail_grid), 10);
-  gtk_grid_set_row_spacing(GTK_GRID(detail_grid), 5);
+  gtk_widget_set_margin_top(detail_grid, 5);
+  gtk_widget_set_margin_bottom(detail_grid, 8);
+  gtk_widget_set_margin_start(detail_grid, 8);
+  gtk_widget_set_margin_end(detail_grid, 5);
+  gtk_grid_set_column_spacing(GTK_GRID(detail_grid), 8);
+  gtk_grid_set_row_spacing(GTK_GRID(detail_grid), 12);
 
-  GtkWidget *window_version_label = gtk_label_new("Windows version:");
-  GtkWidget *window_version = gtk_label_new("Windows 7");
+  // General heading
+  GtkWidget *general_icon = gtk_image_new_from_icon_name("computer", GTK_ICON_SIZE_MENU);
+  GtkWidget *general_label = gtk_label_new(NULL);
+  gtk_label_set_markup(GTK_LABEL(general_label), "<b>General</b>");
+  gtk_grid_attach(GTK_GRID(detail_grid), general_icon, 0, 0, 1, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), general_label, general_icon, GTK_POS_RIGHT, 1, 1);
 
-  GtkWidget *system_bit_label = gtk_label_new("Bit OS:");
-  GtkWidget *system_bit = gtk_label_new("64 bit");
-
-  gtk_grid_attach(GTK_GRID(detail_grid), window_version_label, 0, 0, 1, 1);
+  // Windows version + bit os
+  GtkWidget *window_version_label = gtk_label_new("Windows:");
+  gchar windows[30], bit[10];
+  g_stpcpy(windows, "Windows 7");
+  g_snprintf(bit, sizeof(bit), " (%s)", "64-bit");
+  g_strlcat(windows, bit, sizeof(windows));
+  GtkWidget *window_version = gtk_label_new(windows);
+  gtk_label_set_xalign(GTK_LABEL(window_version_label), 0.0);
+  gtk_label_set_xalign(GTK_LABEL(window_version), 0.0);
+  // Label consumes 2 columns
+  gtk_grid_attach(GTK_GRID(detail_grid), window_version_label, 0, 1, 2, 1);
   gtk_grid_attach_next_to(GTK_GRID(detail_grid), window_version, window_version_label, GTK_POS_RIGHT, 1, 1);
 
-  gtk_grid_attach(GTK_GRID(detail_grid), system_bit_label, 0, 1, 1, 1);
-  gtk_grid_attach_next_to(GTK_GRID(detail_grid), system_bit, system_bit_label, GTK_POS_RIGHT, 1, 1);
+  // Wine version
+  GtkWidget *wine_version_label = gtk_label_new("Wine:");
+  GtkWidget *wine_version = gtk_label_new("v4.0.1");
+  gtk_label_set_xalign(GTK_LABEL(wine_version_label), 0.0);
+  gtk_label_set_xalign(GTK_LABEL(wine_version), 0.0);
+  // Label consumes 2 columns
+  gtk_grid_attach(GTK_GRID(detail_grid), wine_version_label, 0, 2, 2, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), wine_version, wine_version_label, GTK_POS_RIGHT, 1, 1);
 
+  // Wine location
+  GtkWidget *wine_location_label = gtk_label_new("Wine location:");
+  GtkWidget *wine_location = gtk_label_new("~/.winegui/prefixes/win7_64");
+  gtk_label_set_xalign(GTK_LABEL(wine_location_label), 0.0);
+  gtk_label_set_xalign(GTK_LABEL(wine_location), 0.0);
+  // Label consumes 2 columns
+  gtk_grid_attach(GTK_GRID(detail_grid), wine_location_label, 0, 3, 2, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), wine_location, wine_location_label, GTK_POS_RIGHT, 1, 1);
+
+
+  // Add detail grid to box
   gtk_box_pack_start(GTK_BOX(box), detail_grid, FALSE, FALSE, 0);
+  gtk_container_add(GTK_CONTAINER(box), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
 
   // Add box to paned
   gtk_paned_add2(GTK_PANED(paned), box);

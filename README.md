@@ -8,9 +8,10 @@ Finally, an user-interface friendly [WINE](https://www.winehq.org/) Manager.
 Dependencies should be met before build:
 
 * cmake
-* GTK3.0+
+* ninja-build
+* libgtk-3-dev
 * pkg-config
-* Doxygen
+* doxygen
 
 ### Build
 
