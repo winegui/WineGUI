@@ -260,7 +260,7 @@ void GUI::CreateRightPanel(GtkWidget *paned)
   gtk_grid_attach_next_to(GTK_GRID(detail_grid), window_version, window_version_label, GTK_POS_RIGHT, 1, 1);
 
   // Wine version
-  GtkWidget *wine_version_label = gtk_label_new("Wine:");
+  GtkWidget *wine_version_label = gtk_label_new("Wine version:");
   GtkWidget *wine_version = gtk_label_new("v4.0.1");
   gtk_label_set_xalign(GTK_LABEL(wine_version_label), 0.0);
   gtk_label_set_xalign(GTK_LABEL(wine_version), 0.0);
