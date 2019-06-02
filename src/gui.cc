@@ -159,7 +159,7 @@ void GUI::CreateLeftPanel(GtkWidget *paned)
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);  
   // Add scrolled window with listbox to paned
   gtk_paned_pack1(GTK_PANED(paned), scrolled_window, FALSE, TRUE);
-  gtk_widget_set_size_request(scrolled_window, 285, -1);
+  gtk_widget_set_size_request(scrolled_window, 240, -1);
 
   GtkWidget *listbox = gtk_list_box_new();
   // Set function that will add seperators between each item
@@ -173,20 +173,32 @@ void GUI::CreateLeftPanel(GtkWidget *paned)
     gtk_widget_set_margin_end(image, 8);
 
     GtkWidget *name = gtk_label_new(NULL);
+    gtk_label_set_xalign(GTK_LABEL(name), 0.0);
     // CSS text
     gtk_label_set_markup(GTK_LABEL(name), "<span size=\"medium\"><b>Windows 10 (64bit)</b></span>");
     gtk_label_set_xalign(GTK_LABEL(name), 0.0);
-    gchar *changed_date = g_strdup_printf("Last changed: 07-07-2019 4:25AM");;
-    GtkWidget *changed_text = gtk_label_new(changed_date);
-    gtk_label_set_xalign(GTK_LABEL(changed_text), 0.0);
+
+    GtkWidget *status_icon = gtk_image_new_from_file("../images/ready.png");
+    gtk_widget_set_size_request(status_icon, 2, -1);
+    gtk_widget_set_halign(status_icon, GTK_ALIGN_START);
+
+    gchar *status_text = g_strdup_printf("Ready");
+    GtkWidget *status_label = gtk_label_new(status_text);
+    gtk_label_set_xalign(GTK_LABEL(status_label), 0.0);
 
     GtkWidget *row = gtk_grid_new();
-    gtk_grid_set_column_spacing(GTK_GRID(row), 10);
+    gtk_grid_set_column_spacing(GTK_GRID(row), 8);
     gtk_grid_set_row_spacing(GTK_GRID(row), 5);
     gtk_container_set_border_width(GTK_CONTAINER(row), 4);
+
     gtk_grid_attach(GTK_GRID(row), image, 0, 0, 1, 2);
-    gtk_grid_attach_next_to(GTK_GRID(row), name, image, GTK_POS_RIGHT, 1, 1);
-    gtk_grid_attach(GTK_GRID(row), changed_text, 1, 1, 1, 1);
+    // Agh, stupid GTK! Width 2 would be enough, add 8 extra = 10
+    // I can't control the gtk grid cell width
+    gtk_grid_attach_next_to(GTK_GRID(row), name, image, GTK_POS_RIGHT, 10, 1);
+
+    gtk_grid_attach(GTK_GRID(row), status_icon, 1, 1, 1, 1);
+    gtk_grid_attach_next_to(GTK_GRID(row), status_label, status_icon, GTK_POS_RIGHT, 1, 1);
+
     gtk_widget_show(GTK_WIDGET(row));
     // Add the whole grid to the listbox
     gtk_container_add(GTK_CONTAINER(listbox), GTK_WIDGET(row));
@@ -277,10 +289,56 @@ void GUI::CreateRightPanel(GtkWidget *paned)
   gtk_grid_attach(GTK_GRID(detail_grid), wine_location_label, 0, 3, 2, 1);
   gtk_grid_attach_next_to(GTK_GRID(detail_grid), wine_location, wine_location_label, GTK_POS_RIGHT, 1, 1);
 
+  // Wine location
+  GtkWidget *wine_last_updated_label = gtk_label_new("Wine last changed:");
+  GtkWidget *wine_last_updated = gtk_label_new("07-07-2019 23:11AM");
+  gtk_label_set_xalign(GTK_LABEL(wine_last_updated_label), 0.0);
+  gtk_label_set_xalign(GTK_LABEL(wine_last_updated), 0.0);
+  // Label consumes 2 columns
+  gtk_grid_attach(GTK_GRID(detail_grid), wine_last_updated_label, 0, 5, 2, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), wine_last_updated, wine_last_updated_label, GTK_POS_RIGHT, 1, 1);
+  // End General
+  gtk_grid_attach(GTK_GRID(detail_grid), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL), 0, 6, 3, 1);
+
+  // Audio heading
+  GtkWidget *audio_icon = gtk_image_new_from_icon_name("audio-speakers", GTK_ICON_SIZE_MENU);
+  GtkWidget *audio_label = gtk_label_new(NULL);
+  gtk_label_set_markup(GTK_LABEL(audio_label), "<b>Audio</b>");
+  gtk_grid_attach(GTK_GRID(detail_grid), audio_icon, 0, 7, 1, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), audio_label, audio_icon, GTK_POS_RIGHT, 1, 1);
+
+  // Audio driver
+  GtkWidget *audio_driver_label = gtk_label_new("Audio driver:");
+  GtkWidget *audio_driver = gtk_label_new("Pulseaudio");
+  gtk_label_set_xalign(GTK_LABEL(audio_driver_label), 0.0);
+  gtk_label_set_xalign(GTK_LABEL(audio_driver), 0.0);
+  // Label consumes 2 columns
+  gtk_grid_attach(GTK_GRID(detail_grid), audio_driver_label, 0, 8, 2, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), audio_driver, audio_driver_label, GTK_POS_RIGHT, 1, 1);
+  // End Audio driver
+  gtk_grid_attach(GTK_GRID(detail_grid), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL), 0, 9, 3, 1);
+
+  // Display heading
+  GtkWidget *display_icon = gtk_image_new_from_icon_name("video-display", GTK_ICON_SIZE_MENU);
+  GtkWidget *display_label = gtk_label_new(NULL);
+  gtk_label_set_markup(GTK_LABEL(display_label), "<b>Display</b>");
+  gtk_grid_attach(GTK_GRID(detail_grid), display_icon, 0, 10, 1, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), display_label, display_icon, GTK_POS_RIGHT, 1, 1);
+
+  // Virtual Desktop
+  GtkWidget *virtual_desktop_label = gtk_label_new("Virtual desktop\n(Window Mode):");
+  GtkWidget *virtual_desktop = gtk_label_new("Disabled");
+  gtk_label_set_xalign(GTK_LABEL(virtual_desktop_label), 0.0);
+  gtk_label_set_xalign(GTK_LABEL(virtual_desktop), 0.0);
+  // Label consumes 2 columns
+  gtk_grid_attach(GTK_GRID(detail_grid), virtual_desktop_label, 0,11, 2, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), virtual_desktop, virtual_desktop_label, GTK_POS_RIGHT, 1, 1);
+  // End Display
+  gtk_grid_attach(GTK_GRID(detail_grid), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL), 0, 12, 3, 1);
+
 
   // Add detail grid to box
   gtk_box_pack_start(GTK_BOX(box), detail_grid, FALSE, FALSE, 0);
-  gtk_container_add(GTK_CONTAINER(box), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
 
   // Add box to paned
   gtk_paned_add2(GTK_PANED(paned), box);

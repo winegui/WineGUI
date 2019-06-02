@@ -21,7 +21,8 @@
 #include "helper.h"
 
 /**
- * \brief Create GUI in the activate signal trigger from the GTK app
+ * \brief Retrieve system processor bit (32/64). Throw error when not found.
+ * \return 32-bit or 64-bit
  */
 Bit Helper::retrieveSystemBit(string prefix_path)
 {
@@ -36,7 +37,63 @@ Bit Helper::retrieveSystemBit(string prefix_path)
   }
 }
 
-string exec(const char* cmd) {
+/**
+ * \brief Retrieve Audio driver
+ * \return Audio Driver (eg. alsa/coreaudio/oss/pulse)
+ */
+AudioDriver Helper::retrieveAudioDriver(string prefix_path)
+{
+  string command = "cat " + prefix_path + "/user.reg | grep -m 1 '\"Audio\"=' | cut -d '=' -f2 | sed 's/\"//g'";
+  string result = exec(command.c_str());
+  if(result == "pulse") {
+    return AudioDriver::pulseaudio;
+  } else if(result == "alsa") {
+    return AudioDriver::alsa;
+  } else if(result == "oss") {
+    return AudioDriver::oss;
+  } else if(result == "coreaudio") {
+    return AudioDriver::coreaudio;
+  } else if(result == "disabled") {
+    return AudioDriver::disabled;
+  } else {
+    return AudioDriver::pulseaudio;
+  }
+}
+
+/**
+ * \brief Retrieve emulation resolution
+ * \return Return the virtual desktop resolution or 'disabled' when disabled fully.
+ */
+string Helper::retrieveVirtualDesktop(string prefix_path)
+{
+  string command = "cat " + prefix_path + "/user.reg | grep -m 1 '\"Default\"=' | cut -d '=' -f2 | sed 's/\"//g'";
+  string result = exec(command.c_str());
+  if(result != "") {
+    return result;
+  } else {
+    return "disabled";
+  }
+}
+
+/**
+ * \brief Retrieve the date/time of the last time the Wine Inf file was updated
+ * \return Date/time of last update
+ */
+string Helper::retrieveLastWineUpdate(string prefix_path)
+{
+  string epoch_time = readFile(prefix_path + "/.update-timestamp");
+  time_t secsSinceEpoch = strtoul(epoch_time.c_str(), NULL, 0);
+  stringstream stringStream;
+  stringStream << put_time(localtime(&secsSinceEpoch), "%c") << endl;
+  return stringStream.str();
+}
+
+/**
+ * \brief Execute command on terminal. Return output.
+ * \return Terminal stdout
+ */
+string Helper::exec(const char* cmd) {
+  // Max 128 characters
   array<char, 128> buffer;
   string result;
   // Execute command using popen
@@ -48,4 +105,26 @@ string exec(const char* cmd) {
     result += buffer.data();
   }
   return result;
+}
+
+/**
+ * \brief Read data from file and returns it.
+ * \return Data from file
+ */
+string Helper::readFile(string file_path)
+{
+  string output = "";
+  ifstream myfile(file_path);
+  if(myfile.is_open())
+  {
+    string line;
+    while(getline(myfile, line))
+    {
+      output += line + '\n';
+    }
+    myfile.close();
+  } else {
+    throw runtime_error("Could not open file!");
+  }
+  return output;
 }

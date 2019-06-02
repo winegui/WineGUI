@@ -22,6 +22,9 @@
 #ifndef HELPER_H
 #define HELPER_H
 
+#include <fstream>
+#include <ctime>
+#include <iomanip>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -30,6 +33,7 @@
 #include <array>
 
 enum Bit { win32, win64 };
+enum AudioDriver { pulseaudio, alsa, coreaudio, oss, disabled };
 
 using namespace std;
 
@@ -40,8 +44,12 @@ using namespace std;
 class Helper {
 public:  
   static Bit retrieveSystemBit(string prefix_path);
+  static AudioDriver retrieveAudioDriver(string prefix_path);
+  static string retrieveVirtualDesktop(string prefix_path);
+  static string retrieveLastWineUpdate(string prefix_path);
 private:
   static string exec(const char* cmd);
+  static string readFile(string file_path);
 };
 
 #endif
