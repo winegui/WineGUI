@@ -186,7 +186,7 @@ void GUI::CreateLeftPanel(GtkWidget *paned)
     gtk_container_set_border_width(GTK_CONTAINER(row), 4);
     gtk_grid_attach(GTK_GRID(row), image, 0, 0, 1, 2);
     gtk_grid_attach_next_to(GTK_GRID(row), name, image, GTK_POS_RIGHT, 1, 1);
-    gtk_grid_attach(GTK_GRID(row), changed_text, 1, 1, 1, 1); 
+    gtk_grid_attach(GTK_GRID(row), changed_text, 1, 1, 1, 1);
     gtk_widget_show(GTK_WIDGET(row));
     // Add the whole grid to the listbox
     gtk_container_add(GTK_CONTAINER(listbox), GTK_WIDGET(row));
@@ -201,7 +201,7 @@ void GUI::CreateLeftPanel(GtkWidget *paned)
  */
 void GUI::CreateRightPanel(GtkWidget *paned)
 {
-    GtkWidget *right_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   GtkWidget *toolbar = gtk_toolbar_new();
   gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_BOTH);
 
@@ -227,17 +227,29 @@ void GUI::CreateRightPanel(GtkWidget *paned)
   gtk_toolbar_insert(GTK_TOOLBAR(toolbar), reboot_button, 4);
 
   // Add toolbar to box
-  gtk_container_add(GTK_CONTAINER(right_box), toolbar);
+  gtk_container_add(GTK_CONTAINER(box), toolbar);
 
-  GtkWidget *button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);  
-  GtkWidget *button = gtk_button_new_with_label("Hello World");
-  g_signal_connect(button, "clicked", G_CALLBACK (print_hello), NULL);
-  gtk_container_add(GTK_CONTAINER(button_box), button);
+  // Add detail section below toolbar
+  GtkWidget *detail_grid = gtk_grid_new();
+  gtk_grid_set_column_spacing(GTK_GRID(detail_grid), 10);
+  gtk_grid_set_row_spacing(GTK_GRID(detail_grid), 5);
 
-  gtk_box_pack_start(GTK_BOX(right_box), button_box, FALSE, FALSE, 0);
+  GtkWidget *window_version_label = gtk_label_new("Windows version:");
+  GtkWidget *window_version = gtk_label_new("Windows 7");
+
+  GtkWidget *system_bit_label = gtk_label_new("Bit OS:");
+  GtkWidget *system_bit = gtk_label_new("64 bit");
+
+  gtk_grid_attach(GTK_GRID(detail_grid), window_version_label, 0, 0, 1, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), window_version, window_version_label, GTK_POS_RIGHT, 1, 1);
+
+  gtk_grid_attach(GTK_GRID(detail_grid), system_bit_label, 0, 1, 1, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), system_bit, system_bit_label, GTK_POS_RIGHT, 1, 1);
+
+  gtk_box_pack_start(GTK_BOX(box), detail_grid, FALSE, FALSE, 0);
 
   // Add box to paned
-  gtk_paned_add2(GTK_PANED(paned), right_box);
+  gtk_paned_add2(GTK_PANED(paned), box);
 }
 
 /**
