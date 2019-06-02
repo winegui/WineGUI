@@ -7,7 +7,9 @@
 	"settings": {
 		"files.associations": {
 			"typeinfo": "cpp",
-			"system_error": "cpp"
+			"system_error": "cpp",
+			"string": "cpp",
+			"stdexcept": "cpp"
 		}
 	}
 }

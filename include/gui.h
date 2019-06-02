@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 AIR Quality developers
+ * Copyright (c) 2019 WineGUI
  *
  * \file    gui.h
  * \brief   GTK+ User Interface Class
@@ -37,12 +37,16 @@ private:
   static GtkWidget* CreateImageMenuItem(const gchar* label_text, const gchar* icon_name);
   static void cbShowAbout(GtkButton *btn, gpointer parent_window);
   static GtkWidget* SetupMenu(GtkWidget *window);
-  static void print_hello(GtkWidget *widget, gpointer data);
-  static void add_css();
+  static GtkWidget* CreateFoundation(GtkWidget *window);
+  static void CreateLeftPanel(GtkWidget *paned);
+  static void CreateRightPanel(GtkWidget *paned);
+  static void activate(GtkApplication *app, gpointer user_data);
+
   static void cc_list_box_update_header_func(GtkListBoxRow *row,
                                 GtkListBoxRow *before,
                                 gpointer user_data);
-  static void activate(GtkApplication *app, gpointer user_data);
+  static void print_hello(GtkWidget *widget, gpointer data);
+  static void add_css();
 };
 
 #endif

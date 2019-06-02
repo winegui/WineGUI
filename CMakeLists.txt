@@ -34,10 +34,11 @@ link_directories(${GTK_LIBRARY_DIRS})
 add_definitions (${GTK_CFLAGS_OTHER})
 
 add_library(gui_lib src/gui.cc)
+add_library(helper_lib src/helper.cc)
 
 add_executable(winegui src/main.cc)
 
-target_link_libraries(winegui gui_lib ${CMAKE_THREAD_LIBS_INIT} ${GTK_LIBRARIES})
+target_link_libraries(winegui gui_lib helper_lib ${CMAKE_THREAD_LIBS_INIT} ${GTK_LIBRARIES})
 
 # To create 'make run'
 add_custom_target( run
