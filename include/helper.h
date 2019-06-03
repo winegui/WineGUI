@@ -44,20 +44,21 @@ using namespace std;
  * \brief Provide some helper methods for CLI interaction
  */
 class Helper {
-public:  
+public:
+  static string retrieveName(string prefix_path);
+  static string retrieveWindowsOSVersion(string prefix_path);
   static Bit retrieveSystemBit(string prefix_path);
   static AudioDriver retrieveAudioDriver(string prefix_path);
   static string retrieveVirtualDesktop(string prefix_path);
   static string retrieveLastWineUpdate(string prefix_path);
   static bool retrieveWineStatus(string prefix_path);
   static string retrieveCLetterDrive(string prefix_path);
-  static string retrieveWindowsOSVersion(string prefix_path);
   static string retrieveWineVersion();
 private:
   static string exec(const char* cmd);
   static void setWinePrefix(string prefix_path);
   static void removeWinePrefix();
-  static string readFile(string file_path);
+  static vector<string> readFile(string file_path);
   static vector<string> split(const string& s, char delimiter);
 };
 

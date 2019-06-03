@@ -21,6 +21,47 @@
 #include "helper.h"
 
 /**
+ * \brief Retrieve Wine Bottle Name from config
+ * \return Name
+ */
+string Helper::retrieveName(string prefix_path)
+{
+  try
+  {
+    vector<string> config = readFile(prefix_path + "/.winegui.conf");
+    for(vector<string>::iterator config_line = config.begin(); config_line != config.end(); ++config_line) {
+      auto delimiterPos = (*config_line).find("=");
+      auto name = (*config_line).substr(0, delimiterPos);
+      auto value = (*config_line).substr(delimiterPos + 1);
+      if (name == "name") {
+        return value;
+      }
+    }    
+  }
+  catch(const std::exception& e)
+  {
+    // Do nothing
+  }
+  // Fall-back
+  return prefix_path;
+}
+
+/**
+ * \brief Retrieve current Windows OS version
+ * \return Return the Windows OS version
+ */
+string Helper::retrieveWindowsOSVersion(string prefix_path)
+{
+  string command = "cat " + prefix_path + "/system.reg | grep -m 1 '\"ProductName\"=' | cut -d '=' -f2 | sed 's/\"//g'";
+  string result = exec(command.c_str());
+  if(result != "") {
+    return result;
+  } else {
+    return " - Unknown Windows OS - ";
+  }
+}
+
+/**
  * \brief Retrieve system processor bit (32/64). Throw error when not found.
  * \return 32-bit or 64-bit
  */
@@ -81,11 +122,17 @@ string Helper::retrieveVirtualDesktop(string prefix_path)
  */
 string Helper::retrieveLastWineUpdate(string prefix_path)
 {
-  string epoch_time = readFile(prefix_path + "/.update-timestamp");
-  time_t secsSinceEpoch = strtoul(epoch_time.c_str(), NULL, 0);
-  stringstream stringStream;
-  stringStream << put_time(localtime(&secsSinceEpoch), "%c") << endl;
-  return stringStream.str();
+  vector<string> epoch_time = readFile(prefix_path + "/.update-timestamp");
+  if(epoch_time.size() > 1) {
+    string time = epoch_time.at(0);
+    time_t secsSinceEpoch = strtoul(time.c_str(), NULL, 0);
+    stringstream stringStream;
+    stringStream << put_time(localtime(&secsSinceEpoch), "%c") << endl;
+    return stringStream.str();
+  } else {
+    return "- Unknown -";
+  }
+   
 }
 
 /**
@@ -120,22 +167,6 @@ string Helper::retrieveCLetterDrive(string prefix_path)
     throw runtime_error("Could not find C:\\ drive location");
   }
 }
-
-/**
- * \brief Retrieve current Windows OS version
- * \return Return the Windows OS version
- */
-string Helper::retrieveWindowsOSVersion(string prefix_path)
-{
-  string command = "cat " + prefix_path + "/system.reg | grep -m 1 '\"ProductName\"=' | cut -d '=' -f2 | sed 's/\"//g'";
-  string result = exec(command.c_str());
-  if(result != "") {
-    return result;
-  } else {
-    return "Unknown Windows OS";
-  }
-}
-
 
 /**
  * \brief Retrieve Wine version
@@ -195,16 +226,16 @@ void Helper::removeWinePrefix() {
  * \brief Read data from file and returns it.
  * \return Data from file
  */
-string Helper::readFile(string file_path)
+vector<string> Helper::readFile(string file_path)
 {
-  string output = "";
+  vector<string> output;
   ifstream myfile(file_path);
   if(myfile.is_open())
   {
     string line;
     while(getline(myfile, line))
     {
-      output += line + '\n';
+      output.push_back(line);
     }
     myfile.close();
   } else {
@@ -219,10 +250,10 @@ string Helper::readFile(string file_path)
  */
 vector<string> Helper::split(const string& s, char delimiter)
 {
-   vector<std::string> tokens;
+   vector<string> tokens;
    string token;
    istringstream tokenStream(s);
-   while (std::getline(tokenStream, token, delimiter))
+   while(getline(tokenStream, token, delimiter))
    {
       tokens.push_back(token);
    }
