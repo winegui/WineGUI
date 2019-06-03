@@ -178,7 +178,7 @@ void GUI::CreateLeftPanel(GtkWidget *paned)
     gtk_label_set_markup(GTK_LABEL(name), "<span size=\"medium\"><b>Windows 10 (64bit)</b></span>");
     gtk_label_set_xalign(GTK_LABEL(name), 0.0);
 
-    GtkWidget *status_icon = gtk_image_new_from_file("../images/ready.png");
+    GtkWidget *status_icon = gtk_image_new_from_file(READY_IMAGE);
     gtk_widget_set_size_request(status_icon, 2, -1);
     gtk_widget_set_halign(status_icon, GTK_ALIGN_START);
 
@@ -289,7 +289,16 @@ void GUI::CreateRightPanel(GtkWidget *paned)
   gtk_grid_attach(GTK_GRID(detail_grid), wine_location_label, 0, 3, 2, 1);
   gtk_grid_attach_next_to(GTK_GRID(detail_grid), wine_location, wine_location_label, GTK_POS_RIGHT, 1, 1);
 
-  // Wine location
+  // Wine C drive location
+  GtkWidget *windows_c_drive_label = gtk_label_new("C: drive location:");
+  GtkWidget *windows_c_drive = gtk_label_new("~/.winegui/prefixes/win7_64/dosdevices/c:/");
+  gtk_label_set_xalign(GTK_LABEL(windows_c_drive_label), 0.0);
+  gtk_label_set_xalign(GTK_LABEL(windows_c_drive), 0.0);
+  // Label consumes 2 columns
+  gtk_grid_attach(GTK_GRID(detail_grid), windows_c_drive_label, 0, 4, 2, 1);
+  gtk_grid_attach_next_to(GTK_GRID(detail_grid), windows_c_drive, windows_c_drive_label, GTK_POS_RIGHT, 1, 1);
+
+  // Wine last changed
   GtkWidget *wine_last_updated_label = gtk_label_new("Wine last changed:");
   GtkWidget *wine_last_updated = gtk_label_new("07-07-2019 23:11AM");
   gtk_label_set_xalign(GTK_LABEL(wine_last_updated_label), 0.0);

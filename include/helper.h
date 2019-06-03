@@ -30,7 +30,9 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <cstring>
 #include <array>
+#include <vector>
 
 enum Bit { win32, win64 };
 enum AudioDriver { pulseaudio, alsa, coreaudio, oss, disabled };
@@ -47,9 +49,16 @@ public:
   static AudioDriver retrieveAudioDriver(string prefix_path);
   static string retrieveVirtualDesktop(string prefix_path);
   static string retrieveLastWineUpdate(string prefix_path);
+  static bool retrieveWineStatus(string prefix_path);
+  static string retrieveCLetterDrive(string prefix_path);
+  static string retrieveWindowsOSVersion(string prefix_path);
+  static string retrieveWineVersion();
 private:
   static string exec(const char* cmd);
+  static void setWinePrefix(string prefix_path);
+  static void removeWinePrefix();
   static string readFile(string file_path);
+  static vector<string> split(const string& s, char delimiter);
 };
 
 #endif

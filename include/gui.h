@@ -23,6 +23,9 @@
 
 #include <gtk/gtk.h>
 
+#define READY_IMAGE "../images/ready.png"
+#define WRONG_IMAGE "../images/wrong.png"
+
 /**
  * \class GUI
  * \brief GTK+ User Interface Class
