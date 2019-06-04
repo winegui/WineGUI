@@ -40,10 +40,11 @@ string Helper::retrieveName(string prefix_path)
   }
   catch(const std::exception& e)
   {
-    // Do nothing
+    // Do nothing, continue
   }
-  // Fall-back
-  return prefix_path;
+  // Fall-back, get last directory name of path
+  filesystem::path path = filesystem::u8path(prefix_path);
+  return (*path.end()).u8string();
 }
 
 /**

@@ -7,7 +7,8 @@ Finally, an user-interface friendly [WINE](https://www.winehq.org/) Manager.
 
 Dependencies should be met before build:
 
-* cmake
+* gcc (v5 or later)
+* cmake (v3.13 or later)
 * ninja-build
 * libgtk-3-dev
 * pkg-config

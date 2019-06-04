@@ -29,6 +29,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <filesystem>
 #include <string>
 #include <cstring>
 #include <array>
