@@ -89,7 +89,7 @@ GtkWidget* GUI::SetupMenu(GtkWidget *window) {
   // Create menu item
   GtkWidget *file_menu = gtk_menu_item_new_with_mnemonic("_File");
   GtkWidget *help_menu = gtk_menu_item_new_with_mnemonic("_Help");
-
+  
   // Create file sub-menu
   GtkWidget *file_sub_menu = gtk_menu_new();
   // Create Menu item with label & image, using a box
@@ -98,7 +98,7 @@ GtkWidget* GUI::SetupMenu(GtkWidget *window) {
   GtkWidget *exit = CreateImageMenuItem("Exit", "application-exit");
   // Add window destroy signal to exit button
   g_signal_connect_swapped(exit, "activate", G_CALLBACK(gtk_widget_destroy), window);
-  
+    
   // Create Help sub-menu
   GtkWidget *help_sub_menu = gtk_menu_new();
   GtkWidget *about = CreateImageMenuItem("About WineGUI...", "help-about");
