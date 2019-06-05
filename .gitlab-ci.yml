@@ -6,7 +6,7 @@ build:
   stage: build
   script: ./build.sh
   tags:
-    - shell
+    - gtk
   artifacts:
     name: "Documentation"
     expire_in: 1 week
@@ -22,7 +22,7 @@ build:
 #  stage: test
 #  script: ./build/bin/runTests
 #  tags:
-#    - shell
+#    - gtk
 #  cache:
 #      key: "$CI_PIPELINE_ID"
 #      policy: pull
