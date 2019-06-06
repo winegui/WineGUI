@@ -228,19 +228,12 @@ void MainWindow::CreateRightPanel()
 
   // Name
   Gtk::Label* name_label = Gtk::manage(new Gtk::Label("Name:", 0.0, -1));
-  name.set_text("Steam Bottle");
   name.set_xalign(0.0);
   detail_grid.attach(*name_label, 0, 1, 2, 1);
   detail_grid.attach_next_to(name, *name_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Windows version + bit os
   Gtk::Label* window_version_label = Gtk::manage(new Gtk::Label("Windows:", 0.0, -1));
-
-  Glib::ustring windows, bit;
-  windows = "Windows 7";
-  bit = "64-bit";
-  Glib::ustring windows_text = windows + " (" + bit + ")";
-  window_version.set_text(windows_text);
   window_version.set_xalign(0.0);
   // Label consumes 2 columns
   detail_grid.attach(*window_version_label, 0, 2, 2, 1);
