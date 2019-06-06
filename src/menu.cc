@@ -36,10 +36,12 @@ Menu::Menu()
   auto save_item = CreateImageMenuItem("Save", "document-save");
   auto exit = CreateImageMenuItem("Exit", "application-exit");
   // Add appliaction quit signal to the exit button
-  exit->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_quit));
+  exit->signal_activate().connect(signalQuit);
     
   auto about = CreateImageMenuItem("About WineGUI...", "help-about");  
-  about->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_help_about));
+  about->signal_activate().connect(signalShowAbout);
+  // Template for creating a seperate method if addition actions are required:
+  //    about->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_help_about));
   
   // Add items to sub-menu
   // File menu
@@ -62,15 +64,6 @@ Menu::Menu()
 Menu::~Menu() {
 }
 
-void Menu::on_quit()
-{
-  // Emit quit signal
-  signalQuit();
-}
-
-void Menu::on_help_about() {
-  signalShowAbout();
-}
 
 /**
  * \brief Helper method for creating a menu with an image

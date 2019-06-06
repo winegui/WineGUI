@@ -44,10 +44,6 @@ protected:
   Gtk::SeparatorMenuItem separator1;
   Gtk::SeparatorMenuItem separator2;
 
-  // Slots
-  virtual void on_help_about();
-  virtual void on_quit();
-
 private:
   Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);
 };
