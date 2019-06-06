@@ -23,7 +23,7 @@
 /**
  * \brief Contructor
  */
-Menu::Menu() // Window& parent
+Menu::Menu()
 : file("_File", true),
   help("_Help", true)
 {
@@ -38,8 +38,8 @@ Menu::Menu() // Window& parent
   // Add appliaction quit signal to the exit button
   exit->signal_activate().connect(sigc::ptr_fun(&Gtk::Main::quit));
     
-  auto about = CreateImageMenuItem("About WineGUI...", "help-about");
-  //about->signal_activate().connect(sigc::mem_fun(parent, &Window::ShowAbout));
+  auto about = CreateImageMenuItem("About WineGUI...", "help-about");  
+  about->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_help_about));
   
   // Add items to sub-menu
   // File menu
@@ -60,6 +60,10 @@ Menu::Menu() // Window& parent
  * \brief Destructor
  */
 Menu::~Menu() {
+}
+
+void Menu::on_help_about() {
+  signalShowAbout();
 }
 
 /**

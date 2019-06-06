@@ -18,12 +18,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "window.h"
+#include "main_window.h"
+
+#include "signal_dispatcher.h"
 
 /**
  * \brief Contructor
  */
-Window::Window()
+MainWindow::MainWindow(Menu& menu)
 : vbox(Gtk::ORIENTATION_VERTICAL),
   paned(Gtk::ORIENTATION_HORIZONTAL),
   right_box(Gtk::Orientation::ORIENTATION_VERTICAL),
@@ -34,14 +36,8 @@ Window::Window()
   set_default_size(1000, 600);
   set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
-  // Set logo
-  logo.set("../images/logo_small.png");
-
-  // Create GTK menu
-  Menu* menu = Gtk::manage(new Menu()); // (*this)
-
   // Add menu to box (top), no expand/fill
-  vbox.pack_start(*menu, false, false);
+  vbox.pack_start(menu, false, false);
 
   // Add paned to box (below menu)
   // NOTE: expand/fill = true
@@ -71,14 +67,22 @@ Window::Window()
 /**
  * \brief Destructor
  */
-Window::~Window() {
+MainWindow::~MainWindow() {
+}
+
+/**
+ * \brief Set signal dispatcher
+ */
+void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
+{
+  // Todo if needed
 }
 
 /**
  * \brief Set a vector of bottles to the left panel
  * \param[in] bottles - WineBottle vector array
  */
-void Window::SetWineBottles(std::vector<WineBottle> bottles)
+void MainWindow::SetWineBottles(std::vector<WineBottle> bottles)
 {
   for (const WineBottle& bottle : bottles)
   {
@@ -127,7 +131,7 @@ void Window::SetWineBottles(std::vector<WineBottle> bottles)
  * \brief set the detailed info panel on the right
  * \param[in] bottle - WineBottle object
  */
-void Window::SetDetailedInfo(WineBottle bottle)
+void MainWindow::SetDetailedInfo(WineBottle bottle)
 {
   name.set_text(bottle.name());
   Glib::ustring windows = BottleTypes::toString(bottle.windows());
@@ -144,7 +148,7 @@ void Window::SetDetailedInfo(WineBottle bottle)
 /**
  * \brief Create left side of the GUI
  */
-void Window::CreateLeftPanel()
+void MainWindow::CreateLeftPanel()
 {
   // Vertical scroll only
   scrolled_window.set_policy(Gtk::PolicyType::POLICY_NEVER, Gtk::PolicyType::POLICY_AUTOMATIC);
@@ -154,7 +158,7 @@ void Window::CreateLeftPanel()
   scrolled_window.set_size_request(240, -1);
 
   // Set function that will add seperators between each item
-  listbox.set_header_func(sigc::ptr_fun(&Window::cc_list_box_update_header_func));
+  listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
 
   // Add list box to scrolled window
   scrolled_window.add(listbox);
@@ -163,7 +167,7 @@ void Window::CreateLeftPanel()
 /**
  * \brief Create right side of the GUI
  */
-void Window::CreateRightPanel()
+void MainWindow::CreateRightPanel()
 {
   toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
 
@@ -298,28 +302,12 @@ void Window::CreateRightPanel()
   paned.add2(right_box);
 }
 
-void Window::ShowAbout() {
-  std::vector<Glib::ustring> authors;
-  authors.push_back("Melroy van den Berg <melroy@melroy.org>");
-
-  // Todo: set window parent
-  about.set_transient_for(*this);
-  about.set_program_name("WineGui");
-  about.set_title("About WineGUI");
-  about.set_logo(logo.get_pixbuf());
-  about.set_authors(authors);
-  about.set_version("v1.0");
-  about.set_copyright("Copyright © 2019 Melroy van den Berg");
-  about.set_license_type(Gtk::LICENSE_AGPL_3_0); 
-  about.show();
-}
-
 /**
  * \brief Override update header function of GTK Listbox with custom layout
  * \param[in] row
  * \param[in] before
  */
-void Window::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::ListBoxRow* before)
+void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::ListBoxRow* before)
 {
   GtkWidget *current;
   GtkListBoxRow *row = m_row->gobj();

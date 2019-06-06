@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2019 WineGUI
  *
- * \file    menu.h
- * \brief   The main-menu
+ * \file    signal_dispatcher.h
+ * \brief   Gtkmm signal dispatcher
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -22,30 +22,27 @@
 
 #include <gtkmm.h>
 
+// Forward declaration
+class MainWindow;
+class Menu;
+class AboutDialog;
+
 /**
- * \class Menu
- * \brief The top main-menu
+ * \class Window
+ * \brief GTK+ Window class
  */
-class Menu: public Gtk::MenuBar
+class SignalDispatcher : public Gtk::Window
 {
+  friend class MainWindow;
+
 public:
-  sigc::signal<void> signalShowAbout;
+  SignalDispatcher(Menu& menu, AboutDialog& about);
+  virtual ~SignalDispatcher();
 
-  Menu();
-  virtual ~Menu();
-
+  void setMainWindow(MainWindow* mainWindow);
+  
 protected:
-  // Child widgets
-  Gtk::MenuItem file;
-  Gtk::MenuItem help;
-  Gtk::Menu file_submenu;
-  Gtk::Menu help_submenu;
-  Gtk::SeparatorMenuItem separator1;
-  Gtk::SeparatorMenuItem separator2;
-
-  // Slots
-  virtual void on_help_about();
 
 private:
-  Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);
+  MainWindow* mainWindow;
 };

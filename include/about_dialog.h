@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2019 WineGUI
  *
- * \file    menu.h
- * \brief   The main-menu
+ * \file    about_dialog.h
+ * \brief   About Dialog
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -20,32 +20,18 @@
  */
 #pragma once
 
-#include <gtkmm.h>
+#include <gtkmm/aboutdialog.h>
+#include <gtkmm/image.h>
 
 /**
- * \class Menu
- * \brief The top main-menu
+ * \class AboutDialog
+ * \brief The About dialog
  */
-class Menu: public Gtk::MenuBar
+class AboutDialog : public Gtk::AboutDialog
 {
 public:
-  sigc::signal<void> signalShowAbout;
-
-  Menu();
-  virtual ~Menu();
-
+  AboutDialog(Gtk::Window& parent);
+  virtual ~AboutDialog();
 protected:
-  // Child widgets
-  Gtk::MenuItem file;
-  Gtk::MenuItem help;
-  Gtk::Menu file_submenu;
-  Gtk::Menu help_submenu;
-  Gtk::SeparatorMenuItem separator1;
-  Gtk::SeparatorMenuItem separator2;
-
-  // Slots
-  virtual void on_help_about();
-
-private:
-  Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);
+  Gtk::Image logo;
 };

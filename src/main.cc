@@ -18,7 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "window.h"
+#include "main_window.h"
+#include "menu.h"
+#include "about_dialog.h"
+#include "signal_dispatcher.h"
 
 #include <gtkmm/application.h>
 
@@ -30,7 +33,15 @@ int main(int argc, char *argv[])
 {
   auto app = Gtk::Application::create("org.melroy.winegui");
   
-  Window window;
+  // Constructing the top level objects:
+  Menu menu;
+  MainWindow mainWindow(menu);
+  AboutDialog about(mainWindow);
 
-  return app->run(window, argc, argv);
+  SignalDispatcher signalDispatcher(menu, about);
+
+  mainWindow.SetDispatcher(signalDispatcher);
+  signalDispatcher.setMainWindow(&mainWindow);
+
+  return app->run(mainWindow, argc, argv);
 }

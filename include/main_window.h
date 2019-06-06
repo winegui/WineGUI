@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2019 WineGUI
  *
- * \file    window.h
- * \brief   GTK+ Window class
+ * \file    main_window.h
+ * \brief   GTK+ Main window class
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -30,15 +30,20 @@
 
 using std::string;
 
+// Forward declaration
+class SignalDispatcher;
+
 /**
- * \class Window
+ * \class MainWindow
  * \brief GTK+ Window class
  */
-class Window : public Gtk::Window
+class MainWindow : public Gtk::Window
 {
 public:
-  Window();
-  virtual ~Window();
+  MainWindow(Menu& menu);
+  virtual ~MainWindow();
+  void SetDispatcher(SignalDispatcher& signalDispatcher);
+
   void SetWineBottles(std::vector<WineBottle> bottles);
   void SetDetailedInfo(WineBottle bottle);
   void ShowAbout();
@@ -47,8 +52,6 @@ protected:
   // Child widgets
   Gtk::Box vbox;
   Gtk::Paned paned;
-  Gtk::Image logo;
-  Gtk::AboutDialog about;
 
   // Left widgets
   Gtk::ScrolledWindow scrolled_window;
