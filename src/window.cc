@@ -25,7 +25,9 @@
  */
 Window::Window()
 : vbox(Gtk::ORIENTATION_VERTICAL),
-  paned(Gtk::ORIENTATION_HORIZONTAL)
+  paned(Gtk::ORIENTATION_HORIZONTAL),
+  right_box(Gtk::Orientation::ORIENTATION_VERTICAL),
+  separator1(Gtk::ORIENTATION_HORIZONTAL)
 {
   // Set some Window properties
   set_title("WineGUI - WINE Manager");
@@ -46,6 +48,16 @@ Window::Window()
   CreateLeftPanel();
   CreateRightPanel();
 
+  // Move this code to the controller!
+  vector<WineBottle> bottles;
+  bottles.push_back(*new WineBottle("Windows 10 (32bit)", "v5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM"));
+  bottles.push_back(*new WineBottle("Windows 10 (64bit)", BottleTypes::Windows10, BottleTypes::win64, "v5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
+  bottles.push_back(*new WineBottle("Steam Bottle", BottleTypes::Windows7, BottleTypes::win32, "v5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
+  SetWineBottles(bottles);
+
+  // Move this code to the controller as well!
+  SetDetailedInfo(*new WineBottle("Steam Bottle", BottleTypes::Windows10, BottleTypes::win64, "v4.0.1", "~/.winegui/prefixes/win7_64", "~/.winegui/prefixes/win7_64/dosdevices/c:/", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
+
   // Using a Vertical box container
   add(vbox);
 
@@ -60,31 +72,26 @@ Window::~Window() {
 }
 
 /**
- * \brief Create left side of the GUI
+ * \brief Set a vector of bottles to the left panel
+ * \param[in] bottles - WineBottle vector array
  */
-void Window::CreateLeftPanel()
+void Window::SetWineBottles(vector<WineBottle> bottles)
 {
-  // Vertical scroll only
-  scrolled_window.set_policy(Gtk::PolicyType::POLICY_NEVER, Gtk::PolicyType::POLICY_AUTOMATIC);
-
-  // Add scrolled window with listbox to paned
-  paned.pack1(scrolled_window, false, true);
-  scrolled_window.set_size_request(240, -1);
-
-  // Set function that will add seperators between each item
-  listbox.set_header_func(sigc::ptr_fun(&Window::cc_list_box_update_header_func));
-  for (int i=1; i<20; i++)
+  for (const WineBottle& bottle : bottles)
   {
+    Glib::ustring name = bottle.name();
+    Glib::ustring bit = BottleTypes::toString(bottle.bit());
+
     Gtk::Image* image = Gtk::manage(new Gtk::Image());
-    image->set("../images/windows/10_64.png");
+    image->set("../images/windows/10_" + bit + ".png");
     image->set_margin_top(8);
     image->set_margin_end(8);
     image->set_margin_bottom(8);
     image->set_margin_start(8);
 
-    Gtk::Label* name = Gtk::manage(new Gtk::Label());
-    name->set_xalign(0.0);
-    name->set_markup("<span size=\"medium\"><b>Windows 10 (64bit)</b></span>");
+    Gtk::Label* name_label = Gtk::manage(new Gtk::Label());
+    name_label->set_xalign(0.0);
+    name_label->set_markup("<span size=\"medium\"><b>" + name + "</b></span>");
    
     Gtk::Image* status_icon = Gtk::manage(new Gtk::Image());
     status_icon->set(READY_IMAGE);
@@ -102,16 +109,50 @@ void Window::CreateLeftPanel()
     row->attach(*image, 0, 0, 1, 2);
     // Agh, stupid GTK! Width 2 would be enough, add 8 extra = 10
     // I can't control the gtk grid cell width
-    row->attach_next_to(*name, *image, Gtk::PositionType::POS_RIGHT, 10, 1);
+    row->attach_next_to(*name_label, *image, Gtk::PositionType::POS_RIGHT, 10, 1);
 
     row->attach(*status_icon, 1, 1, 1, 1);
     row->attach_next_to(*status_label, *status_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
 
     // Add the whole grid to the listbox
     listbox.add(*row);
-
     row->show();
   }
+}
+
+/**
+ * \brief set the detailed info panel on the right
+ * \param[in] bottle - WineBottle object
+ */
+void Window::SetDetailedInfo(WineBottle bottle)
+{
+  name.set_text(bottle.name());
+  Glib::ustring windows = BottleTypes::toString(bottle.windows());
+  windows += " (" + BottleTypes::toString(bottle.bit()) + "-bit)";
+  window_version.set_text(windows);
+  wine_version.set_text(bottle.wine_version());
+  wine_location.set_text(bottle.wine_location());
+  c_drive_location.set_text(bottle.wine_c_drive());
+  wine_last_changed.set_text(bottle.wine_last_changed());
+  audio_driver.set_text(BottleTypes::toString(bottle.audio_driver()));
+  virtual_desktop.set_text(bottle.virtual_desktop());
+}
+
+/**
+ * \brief Create left side of the GUI
+ */
+void Window::CreateLeftPanel()
+{
+  // Vertical scroll only
+  scrolled_window.set_policy(Gtk::PolicyType::POLICY_NEVER, Gtk::PolicyType::POLICY_AUTOMATIC);
+
+  // Add scrolled window with listbox to paned
+  paned.pack1(scrolled_window, false, true);
+  scrolled_window.set_size_request(240, -1);
+
+  // Set function that will add seperators between each item
+  listbox.set_header_func(sigc::ptr_fun(&Window::cc_list_box_update_header_func));
+
   // Add list box to scrolled window
   scrolled_window.add(listbox);
 }
@@ -121,42 +162,39 @@ void Window::CreateLeftPanel()
  */
 void Window::CreateRightPanel()
 {
-  Gtk::Box box(Gtk::Orientation::ORIENTATION_VERTICAL);
-  Gtk::Toolbar toolbar;
   toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
 
   // Buttons in toolbar
-  Gtk::Image new_image;
-  new_image.set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::MenuToolButton new_button(new_image, "New");
-  toolbar.insert(new_button, 0);
+  Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
+  new_image->set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  Gtk::ToolButton* new_button = Gtk::manage(new Gtk::ToolButton(*new_image, "New"));
+  toolbar.insert(*new_button, 0);
 
-  Gtk::Image run_image;
-  run_image.set_from_icon_name("system-run", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::MenuToolButton run_button(run_image, "Run Program...");
-  toolbar.insert(run_button, 1);
+  Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
+  run_image->set_from_icon_name("system-run", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  Gtk::ToolButton* run_button = Gtk::manage(new Gtk::ToolButton(*run_image, "Run Program..."));
+  toolbar.insert(*run_button, 1);
 
-  Gtk::Image settings_image;
-  settings_image.set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::MenuToolButton settings_button(settings_image, "Settings");
-  toolbar.insert(settings_button, 2);
+  Gtk::Image* settings_image = Gtk::manage(new Gtk::Image());
+  settings_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  Gtk::ToolButton* settings_button = Gtk::manage(new Gtk::ToolButton(*settings_image, "Settings"));
+  toolbar.insert(*settings_button, 2);
 
-  Gtk::Image manage_image;
-  manage_image.set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::MenuToolButton manage_button(manage_image, "Manage");
-  toolbar.insert(manage_button, 3);
+  Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
+  manage_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  Gtk::ToolButton* manage_button = Gtk::manage(new Gtk::ToolButton(*manage_image, "Manage"));
+  toolbar.insert(*manage_button, 3);
 
-  Gtk::Image reboot_image;
-  reboot_image.set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::MenuToolButton reboot_button(reboot_image, "Reboot");
-  toolbar.insert(reboot_button, 4);
+  Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
+  reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  Gtk::ToolButton* reboot_button = Gtk::manage(new Gtk::ToolButton(*reboot_image, "Reboot"));
+  toolbar.insert(*reboot_button, 4);
 
-  // Add toolbar to box
-  box.add(toolbar);
-  box.add(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL));
+  // Add toolbar to right box
+  right_box.add(toolbar);
+  right_box.add(separator1);
 
   // Add detail section below toolbar
-  Gtk::Grid detail_grid;
   detail_grid.set_margin_top(5);
   detail_grid.set_margin_end(5);
   detail_grid.set_margin_bottom(8);
@@ -165,102 +203,96 @@ void Window::CreateRightPanel()
   detail_grid.set_row_spacing(12);
 
   // General heading
-  Gtk::Image general_icon;
-  general_icon.set_from_icon_name("computer", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
-  Gtk::Label general_label;
-  general_label.set_markup("<b>General</b>");
-  detail_grid.attach(general_icon, 0, 0, 1, 1);
-  detail_grid.attach_next_to(general_label, general_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  Gtk::Image* general_icon = Gtk::manage(new Gtk::Image());
+  general_icon->set_from_icon_name("computer", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  Gtk::Label* general_label = Gtk::manage(new Gtk::Label());
+  general_label->set_markup("<b>General</b>");
+  detail_grid.attach(*general_icon, 0, 0, 1, 1);
+  detail_grid.attach_next_to(*general_label, *general_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+
+  // Name
+  Gtk::Label* name_label = Gtk::manage(new Gtk::Label("Name:", 0.0, -1));
+  name.set_text("Steam Bottle");
+  name.set_xalign(0.0);
+  detail_grid.attach(*name_label, 0, 1, 2, 1);
+  detail_grid.attach_next_to(name, *name_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Windows version + bit os
-  Gtk::Label window_version_label("Windows:");
-  window_version_label.set_xalign(0.0);
+  Gtk::Label* window_version_label = Gtk::manage(new Gtk::Label("Windows:", 0.0, -1));
 
   Glib::ustring windows, bit;
   windows = "Windows 7";
   bit = "64-bit";
   Glib::ustring windows_text = windows + " (" + bit + ")";
-  Gtk::Label window_version(windows_text);
+  window_version.set_text(windows_text);
   window_version.set_xalign(0.0);
   // Label consumes 2 columns
-  detail_grid.attach(window_version_label, 0, 1, 2, 1);
-  detail_grid.attach_next_to(window_version, window_version_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach(*window_version_label, 0, 2, 2, 1);
+  detail_grid.attach_next_to(window_version, *window_version_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Wine version
-  Gtk::Label wine_version_label("Wine version:");
-  wine_version_label.set_xalign(0.0);
-  Gtk::Label wine_version("v4.0.1");
+  Gtk::Label* wine_version_label = Gtk::manage(new Gtk::Label("Wine Version:", 0.0, -1));
   wine_version.set_xalign(0.0);
-  detail_grid.attach(wine_version_label, 0, 2, 2, 1);
-  detail_grid.attach_next_to(wine_version, wine_version_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach(*wine_version_label, 0, 3, 2, 1);
+  detail_grid.attach_next_to(wine_version, *wine_version_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Wine location
-  Gtk::Label wine_location_label("Wine location:");
-  wine_location_label.set_xalign(0.0);
-  Gtk::Label wine_location("~/.winegui/prefixes/win7_64");
+  Gtk::Label* wine_location_label = Gtk::manage(new Gtk::Label("Wine Location:", 0.0, -1));
   wine_location.set_xalign(0.0);
-  detail_grid.attach(wine_location_label, 0, 3, 2, 1);
-  detail_grid.attach_next_to(wine_location, wine_location_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach(*wine_location_label, 0, 4, 2, 1);
+  detail_grid.attach_next_to(wine_location, *wine_location_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Wine C drive location
-  Gtk::Label c_drive_location_label("C: drive location:");
-  c_drive_location_label.set_xalign(0.0);
-  Gtk::Label c_drive_location("~/.winegui/prefixes/win7_64/dosdevices/c:/");
+  Gtk::Label* c_drive_location_label = Gtk::manage(new Gtk::Label("C: Drive Location:", 0.0, -1));
   c_drive_location.set_xalign(0.0);
-  detail_grid.attach(c_drive_location_label, 0, 4, 2, 1);
-  detail_grid.attach_next_to(c_drive_location, c_drive_location_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach(*c_drive_location_label, 0, 5, 2, 1);
+  detail_grid.attach_next_to(c_drive_location, *c_drive_location_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Wine last changed
-  Gtk::Label wine_last_changed_label("Wine last changed:");
-  wine_last_changed_label.set_xalign(0.0);
-  Gtk::Label wine_last_changed("07-07-2019 23:11AM");
+  Gtk::Label* wine_last_changed_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", 0.0, -1));
   wine_last_changed.set_xalign(0.0);
-  detail_grid.attach(wine_last_changed_label, 0, 5, 2, 1);
-  detail_grid.attach_next_to(wine_last_changed, wine_last_changed_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach(*wine_last_changed_label, 0, 6, 2, 1);
+  detail_grid.attach_next_to(wine_last_changed, *wine_last_changed_label, Gtk::PositionType::POS_RIGHT, 1, 1);
   // End General
-  detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 6, 3, 1);
+  detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 7, 3, 1);
 
   // Audio heading
-  Gtk::Image audio_icon;
-  audio_icon.set_from_icon_name("audio-speakers", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
-  Gtk::Label audio_label;
-  audio_label.set_markup("<b>Audio</b>");
-  detail_grid.attach(audio_icon, 0, 7, 1, 1);
-  detail_grid.attach_next_to(audio_label, audio_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  Gtk::Image* audio_icon = Gtk::manage(new Gtk::Image());
+  audio_icon->set_from_icon_name("audio-speakers", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  Gtk::Label* audio_label = Gtk::manage(new Gtk::Label());
+  audio_label->set_markup("<b>Audio</b>");
+  detail_grid.attach(*audio_icon, 0, 8, 1, 1);
+  detail_grid.attach_next_to(*audio_label, *audio_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Audio driver
-  Gtk::Label audio_driver_label("Audio driver:");
-  audio_driver_label.set_xalign(0.0);
-  Gtk::Label audio_driver("Pulseaudio");
+  Gtk::Label* audio_driver_label = Gtk::manage(new Gtk::Label("Audio Driver:", 0.0, -1));
   audio_driver.set_xalign(0.0);
-  detail_grid.attach(audio_driver_label, 0, 8, 2, 1);
-  detail_grid.attach_next_to(audio_driver, audio_driver_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach(*audio_driver_label, 0, 9, 2, 1);
+  detail_grid.attach_next_to(audio_driver, *audio_driver_label, Gtk::PositionType::POS_RIGHT, 1, 1);
   // End Audio driver
-  detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 9, 3, 1);
+  detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 10, 3, 1);
 
   // Display heading
-  Gtk::Image display_icon;
-  display_icon.set_from_icon_name("video-display", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
-  Gtk::Label display_label;
-  display_label.set_markup("<b>Display</b>");
-  detail_grid.attach(display_icon, 0, 10, 1, 1);
-  detail_grid.attach_next_to(display_label, display_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  Gtk::Image* display_icon = Gtk::manage(new Gtk::Image());
+  display_icon->set_from_icon_name("video-display", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  Gtk::Label* display_label = Gtk::manage(new Gtk::Label());
+  display_label->set_markup("<b>Display</b>");
+  detail_grid.attach(*display_icon, 0, 11, 1, 1);
+  detail_grid.attach_next_to(*display_label, *display_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Virtual Desktop
-  Gtk::Label virtual_desktop_label("Virtual desktop\n(Window Mode):");
-  virtual_desktop_label.set_xalign(0.0);
-  Gtk::Label virtual_desktop("Disabled");
+  Gtk::Label* virtual_desktop_label = Gtk::manage(new Gtk::Label("Virtual Desktop\n(Window Mode):", 0.0, -1));
   virtual_desktop.set_xalign(0.0);
-  detail_grid.attach(virtual_desktop_label, 0, 11, 2, 1);
-  detail_grid.attach_next_to(virtual_desktop, virtual_desktop_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach(*virtual_desktop_label, 0, 12, 2, 1);
+  detail_grid.attach_next_to(virtual_desktop, *virtual_desktop_label, Gtk::PositionType::POS_RIGHT, 1, 1);
   // End Display
-  detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 12, 3, 1);
+  detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 13, 3, 1);
 
   // Add detail grid to box
-  box.pack_start(detail_grid, false, false);
+  right_box.pack_start(detail_grid, false, false);
 
   // Add box to paned
-  paned.add2(box);
+  paned.add2(right_box);
 }
 
 /**

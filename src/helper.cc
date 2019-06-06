@@ -66,14 +66,14 @@ string Helper::retrieveWindowsOSVersion(string prefix_path)
  * \brief Retrieve system processor bit (32/64). Throw error when not found.
  * \return 32-bit or 64-bit
  */
-Bit Helper::retrieveSystemBit(string prefix_path)
+BottleTypes::Bit Helper::retrieveSystemBit(string prefix_path)
 {
   string command = "cat " + prefix_path + "/system.reg | grep -m 1 '#arch' | cut -d '=' -f2";
   string result = exec(command.c_str());
   if(result == "win32") {
-    return Bit::win32;
+    return BottleTypes::Bit::win32;
   } else if(result == "win64") {
-    return Bit::win64;
+    return BottleTypes::Bit::win64;
   } else {
     throw runtime_error("Could not determ Windows system bit.");
   }
@@ -83,22 +83,22 @@ Bit Helper::retrieveSystemBit(string prefix_path)
  * \brief Retrieve Audio driver
  * \return Audio Driver (eg. alsa/coreaudio/oss/pulse)
  */
-AudioDriver Helper::retrieveAudioDriver(string prefix_path)
+BottleTypes::AudioDriver Helper::retrieveAudioDriver(string prefix_path)
 {
   string command = "cat " + prefix_path + "/user.reg | grep -m 1 '\"Audio\"=' | cut -d '=' -f2 | sed 's/\"//g'";
   string result = exec(command.c_str());
   if(result == "pulse") {
-    return AudioDriver::pulseaudio;
+    return BottleTypes::AudioDriver::pulseaudio;
   } else if(result == "alsa") {
-    return AudioDriver::alsa;
+    return BottleTypes::AudioDriver::alsa;
   } else if(result == "oss") {
-    return AudioDriver::oss;
+    return BottleTypes::AudioDriver::oss;
   } else if(result == "coreaudio") {
-    return AudioDriver::coreaudio;
+    return BottleTypes::AudioDriver::coreaudio;
   } else if(result == "disabled") {
-    return AudioDriver::disabled;
+    return BottleTypes::AudioDriver::disabled;
   } else {
-    return AudioDriver::pulseaudio;
+    return BottleTypes::AudioDriver::pulseaudio;
   }
 }
 

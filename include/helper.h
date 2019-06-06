@@ -33,8 +33,7 @@
 #include <array>
 #include <vector>
 
-enum Bit { win32, win64 };
-enum AudioDriver { pulseaudio, alsa, coreaudio, oss, disabled };
+#include "bottle_types.h"
 
 using namespace std;
 
@@ -47,8 +46,8 @@ class Helper
 public:
   static string retrieveName(string prefix_path);
   static string retrieveWindowsOSVersion(string prefix_path);
-  static Bit retrieveSystemBit(string prefix_path);
-  static AudioDriver retrieveAudioDriver(string prefix_path);
+  static BottleTypes::Bit retrieveSystemBit(string prefix_path);
+  static BottleTypes::AudioDriver retrieveAudioDriver(string prefix_path);
   static string retrieveVirtualDesktop(string prefix_path);
   static string retrieveLastWineUpdate(string prefix_path);
   static bool retrieveWineStatus(string prefix_path);

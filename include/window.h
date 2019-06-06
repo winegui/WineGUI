@@ -22,6 +22,7 @@
 
 #include <gtkmm.h>
 #include "menu.h"
+#include "wine_bottle.h"
 
 #define READY_IMAGE "../images/ready.png"
 #define WRONG_IMAGE "../images/wrong.png"
@@ -35,6 +36,8 @@ class Window : public Gtk::Window
 public:
   Window();
   virtual ~Window();
+  void SetWineBottles(vector<WineBottle> bottles);
+  void SetDetailedInfo(WineBottle bottle);
 
 protected:
   // Child widgets
@@ -44,7 +47,22 @@ protected:
   // Left widgets
   Gtk::ScrolledWindow scrolled_window;
   Gtk::ListBox listbox;
-  
+
+  // Right widgets
+  Gtk::Box right_box;
+  Gtk::Toolbar toolbar;
+  Gtk::Separator separator1;
+  Gtk::Grid detail_grid;
+  // Detailed info labels on the right panel
+  Gtk::Label name;
+  Gtk::Label window_version;
+  Gtk::Label wine_version;
+  Gtk::Label wine_location;
+  Gtk::Label c_drive_location;
+  Gtk::Label wine_last_changed;
+  Gtk::Label audio_driver;
+  Gtk::Label virtual_desktop;
+
 private:
   void CreateLeftPanel();
   void CreateRightPanel();
