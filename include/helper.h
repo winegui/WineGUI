@@ -42,7 +42,8 @@ using namespace std;
  * \class Helper
  * \brief Provide some helper methods for CLI interaction
  */
-class Helper {
+class Helper
+{
 public:
   static string retrieveName(string prefix_path);
   static string retrieveWindowsOSVersion(string prefix_path);

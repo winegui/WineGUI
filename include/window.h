@@ -30,7 +30,8 @@
  * \class Window
  * \brief GTK+ Window class
  */
-class Window : public Gtk::Window {
+class Window : public Gtk::Window
+{
 public:
   Window();
   virtual ~Window();
@@ -40,6 +41,10 @@ protected:
   Gtk::Box vbox;
   Gtk::Paned paned;
 
+  // Left widgets
+  Gtk::ScrolledWindow scrolled_window;
+  Gtk::ListBox listbox;
+  
 private:
   void CreateLeftPanel();
   void CreateRightPanel();

@@ -28,29 +28,29 @@ Window::Window()
   paned(Gtk::ORIENTATION_HORIZONTAL)
 {
   // Set some Window properties
-  this->set_title("WineGUI - WINE Manager");
-  this->set_default_size(1000, 600);
-  this->set_position(Gtk::WIN_POS_CENTER_ALWAYS);
-
-  // Using a Vertical box container
-  this->add(vbox);
+  set_title("WineGUI - WINE Manager");
+  set_default_size(1000, 600);
+  set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
   // Create GTK menu
-  Menu menu;
+  Menu* menu = Gtk::manage(new Menu());
 
   // Add menu to box (top), no expand/fill
-  vbox.pack_start(menu, false, false);
+  vbox.pack_start(*menu, false, false);
 
   // Add paned to box (below menu)
   // NOTE: expand/fill = true
   vbox.pack_end(paned);
 
-  // Create rest
+  // Create rest to vbox
   CreateLeftPanel();
   CreateRightPanel();
 
-  // Finally, show!
-  this->show_all();
+  // Using a Vertical box container
+  add(vbox);
+
+  // Show the widget children
+  show_all_children();
 }
 
 /**
@@ -64,8 +64,6 @@ Window::~Window() {
  */
 void Window::CreateLeftPanel()
 {
-  // Use a scrolled window
-  Gtk::ScrolledWindow scrolled_window;
   // Vertical scroll only
   scrolled_window.set_policy(Gtk::PolicyType::POLICY_NEVER, Gtk::PolicyType::POLICY_AUTOMATIC);
 
@@ -73,46 +71,46 @@ void Window::CreateLeftPanel()
   paned.pack1(scrolled_window, false, true);
   scrolled_window.set_size_request(240, -1);
 
-  Gtk::ListBox listbox;
   // Set function that will add seperators between each item
   listbox.set_header_func(sigc::ptr_fun(&Window::cc_list_box_update_header_func));
   for (int i=1; i<20; i++)
   {
-    Gtk::Image image;
-    image.set("../images/windows/10_64.png");
-    image.set_margin_top(8);
-    image.set_margin_end(8);
-    image.set_margin_bottom(8);
-    image.set_margin_start(8);
+    Gtk::Image* image = Gtk::manage(new Gtk::Image());
+    image->set("../images/windows/10_64.png");
+    image->set_margin_top(8);
+    image->set_margin_end(8);
+    image->set_margin_bottom(8);
+    image->set_margin_start(8);
 
-    Gtk::Label name;
-    name.set_xalign(0.0);
-    name.set_markup("<span size=\"medium\"><b>Windows 10 (64bit)</b></span>");
+    Gtk::Label* name = Gtk::manage(new Gtk::Label());
+    name->set_xalign(0.0);
+    name->set_markup("<span size=\"medium\"><b>Windows 10 (64bit)</b></span>");
    
-    Gtk::Image status_icon;
-    status_icon.set(READY_IMAGE);
-    status_icon.set_size_request(2, -1);
-    status_icon.set_halign(Gtk::Align::ALIGN_START);
+    Gtk::Image* status_icon = Gtk::manage(new Gtk::Image());
+    status_icon->set(READY_IMAGE);
+    status_icon->set_size_request(2, -1);
+    status_icon->set_halign(Gtk::Align::ALIGN_START);
 
-    Gtk::Label status_label("Ready");
-    status_label.set_xalign(0.0);
+    Gtk::Label* status_label = Gtk::manage(new Gtk::Label("Ready"));
+    status_label->set_xalign(0.0);
 
-    Gtk::Grid row;
-    row.set_column_spacing(8);
-    row.set_row_spacing(5);
-    row.set_border_width(4);
+    Gtk::Grid* row = Gtk::manage(new Gtk::Grid());
+    row->set_column_spacing(8);
+    row->set_row_spacing(5);
+    row->set_border_width(4);
 
-    row.attach(image, 0, 0, 1, 2);
+    row->attach(*image, 0, 0, 1, 2);
     // Agh, stupid GTK! Width 2 would be enough, add 8 extra = 10
     // I can't control the gtk grid cell width
-    row.attach_next_to(name, image, Gtk::PositionType::POS_RIGHT, 10, 1);
+    row->attach_next_to(*name, *image, Gtk::PositionType::POS_RIGHT, 10, 1);
 
-    row.attach(status_icon, 1, 1, 1, 1);
-    row.attach_next_to(status_label, status_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+    row->attach(*status_icon, 1, 1, 1, 1);
+    row->attach_next_to(*status_label, *status_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
 
-    row.show();
     // Add the whole grid to the listbox
-    listbox.add(row);
+    listbox.add(*row);
+
+    row->show();
   }
   // Add list box to scrolled window
   scrolled_window.add(listbox);

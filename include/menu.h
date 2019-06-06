@@ -26,20 +26,25 @@
  * \class Menu
  * \brief The top main-menu
  */
-class Menu: public Gtk::MenuBar {
+class Menu: public Gtk::MenuBar
+{
 public:
   Menu();
   virtual ~Menu();
 
 protected:
   // Child widgets
+  Gtk::AboutDialog about;
   Gtk::MenuItem file;
   Gtk::MenuItem help;
-
   Gtk::Menu file_submenu;
   Gtk::Menu help_submenu;
+  Gtk::SeparatorMenuItem separator1;
+  Gtk::SeparatorMenuItem separator2;
 
-private:
-  Gtk::MenuItem CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);
+  Glib::RefPtr<Gdk::Pixbuf> logo_icon;
+
   void ShowAbout();
+private:
+  Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);
 };

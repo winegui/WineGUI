@@ -26,7 +26,16 @@
 Menu::Menu()
 : file("_File", true),
   help("_Help", true)
-{ 
+{
+  try {
+    // TODO: Icon
+    logo_icon = Gdk::Pixbuf::create_from_resource("../../images/logo_small.png", -1, 40);
+  }
+  catch(const Glib::Error& error)
+  {
+    //std::cout << error.what() << std::endl;
+  }
+
   // Add sub-menu's to menu items
   file.set_submenu(file_submenu);
   help.set_submenu(help_submenu);
@@ -36,27 +45,24 @@ Menu::Menu()
   auto save_item = CreateImageMenuItem("Save", "document-save");
   auto exit = CreateImageMenuItem("Exit", "application-exit");
   // Add appliaction quit signal to the exit button
-  exit.signal_activate().connect(sigc::ptr_fun(&Gtk::Main::quit));
+  exit->signal_activate().connect(sigc::ptr_fun(&Gtk::Main::quit));
     
   auto about = CreateImageMenuItem("About WineGUI...", "help-about");
-  about.signal_activate().connect(sigc::mem_fun(*this, &Menu::ShowAbout));
+  about->signal_activate().connect(sigc::mem_fun(*this, &Menu::ShowAbout));
   
-
-  Gtk::SeparatorMenuItem separator1;
-  Gtk::SeparatorMenuItem separator2;
   // Add items to sub-menu
   // File menu
-  file_submenu.append(preferences);
+  file_submenu.append(*preferences);
   file_submenu.append(separator1);
-  file_submenu.append(save_item);
+  file_submenu.append(*save_item);
   file_submenu.append(separator2);
-  file_submenu.append(exit);
+  file_submenu.append(*exit);
   // Help menu
-  help_submenu.append(about);
+  help_submenu.append(*about);
   
   // Add menu items to menu bar
-  this->append(file);
-  this->append(help);
+  append(file);
+  append(help);
 }
 
 /**
@@ -69,15 +75,15 @@ Menu::~Menu() {
  * \brief Helper method for creating a menu with an image
  * \return GTKWidget menu item pointer
  */
-Gtk::MenuItem Menu::CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name) {
-  Gtk::MenuItem item;
-  Gtk::Box helper_box(Gtk::ORIENTATION_HORIZONTAL, 2);
-  Gtk::Image icon;
-  icon.set_from_icon_name(icon_name, Gtk::IconSize(Gtk::ICON_SIZE_MENU));
-  helper_box.add(icon);
-  Gtk::Label label(label_text, 0.0, 0.0);
-  helper_box.pack_end(label, true, true, 0U);
-  item.add(helper_box);
+Gtk::MenuItem* Menu::CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name) {
+  Gtk::MenuItem* item = Gtk::manage(new Gtk::MenuItem());
+  Gtk::Box* helper_box = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2));
+  Gtk::Image* icon = Gtk::manage(new Gtk::Image());
+  icon->set_from_icon_name(icon_name, Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  helper_box->add(*icon);
+  Gtk::Label* label = Gtk::manage(new Gtk::Label(label_text, 0.0, 0.0));
+  helper_box->pack_end(*label, true, true, 0U);
+  item->add(*helper_box);
   return item;
 }
 
@@ -85,13 +91,14 @@ void Menu::ShowAbout() {
   std::vector<Glib::ustring> authors;
   authors.push_back("Melroy van den Berg <melroy@melroy.org>");
 
-  Gtk::AboutDialog dialog;
+  // Todo: set window parent
   //dialog.set_artists(*this);
-  dialog.set_program_name("WineGui");
-  dialog.set_logo(Gdk::Pixbuf::create_from_resource("./logo.png", -1, 40));
-  dialog.set_title("About WineGUI");
-  dialog.set_authors(authors);
-  dialog.set_version("v1.0");
-  dialog.set_copyright("Copyright © 2019 Melroy van den Berg");
-  dialog.set_license_type(Gtk::LICENSE_AGPL_3_0); 
+  about.set_program_name("WineGui");
+  about.set_title("About WineGUI");
+  about.set_logo(logo_icon);
+  about.set_authors(authors);
+  about.set_version("v1.0");
+  about.set_copyright("Copyright © 2019 Melroy van den Berg");
+  about.set_license_type(Gtk::LICENSE_AGPL_3_0); 
+  about.show();
 }
