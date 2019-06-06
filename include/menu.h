@@ -1,10 +1,10 @@
 /**
  * Copyright (c) 2019 WineGUI
  *
- * \file    main.cc
- * \brief   Main, where it all starts
+ * \file    menu.h
+ * \brief   The main-menu
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -18,19 +18,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "window.h"
+#pragma once
 
-#include <gtkmm/application.h>
+#include <gtkmm.h>
 
 /**
- * \brief The beginning, start the main loop
- * \return Status code
+ * \class Menu
+ * \brief The top main-menu
  */
-int main(int argc, char *argv[])
-{
-  auto app = Gtk::Application::create("org.melroy.winegui");
-  
-  Window window;
+class Menu: public Gtk::MenuBar {
+public:
+  Menu();
+  virtual ~Menu();
 
-  return app->run(window, argc, argv);
-}
+protected:
+  // Child widgets
+  Gtk::MenuItem file;
+  Gtk::MenuItem help;
+
+  Gtk::Menu file_submenu;
+  Gtk::Menu help_submenu;
+
+private:
+  Gtk::MenuItem CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);
+  void ShowAbout();
+};

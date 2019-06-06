@@ -10,7 +10,7 @@ Dependencies should be met before build:
 * gcc/g++ (v8.3 or later)
 * cmake (v3.13 or later)
 * ninja-build
-* libgtk-3-dev
+* libgtkmm-3.0-dev (implicit dependency with libgtk-3-dev obviously)
 * pkg-config
 * doxygen
 

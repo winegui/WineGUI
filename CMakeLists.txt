@@ -17,7 +17,7 @@ endif()
 
 # Use the package PkgConfig to detect GTK+ headers/library files
 FIND_PACKAGE(PkgConfig REQUIRED)
-PKG_CHECK_MODULES(GTK REQUIRED gtk+-3.0)
+PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -28,17 +28,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Add GTK libs and local include
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
-  ${GTK_INCLUDE_DIRS}
+  ${GTKMM_INCLUDE_DIRS}
 )
-link_directories(${GTK_LIBRARY_DIRS})
-add_definitions (${GTK_CFLAGS_OTHER})
+link_directories(${GTKMM_LIBRARY_DIRS})
+add_definitions (${GTKMM_CFLAGS_OTHER})
 
-add_library(gui_lib src/gui.cc)
+add_library(menu_lib src/menu.cc)
+add_library(window_lib src/window.cc)
 add_library(helper_lib src/helper.cc)
 
 add_executable(winegui src/main.cc)
 
-target_link_libraries(winegui gui_lib helper_lib ${CMAKE_THREAD_LIBS_INIT} ${GTK_LIBRARIES})
+target_link_libraries(winegui  window_lib menu_lib helper_lib ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
 # To create 'make run'
 add_custom_target( run

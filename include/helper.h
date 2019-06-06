@@ -18,9 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#ifndef HELPER_H
-#define HELPER_H
+#pragma once
 
 #include <fstream>
 #include <ctime>
@@ -62,5 +60,3 @@ private:
   static vector<string> readFile(string file_path);
   static vector<string> split(const string& s, char delimiter);
 };
-
-#endif
