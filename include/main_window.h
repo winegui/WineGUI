@@ -73,6 +73,9 @@ protected:
   Gtk::Label virtual_desktop;
 
 private:
+  // Slots
+  virtual void on_hide_window();
+  
   void CreateLeftPanel();
   void CreateRightPanel();
 

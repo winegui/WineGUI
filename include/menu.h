@@ -29,7 +29,9 @@
 class Menu: public Gtk::MenuBar
 {
 public:
+  sigc::signal<void> signalQuit;
   sigc::signal<void> signalShowAbout;
+  sigc::signal<void> signalHideMainWindow;
 
   Menu();
   virtual ~Menu();
@@ -45,6 +47,7 @@ protected:
 
   // Slots
   virtual void on_help_about();
+  virtual void on_quit();
 
 private:
   Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);

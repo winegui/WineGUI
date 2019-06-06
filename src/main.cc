@@ -41,7 +41,10 @@ int main(int argc, char *argv[])
   SignalDispatcher signalDispatcher(menu, about);
 
   mainWindow.SetDispatcher(signalDispatcher);
-  signalDispatcher.setMainWindow(&mainWindow);
+  signalDispatcher.SetMainWindow(&mainWindow);
+  // Do all the signal connections
+  signalDispatcher.DispatchSignals();
 
+  // Start main loop
   return app->run(mainWindow, argc, argv);
 }

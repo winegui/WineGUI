@@ -24,16 +24,30 @@
 #include "menu.h"
 #include "about_dialog.h"
 
-//Menu& menu
 SignalDispatcher::SignalDispatcher(Menu& menu, AboutDialog& about)
+: menu(menu),
+  about(about) {}
+
+SignalDispatcher::~SignalDispatcher() {}
+
+void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
 {
+  this->mainWindow = mainWindow;
+}
+
+/**
+ * \brief This method does all the signal connections between classes/emits/signals
+ */
+void SignalDispatcher::DispatchSignals()
+{
+  menu.signalQuit.connect(sigc::mem_fun(*this, &SignalDispatcher::on_quit));
   menu.signalShowAbout.connect(sigc::mem_fun(about, &AboutDialog::show));
 }
 
-SignalDispatcher::~SignalDispatcher()
-{}
-
-void SignalDispatcher::setMainWindow(MainWindow* mainWindow)
+void SignalDispatcher::on_quit()
 {
-  this->mainWindow = mainWindow;
+  // Signal hide main window
+  hideMainWindow();
+  // needed at all?
+  //Gtk::Main::quit();
 }

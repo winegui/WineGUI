@@ -36,7 +36,7 @@ Menu::Menu()
   auto save_item = CreateImageMenuItem("Save", "document-save");
   auto exit = CreateImageMenuItem("Exit", "application-exit");
   // Add appliaction quit signal to the exit button
-  exit->signal_activate().connect(sigc::ptr_fun(&Gtk::Main::quit));
+  exit->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_quit));
     
   auto about = CreateImageMenuItem("About WineGUI...", "help-about");  
   about->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_help_about));
@@ -60,6 +60,17 @@ Menu::Menu()
  * \brief Destructor
  */
 Menu::~Menu() {
+}
+
+void Menu::on_quit()
+{
+
+  signalQuit();
+
+  // Hiding the main window to give immediate user feedback.
+  // This does not stop Gtk::Main::run(), since it is called
+  // with a window parameter:
+  signalHideMainWindow();
 }
 
 void Menu::on_help_about() {

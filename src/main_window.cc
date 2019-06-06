@@ -75,7 +75,16 @@ MainWindow::~MainWindow() {
  */
 void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
 {
-  // Todo if needed
+  // Hide signal for immidate response after pressing quit button
+  signalDispatcher.hideMainWindow.connect(sigc::mem_fun(*this, &MainWindow::on_hide_window));
+}
+
+/**
+ * \brief Just hide the main window
+ */
+void MainWindow::on_hide_window()
+{
+  hide();
 }
 
 /**

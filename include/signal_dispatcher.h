@@ -36,13 +36,21 @@ class SignalDispatcher : public Gtk::Window
   friend class MainWindow;
 
 public:
+  sigc::signal<void> hideMainWindow;
+
   SignalDispatcher(Menu& menu, AboutDialog& about);
   virtual ~SignalDispatcher();
-
-  void setMainWindow(MainWindow* mainWindow);
+  void SetMainWindow(MainWindow* mainWindow);
   
+  void DispatchSignals();
+
 protected:
 
 private:
+  // slots
+  virtual void on_quit();
+
   MainWindow* mainWindow;
+  Menu& menu;
+  AboutDialog& about;
 };
