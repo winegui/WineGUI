@@ -64,13 +64,8 @@ Menu::~Menu() {
 
 void Menu::on_quit()
 {
-
+  // Emit quit signal
   signalQuit();
-
-  // Hiding the main window to give immediate user feedback.
-  // This does not stop Gtk::Main::run(), since it is called
-  // with a window parameter:
-  signalHideMainWindow();
 }
 
 void Menu::on_help_about() {

@@ -31,7 +31,6 @@ class Menu: public Gtk::MenuBar
 public:
   sigc::signal<void> signalQuit;
   sigc::signal<void> signalShowAbout;
-  sigc::signal<void> signalHideMainWindow;
 
   Menu();
   virtual ~Menu();
