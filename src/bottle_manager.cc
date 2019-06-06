@@ -1,10 +1,10 @@
 /**
  * Copyright (c) 2019 WineGUI
  *
- * \file    signal_dispatcher.h
- * \brief   Gtkmm signal dispatcher
+ * \file    controller.cc
+ * \brief   The controller controls it all
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -18,41 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#pragma once
+#include "bottle_manager.h"
+#include "main_window.h"
 
-#include <gtkmm.h>
+BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow) {
+  current_bottle = NULL;
 
-// Forward declaration
-class MainWindow;
-class BottleManager;
-class Menu;
-class AboutDialog;
+}
 
-/**
- * \class Window
- * \brief GTK+ Window class
- */
-class SignalDispatcher : public Gtk::Window
-{
-  friend class MainWindow;
+BottleManager::~BottleManager() {}
 
-public:
-  sigc::signal<void> hideMainWindow;
-
-  SignalDispatcher(BottleManager& manager, Menu& menu, AboutDialog& about);
-  virtual ~SignalDispatcher();
-  void SetMainWindow(MainWindow* mainWindow);
-  
-  void DispatchSignals();
-
-protected:
-
-private:
-  // slots
-  virtual void on_quit();
-
-  MainWindow* mainWindow;
-  BottleManager& manager;
-  Menu& menu;
-  AboutDialog& about;
-};
+void BottleManager::SetCurrentBottle(WineBottle* bottle) {
+  current_bottle = bottle;
+}

@@ -21,11 +21,13 @@
 #include "signal_dispatcher.h"
 
 #include "main_window.h"
+#include "bottle_manager.h"
 #include "menu.h"
 #include "about_dialog.h"
 
-SignalDispatcher::SignalDispatcher(Menu& menu, AboutDialog& about)
-: menu(menu),
+SignalDispatcher::SignalDispatcher(BottleManager& manager, Menu& menu, AboutDialog& about)
+: manager(manager),
+  menu(menu),
   about(about) {}
 
 SignalDispatcher::~SignalDispatcher() {}

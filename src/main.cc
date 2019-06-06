@@ -20,6 +20,7 @@
  */
 #include "main_window.h"
 #include "menu.h"
+#include "bottle_manager.h"
 #include "about_dialog.h"
 #include "signal_dispatcher.h"
 
@@ -37,8 +38,9 @@ int main(int argc, char *argv[])
   Menu menu;
   MainWindow mainWindow(menu);
   AboutDialog about(mainWindow);
+  BottleManager bottleManager(mainWindow);
 
-  SignalDispatcher signalDispatcher(menu, about);
+  SignalDispatcher signalDispatcher(bottleManager, menu, about);
 
   mainWindow.SetDispatcher(signalDispatcher);
   signalDispatcher.SetMainWindow(&mainWindow);
