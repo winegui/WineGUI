@@ -38,11 +38,14 @@ public:
   virtual ~Window();
   void SetWineBottles(vector<WineBottle> bottles);
   void SetDetailedInfo(WineBottle bottle);
-
+  void ShowAbout();
+  
 protected:
   // Child widgets
   Gtk::Box vbox;
   Gtk::Paned paned;
+  Gtk::Image logo;
+  Gtk::AboutDialog about;
 
   // Left widgets
   Gtk::ScrolledWindow scrolled_window;

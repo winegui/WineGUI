@@ -39,7 +39,7 @@ add_library(helper_lib src/helper.cc)
 
 add_executable(winegui src/main.cc)
 
-target_link_libraries(winegui  window_lib menu_lib helper_lib ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+target_link_libraries(winegui window_lib menu_lib helper_lib ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
 # To create 'make run'
 add_custom_target( run

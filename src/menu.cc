@@ -23,19 +23,10 @@
 /**
  * \brief Contructor
  */
-Menu::Menu()
+Menu::Menu() // Window& parent
 : file("_File", true),
   help("_Help", true)
 {
-  try {
-    // TODO: Icon
-    logo_icon = Gdk::Pixbuf::create_from_resource("../../images/logo_small.png", -1, 40);
-  }
-  catch(const Glib::Error& error)
-  {
-    //std::cout << error.what() << std::endl;
-  }
-
   // Add sub-menu's to menu items
   file.set_submenu(file_submenu);
   help.set_submenu(help_submenu);
@@ -48,7 +39,7 @@ Menu::Menu()
   exit->signal_activate().connect(sigc::ptr_fun(&Gtk::Main::quit));
     
   auto about = CreateImageMenuItem("About WineGUI...", "help-about");
-  about->signal_activate().connect(sigc::mem_fun(*this, &Menu::ShowAbout));
+  //about->signal_activate().connect(sigc::mem_fun(parent, &Window::ShowAbout));
   
   // Add items to sub-menu
   // File menu
@@ -87,18 +78,3 @@ Gtk::MenuItem* Menu::CreateImageMenuItem(const Glib::ustring& label_text, const 
   return item;
 }
 
-void Menu::ShowAbout() {
-  std::vector<Glib::ustring> authors;
-  authors.push_back("Melroy van den Berg <melroy@melroy.org>");
-
-  // Todo: set window parent
-  //dialog.set_artists(*this);
-  about.set_program_name("WineGui");
-  about.set_title("About WineGUI");
-  about.set_logo(logo_icon);
-  about.set_authors(authors);
-  about.set_version("v1.0");
-  about.set_copyright("Copyright © 2019 Melroy van den Berg");
-  about.set_license_type(Gtk::LICENSE_AGPL_3_0); 
-  about.show();
-}

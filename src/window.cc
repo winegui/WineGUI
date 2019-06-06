@@ -34,8 +34,11 @@ Window::Window()
   set_default_size(1000, 600);
   set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
+  // Set logo
+  logo.set("../images/logo_small.png");
+
   // Create GTK menu
-  Menu* menu = Gtk::manage(new Menu());
+  Menu* menu = Gtk::manage(new Menu()); // (*this)
 
   // Add menu to box (top), no expand/fill
   vbox.pack_start(*menu, false, false);
@@ -293,6 +296,22 @@ void Window::CreateRightPanel()
 
   // Add box to paned
   paned.add2(right_box);
+}
+
+void Window::ShowAbout() {
+  std::vector<Glib::ustring> authors;
+  authors.push_back("Melroy van den Berg <melroy@melroy.org>");
+
+  // Todo: set window parent
+  about.set_transient_for(*this);
+  about.set_program_name("WineGui");
+  about.set_title("About WineGUI");
+  about.set_logo(logo.get_pixbuf());
+  about.set_authors(authors);
+  about.set_version("v1.0");
+  about.set_copyright("Copyright © 2019 Melroy van den Berg");
+  about.set_license_type(Gtk::LICENSE_AGPL_3_0); 
+  about.show();
 }
 
 /**

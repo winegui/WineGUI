@@ -29,12 +29,11 @@
 class Menu: public Gtk::MenuBar
 {
 public:
-  Menu();
+  Menu(); // Window& parent
   virtual ~Menu();
 
 protected:
   // Child widgets
-  Gtk::AboutDialog about;
   Gtk::MenuItem file;
   Gtk::MenuItem help;
   Gtk::Menu file_submenu;
@@ -42,9 +41,6 @@ protected:
   Gtk::SeparatorMenuItem separator1;
   Gtk::SeparatorMenuItem separator2;
 
-  Glib::RefPtr<Gdk::Pixbuf> logo_icon;
-
-  void ShowAbout();
 private:
   Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);
 };
