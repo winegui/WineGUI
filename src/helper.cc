@@ -24,12 +24,12 @@
  * \brief Retrieve Wine Bottle Name from config
  * \return Name
  */
-string Helper::retrieveName(string prefix_path)
+string Helper::retrieveName(std::string prefix_path)
 {
   try
   {
-    vector<string> config = readFile(prefix_path + "/.winegui.conf");
-    for(vector<string>::iterator config_line = config.begin(); config_line != config.end(); ++config_line) {
+    std::vector<std::string> config = readFile(prefix_path + "/.winegui.conf");
+    for(std::vector<std::string>::iterator config_line = config.begin(); config_line != config.end(); ++config_line) {
       auto delimiterPos = (*config_line).find("=");
       auto name = (*config_line).substr(0, delimiterPos);
       auto value = (*config_line).substr(delimiterPos + 1);
@@ -43,7 +43,7 @@ string Helper::retrieveName(string prefix_path)
     // Do nothing, continue
   }
   // Fall-back, get last directory name of path
-  filesystem::path path = filesystem::u8path(prefix_path);
+  std::filesystem::path path = std::filesystem::u8path(prefix_path);
   return (*path.end()).u8string();
 }
 
@@ -75,7 +75,7 @@ BottleTypes::Bit Helper::retrieveSystemBit(string prefix_path)
   } else if(result == "win64") {
     return BottleTypes::Bit::win64;
   } else {
-    throw runtime_error("Could not determ Windows system bit.");
+    throw std::runtime_error("Could not determ Windows system bit.");
   }
 }
 
@@ -123,12 +123,12 @@ string Helper::retrieveVirtualDesktop(string prefix_path)
  */
 string Helper::retrieveLastWineUpdate(string prefix_path)
 {
-  vector<string> epoch_time = readFile(prefix_path + "/.update-timestamp");
+  std::vector<string> epoch_time = readFile(prefix_path + "/.update-timestamp");
   if(epoch_time.size() > 1) {
     string time = epoch_time.at(0);
     time_t secsSinceEpoch = strtoul(time.c_str(), NULL, 0);
-    stringstream stringStream;
-    stringStream << put_time(localtime(&secsSinceEpoch), "%c") << endl;
+    std::stringstream stringStream;
+    stringStream << std::put_time(localtime(&secsSinceEpoch), "%c") << std::endl;
     return stringStream.str();
   } else {
     return "- Unknown -";
@@ -165,7 +165,7 @@ string Helper::retrieveCLetterDrive(string prefix_path)
   if(result !="") {
     return result;
   } else {
-    throw runtime_error("Could not find C:\\ drive location");
+    throw std::runtime_error("Could not find C:\\ drive location");
   }
 }
 
@@ -177,11 +177,11 @@ string Helper::retrieveWineVersion()
 {
   string result = exec("wine --version");
   if(result != "") {
-    vector<string> results = split(result, '-');
+    std::vector<string> results = split(result, '-');
     if(results.size() > 2) {
       return results.at(1);
     } else {
-      throw runtime_error("Could not receive Wine version");
+      throw std::runtime_error("Could not receive Wine version");
     }
   } else {
     return "Unknown Windows OS";
@@ -194,12 +194,12 @@ string Helper::retrieveWineVersion()
  */
 string Helper::exec(const char* cmd) {
   // Max 128 characters
-  array<char, 128> buffer;
+  std::array<char, 128> buffer;
   string result;
   // Execute command using popen
-  unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
   if (!pipe) {
-    throw runtime_error("popen() failed!");
+    throw std::runtime_error("popen() failed!");
   }
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
     result += buffer.data();
@@ -212,14 +212,14 @@ void Helper::setWinePrefix(string prefix_path) {
   strcat(environ_variable, prefix_path.c_str());
   int res = putenv(environ_variable);
   if(res != 0) {
-    throw runtime_error("Can't set wine prefix environment variable");
+    throw std::runtime_error("Can't set wine prefix environment variable");
   }
 }
 
 void Helper::removeWinePrefix() {
   int res = unsetenv("WINEPREFIX");
   if(res != 0) {
-    throw runtime_error("Can't unset wine prefix environment variable");
+    throw std::runtime_error("Can't unset wine prefix environment variable");
   }
 }
 
@@ -227,20 +227,20 @@ void Helper::removeWinePrefix() {
  * \brief Read data from file and returns it.
  * \return Data from file
  */
-vector<string> Helper::readFile(string file_path)
+std::vector<string> Helper::readFile(std::string file_path)
 {
-  vector<string> output;
-  ifstream myfile(file_path);
+  std::vector<string> output;
+  std::ifstream myfile(file_path);
   if(myfile.is_open())
   {
-    string line;
-    while(getline(myfile, line))
+    std::string line;
+    while(std::getline(myfile, line))
     {
       output.push_back(line);
     }
     myfile.close();
   } else {
-    throw runtime_error("Could not open file!");
+    throw std::runtime_error("Could not open file!");
   }
   return output;
 }
@@ -249,11 +249,11 @@ vector<string> Helper::readFile(string file_path)
  * \brief Split string by delimiter
  * \return Array of strings
  */
-vector<string> Helper::split(const string& s, char delimiter)
+std::vector<string> Helper::split(const std::string& s, char delimiter)
 {
-   vector<string> tokens;
-   string token;
-   istringstream tokenStream(s);
+   std::vector<string> tokens;
+   std::string token;
+   std::istringstream tokenStream(s);
    while(getline(tokenStream, token, delimiter))
    {
       tokens.push_back(token);

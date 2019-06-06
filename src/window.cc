@@ -52,7 +52,7 @@ Window::Window()
   CreateRightPanel();
 
   // Move this code to the controller!
-  vector<WineBottle> bottles;
+  std::vector<WineBottle> bottles;
   bottles.push_back(*new WineBottle("Windows 10 (32bit)", "v5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM"));
   bottles.push_back(*new WineBottle("Windows 10 (64bit)", BottleTypes::Windows10, BottleTypes::win64, "v5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
   bottles.push_back(*new WineBottle("Steam Bottle", BottleTypes::Windows7, BottleTypes::win32, "v5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
@@ -78,7 +78,7 @@ Window::~Window() {
  * \brief Set a vector of bottles to the left panel
  * \param[in] bottles - WineBottle vector array
  */
-void Window::SetWineBottles(vector<WineBottle> bottles)
+void Window::SetWineBottles(std::vector<WineBottle> bottles)
 {
   for (const WineBottle& bottle : bottles)
   {

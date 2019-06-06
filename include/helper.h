@@ -35,7 +35,6 @@
 
 #include "bottle_types.h"
 
-using namespace std;
 
 /**
  * \class Helper
@@ -57,6 +56,6 @@ private:
   static string exec(const char* cmd);
   static void setWinePrefix(string prefix_path);
   static void removeWinePrefix();
-  static vector<string> readFile(string file_path);
-  static vector<string> split(const string& s, char delimiter);
+  static std::vector<string> readFile(string file_path);
+  static std::vector<string> split(const string& s, char delimiter);
 };

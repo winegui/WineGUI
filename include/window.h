@@ -21,6 +21,7 @@
 #pragma once
 
 #include <gtkmm.h>
+#include <vector>
 #include "menu.h"
 #include "wine_bottle.h"
 
@@ -36,7 +37,7 @@ class Window : public Gtk::Window
 public:
   Window();
   virtual ~Window();
-  void SetWineBottles(vector<WineBottle> bottles);
+  void SetWineBottles(std::vector<WineBottle> bottles);
   void SetDetailedInfo(WineBottle bottle);
   void ShowAbout();
   

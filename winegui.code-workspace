@@ -46,7 +46,16 @@
 			"string_view": "cpp",
 			"type_traits": "cpp",
 			"tuple": "cpp",
-			"utility": "cpp"
+			"utility": "cpp",
+			"condition_variable": "cpp",
+			"cstddef": "cpp",
+			"list": "cpp",
+			"filesystem": "cpp",
+			"functional": "cpp",
+			"mutex": "cpp",
+			"thread": "cpp",
+			"valarray": "cpp",
+			"algorithm": "cpp"
 		}
 	}
 }
