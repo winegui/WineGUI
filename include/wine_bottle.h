@@ -23,6 +23,9 @@
 #include <string>
 #include "bottle_types.h"
 
+using std::string;
+
+
 /**
  * \class WineBottle
  * \brief Class object definition for a wine bottle (only header file)

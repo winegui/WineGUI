@@ -28,6 +28,8 @@
 #define READY_IMAGE "../images/ready.png"
 #define WRONG_IMAGE "../images/wrong.png"
 
+using std::string;
+
 /**
  * \class Window
  * \brief GTK+ Window class

@@ -20,9 +20,7 @@
  */
 #pragma once
 
-#include "string"
-
-using std::string;
+#include <string>
 
 /**
  * \brief Bottle type enum definitions
@@ -64,7 +62,7 @@ struct BottleTypes {
   BottleTypes(Windows w) : w_(w) {}
   operator Windows () const {return w_;}
 
-  static string toString(Bit bit) {
+  static std::string toString(Bit bit) {
     switch(bit) {
       case Bit::win32:
         return "32";
@@ -75,7 +73,7 @@ struct BottleTypes {
     }
   }
 
-  static string toString(Windows win) {
+  static std::string toString(Windows win) {
     switch(win) {
       case Windows::Windows2003:
         return "Windows 2003";
@@ -98,7 +96,7 @@ struct BottleTypes {
     }
   }
 
-  static string toString(AudioDriver audio) {
+  static std::string toString(AudioDriver audio) {
     switch(audio) {
       case AudioDriver::pulseaudio:
         return "PulseAudio";

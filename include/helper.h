@@ -35,6 +35,8 @@
 
 #include "bottle_types.h"
 
+using std::string;
+
 
 /**
  * \class Helper
