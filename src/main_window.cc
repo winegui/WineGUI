@@ -156,13 +156,13 @@ void MainWindow::SetDetailedInfo(WineBottle bottle)
 
 /**
  * \brief Just show an error message
- * TODO: add custom string as input
  */
-void MainWindow::ShowErrorMessage()
+void MainWindow::ShowErrorMessage(const Glib::ustring& message)
 {
-  Gtk::MessageDialog* dialog = Gtk::manage(new Gtk::MessageDialog(*this, "An error has occurred!", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK));
-  dialog->set_modal(Gtk::DialogFlags::DIALOG_DESTROY_WITH_PARENT);
-  dialog->run();
+  Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+  dialog.set_title("An error has occurred!");
+  dialog.set_modal(Gtk::DialogFlags::DIALOG_DESTROY_WITH_PARENT);
+  dialog.run();
 }
 
 /**

@@ -42,7 +42,7 @@ public:
   virtual ~BottleManager();
 
   // Signals
-  sigc::signal<void> signalConfigError;
+  sigc::signal<void> placeholder;
 
 private:
   string WINE_PREFIX;

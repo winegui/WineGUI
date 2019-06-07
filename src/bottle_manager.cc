@@ -39,7 +39,6 @@ BottleManager::~BottleManager() {}
 void BottleManager::ReadBottles() {
   if(!Helper::exists(WINE_PREFIX)) {
     // Create directory if not exist yet
-    std::cout << "created!?" << std::endl;
     if(g_mkdir_with_parents(WINE_PREFIX.c_str(), 0775) < 0 && errno != EEXIST) {
       printf("Failed to create WineGUI directory \"%s\": %s\n", WINE_PREFIX.c_str(), g_strerror(errno));
     }
@@ -47,9 +46,10 @@ void BottleManager::ReadBottles() {
 
   // Continue
   if(Helper::exists(WINE_PREFIX)) {
+
   }
   else {
-    signalConfigError();
+    mainWindow.ShowErrorMessage("Configuration directory not found (could not create):\n" + WINE_PREFIX);
   }
 
   //std::vector<string> bottles = Helper::retrieveBottles("home/melroy/");

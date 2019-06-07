@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 
   mainWindow.SetDispatcher(signalDispatcher);
   signalDispatcher.SetMainWindow(&mainWindow);
-  // Do all the signal connections
+  // Do all the signal connections of the life time of the app
   signalDispatcher.DispatchSignals();
 
   // Start main loop
