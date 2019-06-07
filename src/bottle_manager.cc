@@ -23,37 +23,68 @@
 
 #include <iostream>
 
-BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow) {
+/**
+ * \brief Constructor
+ */
+BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
+{
+  // Set NULL during init
   current_bottle = NULL;
 
   // TODO: Make it configurable via settings
   WINE_PREFIX = Glib::get_home_dir() + "/.winegui/prefixes";
-  ReadBottles();
+  
+  // Read wine version (is always the same for all bottles atm)
+  //string wineVersion = Helper::GetWineVersion();
+
+  // Read bottles from disk and create classes from it
+  std::vector<string> bottleDirs = ReadBottles();
+  CreateWineBottles(bottleDirs);
 }
 
+/**
+ * \brief Destructor
+ */
 BottleManager::~BottleManager() {}
 
 /**
- * \brief Read Wine bottles from disk
+ * \brief Read Wine bottles from disk at start-up
  */
-void BottleManager::ReadBottles() {
-  if(!Helper::exists(WINE_PREFIX)) {
+std::vector<string> BottleManager::ReadBottles()
+{
+  if(!Helper::Exists(WINE_PREFIX)) {
     // Create directory if not exist yet
     if(g_mkdir_with_parents(WINE_PREFIX.c_str(), 0775) < 0 && errno != EEXIST) {
       printf("Failed to create WineGUI directory \"%s\": %s\n", WINE_PREFIX.c_str(), g_strerror(errno));
     }
   }
 
-  // Continue
-  if(Helper::exists(WINE_PREFIX)) {
-
-    std::vector<string> bottleDirectories = Helper::retrieveBottles(WINE_PREFIX);
+  if(Helper::Exists(WINE_PREFIX)) {
+    // Continue
+    return Helper::GetBottles(WINE_PREFIX);
   }
   else {
     mainWindow.ShowErrorMessage("Configuration directory not found (could not create):\n" + WINE_PREFIX);
   }
+  // Otherwise empty
+  return std::vector<string>();
 }
 
-void BottleManager::SetCurrentBottle(WineBottle* bottle) {
+/**
+ * \brief Create wine bottle classes and add them to the private bottles variable
+ */
+void BottleManager::CreateWineBottles(std::vector<string> bottleDirs)
+{
+  for(string prefix: bottleDirs) {
+    std::cout << prefix;
+  }
+}
+
+/**
+ * \brief Set the current selected bottle, the one you are working with
+ * TODO: Should this be managed by the manager or GUI?
+ */
+void BottleManager::SetCurrentBottle(WineBottle* bottle)
+{
   current_bottle = bottle;
 }

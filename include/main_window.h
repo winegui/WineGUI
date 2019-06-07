@@ -80,4 +80,5 @@ private:
   void CreateRightPanel();
 
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* row, Gtk::ListBoxRow* before);
+  static string str_tolower(string s);
 };

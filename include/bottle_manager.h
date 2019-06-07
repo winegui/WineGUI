@@ -50,6 +50,7 @@ private:
   std::vector<WineBottle> bottles;
   WineBottle* current_bottle;
 
-  void ReadBottles();
+  std::vector<string> ReadBottles();
+  void CreateWineBottles(std::vector<string> bottleDirs);
   void SetCurrentBottle(WineBottle* bottle);
 };

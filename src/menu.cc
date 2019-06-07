@@ -64,7 +64,6 @@ Menu::Menu()
 Menu::~Menu() {
 }
 
-
 /**
  * \brief Helper method for creating a menu with an image
  * \return GTKWidget menu item pointer

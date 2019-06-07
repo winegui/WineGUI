@@ -20,6 +20,7 @@
  */
 #include "main_window.h"
 
+#include <algorithm>
 #include "signal_dispatcher.h"
 
 /**
@@ -49,13 +50,13 @@ MainWindow::MainWindow(Menu& menu)
 
   // Move this code to the controller!
   std::vector<WineBottle> bottles;
-  bottles.push_back(*new WineBottle("Windows 10 (32bit)", "v5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM"));
-  bottles.push_back(*new WineBottle("Windows 10 (64bit)", BottleTypes::Windows10, BottleTypes::win64, "v5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
-  bottles.push_back(*new WineBottle("Steam Bottle", BottleTypes::Windows7, BottleTypes::win32, "v5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
+  bottles.push_back(*new WineBottle("Windows 10 (32bit)", "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM"));
+  bottles.push_back(*new WineBottle("Windows 10 (64bit)", BottleTypes::Windows10, BottleTypes::win64, "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
+  bottles.push_back(*new WineBottle("Steam Bottle", BottleTypes::Windows7, BottleTypes::win32, "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
   SetWineBottles(bottles);
 
   // Move this code to the controller as well!
-  SetDetailedInfo(*new WineBottle("Steam Bottle", BottleTypes::Windows10, BottleTypes::win64, "v4.0.1", "~/.winegui/prefixes/win7_64", "~/.winegui/prefixes/win7_64/dosdevices/c:/", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
+  SetDetailedInfo(*new WineBottle("Steam Bottle", BottleTypes::Windows10, BottleTypes::win64, "4.0.1", "~/.winegui/prefixes/win7_64", "~/.winegui/prefixes/win7_64/dosdevices/c:/", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
 
   // Using a Vertical box container
   add(vbox);
@@ -95,11 +96,20 @@ void MainWindow::SetWineBottles(std::vector<WineBottle> bottles)
 {
   for (const WineBottle& bottle : bottles)
   {
-    Glib::ustring name = bottle.name();
+    // To lower case
+    string windows = str_tolower(BottleTypes::toString(bottle.windows()));
+    // Remove spaces
+    windows.erase(std::remove_if(
+      std::begin(windows), std::end(windows),
+     [l = std::locale{}](auto ch) { return std::isspace(ch, l); }
+    ), end(windows));
     Glib::ustring bit = BottleTypes::toString(bottle.bit());
+    Glib::ustring filename = windows + "_" + bit + ".png";
+    Glib::ustring name = bottle.name();
 
+    // Set left side of the GUI
     Gtk::Image* image = Gtk::manage(new Gtk::Image());
-    image->set("../images/windows/10_" + bit + ".png");
+    image->set("../images/windows/" + filename);
     image->set_margin_top(8);
     image->set_margin_end(8);
     image->set_margin_bottom(8);
@@ -142,11 +152,12 @@ void MainWindow::SetWineBottles(std::vector<WineBottle> bottles)
  */
 void MainWindow::SetDetailedInfo(WineBottle bottle)
 {
+  // Set right side of the GUI
   name.set_text(bottle.name());
   Glib::ustring windows = BottleTypes::toString(bottle.windows());
   windows += " (" + BottleTypes::toString(bottle.bit()) + "-bit)";
   window_version.set_text(windows);
-  wine_version.set_text(bottle.wine_version());
+  wine_version.set_text("v" + bottle.wine_version());
   wine_location.set_text(bottle.wine_location());
   c_drive_location.set_text(bottle.wine_c_drive());
   wine_last_changed.set_text(bottle.wine_last_changed());
@@ -336,4 +347,14 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
   }
 }
 
-
+/**
+ * \brief String to lower string helper method
+ * \param[in] string that needs lower case
+ * \return lower case string
+ */
+string MainWindow::str_tolower(string s) {
+    std::transform(s.begin(), s.end(), s.begin(), 
+      [](unsigned char c){ return std::tolower(c); }
+    );
+    return s;
+}

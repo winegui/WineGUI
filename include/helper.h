@@ -33,21 +33,21 @@ using std::string;
 class Helper
 {
 public:
-  static string retrieveName(const string prefix_path);
-  static string retrieveWindowsOSVersion(const string prefix_path);
-  static BottleTypes::Bit retrieveSystemBit(const string prefix_path);
-  static BottleTypes::AudioDriver retrieveAudioDriver(const string prefix_path);
-  static string retrieveVirtualDesktop(const string prefix_path);
-  static string retrieveLastWineUpdate(const string prefix_path);
-  static bool retrieveWineStatus(const string prefix_path);
-  static string retrieveCLetterDrive(const string prefix_path);
-  static bool exists(const string& prefix_path);
-  static std::vector<string> retrieveBottles(const string& prefix_path);
-  static string retrieveWineVersion();
+  static string GetName(const string prefix_path);
+  static string GetWindowsOSVersion(const string prefix_path);
+  static BottleTypes::Bit GetSystemBit(const string prefix_path);
+  static BottleTypes::AudioDriver GetAudioDriver(const string prefix_path);
+  static string GetVirtualDesktop(const string prefix_path);
+  static string GetLastWineUpdate(const string prefix_path);
+  static bool GetWineStatus(const string prefix_path);
+  static string GetCLetterDrive(const string prefix_path);
+  static bool Exists(const string& prefix_path);
+  static std::vector<string> GetBottles(const string& prefix_path);
+  static string GetWineVersion();
 private:
-  static string exec(const char* cmd);
-  static void setWinePrefix(const string prefix_path);
-  static void removeWinePrefix();
-  static std::vector<string> readFile(const string file_path);
-  static std::vector<string> split(const string& s, char delimiter);
+  static string Exec(const char* cmd);
+  static void SetWinePrefix(const string prefix_path);
+  static void RemoveWinePrefix();
+  static std::vector<string> ReadFile(const string file_path);
+  static std::vector<string> Split(const string& s, char delimiter);
 };

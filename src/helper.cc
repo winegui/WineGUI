@@ -35,14 +35,14 @@
 #include <glibmm/fileutils.h>
 
 /**
- * \brief Retrieve Wine Bottle Name from config
- * \return Name
+ * \brief Get Wine Bottle Name from configuration file (if possible)
+ * \return Bottle name
  */
-string Helper::retrieveName(const string prefix_path)
+string Helper::GetName(const string prefix_path)
 {
   try
   {
-    std::vector<std::string> config = readFile(prefix_path + "/.winegui.conf");
+    std::vector<std::string> config = ReadFile(prefix_path + "/.winegui.conf");
     for(std::vector<std::string>::iterator config_line = config.begin(); config_line != config.end(); ++config_line) {
       auto delimiterPos = (*config_line).find("=");
       auto name = (*config_line).substr(0, delimiterPos);
@@ -56,19 +56,19 @@ string Helper::retrieveName(const string prefix_path)
   {
     // Do nothing, continue
   }
-  // Fall-back, get last directory name of path
+  // Fall-back, Get last directory name of path
   std::filesystem::path path = std::filesystem::u8path(prefix_path);
   return (*path.end()).u8string();
 }
 
 /**
- * \brief Retrieve current Windows OS version
+ * \brief Get current Windows OS version
  * \return Return the Windows OS version
  */
-string Helper::retrieveWindowsOSVersion(const string prefix_path)
+string Helper::GetWindowsOSVersion(const string prefix_path)
 {
   string command = "cat " + prefix_path + "/system.reg | grep -m 1 '\"ProductName\"=' | cut -d '=' -f2 | sed 's/\"//g'";
-  string result = exec(command.c_str());
+  string result = Exec(command.c_str());
   if(result != "") {
     return result;
   } else {
@@ -77,13 +77,13 @@ string Helper::retrieveWindowsOSVersion(const string prefix_path)
 }
 
 /**
- * \brief Retrieve system processor bit (32/64). Throw error when not found.
+ * \brief Get system processor bit (32/64). Throw error when not found.
  * \return 32-bit or 64-bit
  */
-BottleTypes::Bit Helper::retrieveSystemBit(const string prefix_path)
+BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 {
   string command = "cat " + prefix_path + "/system.reg | grep -m 1 '#arch' | cut -d '=' -f2";
-  string result = exec(command.c_str());
+  string result = Exec(command.c_str());
   if(result == "win32") {
     return BottleTypes::Bit::win32;
   } else if(result == "win64") {
@@ -94,13 +94,13 @@ BottleTypes::Bit Helper::retrieveSystemBit(const string prefix_path)
 }
 
 /**
- * \brief Retrieve Audio driver
+ * \brief Get Audio driver
  * \return Audio Driver (eg. alsa/coreaudio/oss/pulse)
  */
-BottleTypes::AudioDriver Helper::retrieveAudioDriver(const string prefix_path)
+BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
 {
   string command = "cat " + prefix_path + "/user.reg | grep -m 1 '\"Audio\"=' | cut -d '=' -f2 | sed 's/\"//g'";
-  string result = exec(command.c_str());
+  string result = Exec(command.c_str());
   if(result == "pulse") {
     return BottleTypes::AudioDriver::pulseaudio;
   } else if(result == "alsa") {
@@ -117,13 +117,13 @@ BottleTypes::AudioDriver Helper::retrieveAudioDriver(const string prefix_path)
 }
 
 /**
- * \brief Retrieve emulation resolution
+ * \brief Get emulation resolution
  * \return Return the virtual desktop resolution or 'disabled' when disabled fully.
  */
-string Helper::retrieveVirtualDesktop(const string prefix_path)
+string Helper::GetVirtualDesktop(const string prefix_path)
 {
   string command = "cat " + prefix_path + "/user.reg | grep -m 1 '\"Default\"=' | cut -d '=' -f2 | sed 's/\"//g'";
-  string result = exec(command.c_str());
+  string result = Exec(command.c_str());
   if(result != "") {
     return result;
   } else {
@@ -132,12 +132,12 @@ string Helper::retrieveVirtualDesktop(const string prefix_path)
 }
 
 /**
- * \brief Retrieve the date/time of the last time the Wine Inf file was updated
+ * \brief Get the date/time of the last time the Wine Inf file was updated
  * \return Date/time of last update
  */
-string Helper::retrieveLastWineUpdate(const string prefix_path)
+string Helper::GetLastWineUpdate(const string prefix_path)
 {
-  std::vector<string> epoch_time = readFile(prefix_path + "/.update-timestamp");
+  std::vector<string> epoch_time = ReadFile(prefix_path + "/.update-timestamp");
   if(epoch_time.size() > 1) {
     string time = epoch_time.at(0);
     time_t secsSinceEpoch = strtoul(time.c_str(), NULL, 0);
@@ -151,13 +151,13 @@ string Helper::retrieveLastWineUpdate(const string prefix_path)
 }
 
 /**
- * \brief Retrieve Wine Status (is Bottle ready or not)
+ * \brief Get Wine Status (is Bottle ready or not)
  * \return True if everything is OK, otherwise false
  */
-bool Helper::retrieveWineStatus(const string prefix_path)
+bool Helper::GetWineStatus(const string prefix_path)
 {
-  setWinePrefix(prefix_path);
-  string result = exec("wine cmd /Q /C ver");
+  SetWinePrefix(prefix_path);
+  string result = Exec("wine cmd /Q /C ver");
   // TODO: check exit code
   // Currenty only check on non-zero string
   if(result !="") {
@@ -168,13 +168,13 @@ bool Helper::retrieveWineStatus(const string prefix_path)
 }
 
 /**
- * \brief Retrieve C:\ Drive location
+ * \brief Get C:\ Drive location
  * \return Location of C:\ location under unix
  */
-string Helper::retrieveCLetterDrive(const string prefix_path)
+string Helper::GetCLetterDrive(const string prefix_path)
 {
-  setWinePrefix(prefix_path);
-  string result = exec("wine winepath C:");
+  SetWinePrefix(prefix_path);
+  string result = Exec("wine winepath C:");
   // TODO: check exit code
   if(result !="") {
     return result;
@@ -187,12 +187,12 @@ string Helper::retrieveCLetterDrive(const string prefix_path)
  * \brief Check if *directory* exists or not
  * \return true if exists, otherwise false
  */
-bool Helper::exists(const string& prefix_path)
+bool Helper::Exists(const string& prefix_path)
 {    
   return Glib::file_test(prefix_path, Glib::FileTest::FILE_TEST_IS_DIR);
 }
 
-std::vector<string> Helper::retrieveBottles(const string& prefix_path)
+std::vector<string> Helper::GetBottles(const string& prefix_path)
 {
   std::vector<std::string> r;
   Glib::Dir dir(prefix_path);
@@ -201,7 +201,7 @@ std::vector<string> Helper::retrieveBottles(const string& prefix_path)
   {
     auto path = Glib::build_filename(prefix_path, name);
     if(Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR)) {
-      r.push_back(name);
+      r.push_back(path);
     }
     name = dir.read_name();
   }
@@ -210,14 +210,14 @@ std::vector<string> Helper::retrieveBottles(const string& prefix_path)
 
 
 /**
- * \brief Retrieve Wine version
+ * \brief Get Wine version
  * \return Return the wine version
  */
-string Helper::retrieveWineVersion()
+string Helper::GetWineVersion()
 {
-  string result = exec("wine --version");
+  string result = Exec("wine --version");
   if(result != "") {
-    std::vector<string> results = split(result, '-');
+    std::vector<string> results = Split(result, '-');
     if(results.size() > 2) {
       return results.at(1);
     } else {
@@ -232,7 +232,7 @@ string Helper::retrieveWineVersion()
  * \brief Execute command on terminal. Return output.
  * \return Terminal stdout
  */
-string Helper::exec(const char* cmd) {
+string Helper::Exec(const char* cmd) {
   // Max 128 characters
   std::array<char, 128> buffer;
   string result;
@@ -247,7 +247,7 @@ string Helper::exec(const char* cmd) {
   return result;
 }
 
-void Helper::setWinePrefix(const string prefix_path) {
+void Helper::SetWinePrefix(const string prefix_path) {
   char environ_variable[] = "WINEPREFIX=";
   strcat(environ_variable, prefix_path.c_str());
   int res = putenv(environ_variable);
@@ -256,7 +256,7 @@ void Helper::setWinePrefix(const string prefix_path) {
   }
 }
 
-void Helper::removeWinePrefix() {
+void Helper::RemoveWinePrefix() {
   int res = unsetenv("WINEPREFIX");
   if(res != 0) {
     throw std::runtime_error("Can't unset wine prefix environment variable");
@@ -267,7 +267,7 @@ void Helper::removeWinePrefix() {
  * \brief Read data from file and returns it.
  * \return Data from file
  */
-std::vector<string> Helper::readFile(const string file_path)
+std::vector<string> Helper::ReadFile(const string file_path)
 {
   std::vector<string> output;
   std::ifstream myfile(file_path);
@@ -289,7 +289,7 @@ std::vector<string> Helper::readFile(const string file_path)
  * \brief Split string by delimiter
  * \return Array of strings
  */
-std::vector<string> Helper::split(const string& s, char delimiter)
+std::vector<string> Helper::Split(const string& s, char delimiter)
 {
    std::vector<string> tokens;
    std::string token;
