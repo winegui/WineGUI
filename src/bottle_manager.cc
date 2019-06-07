@@ -47,15 +47,11 @@ void BottleManager::ReadBottles() {
   // Continue
   if(Helper::exists(WINE_PREFIX)) {
 
+    std::vector<string> bottleDirectories = Helper::retrieveBottles(WINE_PREFIX);
   }
   else {
     mainWindow.ShowErrorMessage("Configuration directory not found (could not create):\n" + WINE_PREFIX);
   }
-
-  //std::vector<string> bottles = Helper::retrieveBottles("home/melroy/");
-  
-  //catch(const fs::filesystem_error& e)
-
 }
 
 void BottleManager::SetCurrentBottle(WineBottle* bottle) {

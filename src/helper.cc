@@ -31,6 +31,8 @@
 #include <cstring>
 #include <array>
 #include <glibmm.h>
+#include <giomm/file.h>
+#include <glibmm/fileutils.h>
 
 /**
  * \brief Retrieve Wine Bottle Name from config
@@ -181,18 +183,28 @@ string Helper::retrieveCLetterDrive(const string prefix_path)
   }
 }
 
+/**
+ * \brief Check if *directory* exists or not
+ * \return true if exists, otherwise false
+ */
 bool Helper::exists(const string& prefix_path)
 {    
   return Glib::file_test(prefix_path, Glib::FileTest::FILE_TEST_IS_DIR);
 }
 
-
 std::vector<string> Helper::retrieveBottles(const string& prefix_path)
 {
   std::vector<std::string> r;
-  for(auto& p : std::filesystem::recursive_directory_iterator(prefix_path))
-    if(p.status().type() == std::filesystem::file_type::directory)
-      r.push_back(p.path().string());
+  Glib::Dir dir(prefix_path);
+  auto name = dir.read_name();
+  while(!name.empty())
+  {
+    auto path = Glib::build_filename(prefix_path, name);
+    if(Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR)) {
+      r.push_back(name);
+    }
+    name = dir.read_name();
+  }
   return r;
 }
 
