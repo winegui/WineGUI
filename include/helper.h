@@ -2,7 +2,7 @@
  * Copyright (c) 2019 WineGUI
  *
  * \file    helper.h
- * \brief   Helper CLI class
+ * \brief   Helper class for Bottle Manager and CLI
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,44 +20,34 @@
  */
 #pragma once
 
-#include <fstream>
-#include <ctime>
-#include <iomanip>
-#include <cstdio>
-#include <iostream>
-#include <memory>
-#include <stdexcept>
-#include <filesystem>
 #include <string>
-#include <cstring>
-#include <array>
 #include <vector>
-
 #include "bottle_types.h"
 
 using std::string;
 
-
 /**
  * \class Helper
- * \brief Provide some helper methods for CLI interaction
+ * \brief Provide some helper methods for Bottle Manager and CLI
  */
 class Helper
 {
 public:
-  static string retrieveName(string prefix_path);
-  static string retrieveWindowsOSVersion(string prefix_path);
-  static BottleTypes::Bit retrieveSystemBit(string prefix_path);
-  static BottleTypes::AudioDriver retrieveAudioDriver(string prefix_path);
-  static string retrieveVirtualDesktop(string prefix_path);
-  static string retrieveLastWineUpdate(string prefix_path);
-  static bool retrieveWineStatus(string prefix_path);
-  static string retrieveCLetterDrive(string prefix_path);
+  static string retrieveName(const string prefix_path);
+  static string retrieveWindowsOSVersion(const string prefix_path);
+  static BottleTypes::Bit retrieveSystemBit(const string prefix_path);
+  static BottleTypes::AudioDriver retrieveAudioDriver(const string prefix_path);
+  static string retrieveVirtualDesktop(const string prefix_path);
+  static string retrieveLastWineUpdate(const string prefix_path);
+  static bool retrieveWineStatus(const string prefix_path);
+  static string retrieveCLetterDrive(const string prefix_path);
+  static bool exists(const string& prefix_path);
+  static std::vector<string> retrieveBottles(const string& prefix_path);
   static string retrieveWineVersion();
 private:
   static string exec(const char* cmd);
-  static void setWinePrefix(string prefix_path);
+  static void setWinePrefix(const string prefix_path);
   static void removeWinePrefix();
-  static std::vector<string> readFile(string file_path);
+  static std::vector<string> readFile(const string file_path);
   static std::vector<string> split(const string& s, char delimiter);
 };

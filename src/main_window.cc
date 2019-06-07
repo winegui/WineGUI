@@ -155,6 +155,17 @@ void MainWindow::SetDetailedInfo(WineBottle bottle)
 }
 
 /**
+ * \brief Just show an error message
+ * TODO: add custom string as input
+ */
+void MainWindow::ShowErrorMessage()
+{
+  Gtk::MessageDialog* dialog = Gtk::manage(new Gtk::MessageDialog(*this, "An error has occurred!", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK));
+  dialog->set_modal(Gtk::DialogFlags::DIALOG_DESTROY_WITH_PARENT);
+  dialog->run();
+}
+
+/**
  * \brief Create left side of the GUI
  */
 void MainWindow::CreateLeftPanel()

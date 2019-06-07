@@ -46,7 +46,7 @@ public:
 
   void SetWineBottles(std::vector<WineBottle> bottles);
   void SetDetailedInfo(WineBottle bottle);
-  void ShowAbout();
+  void ShowErrorMessage();
   
 protected:
   // Child widgets

@@ -21,12 +21,42 @@
 #include "bottle_manager.h"
 #include "main_window.h"
 
+#include <iostream>
+
 BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow) {
   current_bottle = NULL;
 
+  // TODO: Make it configurable via settings
+  WINE_PREFIX = Glib::get_home_dir() + "/.winegui/prefixes";
+  ReadBottles();
 }
 
 BottleManager::~BottleManager() {}
+
+/**
+ * \brief Read Wine bottles from disk
+ */
+void BottleManager::ReadBottles() {
+  if(!Helper::exists(WINE_PREFIX)) {
+    // Create directory if not exist yet
+    std::cout << "created!?" << std::endl;
+    if(g_mkdir_with_parents(WINE_PREFIX.c_str(), 0775) < 0 && errno != EEXIST) {
+      printf("Failed to create WineGUI directory \"%s\": %s\n", WINE_PREFIX.c_str(), g_strerror(errno));
+    }
+  }
+
+  // Continue
+  if(Helper::exists(WINE_PREFIX)) {
+  }
+  else {
+    signalConfigError();
+  }
+
+  //std::vector<string> bottles = Helper::retrieveBottles("home/melroy/");
+  
+  //catch(const fs::filesystem_error& e)
+
+}
 
 void BottleManager::SetCurrentBottle(WineBottle* bottle) {
   current_bottle = bottle;

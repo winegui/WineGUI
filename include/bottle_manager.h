@@ -21,7 +21,12 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <glibmm/main.h>
 #include "wine_bottle.h"
+#include "helper.h"
+
+using std::string;
 
 // Forward declaration
 class MainWindow;
@@ -37,11 +42,14 @@ public:
   virtual ~BottleManager();
 
   // Signals
+  sigc::signal<void> signalConfigError;
 
 private:
+  string WINE_PREFIX;
   MainWindow& mainWindow;
   std::vector<WineBottle> bottles;
   WineBottle* current_bottle;
 
+  void ReadBottles();
   void SetCurrentBottle(WineBottle* bottle);
 };

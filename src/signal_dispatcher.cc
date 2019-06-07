@@ -44,11 +44,12 @@ void SignalDispatcher::DispatchSignals()
 {
   menu.signalQuit.connect(sigc::mem_fun(*this, &SignalDispatcher::on_quit));
   menu.signalShowAbout.connect(sigc::mem_fun(about, &AboutDialog::show));
+  manager.signalConfigError.connect(sigc::mem_fun(*mainWindow, &MainWindow::ShowErrorMessage));
 }
 
 void SignalDispatcher::on_quit()
 {
-  // Signal hide main window
+  // Signal hide main window and therefor it closes the app
   hideMainWindow();
   // needed at all?
   //Gtk::Main::quit();
