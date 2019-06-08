@@ -26,6 +26,7 @@
  * \brief Bottle type enum definitions
  */
 struct BottleTypes {
+  inline static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
   enum Windows
   {
     Windows2003,

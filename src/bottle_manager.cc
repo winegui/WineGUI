@@ -97,14 +97,13 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
   // Retrieve detailed info for each wine bottle prefix
   for(string prefix: bottleDirs) {
     string name = Helper::GetName(prefix);
+    string virtualDesktop = Helper::GetVirtualDesktop(prefix);
     bool status = Helper::GetBottleStatus(prefix);
     BottleTypes::Windows windows = Helper::GetWindowsOSVersion(prefix);
     BottleTypes::Bit bit = Helper::GetSystemBit(prefix);
     string cDriveLocation = Helper::GetCLetterDrive(prefix);
-
     string lastTimeWineUpdated = Helper::GetLastWineUpdated(prefix);
     BottleTypes::AudioDriver audioDriver = Helper::GetAudioDriver(prefix);
-    string virtualDesktop = Helper::GetVirtualDesktop(prefix);
     
     WineBottle* bottle = new WineBottle(
       name,

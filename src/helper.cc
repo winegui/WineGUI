@@ -229,7 +229,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
       return value;
     } else {
       // If not found, it's disabled
-      return "Disabled";
+      return BottleTypes::VIRTUAL_DESKTOP_DISABLED;
     }
   } else {
     throw std::runtime_error("Could not determ Virtual Desktop");
@@ -261,6 +261,7 @@ string Helper::GetLastWineUpdated(const string prefix_path)
 
 /**
  * \brief Get Bottle Status (is Bottle ready or not)
+ * \param[in] prefix path
  * TODO: Maybe do not make this call blocking but async
  * \return True if everything is OK, otherwise false
  */
@@ -270,15 +271,11 @@ bool Helper::GetBottleStatus(const string prefix_path)
   // And check if system.reg is present (important Wine file)
   if(Helper::DirExists(prefix_path) &&
      Helper::FileExists(prefix_path + "/system.reg")) {
-    // Execute some test
-    string result = Exec(("WINEPREFIX=" + prefix_path + " wine cmd /Q /C ver").c_str());
-    // Check for 'Microsoft Windows' string present
-    if(result.find("Microsoft Windows") != string::npos) {
-      // All tests passed!
-      return true;
-    } else {
-      return false;
-    }
+      // This takes too long! Think about a better alternative?
+      //string result = Exec(("WINEPREFIX=" + prefix_path + " wine cmd /Q /C ver").c_str());
+      // Check for 'Microsoft Windows' string present
+      //if(result.find("Microsoft Windows") != string::npos) {
+    return true;
   } else {
     return false;
   }
