@@ -34,7 +34,6 @@
 #include <giomm/file.h>
 #include <glibmm/fileutils.h>
 
-
 /**
  * \brief Get the bottle directories within the given path
  * \param[in] Directory path to search in
@@ -190,7 +189,7 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
     }
   } else {
     throw std::runtime_error("Could not determ Audio driver");
-  }  
+  }
 }
 
 /**
@@ -199,12 +198,19 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
  */
 string Helper::GetVirtualDesktop(const string prefix_path)
 {
-  string command = "cat " + prefix_path + "/user.reg | grep -m 1 '\"Default\"=' | cut -d '=' -f2 | sed 's/\"//g'";
-  string result = Exec(command.c_str());
-  if(!result.empty()) {
-    return result;
+  string filename = prefix_path + "/user.reg";
+  string key = "\"Default\"=";
+  if(Helper::FileExists(filename)) {
+    string value = Helper::GetValueByKey(filename, key);
+    if(!value.empty()) {
+      // Return the resolution
+      return value;
+    } else {
+      // If not found, it's disabled
+      return "Disabled";
+    }
   } else {
-    return "disabled";
+    throw std::runtime_error("Could not determ Virtual Desktop");
   }
 }
 
@@ -214,17 +220,21 @@ string Helper::GetVirtualDesktop(const string prefix_path)
  */
 string Helper::GetLastWineUpdate(const string prefix_path)
 {
-  std::vector<string> epoch_time = ReadFile(prefix_path + "/.update-timestamp");
-  if(epoch_time.size() >= 1) {
-    string time = epoch_time.at(0);
-    time_t secsSinceEpoch = strtoul(time.c_str(), NULL, 0);
-    std::stringstream stringStream;
-    stringStream << std::put_time(localtime(&secsSinceEpoch), "%c") << std::endl;
-    return stringStream.str();
+  string filename = prefix_path + "/.update-timestamp";
+  if(Helper::FileExists(filename)) {
+    std::vector<string> epoch_time = ReadFile(filename);
+    if(epoch_time.size() >= 1) {
+      string time = epoch_time.at(0);
+      time_t secsSinceEpoch = strtoul(time.c_str(), NULL, 0);
+      std::stringstream stringStream;
+      stringStream << std::put_time(localtime(&secsSinceEpoch), "%c") << std::endl;
+      return stringStream.str();
+    } else {
+      throw std::runtime_error("Could not determ last time wine update timestamp");
+    }
   } else {
-    return "- Unknown -";
+    throw std::runtime_error("Could not determ last time wine update timestamp");
   }
-   
 }
 
 /**
@@ -259,18 +269,21 @@ bool Helper::GetBottleStatus(const string prefix_path)
  */
 string Helper::GetCLetterDrive(const string prefix_path)
 {
+  // Check if Wine dir exists & system.reg file
   if(Helper::DirExists(prefix_path) &&
      Helper::FileExists(prefix_path + "/system.reg")) {
     SetWinePrefix(prefix_path);
     string result = Exec("wine winepath C:");
     // TODO: check exit code
     if(!result.empty()) {
+      // Remove new lines
+      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
       return result;
     } else {
       throw std::runtime_error("Could not find C:\\ drive location");
     }
   } else {
-    return "- Unkown C: drive -";
+    return "- Unkown C:\\ drive -";
   }
 }
 
