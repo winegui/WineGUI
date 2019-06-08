@@ -56,6 +56,28 @@ std::vector<string> Helper::GetBottlesPaths(const string& dir_path)
 }
 
 /**
+ * \brief Get Wine version from CLI
+ * \return Return the wine version
+ */
+string Helper::GetWineVersion()
+{
+  string result = Exec("wine --version");
+  if(!result.empty()) {
+    std::vector<string> results = Split(result, '-');
+    if(results.size() >= 2) {
+      string result = results.at(1);;
+      // Remove new lines
+      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+      return result;
+    } else {
+      throw std::runtime_error("Could not determ wine version?\nSomething went wrong.");
+    }
+  } else {
+    throw std::runtime_error("Could not receive Wine version!\n\nIs wine installed?");
+  }
+}
+
+/**
  * \brief Get Wine Bottle Name from configuration file (if possible)
  * \return Bottle name
  */
@@ -227,7 +249,7 @@ string Helper::GetLastWineUpdate(const string prefix_path)
       string time = epoch_time.at(0);
       time_t secsSinceEpoch = strtoul(time.c_str(), NULL, 0);
       std::stringstream stringStream;
-      stringStream << std::put_time(localtime(&secsSinceEpoch), "%c") << std::endl;
+      stringStream << std::put_time(localtime(&secsSinceEpoch), "%c");
       return stringStream.str();
     } else {
       throw std::runtime_error("Could not determ last time wine update timestamp");
@@ -305,24 +327,6 @@ bool Helper::FileExists(const string& file_path)
   return Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR);
 }
 
-/**
- * \brief Get Wine version
- * \return Return the wine version
- */
-string Helper::GetWineVersion()
-{
-  string result = Exec("wine --version");
-  if(!result.empty()) {
-    std::vector<string> results = Split(result, '-');
-    if(results.size() >= 2) {
-      return results.at(1);
-    } else {
-      throw std::runtime_error("Could not determ wine version?\nSomething went wrong.");
-    }
-  } else {
-    throw std::runtime_error("Could not receive Wine version!\n\nIs wine installed?");
-  }
-}
 
 /**
  * \brief Execute command on terminal. Return output.

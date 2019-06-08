@@ -101,6 +101,7 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
     std::cout << BottleTypes::toString(bit) << std::endl;
     std::cout << BottleTypes::toString(driver) << std::endl;
     std::cout << virtualDesktop << std::endl;
+    std::cout << wineVersion << std::endl;
     std::cout << lastTimeWineUpdate << std::endl;
   }
 }
