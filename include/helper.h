@@ -33,16 +33,17 @@ using std::string;
 class Helper
 {
 public:
+  static std::vector<string> GetBottlesPaths(const string& dir_path);
   static string GetName(const string prefix_path);
   static string GetWindowsOSVersion(const string prefix_path);
   static BottleTypes::Bit GetSystemBit(const string prefix_path);
   static BottleTypes::AudioDriver GetAudioDriver(const string prefix_path);
   static string GetVirtualDesktop(const string prefix_path);
   static string GetLastWineUpdate(const string prefix_path);
-  static bool GetWineStatus(const string prefix_path);
+  static bool GetBottleStatus(const string prefix_path);
   static string GetCLetterDrive(const string prefix_path);
-  static bool Exists(const string& prefix_path);
-  static std::vector<string> GetBottles(const string& prefix_path);
+  static bool DirExists(const string& dir_path);
+  static bool FileExists(const string& filer_path);
   static string GetWineVersion();
 private:
   static string Exec(const char* cmd);

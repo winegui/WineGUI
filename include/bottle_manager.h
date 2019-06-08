@@ -45,7 +45,7 @@ public:
   sigc::signal<void> placeholder;
 
 private:
-  string WINE_PREFIX;
+  string BOTTLE_LOCATION;
   MainWindow& mainWindow;
   std::vector<WineBottle> bottles;
   WineBottle* current_bottle;

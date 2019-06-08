@@ -34,12 +34,13 @@ class WineBottle
 {
 public:
   WineBottle(
-    string name,  
+    string name, 
     string wine_version,
     string wine_location,
     string wine_c_drive,
     string wine_last_changed)
   : _name(name),
+    _is_status_ok(true),
     _win(BottleTypes::Windows::WindowsXP),
     _bit(BottleTypes::Bit::win32),
     _wine_version(wine_version),
@@ -51,6 +52,7 @@ public:
 
   WineBottle(
     string name,
+    bool status,
     BottleTypes::Windows win,
     BottleTypes::Bit bit,
     string wine_version,
@@ -60,6 +62,7 @@ public:
     BottleTypes::AudioDriver audio_driver,
     string virtual_desktop)
   : _name(name),
+    _is_status_ok(status),
     _win(win),
     _bit(bit),
     _wine_version(wine_version),
@@ -73,6 +76,8 @@ public:
 
   void name(const string name) { _name = name; };
   const string& name() const { return _name; };
+  void status(const bool status) { _is_status_ok = status; };
+  const bool status() const { return _is_status_ok; };
   void windows(const BottleTypes::Windows win) { _win = win; };
   const BottleTypes::Windows windows() const { return _win; };
   void bit(const BottleTypes::Bit bit) { _bit = bit; };
@@ -94,6 +99,7 @@ public:
 
 private:
   string _name;
+  bool _is_status_ok;
   BottleTypes::Windows _win;
   BottleTypes::Bit _bit;
   string _wine_version;

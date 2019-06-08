@@ -34,6 +34,27 @@
 #include <glibmm/fileutils.h>
 
 /**
+ * \brief Get the bottle directories within the given path
+ * \param[in] Directory path to search in
+ * \return vector of strings of found directories (*full paths*)
+ */
+std::vector<string> Helper::GetBottlesPaths(const string& dir_path)
+{
+  std::vector<std::string> r;
+  Glib::Dir dir(dir_path);
+  auto name = dir.read_name();
+  while(!name.empty())
+  {
+    auto path = Glib::build_filename(dir_path, name);
+    if(Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR)) {
+      r.push_back(path);
+    }
+    name = dir.read_name();
+  }
+  return r;
+}
+
+/**
  * \brief Get Wine Bottle Name from configuration file (if possible)
  * \return Bottle name
  */
@@ -162,17 +183,29 @@ string Helper::GetLastWineUpdate(const string prefix_path)
 }
 
 /**
- * \brief Get Wine Status (is Bottle ready or not)
+ * \brief Get Bottle Status (is Bottle ready or not)
+ * TODO: Maybe do not make this call blocking but async
  * \return True if everything is OK, otherwise false
  */
-bool Helper::GetWineStatus(const string prefix_path)
+bool Helper::GetBottleStatus(const string prefix_path)
 {
-  SetWinePrefix(prefix_path);
-  string result = Exec("wine cmd /Q /C ver");
-  // TODO: check exit code
-  // Currenty only check on non-zero string
-  if(result !="") {
-    return true;
+  // First check if directory exists at all (otherwise any wine command will create a new bottle)
+  if(Helper::DirExists(prefix_path)) {
+    // Check if some key important Wine file is present (system.reg)
+    if(Helper::FileExists(prefix_path + "/system.reg")) {
+      // Execute some test
+      SetWinePrefix(prefix_path);
+      string result = Exec("wine cmd /Q /C ver");
+      // TODO: check exit code
+      // Currenty only check on non-zero string
+      if(result !="") {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
   } else {
     return false;
   }
@@ -198,27 +231,19 @@ string Helper::GetCLetterDrive(const string prefix_path)
  * \brief Check if *directory* exists or not
  * \return true if exists, otherwise false
  */
-bool Helper::Exists(const string& prefix_path)
+bool Helper::DirExists(const string& dir_path)
 {    
-  return Glib::file_test(prefix_path, Glib::FileTest::FILE_TEST_IS_DIR);
+  return Glib::file_test(dir_path, Glib::FileTest::FILE_TEST_IS_DIR);
 }
 
-std::vector<string> Helper::GetBottles(const string& prefix_path)
-{
-  std::vector<std::string> r;
-  Glib::Dir dir(prefix_path);
-  auto name = dir.read_name();
-  while(!name.empty())
-  {
-    auto path = Glib::build_filename(prefix_path, name);
-    if(Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR)) {
-      r.push_back(path);
-    }
-    name = dir.read_name();
-  }
-  return r;
+/**
+ * \brief Check if *file* exists or not
+ * \return true if exists, otherwise false
+ */
+bool Helper::FileExists(const string& file_path)
+{    
+  return Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR);
 }
-
 
 /**
  * \brief Get Wine version
@@ -259,9 +284,8 @@ string Helper::Exec(const char* cmd) {
 }
 
 void Helper::SetWinePrefix(const string prefix_path) {
-  char environ_variable[] = "WINEPREFIX=";
-  strcat(environ_variable, prefix_path.c_str());
-  int res = putenv(environ_variable);
+  string prefix = "WINEPREFIX=" + prefix_path;
+  int res = putenv((char*)prefix.c_str());
   if(res != 0) {
     throw std::runtime_error("Can't set wine prefix environment variable");
   }

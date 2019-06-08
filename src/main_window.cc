@@ -51,12 +51,12 @@ MainWindow::MainWindow(Menu& menu)
   // Move this code to the controller!
   std::vector<WineBottle> bottles;
   bottles.push_back(*new WineBottle("Windows 10 (32bit)", "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM"));
-  bottles.push_back(*new WineBottle("Windows 10 (64bit)", BottleTypes::Windows10, BottleTypes::win64, "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
-  bottles.push_back(*new WineBottle("Steam Bottle", BottleTypes::Windows7, BottleTypes::win32, "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
+  bottles.push_back(*new WineBottle("Windows 10 (64bit)", true, BottleTypes::Windows10, BottleTypes::win64, "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
+  bottles.push_back(*new WineBottle("Steam Bottle", false, BottleTypes::Windows7, BottleTypes::win32, "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
   SetWineBottles(bottles);
 
   // Move this code to the controller as well!
-  SetDetailedInfo(*new WineBottle("Steam Bottle", BottleTypes::Windows10, BottleTypes::win64, "4.0.1", "~/.winegui/prefixes/win7_64", "~/.winegui/prefixes/win7_64/dosdevices/c:/", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
+  SetDetailedInfo(*new WineBottle("Steam Bottle", true, BottleTypes::Windows10, BottleTypes::win64, "4.0.1", "~/.winegui/prefixes/win7_64", "~/.winegui/prefixes/win7_64/dosdevices/c:/", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
 
   // Using a Vertical box container
   add(vbox);
@@ -106,6 +106,7 @@ void MainWindow::SetWineBottles(std::vector<WineBottle> bottles)
     Glib::ustring bit = BottleTypes::toString(bottle.bit());
     Glib::ustring filename = windows + "_" + bit + ".png";
     Glib::ustring name = bottle.name();
+    bool status = bottle.status();
 
     // Set left side of the GUI
     Gtk::Image* image = Gtk::manage(new Gtk::Image());
@@ -119,12 +120,18 @@ void MainWindow::SetWineBottles(std::vector<WineBottle> bottles)
     name_label->set_xalign(0.0);
     name_label->set_markup("<span size=\"medium\"><b>" + name + "</b></span>");
    
+    Glib::ustring status_text = "Ready";
     Gtk::Image* status_icon = Gtk::manage(new Gtk::Image());
-    status_icon->set(READY_IMAGE);
+    if(status) {
+      status_icon->set(READY_IMAGE);
+    } else {
+      status_text = "Not Ready";
+      status_icon->set(NOT_READY_IMAGE);
+    }
     status_icon->set_size_request(2, -1);
     status_icon->set_halign(Gtk::Align::ALIGN_START);
 
-    Gtk::Label* status_label = Gtk::manage(new Gtk::Label("Ready"));
+    Gtk::Label* status_label = Gtk::manage(new Gtk::Label(status_text));
     status_label->set_xalign(0.0);
 
     Gtk::Grid* row = Gtk::manage(new Gtk::Grid());

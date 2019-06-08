@@ -26,7 +26,7 @@
 #include "wine_bottle.h"
 
 #define READY_IMAGE "../images/ready.png"
-#define WRONG_IMAGE "../images/wrong.png"
+#define NOT_READY_IMAGE "../images/not_ready.png"
 
 using std::string;
 

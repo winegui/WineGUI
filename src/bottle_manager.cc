@@ -33,7 +33,7 @@ BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
   current_bottle = NULL;
 
   // TODO: Make it configurable via settings
-  WINE_PREFIX = Glib::get_home_dir() + "/.winegui/prefixes";
+  BOTTLE_LOCATION = Glib::get_home_dir() + "/.winegui/prefixes";
   
   // Read wine version (is always the same for all bottles atm)
   string wineVersion = "";
@@ -60,19 +60,19 @@ BottleManager::~BottleManager() {}
  */
 std::vector<string> BottleManager::ReadBottles()
 {
-  if(!Helper::Exists(WINE_PREFIX)) {
+  if(!Helper::DirExists(BOTTLE_LOCATION)) {
     // Create directory if not exist yet
-    if(g_mkdir_with_parents(WINE_PREFIX.c_str(), 0775) < 0 && errno != EEXIST) {
-      printf("Failed to create WineGUI directory \"%s\": %s\n", WINE_PREFIX.c_str(), g_strerror(errno));
+    if(g_mkdir_with_parents(BOTTLE_LOCATION.c_str(), 0775) < 0 && errno != EEXIST) {
+      printf("Failed to create WineGUI directory \"%s\": %s\n", BOTTLE_LOCATION.c_str(), g_strerror(errno));
     }
   }
 
-  if(Helper::Exists(WINE_PREFIX)) {
+  if(Helper::DirExists(BOTTLE_LOCATION)) {
     // Continue
-    return Helper::GetBottles(WINE_PREFIX);
+    return Helper::GetBottlesPaths(BOTTLE_LOCATION);
   }
   else {
-    mainWindow.ShowErrorMessage("Configuration directory not found (could not create):\n" + WINE_PREFIX);
+    mainWindow.ShowErrorMessage("Configuration directory not found (could not create):\n" + BOTTLE_LOCATION);
   }
   // Otherwise empty
   return std::vector<string>();
@@ -86,7 +86,9 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
   // Retrieve detailed info for each wine bottle prefix
   for(string prefix: bottleDirs) {
     string name = Helper::GetName(prefix);
-    std::cout << name;
+    bool status = Helper::GetBottleStatus(prefix);
+    std::cout << name << std::endl;
+    std::cout << status << std::endl;
   }
 }
 
