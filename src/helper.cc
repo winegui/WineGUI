@@ -122,6 +122,12 @@ string Helper::GetName(const string prefix_path)
  */
 BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
 {
+  // TODO: system.reg is not the last up to date info! And missing the ProductName for older verions!
+  // However, "WINEPREFIX=~/.bla wine cmd /C ver" does show the actual current Windows version
+  // The registery (incl. wine reg query) is not sufficient enough, since older NT versions doesn't list the ProductName
+  // Internal translation is needed (eg. v6.1 = Windows 7), see: https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions
+  // Source code: https://github.com/wine-mirror/wine/blob/master/dlls/ntdll/version.c
+  // Too bad running a wine command (even just 'ver') takes quite some time for some reason.
   string filename = prefix_path + "/system.reg";
   string key = "\"ProductName\"=\"";
   if(Helper::FileExists(filename)) {
