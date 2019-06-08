@@ -27,7 +27,6 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#include <filesystem>
 #include <cstring>
 #include <array>
 #include <glibmm.h>
@@ -56,9 +55,21 @@ string Helper::GetName(const string prefix_path)
   {
     // Do nothing, continue
   }
-  // Fall-back, Get last directory name of path
-  std::filesystem::path path = std::filesystem::u8path(prefix_path);
-  return (*path.end()).u8string();
+
+  // Fall-back: get last directory name of path string
+  string name = "- Unknown -";
+  std::size_t last_index = prefix_path.find_last_of("/\\");
+  if (last_index != string::npos) {
+    // Get only the last directory name from path (+ remove slash)
+    name = prefix_path.substr(last_index+1);
+    // Remove dot if present (=hidden dir)
+    size_t dot_index = name.find_first_of('.');
+    if(dot_index == 0) {
+      // Remove dot at start
+      name = name.substr(1);
+    }
+  }
+  return name;
 }
 
 /**
@@ -218,13 +229,13 @@ string Helper::GetWineVersion()
   string result = Exec("wine --version");
   if(result != "") {
     std::vector<string> results = Split(result, '-');
-    if(results.size() > 2) {
+    if(results.size() >= 2) {
       return results.at(1);
     } else {
-      throw std::runtime_error("Could not receive Wine version");
+      throw std::runtime_error("Could not determ wine version?\nSomething went wrong.");
     }
   } else {
-    return "Unknown Windows OS";
+    throw std::runtime_error("Could not receive Wine version!\n\nIs wine installed?");
   }
 }
 

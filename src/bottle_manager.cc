@@ -22,6 +22,7 @@
 #include "main_window.h"
 
 #include <iostream>
+#include <stdexcept>
 
 /**
  * \brief Constructor
@@ -35,11 +36,18 @@ BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
   WINE_PREFIX = Glib::get_home_dir() + "/.winegui/prefixes";
   
   // Read wine version (is always the same for all bottles atm)
-  //string wineVersion = Helper::GetWineVersion();
-
+  string wineVersion = "";
+  try
+  {
+    wineVersion = Helper::GetWineVersion();
+  }
+  catch (const std::runtime_error& error)
+  {
+      mainWindow.ShowErrorMessage(error.what());
+  }
   // Read bottles from disk and create classes from it
   std::vector<string> bottleDirs = ReadBottles();
-  CreateWineBottles(bottleDirs);
+  CreateWineBottles(wineVersion, bottleDirs);
 }
 
 /**
@@ -73,10 +81,12 @@ std::vector<string> BottleManager::ReadBottles()
 /**
  * \brief Create wine bottle classes and add them to the private bottles variable
  */
-void BottleManager::CreateWineBottles(std::vector<string> bottleDirs)
+void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bottleDirs)
 {
+  // Retrieve detailed info for each wine bottle prefix
   for(string prefix: bottleDirs) {
-    std::cout << prefix;
+    string name = Helper::GetName(prefix);
+    std::cout << name;
   }
 }
 
