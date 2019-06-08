@@ -87,8 +87,15 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
   for(string prefix: bottleDirs) {
     string name = Helper::GetName(prefix);
     bool status = Helper::GetBottleStatus(prefix);
+    BottleTypes::Windows windows = Helper::GetWindowsOSVersion(prefix);
+    BottleTypes::Bit bit = Helper::GetSystemBit(prefix);
+    BottleTypes::AudioDriver driver = Helper::GetAudioDriver(prefix);
+    
     std::cout << name << std::endl;
     std::cout << status << std::endl;
+    std::cout << BottleTypes::toString(windows) << std::endl;
+    std::cout << BottleTypes::toString(bit) << std::endl;
+    std::cout << BottleTypes::toString(driver) << std::endl;
   }
 }
 

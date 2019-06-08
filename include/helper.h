@@ -35,7 +35,7 @@ class Helper
 public:
   static std::vector<string> GetBottlesPaths(const string& dir_path);
   static string GetName(const string prefix_path);
-  static string GetWindowsOSVersion(const string prefix_path);
+  static BottleTypes::Windows GetWindowsOSVersion(const string prefix_path);
   static BottleTypes::Bit GetSystemBit(const string prefix_path);
   static BottleTypes::AudioDriver GetAudioDriver(const string prefix_path);
   static string GetVirtualDesktop(const string prefix_path);
@@ -47,6 +47,7 @@ public:
   static string GetWineVersion();
 private:
   static string Exec(const char* cmd);
+  static string GetValueByKey(const string& filename, const string& key);
   static void SetWinePrefix(const string prefix_path);
   static void RemoveWinePrefix();
   static std::vector<string> ReadFile(const string file_path);

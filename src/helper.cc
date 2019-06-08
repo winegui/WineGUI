@@ -28,10 +28,12 @@
 #include <memory>
 #include <stdexcept>
 #include <cstring>
+#include <fcntl.h>
 #include <array>
 #include <glibmm.h>
 #include <giomm/file.h>
 #include <glibmm/fileutils.h>
+
 
 /**
  * \brief Get the bottle directories within the given path
@@ -67,7 +69,7 @@ string Helper::GetName(const string prefix_path)
       auto delimiterPos = (*config_line).find("=");
       auto name = (*config_line).substr(0, delimiterPos);
       auto value = (*config_line).substr(delimiterPos + 1);
-      if (name == "name") {
+      if (name.compare("name") == 0) {
         return value;
       }
     }    
@@ -97,31 +99,63 @@ string Helper::GetName(const string prefix_path)
  * \brief Get current Windows OS version
  * \return Return the Windows OS version
  */
-string Helper::GetWindowsOSVersion(const string prefix_path)
+BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
 {
-  string command = "cat " + prefix_path + "/system.reg | grep -m 1 '\"ProductName\"=' | cut -d '=' -f2 | sed 's/\"//g'";
-  string result = Exec(command.c_str());
-  if(result != "") {
-    return result;
+  string filename = prefix_path + "/system.reg";
+  string key = "\"ProductName\"=\"";
+  if(Helper::FileExists(filename)) {
+    string value = Helper::GetValueByKey(filename, key);
+    if(!value.empty()) {
+      if(value.compare("Microsoft Windows 2003") == 0) {
+        return BottleTypes::Windows::Windows2003;
+      } else if(value.compare("Microsoft Windows 2008") == 0) {
+        return BottleTypes::Windows::Windows2008;
+      } else if(value.compare("Microsoft Windows XP") == 0) {
+        return BottleTypes::Windows::WindowsXP;
+      } else if(value.compare("Microsoft Windows Vista") == 0) {
+        return BottleTypes::Windows::WindowsVista;
+      } else if(value.compare("Microsoft Windows 7") == 0) {
+        return BottleTypes::Windows::Windows7;
+      } else if(value.compare("Microsoft Windows 8") == 0) {
+        return BottleTypes::Windows::Windows8;
+      } else if(value.compare("Microsoft Windows 8.1") == 0) {
+        return BottleTypes::Windows::Windows81;
+      } else if(value.compare("Microsoft Windows 10") == 0) {
+        return BottleTypes::Windows::Windows10;        
+      } else {
+        throw std::runtime_error("Could not determ Windows OS version (Unknown version).");
+      }
+    } else {
+      throw std::runtime_error("Could not determ Windows OS version.");    
+    }
   } else {
-    return " - Unknown Windows OS - ";
+    throw std::runtime_error("Could not determ Windows OS version.");    
   }
 }
 
 /**
- * \brief Get system processor bit (32/64). Throw error when not found.
+ * \brief Get system processor bit (32/64). *Throw runtime_error* when not found.
  * \return 32-bit or 64-bit
  */
 BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 {
-  string command = "cat " + prefix_path + "/system.reg | grep -m 1 '#arch' | cut -d '=' -f2";
-  string result = Exec(command.c_str());
-  if(result == "win32") {
-    return BottleTypes::Bit::win32;
-  } else if(result == "win64") {
-    return BottleTypes::Bit::win64;
+  string filename = prefix_path + "/system.reg";
+  string key = "#arch=";
+  if(Helper::FileExists(filename)) {
+    string value = Helper::GetValueByKey(filename, key);
+    if(!value.empty()) {
+      if(value.compare("win32") == 0) {
+        return BottleTypes::Bit::win32;
+      } else if(value.compare("win64") == 0) {
+        return BottleTypes::Bit::win64;
+      } else {
+        throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64?).");
+      }
+    } else {
+      throw std::runtime_error("Could not determ Windows system bit.");
+    }    
   } else {
-    throw std::runtime_error("Could not determ Windows system bit.");
+    throw std::runtime_error("Could not determ Windows system bit.\nDoes the Wine bottle exists?");
   }
 }
 
@@ -131,21 +165,32 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
  */
 BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
 {
-  string command = "cat " + prefix_path + "/user.reg | grep -m 1 '\"Audio\"=' | cut -d '=' -f2 | sed 's/\"//g'";
-  string result = Exec(command.c_str());
-  if(result == "pulse") {
-    return BottleTypes::AudioDriver::pulseaudio;
-  } else if(result == "alsa") {
-    return BottleTypes::AudioDriver::alsa;
-  } else if(result == "oss") {
-    return BottleTypes::AudioDriver::oss;
-  } else if(result == "coreaudio") {
-    return BottleTypes::AudioDriver::coreaudio;
-  } else if(result == "disabled") {
-    return BottleTypes::AudioDriver::disabled;
+  string filename = prefix_path + "/user.reg";
+  string key = "\"Audio\"=";
+  if(Helper::FileExists(filename)) {
+    string value = Helper::GetValueByKey(filename, key);
+    if(!value.empty()) {
+      if(value.compare("pulse") == 0) {
+        return BottleTypes::AudioDriver::pulseaudio;
+      } else if(value.compare("alsa") == 0) {
+        return BottleTypes::AudioDriver::alsa;
+      } else if(value.compare("oss") == 0) {
+        return BottleTypes::AudioDriver::oss;
+      } else if(value.compare("coreaudio") == 0) {
+        return BottleTypes::AudioDriver::coreaudio;
+      } else if(value.compare("disabled") == 0) {
+        return BottleTypes::AudioDriver::disabled;
+      } else {
+        // Otherwise just return PulseAudio
+        return BottleTypes::AudioDriver::pulseaudio;
+      }
+    } else {
+      // If not found, it is set to PulseAudio
+      return BottleTypes::AudioDriver::pulseaudio;
+    }
   } else {
-    return BottleTypes::AudioDriver::pulseaudio;
-  }
+    throw std::runtime_error("Could not determ Audio driver");
+  }  
 }
 
 /**
@@ -156,7 +201,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
 {
   string command = "cat " + prefix_path + "/user.reg | grep -m 1 '\"Default\"=' | cut -d '=' -f2 | sed 's/\"//g'";
   string result = Exec(command.c_str());
-  if(result != "") {
+  if(!result.empty()) {
     return result;
   } else {
     return "disabled";
@@ -170,7 +215,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
 string Helper::GetLastWineUpdate(const string prefix_path)
 {
   std::vector<string> epoch_time = ReadFile(prefix_path + "/.update-timestamp");
-  if(epoch_time.size() > 1) {
+  if(epoch_time.size() >= 1) {
     string time = epoch_time.at(0);
     time_t secsSinceEpoch = strtoul(time.c_str(), NULL, 0);
     std::stringstream stringStream;
@@ -190,19 +235,16 @@ string Helper::GetLastWineUpdate(const string prefix_path)
 bool Helper::GetBottleStatus(const string prefix_path)
 {
   // First check if directory exists at all (otherwise any wine command will create a new bottle)
-  if(Helper::DirExists(prefix_path)) {
-    // Check if some key important Wine file is present (system.reg)
-    if(Helper::FileExists(prefix_path + "/system.reg")) {
-      // Execute some test
-      SetWinePrefix(prefix_path);
-      string result = Exec("wine cmd /Q /C ver");
-      // TODO: check exit code
-      // Currenty only check on non-zero string
-      if(result !="") {
-        return true;
-      } else {
-        return false;
-      }
+  // And check if system.reg is present (important Wine file)
+  if(Helper::DirExists(prefix_path) &&
+     Helper::FileExists(prefix_path + "/system.reg")) {
+    // Execute some test
+    SetWinePrefix(prefix_path);
+    string result = Exec("wine cmd /Q /C ver");
+    // Check for 'Microsoft Windows' string present
+    if(result.find("Microsoft Windows") != string::npos) {
+      // All tests passed!
+      return true;
     } else {
       return false;
     }
@@ -217,13 +259,18 @@ bool Helper::GetBottleStatus(const string prefix_path)
  */
 string Helper::GetCLetterDrive(const string prefix_path)
 {
-  SetWinePrefix(prefix_path);
-  string result = Exec("wine winepath C:");
-  // TODO: check exit code
-  if(result !="") {
-    return result;
+  if(Helper::DirExists(prefix_path) &&
+     Helper::FileExists(prefix_path + "/system.reg")) {
+    SetWinePrefix(prefix_path);
+    string result = Exec("wine winepath C:");
+    // TODO: check exit code
+    if(!result.empty()) {
+      return result;
+    } else {
+      throw std::runtime_error("Could not find C:\\ drive location");
+    }
   } else {
-    throw std::runtime_error("Could not find C:\\ drive location");
+    return "- Unkown C: drive -";
   }
 }
 
@@ -252,7 +299,7 @@ bool Helper::FileExists(const string& file_path)
 string Helper::GetWineVersion()
 {
   string result = Exec("wine --version");
-  if(result != "") {
+  if(!result.empty()) {
     std::vector<string> results = Split(result, '-');
     if(results.size() >= 2) {
       return results.at(1);
@@ -281,6 +328,49 @@ string Helper::Exec(const char* cmd) {
     result += buffer.data();
   }
   return result;
+}
+
+/**
+ * \brief Get the value by key from registery
+ * \param[in] Filename location path (eg. reg file)
+ * \param[in] Key pattern to search for
+ * \return The value or empty if not found
+ */
+string Helper::GetValueByKey(const string& filename, const string& key)
+{
+  string matchStr = "";
+  FILE *f;
+  char buffer[100];
+  const char *pattern = key.c_str();
+  char* match_pch = NULL;
+  if ((f = fopen(filename.c_str(), "r")) == NULL) {
+    throw std::runtime_error("File could not be opened");
+  }
+  while (fgets(buffer, sizeof(buffer), f)) {
+    // Put the strstr match char point in 'match_pch'
+    // It returns the pointer to the first occurrence until the null character (end of line)
+    if ((match_pch = strstr(buffer, pattern)) != NULL) {
+      // Match!
+      break;
+    }
+  }
+  fclose(f);
+
+  if(match_pch != NULL) {
+    // Create string
+    matchStr = string(match_pch);
+
+    std::vector<string> results = Helper::Split(matchStr, '=');
+    if(results.size() >= 2 ) {
+      matchStr = results.at(1);
+      // TODO: Combine the removals in a single iteration?
+      // Remove double-quote chars
+      matchStr.erase(std::remove(matchStr.begin(), matchStr.end(), '\"' ), matchStr.end());
+      // Remove new lines
+      matchStr.erase(std::remove(matchStr.begin(), matchStr.end(), '\n'), matchStr.end());
+    }
+  }
+  return matchStr;
 }
 
 void Helper::SetWinePrefix(const string prefix_path) {
