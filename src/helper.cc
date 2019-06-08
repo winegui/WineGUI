@@ -166,7 +166,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
  */
 BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 {
-  string filename = prefix_path + "/system.reg";
+  string filename = prefix_path + "/user.reg";
   string key = "#arch=";
   if(Helper::FileExists(filename)) {
     string value = Helper::GetValueByKey(filename, key);
