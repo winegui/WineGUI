@@ -37,8 +37,6 @@ MainWindow::MainWindow(Menu& menu)
   set_default_size(1000, 600);
   set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
-
-
   // Add menu to box (top), no expand/fill
   vbox.pack_start(menu, false, false);
 
@@ -275,7 +273,7 @@ void MainWindow::CreateRightPanel()
   detail_grid.attach_next_to(wine_location, *wine_location_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Wine C drive location
-  Gtk::Label* c_drive_location_label = Gtk::manage(new Gtk::Label("C: Drive Location:", 0.0, -1));
+  Gtk::Label* c_drive_location_label = Gtk::manage(new Gtk::Label("C:\\ Drive Location:", 0.0, -1));
   c_drive_location.set_xalign(0.0);
   detail_grid.attach(*c_drive_location_label, 0, 5, 2, 1);
   detail_grid.attach_next_to(c_drive_location, *c_drive_location_label, Gtk::PositionType::POS_RIGHT, 1, 1);

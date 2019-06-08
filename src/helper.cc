@@ -271,8 +271,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
   if(Helper::DirExists(prefix_path) &&
      Helper::FileExists(prefix_path + "/system.reg")) {
     // Execute some test
-    SetWinePrefix(prefix_path);
-    string result = Exec("wine cmd /Q /C ver");
+    string result = Exec(("WINEPREFIX=" + prefix_path + " wine cmd /Q /C ver").c_str());
     // Check for 'Microsoft Windows' string present
     if(result.find("Microsoft Windows") != string::npos) {
       // All tests passed!
@@ -291,21 +290,13 @@ bool Helper::GetBottleStatus(const string prefix_path)
  */
 string Helper::GetCLetterDrive(const string prefix_path)
 {
-  // Check if Wine dir exists & system.reg file
+  // Determ C location
+  string c_drive_location = prefix_path + "/dosdevices/c:/";
   if(Helper::DirExists(prefix_path) &&
-     Helper::FileExists(prefix_path + "/system.reg")) {
-    SetWinePrefix(prefix_path);
-    string result = Exec("wine winepath C:");
-    // TODO: check exit code
-    if(!result.empty()) {
-      // Remove new lines
-      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      return result;
-    } else {
-      throw std::runtime_error("Could not find C:\\ drive location");
-    }
+     Helper::DirExists(c_drive_location)) {
+       return c_drive_location;
   } else {
-    return "- Unkown C:\\ drive -";
+    return "- Unknown C:\\ drive location -";
   }
 }
 
@@ -388,21 +379,6 @@ string Helper::GetValueByKey(const string& filename, const string& key)
     }
   }
   return matchStr;
-}
-
-void Helper::SetWinePrefix(const string prefix_path) {
-  string prefix = "WINEPREFIX=" + prefix_path;
-  int res = putenv((char*)prefix.c_str());
-  if(res != 0) {
-    throw std::runtime_error("Can't set wine prefix environment variable");
-  }
-}
-
-void Helper::RemoveWinePrefix() {
-  int res = unsetenv("WINEPREFIX");
-  if(res != 0) {
-    throw std::runtime_error("Can't unset wine prefix environment variable");
-  }
 }
 
 /**

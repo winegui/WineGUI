@@ -48,8 +48,6 @@ public:
 private:
   static string Exec(const char* cmd);
   static string GetValueByKey(const string& filename, const string& key);
-  static void SetWinePrefix(const string prefix_path);
-  static void RemoveWinePrefix();
   static std::vector<string> ReadFile(const string file_path);
   static std::vector<string> Split(const string& s, char delimiter);
 };

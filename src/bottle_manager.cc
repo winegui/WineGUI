@@ -47,15 +47,17 @@ BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
   }
   // Read bottles from disk and create classes from it
   std::vector<string> bottleDirs = ReadBottles();
-  CreateWineBottles(wineVersion, bottleDirs);
+  if(bottleDirs.size() > 0) {
+    CreateWineBottles(wineVersion, bottleDirs);
+  
+    if(bottles.size() > 0)
+    {
+      // Update main Window
+      mainWindow.SetWineBottles(bottles);
 
-  if(bottles.size() > 0)
-  {
-    // Update main Window
-    mainWindow.SetWineBottles(bottles);
-
-    // Set first element as active (details)    
-    mainWindow.SetDetailedInfo(bottles.at(0));
+      // Set first element as active (details)    
+      mainWindow.SetDetailedInfo(bottles.at(0));
+    }
   }
 }
 
@@ -99,6 +101,7 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
     BottleTypes::Windows windows = Helper::GetWindowsOSVersion(prefix);
     BottleTypes::Bit bit = Helper::GetSystemBit(prefix);
     string cDriveLocation = Helper::GetCLetterDrive(prefix);
+
     string lastTimeWineUpdated = Helper::GetLastWineUpdated(prefix);
     BottleTypes::AudioDriver audioDriver = Helper::GetAudioDriver(prefix);
     string virtualDesktop = Helper::GetVirtualDesktop(prefix);
