@@ -48,6 +48,15 @@ BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
   // Read bottles from disk and create classes from it
   std::vector<string> bottleDirs = ReadBottles();
   CreateWineBottles(wineVersion, bottleDirs);
+
+  if(bottles.size() > 0)
+  {
+    // Update main Window
+    mainWindow.SetWineBottles(bottles);
+
+    // Set first element as active (details)    
+    mainWindow.SetDetailedInfo(bottles.at(0));
+  }
 }
 
 /**
@@ -87,22 +96,26 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
   for(string prefix: bottleDirs) {
     string name = Helper::GetName(prefix);
     bool status = Helper::GetBottleStatus(prefix);
-    string cDriveLocation = Helper::GetCLetterDrive(prefix);
     BottleTypes::Windows windows = Helper::GetWindowsOSVersion(prefix);
     BottleTypes::Bit bit = Helper::GetSystemBit(prefix);
-    BottleTypes::AudioDriver driver = Helper::GetAudioDriver(prefix);
+    string cDriveLocation = Helper::GetCLetterDrive(prefix);
+    string lastTimeWineUpdated = Helper::GetLastWineUpdated(prefix);
+    BottleTypes::AudioDriver audioDriver = Helper::GetAudioDriver(prefix);
     string virtualDesktop = Helper::GetVirtualDesktop(prefix);
-    string lastTimeWineUpdate = Helper::GetLastWineUpdate(prefix);
-        
-    std::cout << name << std::endl;
-    std::cout << status << std::endl;
-    std::cout << cDriveLocation << std::endl;
-    std::cout << BottleTypes::toString(windows) << std::endl;
-    std::cout << BottleTypes::toString(bit) << std::endl;
-    std::cout << BottleTypes::toString(driver) << std::endl;
-    std::cout << virtualDesktop << std::endl;
-    std::cout << wineVersion << std::endl;
-    std::cout << lastTimeWineUpdate << std::endl;
+    
+    WineBottle* bottle = new WineBottle(
+      name,
+      status,
+      windows,
+      bit,
+      wineVersion,
+      prefix,
+      cDriveLocation,
+      lastTimeWineUpdated,
+      audioDriver,
+      virtualDesktop);
+
+    bottles.push_back(*bottle);
   }
 }
 

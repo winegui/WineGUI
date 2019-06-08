@@ -37,6 +37,8 @@ MainWindow::MainWindow(Menu& menu)
   set_default_size(1000, 600);
   set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
+
+
   // Add menu to box (top), no expand/fill
   vbox.pack_start(menu, false, false);
 
@@ -47,16 +49,6 @@ MainWindow::MainWindow(Menu& menu)
   // Create rest to vbox
   CreateLeftPanel();
   CreateRightPanel();
-
-  // Move this code to the controller!
-  std::vector<WineBottle> bottles;
-  bottles.push_back(*new WineBottle("Windows 10 (32bit)", "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM"));
-  bottles.push_back(*new WineBottle("Windows 10 (64bit)", true, BottleTypes::Windows10, BottleTypes::win64, "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
-  bottles.push_back(*new WineBottle("Steam Bottle", false, BottleTypes::Windows7, BottleTypes::win32, "5.1", "~/.fadsad", "~/.sadasd", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
-  SetWineBottles(bottles);
-
-  // Move this code to the controller as well!
-  SetDetailedInfo(*new WineBottle("Steam Bottle", true, BottleTypes::Windows10, BottleTypes::win64, "4.0.1", "~/.winegui/prefixes/win7_64", "~/.winegui/prefixes/win7_64/dosdevices/c:/", "07-07-2019 2:10AM", BottleTypes::AudioDriver::pulseaudio, "Disabled"));
 
   // Using a Vertical box container
   add(vbox);
@@ -92,9 +84,9 @@ void MainWindow::on_hide_window()
  * \brief Set a vector of bottles to the left panel
  * \param[in] bottles - WineBottle vector array
  */
-void MainWindow::SetWineBottles(std::vector<WineBottle> bottles)
+void MainWindow::SetWineBottles(const std::vector<WineBottle>& bottles)
 {
-  for (const WineBottle& bottle : bottles)
+  for(const WineBottle& bottle : bottles)
   {
     // To lower case
     string windows = str_tolower(BottleTypes::toString(bottle.windows()));
@@ -151,6 +143,8 @@ void MainWindow::SetWineBottles(std::vector<WineBottle> bottles)
     listbox.add(*row);
     row->show();
   }
+  // Update show
+  show_all_children();
 }
 
 /**

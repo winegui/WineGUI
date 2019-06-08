@@ -240,7 +240,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
  * \brief Get the date/time of the last time the Wine Inf file was updated
  * \return Date/time of last update
  */
-string Helper::GetLastWineUpdate(const string prefix_path)
+string Helper::GetLastWineUpdated(const string prefix_path)
 {
   string filename = prefix_path + "/.update-timestamp";
   if(Helper::FileExists(filename)) {

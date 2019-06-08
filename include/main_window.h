@@ -44,7 +44,7 @@ public:
   virtual ~MainWindow();
   void SetDispatcher(SignalDispatcher& signalDispatcher);
 
-  void SetWineBottles(std::vector<WineBottle> bottles);
+  void SetWineBottles(const std::vector<WineBottle>& bottles);
   void SetDetailedInfo(WineBottle bottle);
   void ShowErrorMessage(const Glib::ustring& message);
   

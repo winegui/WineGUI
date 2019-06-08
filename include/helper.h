@@ -40,7 +40,7 @@ public:
   static BottleTypes::Bit GetSystemBit(const string prefix_path);
   static BottleTypes::AudioDriver GetAudioDriver(const string prefix_path);
   static string GetVirtualDesktop(const string prefix_path);
-  static string GetLastWineUpdate(const string prefix_path);
+  static string GetLastWineUpdated(const string prefix_path);
   static bool GetBottleStatus(const string prefix_path);
   static string GetCLetterDrive(const string prefix_path);
   static bool DirExists(const string& dir_path);
