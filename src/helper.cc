@@ -34,6 +34,48 @@
 #include <giomm/file.h>
 #include <glibmm/fileutils.h>
 
+// Reg keys
+static const string keyName9x = "Software\\Microsoft\\Windows\\CurrentVersion";
+static const string keyNameNT = "Software\\Microsoft\\Windows NT\\CurrentVersion";
+
+// Reg names
+static const string nameNTVersion = "CurrentVersion";
+static const string nameNTBuild  = "CurrentBuildNumber";
+static const string name9xVersion = "VersionNumber";
+
+// Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L49
+// Build number is tranformed to decimal number
+static const struct
+{
+    const string version;
+    const string description;
+    unsigned int versionNumber;
+    unsigned int buildNumber;
+    const string servicePack;
+    const BottleTypes::Bit bitOnly;
+} win_versions[] =
+{
+  {"win10",    "Windows 10",      10.0,  17134, ""},
+  {"win81",     "Windows 8.1",     6.3,  9600,  ""},
+  {"win8",      "Windows 8",       6.2,  9200,  ""},
+  {"win2008r2", "Windows 2008 R2", 6.1,  7601, "SP1"},
+  {"win7",      "Windows 7",       6.1,  7601, "SP1"},
+  {"win2008",   "Windows 2008",    6.0,  6002, "SP2"},
+  {"vista",     "Windows Vista",   6.0,  6002, "SP2"},
+  {"win2003",   "Windows 2003",    5.2,  3790, "SP2"},
+  {"winxp64",   "Windows XP",      5.2,  3790, "SP2",  BottleTypes::Bit::win64},
+  {"winxp",     "Windows XP",      5.1,  2600, "SP3",  BottleTypes::Bit::win32},
+  {"win2k",     "Windows 2000",    5.0,  2195, "SP4",  BottleTypes::Bit::win32},
+  {"winme",     "Windows ME",      4.90, 3000,  "",    BottleTypes::Bit::win32},
+  {"win98",     "Windows 98",      4.10, 2222,  "",    BottleTypes::Bit::win32},
+  {"win95",     "Windows 95",      4.0,  950,   "",    BottleTypes::Bit::win32},
+  {"nt40",      "Windows NT 4.0",  4.0,  1381, "SP6a", BottleTypes::Bit::win32},
+  {"nt351",     "Windows NT 3.51", 3.51, 1057, "SP5",  BottleTypes::Bit::win32},
+  {"win31",     "Windows 3.1",     3.10, 0,    "",     BottleTypes::Bit::win32},
+  {"win30",     "Windows 3.0",     3.0,  0,    "",     BottleTypes::Bit::win32},
+  {"win20",     "Windows 2.0",     2.0,  0,    "",     BottleTypes::Bit::win32}
+};
+
 /**
  * \brief Get the bottle directories within the given path
  * \param[in] Directory path to search in
@@ -122,12 +164,8 @@ string Helper::GetName(const string prefix_path)
  */
 BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
 {
-  // TODO: system.reg is not the last up to date info! And missing the ProductName for older verions!
-  // However, "WINEPREFIX=~/.bla wine cmd /C ver" does show the actual current Windows version
-  // The registery (incl. wine reg query) is not sufficient enough, since older NT versions doesn't list the ProductName
-  // Internal translation is needed (eg. v6.1 = Windows 7), see: https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions
-  // Source code: https://github.com/wine-mirror/wine/blob/master/dlls/ntdll/version.c
-  // Too bad running a wine command (even just 'ver') takes quite some time for some reason.
+  // TODO: Try first reg keyNameNT (with nameNTVersion & nameNTBuild names) and otherwise reg keyName9x (with name9xVersion name)
+  
   string filename = prefix_path + "/system.reg";
   string key = "\"ProductName\"=\"";
   if(Helper::FileExists(filename)) {
@@ -193,6 +231,9 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
 {
   string filename = prefix_path + "/user.reg";
+  // Reg key: "Software\\Wine\\Drivers"
+  // Value name: "Audio"
+
   string key = "\"Audio\"=";
   if(Helper::FileExists(filename)) {
     string value = Helper::GetValueByKey(filename, key);
@@ -226,6 +267,13 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
  */
 string Helper::GetVirtualDesktop(const string prefix_path)
 {
+  // TODO: Virtual desktop is disabled once:
+  // The user.reg key: "Software\\Wine\\Explorer" Value name: "Desktop" is NOT set.
+  // If this value name is set (store the value of "Desktop"...), virtual desktop is enabled.
+  //
+  // The resolution can be found in Key: Software\\Wine\\Explorer\\Desktops with the Value name set as value 
+  // (see above, "Default" is the default value). eg. "Default"="1920x1080"
+
   string filename = prefix_path + "/user.reg";
   string key = "\"Default\"=";
   if(Helper::FileExists(filename)) {
@@ -346,6 +394,7 @@ string Helper::Exec(const char* cmd) {
  * \param[in] Filename location path (eg. reg file)
  * \param[in] Key pattern to search for
  * \return The value or empty if not found
+ * TODO: Obsolete, implement GetRegValue() below instead! And move to GetRegValue
  */
 string Helper::GetValueByKey(const string& filename, const string& key)
 {
@@ -382,6 +431,18 @@ string Helper::GetValueByKey(const string& filename, const string& key)
     }
   }
   return matchStr;
+}
+
+/**
+ * \brief Get a value from the registery from disk
+ * \param[in] filename  - File of registery
+ * \param[in] keyName   - Full path of the subkey
+ * \param[in] valueName - Specifies the registery value name
+ */
+string Helper::GetRegValue(const string& filename, const string& keyName, const string& valueName)
+{
+  // TODO
+  return "";
 }
 
 /**
