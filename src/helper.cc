@@ -34,6 +34,11 @@
 #include <giomm/file.h>
 #include <glibmm/fileutils.h>
 
+// Reg files
+static const string SYSTEM_REG = "system.reg";
+static const string USER_REG = "user.reg";
+static const string USERDEF_REG = "userdef.reg";
+
 // Reg keys
 static const string keyName9x = "Software\\Microsoft\\Windows\\CurrentVersion";
 static const string keyNameNT = "Software\\Microsoft\\Windows NT\\CurrentVersion";
@@ -43,14 +48,19 @@ static const string nameNTVersion = "CurrentVersion";
 static const string nameNTBuild  = "CurrentBuildNumber";
 static const string name9xVersion = "VersionNumber";
 
+// Other files
+static const string WINEGUI_CONF = ".winegui.conf";
+static const string UPDATE_TIMESTAMP = ".update-timestamp";
+
+
 // Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L49
 // Build number is tranformed to decimal number
 static const struct
 {
     const string version;
     const string description;
-    unsigned int versionNumber;
-    unsigned int buildNumber;
+    double versionNumber;
+    double buildNumber;
     const string servicePack;
     const BottleTypes::Bit bitOnly;
 } win_versions[] =
@@ -127,7 +137,7 @@ string Helper::GetName(const string prefix_path)
 {
   try
   {
-    std::vector<std::string> config = ReadFile(prefix_path + "/.winegui.conf");
+    std::vector<std::string> config = ReadFile(Glib::build_filename(prefix_path, WINEGUI_CONF));
     for(std::vector<std::string>::iterator config_line = config.begin(); config_line != config.end(); ++config_line) {
       auto delimiterPos = (*config_line).find("=");
       auto name = (*config_line).substr(0, delimiterPos);
@@ -165,8 +175,8 @@ string Helper::GetName(const string prefix_path)
 BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
 {
   // TODO: Try first reg keyNameNT (with nameNTVersion & nameNTBuild names) and otherwise reg keyName9x (with name9xVersion name)
-  
-  string filename = prefix_path + "/system.reg";
+
+  string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
   string key = "\"ProductName\"=\"";
   if(Helper::FileExists(filename)) {
     string value = Helper::GetValueByKey(filename, key);
@@ -204,7 +214,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
  */
 BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 {
-  string filename = prefix_path + "/user.reg";
+  string filename = Glib::build_filename(prefix_path, USER_REG);
   string key = "#arch=";
   if(Helper::FileExists(filename)) {
     string value = Helper::GetValueByKey(filename, key);
@@ -230,7 +240,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
  */
 BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
 {
-  string filename = prefix_path + "/user.reg";
+  string filename = Glib::build_filename(prefix_path, USER_REG);
   // Reg key: "Software\\Wine\\Drivers"
   // Value name: "Audio"
 
@@ -274,7 +284,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
   // The resolution can be found in Key: Software\\Wine\\Explorer\\Desktops with the Value name set as value 
   // (see above, "Default" is the default value). eg. "Default"="1920x1080"
 
-  string filename = prefix_path + "/user.reg";
+  string filename = Glib::build_filename(prefix_path, USER_REG);
   string key = "\"Default\"=";
   if(Helper::FileExists(filename)) {
     string value = Helper::GetValueByKey(filename, key);
@@ -296,7 +306,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
  */
 string Helper::GetLastWineUpdated(const string prefix_path)
 {
-  string filename = prefix_path + "/.update-timestamp";
+  string filename = Glib::build_filename(prefix_path, UPDATE_TIMESTAMP);
   if(Helper::FileExists(filename)) {
     std::vector<string> epoch_time = ReadFile(filename);
     if(epoch_time.size() >= 1) {
@@ -324,7 +334,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
   // First check if directory exists at all (otherwise any wine command will create a new bottle)
   // And check if system.reg is present (important Wine file)
   if(Helper::DirExists(prefix_path) &&
-     Helper::FileExists(prefix_path + "/system.reg")) {
+     Helper::FileExists(Glib::build_filename(prefix_path, SYSTEM_REG))) {
       // This takes too long! Think about a better alternative?
       //string result = Exec(("WINEPREFIX=" + prefix_path + " wine cmd /Q /C ver").c_str());
       // Check for 'Microsoft Windows' string present
@@ -342,7 +352,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
 string Helper::GetCLetterDrive(const string prefix_path)
 {
   // Determ C location
-  string c_drive_location = prefix_path + "/dosdevices/c:/";
+  string c_drive_location = Glib::build_filename(prefix_path, "/dosdevices/c:/");
   if(Helper::DirExists(prefix_path) &&
      Helper::DirExists(c_drive_location)) {
        return c_drive_location;
@@ -403,34 +413,42 @@ string Helper::GetValueByKey(const string& filename, const string& key)
   char buffer[100];
   const char *pattern = key.c_str();
   char* match_pch = NULL;
-  if ((f = fopen(filename.c_str(), "r")) == NULL) {
-    throw std::runtime_error("File could not be opened");
-  }
-  while (fgets(buffer, sizeof(buffer), f)) {
-    // Put the strstr match char point in 'match_pch'
-    // It returns the pointer to the first occurrence until the null character (end of line)
-    if ((match_pch = strstr(buffer, pattern)) != NULL) {
-      // Match!
-      break;
-    }
-  }
-  fclose(f);
 
-  if(match_pch != NULL) {
-    // Create string
-    matchStr = string(match_pch);
-
-    std::vector<string> results = Helper::Split(matchStr, '=');
-    if(results.size() >= 2 ) {
-      matchStr = results.at(1);
-      // TODO: Combine the removals in a single iteration?
-      // Remove double-quote chars
-      matchStr.erase(std::remove(matchStr.begin(), matchStr.end(), '\"' ), matchStr.end());
-      // Remove new lines
-      matchStr.erase(std::remove(matchStr.begin(), matchStr.end(), '\n'), matchStr.end());
+  if(Helper::FileExists(filename)) 
+  {
+    if ((f = fopen(filename.c_str(), "r")) == NULL)
+    {
+      throw std::runtime_error("File could not be opened");
     }
+    while (fgets(buffer, sizeof(buffer), f)) {
+      // Put the strstr match char point in 'match_pch'
+      // It returns the pointer to the first occurrence until the null character (end of line)
+      if ((match_pch = strstr(buffer, pattern)) != NULL) {
+        // Match!
+        break;
+      }
+    }
+    fclose(f);
+
+    if(match_pch != NULL) {
+      // Create string
+      matchStr = string(match_pch);
+
+      std::vector<string> results = Helper::Split(matchStr, '=');
+      if(results.size() >= 2 ) {
+        matchStr = results.at(1);
+        // TODO: Combine the removals in a single iteration?
+        // Remove double-quote chars
+        matchStr.erase(std::remove(matchStr.begin(), matchStr.end(), '\"' ), matchStr.end());
+        // Remove new lines
+        matchStr.erase(std::remove(matchStr.begin(), matchStr.end(), '\n'), matchStr.end());
+      }
+    }
+    return matchStr;
   }
-  return matchStr;
+  else {
+    throw std::runtime_error("Registery file does not exists. Can not determ Windows settings.");
+  }
 }
 
 /**
