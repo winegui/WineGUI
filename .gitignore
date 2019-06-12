@@ -3,6 +3,7 @@ doc/doxygen
 
 # Build stuff
 build
+build_debug
 
 # CMake
 CMakeLists.txt.user
