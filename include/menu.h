@@ -38,8 +38,10 @@ public:
 protected:
   // Child widgets
   Gtk::MenuItem file;
+  Gtk::MenuItem view;
   Gtk::MenuItem help;
   Gtk::Menu file_submenu;
+  Gtk::Menu view_submenu;
   Gtk::Menu help_submenu;
   Gtk::SeparatorMenuItem separator1;
   Gtk::SeparatorMenuItem separator2;

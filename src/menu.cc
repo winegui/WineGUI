@@ -25,20 +25,27 @@
  */
 Menu::Menu()
 : file("_File", true),
+  view("_View", true),
   help("_Help", true)
 {
   // Add sub-menu's to menu items
   file.set_submenu(file_submenu);
+  view.set_submenu(view_submenu);
   help.set_submenu(help_submenu);
 
-  // Create Menu item with label & image, using a box
+  // File submenu
+  // Using text + image
   auto preferences = CreateImageMenuItem("Preferences", "preferences-other");
   auto save_item = CreateImageMenuItem("Save", "document-save");
   auto exit = CreateImageMenuItem("Exit", "application-exit");
   // Add appliaction quit signal to the exit button
   exit->signal_activate().connect(signalQuit);
-    
-  auto about = CreateImageMenuItem("About WineGUI...", "help-about");  
+  
+  // View submenu
+  auto refresh = CreateImageMenuItem("Refresh", "view-refresh");
+
+  // Help submenu
+  auto about = CreateImageMenuItem("About WineGUI...", "help-about");
   about->signal_activate().connect(signalShowAbout);
   // Template for creating a seperate method if addition actions are required:
   //    about->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_help_about));
@@ -50,11 +57,16 @@ Menu::Menu()
   file_submenu.append(*save_item);
   file_submenu.append(separator2);
   file_submenu.append(*exit);
+
+  // View menu
+  view_submenu.append(*refresh);
+
   // Help menu
   help_submenu.append(*about);
   
   // Add menu items to menu bar
   append(file);
+  append(view);
   append(help);
 }
 
