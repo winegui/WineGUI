@@ -98,7 +98,7 @@ std::vector<string> BottleManager::ReadBottles()
 void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bottleDirs)
 {
   string name = "";
-  string virtualDesktop = "";
+  string virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
   bool status = false;
   BottleTypes::Windows windows = BottleTypes::WindowsXP;
   BottleTypes::Bit bit = BottleTypes::win32;
@@ -110,12 +110,12 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
   for(string prefix: bottleDirs) {
     // Reset variables
     name = "";
-    virtualDesktop = "Disabled";
+    virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
     status = false;
     windows = BottleTypes::WindowsXP;
     bit = BottleTypes::win32;
     cDriveLocation = "- Unknown -";
-    lastTimeWineUpdated = " - Unkown -";
+    lastTimeWineUpdated = " - Unknown -";
     audioDriver = BottleTypes::pulseaudio;
 
     try {
