@@ -180,11 +180,11 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
   string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
   string version = "";
   string version9x = "";
-  if(!(version = Helper::GetRegValue(filename, keyNameNT, nameNTVersion))).empty())
+  if(!(version = Helper::GetRegValue(filename, keyNameNT, nameNTVersion)).empty())
   {
     string buildNumberNT = Helper::GetRegValue(filename, keyNameNT, nameNTBuild);
     // Find Windows version
-    for (int i = 0; i < sizeof(win_versions); i++)
+    for (unsigned long i = 0; i < sizeof(win_versions); i++)
     {
       string versionNumber = string(win_versions[i].versionNumber);
       string buildNumber = string(win_versions[i].buildNumber);
@@ -195,11 +195,11 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
       }
     }
   }
-  else if(!(version = Helper::GetRegValue(filename, keyName9x, name9xVersion)).empty())    
+  else if(!(version = Helper::GetRegValue(filename, keyName9x, name9xVersion)).empty())
   {
     string currentVersion = "";
     string currentBuildNumber = "";
-    vector<string> versionList = Split(version, '.');
+    std::vector<string> versionList = Split(version, '.');
     // Only get minor & major
     if(sizeof(versionList) >= 2) {
       currentVersion = versionList.at(0) + '.' + versionList.at(1);
