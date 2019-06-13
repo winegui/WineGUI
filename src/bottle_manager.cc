@@ -26,6 +26,7 @@
 
 /**
  * \brief Constructor
+ * \param mainWindow Address to the main Window
  */
 BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
 {
@@ -91,6 +92,8 @@ std::vector<string> BottleManager::ReadBottles()
 
 /**
  * \brief Create wine bottle classes and add them to the private bottles variable
+ * \param[in] wineVersion The current wine version used
+ * \param[in] bottleDirs  The list of bottle directories
  */
 void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bottleDirs)
 {
@@ -123,6 +126,7 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
 
 /**
  * \brief Set the current selected bottle, the one you are working with
+ * \param[in] bottle The bottle to be the current selected one
  * TODO: Should this be managed by the manager or GUI?
  */
 void BottleManager::SetCurrentBottle(WineBottle* bottle)

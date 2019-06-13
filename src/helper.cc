@@ -88,7 +88,7 @@ static const struct
 
 /**
  * \brief Get the bottle directories within the given path
- * \param[in] Directory path to search in
+ * \param[in] dir_path Path to search in
  * \return vector of strings of found directories (*full paths*)
  */
 std::vector<string> Helper::GetBottlesPaths(const string& dir_path)
@@ -131,6 +131,7 @@ string Helper::GetWineVersion()
 
 /**
  * \brief Get Wine Bottle Name from configuration file (if possible)
+ * \param[in] prefix_path The prefix directory path to the bottle prefix
  * \return Bottle name
  */
 string Helper::GetName(const string prefix_path)
@@ -170,6 +171,7 @@ string Helper::GetName(const string prefix_path)
 
 /**
  * \brief Get current Windows OS version
+ * \param[in] prefix_path The prefix directory path to the bottle prefix
  * \return Return the Windows OS version
  */
 BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
@@ -228,6 +230,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
 
 /**
  * \brief Get system processor bit (32/64). *Throw runtime_error* when not found.
+ * \param[in] prefix_path The prefix directory path to the bottle prefix
  * \return 32-bit or 64-bit
  */
 BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
@@ -251,6 +254,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 
 /**
  * \brief Get Audio driver
+ * \param[in] prefix_path The prefix directory path to the bottle prefix
  * \return Audio Driver (eg. alsa/coreaudio/oss/pulse)
  */
 BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
@@ -282,6 +286,7 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
 
 /**
  * \brief Get emulation resolution
+ * \param[in] prefix_path The prefix directory path to the bottle prefix
  * \return Return the virtual desktop resolution or 'disabled' when disabled fully.
  */
 string Helper::GetVirtualDesktop(const string prefix_path)
@@ -308,6 +313,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
 
 /**
  * \brief Get the date/time of the last time the Wine Inf file was updated
+ * \param[in] prefix_path The prefix directory path to the bottle prefix
  * \return Date/time of last update
  */
 string Helper::GetLastWineUpdated(const string prefix_path)
@@ -331,7 +337,7 @@ string Helper::GetLastWineUpdated(const string prefix_path)
 
 /**
  * \brief Get Bottle Status (is Bottle ready or not)
- * \param[in] prefix path
+ * \param[in] prefix_path The prefix directory path to the bottle prefix
  * TODO: Maybe do not make this call blocking but async
  * \return True if everything is OK, otherwise false
  */
@@ -354,6 +360,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
 
 /**
  * \brief Get C:\ Drive location
+ * \param[in] prefix_path The prefix directory path to the bottle prefix
  * \return Location of C:\ location under unix
  */
 string Helper::GetCLetterDrive(const string prefix_path)
@@ -370,6 +377,7 @@ string Helper::GetCLetterDrive(const string prefix_path)
 
 /**
  * \brief Check if *directory* exists or not
+ * \param[in] dir_path The directory to be checked for existence
  * \return true if exists, otherwise false
  */
 bool Helper::DirExists(const string& dir_path)
@@ -379,6 +387,7 @@ bool Helper::DirExists(const string& dir_path)
 
 /**
  * \brief Check if *file* exists or not
+ * \param[in] file_path The file to be checked for existence
  * \return true if exists, otherwise false
  */
 bool Helper::FileExists(const string& file_path)
@@ -389,6 +398,7 @@ bool Helper::FileExists(const string& file_path)
 
 /**
  * \brief Execute command on terminal. Return output.
+ * \param[in] cmd The command to be executed
  * \return Terminal stdout
  */
 string Helper::Exec(const char* cmd) {
@@ -408,9 +418,9 @@ string Helper::Exec(const char* cmd) {
 
 /**
  * \brief Get a value from the registery from disk
- * \param[in] filename  - File of registery
- * \param[in] keyName   - Full path of the subkey (eg. Software\\Wine\\Explorer)
- * \param[in] valueName - Specifies the registery value name (eg. Desktop)
+ * \param[in] filename  File of registery
+ * \param[in] keyName   Full path of the subkey (eg. Software\\Wine\\Explorer)
+ * \param[in] valueName Specifies the registery value name (eg. Desktop)
  * \return Data of value name
  */
 string Helper::GetRegValue(const string& filename, const string& keyName, const string& valueName)
@@ -468,8 +478,8 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
 
 /**
  * \brief Get a meta value from the registery from disk
- * \param[in] filename  - File of registery
- * \param[in] metaValueName - Specifies the registery value name (eg. arch)
+ * \param[in] filename      File of registery
+ * \param[in] metaValueName Specifies the registery value name (eg. arch)
  * \return Data of value name
  */
 string Helper::GetRegMetaData(const string& filename, const string& metaValueName)
@@ -503,7 +513,7 @@ string Helper::GetRegMetaData(const string& filename, const string& metaValueNam
 
 /**
  * \brief Create a string from a value name char pointer
- * \param char pointer registery raw data value
+ * \param charp Character pointer registery raw data value
  * \return string with the data
  */
 string Helper::CharPointerValueToString(char* charp)
@@ -531,6 +541,7 @@ string Helper::CharPointerValueToString(char* charp)
 
 /**
  * \brief Read data from file and returns it.
+ * \param[in] file_path File location to be read
  * \return Data from file
  */
 std::vector<string> Helper::ReadFile(const string file_path)
@@ -553,6 +564,8 @@ std::vector<string> Helper::ReadFile(const string file_path)
 
 /**
  * \brief Split string by delimiter
+ * \param[in] s         String to be splitted
+ * \param[in] delimiter Delimiter character
  * \return Array of strings
  */
 std::vector<string> Helper::Split(const string& s, char delimiter)

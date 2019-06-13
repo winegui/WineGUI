@@ -69,14 +69,17 @@ struct BottleTypes {
     oss,
     disabled
   };
+  // Define Bit so it keeps within the limits of the enum
   Bit b_;
   BottleTypes(Bit b) : b_(b) {}
   operator Bit () const {return b_;}
 
+  // Define AudioDriver so it keeps within the limits of the enum
   AudioDriver ar_;
   BottleTypes(AudioDriver ad) : ar_(ad) {}
   operator AudioDriver () const {return ar_;}
 
+  // Define Windows so it keeps within the limits of the enum
   Windows w_;
   BottleTypes(Windows w) : w_(w) {}
   operator Windows () const {return w_;}
