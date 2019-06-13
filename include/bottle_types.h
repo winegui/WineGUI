@@ -29,15 +29,26 @@ struct BottleTypes {
   inline static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
   enum Windows
   {
-    Windows2003,
-    Windows2008,
+    Windows20,
+    Windows30,
+    Windows31,
+    WindowsNT351,
+    WindowsNT40,
+    Windows95,
+    Windows98,
+    WindowsME,
+    Windows2000,
     WindowsXP,
+    Windows2003,
     WindowsVista,
+    Windows2008,
     Windows7,
+    Windows2008R2,
     Windows8,
     Windows81,
     Windows10
   };
+
   enum Bit
   {
     win32,
