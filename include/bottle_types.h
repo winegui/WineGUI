@@ -26,10 +26,10 @@
  * \brief Bottle type enum definitions
  */
 struct BottleTypes {
-  // Emulate Virtual Desktop disabled string
+  // \brief Emulate Virtual Desktop disabled string
   inline static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
   
-  // List of Windows versions
+  // \brief  List of Windows versions
   // Don't forget to update the toString methods if required!
   enum Windows
   {
@@ -53,7 +53,7 @@ struct BottleTypes {
     Windows10
   };
 
-  // Windows bit options
+  // \brief Windows bit options
   enum Bit
   {
     win32,
