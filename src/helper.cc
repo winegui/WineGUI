@@ -59,32 +59,32 @@ static const struct
 {
     const string version;
     const string description;
-    double versionNumber;
-    double buildNumber;
+    const string versionNumber;
+    const string buildNumber;
     const string servicePack;
     const BottleTypes::Windows windows;
     const BottleTypes::Bit bitOnly;
 } win_versions[] =
 {
-  {"win10",     "Windows 10",      10.0, 17134, "",     BottleTypes::Windows::Windows10},
-  {"win81",     "Windows 8.1",     6.3,  9600,  "",     BottleTypes::Windows::Windows81},
-  {"win8",      "Windows 8",       6.2,  9200,  "",     BottleTypes::Windows::Windows8},
-  {"win2008r2", "Windows 2008 R2", 6.1,  7601,  "SP1",  BottleTypes::Windows::Windows2008R2},
-  {"win7",      "Windows 7",       6.1,  7601,  "SP1",  BottleTypes::Windows::Windows7},
-  {"win2008",   "Windows 2008",    6.0,  6002,  "SP2",  BottleTypes::Windows::Windows2008},
-  {"vista",     "Windows Vista",   6.0,  6002,  "SP2",  BottleTypes::Windows::WindowsVista},
-  {"win2003",   "Windows 2003",    5.2,  3790,  "SP2",  BottleTypes::Windows::Windows2003},
-  {"winxp64",   "Windows XP",      5.2,  3790,  "SP2",  BottleTypes::Windows::WindowsXP,    BottleTypes::Bit::win64},
-  {"winxp",     "Windows XP",      5.1,  2600,  "SP3",  BottleTypes::Windows::WindowsXP,    BottleTypes::Bit::win32},
-  {"win2k",     "Windows 2000",    5.0,  2195,  "SP4",  BottleTypes::Windows::Windows2000,  BottleTypes::Bit::win32},
-  {"winme",     "Windows ME",      4.90, 3000,  "",     BottleTypes::Windows::WindowsME,    BottleTypes::Bit::win32},
-  {"win98",     "Windows 98",      4.10, 2222,  "",     BottleTypes::Windows::Windows98,    BottleTypes::Bit::win32},
-  {"win95",     "Windows 95",      4.0,  950,   "",     BottleTypes::Windows::Windows95,    BottleTypes::Bit::win32},
-  {"nt40",      "Windows NT 4.0",  4.0,  1381,  "SP6a", BottleTypes::Windows::WindowsNT40,  BottleTypes::Bit::win32},
-  {"nt351",     "Windows NT 3.51", 3.51, 1057,  "SP5",  BottleTypes::Windows::WindowsNT351, BottleTypes::Bit::win32},
-  {"win31",     "Windows 3.1",     3.10, 0,     "",     BottleTypes::Windows::Windows31,    BottleTypes::Bit::win32},
-  {"win30",     "Windows 3.0",     3.0,  0,     "",     BottleTypes::Windows::Windows30,    BottleTypes::Bit::win32},
-  {"win20",     "Windows 2.0",     2.0,  0,     "",     BottleTypes::Windows::Windows20,    BottleTypes::Bit::win32}
+  {"win10",     "Windows 10",      "10.0", "17134", "",     BottleTypes::Windows::Windows10},
+  {"win81",     "Windows 8.1",     "6.3",  "9600",  "",     BottleTypes::Windows::Windows81},
+  {"win8",      "Windows 8",       "6.2",  "9200",  "",     BottleTypes::Windows::Windows8},
+  {"win2008r2", "Windows 2008 R2", "6.1",  "7601",  "SP1",  BottleTypes::Windows::Windows2008R2},
+  {"win7",      "Windows 7",       "6.1",  "7601",  "SP1",  BottleTypes::Windows::Windows7},
+  {"win2008",   "Windows 2008",    "6.0",  "6002",  "SP2",  BottleTypes::Windows::Windows2008},
+  {"vista",     "Windows Vista",   "6.0",  "6002",  "SP2",  BottleTypes::Windows::WindowsVista},
+  {"win2003",   "Windows 2003",    "5.2",  "3790",  "SP2",  BottleTypes::Windows::Windows2003},
+  {"winxp64",   "Windows XP",      "5.2",  "3790",  "SP2",  BottleTypes::Windows::WindowsXP,    BottleTypes::Bit::win64},
+  {"winxp",     "Windows XP",      "5.1",  "2600",  "SP3",  BottleTypes::Windows::WindowsXP,    BottleTypes::Bit::win32},
+  {"win2k",     "Windows 2000",    "5.0",  "2195",  "SP4",  BottleTypes::Windows::Windows2000,  BottleTypes::Bit::win32},
+  {"winme",     "Windows ME",      "4.90", "3000",  "",     BottleTypes::Windows::WindowsME,    BottleTypes::Bit::win32},
+  {"win98",     "Windows 98",      "4.10", "2222",  "",     BottleTypes::Windows::Windows98,    BottleTypes::Bit::win32},
+  {"win95",     "Windows 95",      "4.0",  "950",   "",     BottleTypes::Windows::Windows95,    BottleTypes::Bit::win32},
+  {"nt40",      "Windows NT 4.0",  "4.0",  "1381",  "SP6a", BottleTypes::Windows::WindowsNT40,  BottleTypes::Bit::win32},
+  {"nt351",     "Windows NT 3.51", "3.51", "1057",  "SP5",  BottleTypes::Windows::WindowsNT351, BottleTypes::Bit::win32},
+  {"win31",     "Windows 3.1",     "3.10", "0",     "",     BottleTypes::Windows::Windows31,    BottleTypes::Bit::win32},
+  {"win30",     "Windows 3.0",     "3.0",  "0",     "",     BottleTypes::Windows::Windows30,    BottleTypes::Bit::win32},
+  {"win20",     "Windows 2.0",     "2.0",  "0",     "",     BottleTypes::Windows::Windows20,    BottleTypes::Bit::win32}
 };
 
 /**
@@ -186,10 +186,9 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
     // Find Windows version
     for (unsigned long i = 0; i < sizeof(win_versions); i++)
     {
-      string versionNumber = string(win_versions[i].versionNumber);
-      string buildNumber = string(win_versions[i].buildNumber);
       // Check if version + build number matches
-      if((versionNumber.compare(versionNT) == 0) && ((buildNumber.compare(buildNumberNT) == 0)) 
+      if(((win_versions[i].versionNumber).compare(version) == 0) && 
+        (((win_versions[i].buildNumber).compare(buildNumberNT) == 0)) 
       {
         return win_versions[i].windows;
       }
@@ -210,12 +209,11 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
     }
      
     // Find Windows version
-    for (int i = 0; i < sizeof(win_versions); i++)
+    for (unsigned long i = 0; i < sizeof(win_versions); i++)
     {
-      string versionNumber = string(win_versions[i].versionNumber);
-      string buildNumber = string(win_versions[i].buildNumber);
       // Check if version + build number matches
-      if((versionNumber.compare(currentVersion) == 0) && ((buildNumber.compare(currentBuildNumber) == 0)) 
+      if(((win_versions[i].versionNumber).compare(currentVersion) == 0) && 
+        (((win_versions[i].buildNumber).compare(currentBuildNumber) == 0))
       {
         return win_versions[i].windows;
       }
