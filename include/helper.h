@@ -20,11 +20,14 @@
  */
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include "bottle_types.h"
 
 using std::string;
+using std::cout;
+using std::endl;
 
 /**
  * \class Helper
@@ -49,6 +52,7 @@ private:
   static string Exec(const char* cmd);
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
   static string GetRegMetaData(const string& filename, const string& metaValueName);
+  static string getBottleDirFromPrefix(const string& prefix_path);
   static string CharPointerValueToString(char* charp);
   static std::vector<string> ReadFile(const string file_path);
   static std::vector<string> Split(const string& s, char delimiter);

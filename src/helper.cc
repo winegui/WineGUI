@@ -24,7 +24,6 @@
 #include <ctime>
 #include <iomanip>
 #include <cstdio>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <cstring>
@@ -40,8 +39,8 @@ static const string USER_REG = "user.reg";
 static const string USERDEF_REG = "userdef.reg";
 
 // Reg keys
-static const string keyName9x = "Software\\Microsoft\\Windows\\CurrentVersion";
-static const string keyNameNT = "Software\\Microsoft\\Windows NT\\CurrentVersion";
+static const string keyName9x = "Software\\\\Microsoft\\\\Windows\\\\CurrentVersion";
+static const string keyNameNT = "Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion";
 
 // Reg names
 static const string nameNTVersion = "CurrentVersion";
@@ -153,20 +152,8 @@ string Helper::GetName(const string prefix_path)
     // Do nothing, continue
   }
 
-  // Fall-back: get last directory name of path string
-  string name = "- Unknown -";
-  std::size_t last_index = prefix_path.find_last_of("/\\");
-  if (last_index != string::npos) {
-    // Get only the last directory name from path (+ remove slash)
-    name = prefix_path.substr(last_index+1);
-    // Remove dot if present (=hidden dir)
-    size_t dot_index = name.find_first_of('.');
-    if(dot_index == 0) {
-      // Remove dot at start
-      name = name.substr(1);
-    }
-  }
-  return name;
+  // Fall-back: get last directory name of path string as 'Bottle name'
+  return getBottleDirFromPrefix(prefix_path);
 }
 
 /**
@@ -181,6 +168,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
   string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
   string version = "";
   string version9x = "";
+
   if(!(version = Helper::GetRegValue(filename, keyNameNT, nameNTVersion)).empty())
   {
     string buildNumberNT = Helper::GetRegValue(filename, keyNameNT, nameNTBuild);
@@ -222,10 +210,14 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
   }
   else
   {
-    throw std::runtime_error("Could not determ Windows OS version.");    
+    throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + 
+      GetName(prefix_path) +
+      "\n\nFull location: " + prefix_path);    
   }
   // Function didn't return before (meaning no match found)
-  throw std::runtime_error("Could not determ Windows OS version.");
+  throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + 
+    GetName(prefix_path) +
+    "\n\nFull location: " + prefix_path);
 }
 
 /**
@@ -245,10 +237,14 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
     } else if(value.compare("win64") == 0) {
       return BottleTypes::Bit::win64;
     } else {
-      throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64?).");
+      throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64?), for Wine machine: " + 
+        GetName(prefix_path) +
+        "\n\nFull location: " + prefix_path);
     }
   } else {
-    throw std::runtime_error("Could not determ Windows system bit.");
+    throw std::runtime_error("Could not determ Windows system bit, for Wine machine: " + 
+      GetName(prefix_path) +
+      "\n\nFull location: " + prefix_path);
   }
 }
 
@@ -260,7 +256,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
 {
   string filename = Glib::build_filename(prefix_path, USER_REG);
-  string keyName = "Software\\Wine\\Drivers";
+  string keyName = "Software\\\\Wine\\\\Drivers";
   string valueName = "Audio";
   string value = Helper::GetRegValue(filename, keyName, valueName);
   if(!value.empty()) {
@@ -299,7 +295,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
   // (see above, "Default" is the default value). eg. "Default"="1920x1080"
 
   string filename = Glib::build_filename(prefix_path, USER_REG);
-  string keyName = "Software\\Wine\\Explorer\\Desktops";
+  string keyName = "Software\\\\Wine\\\\Explorer\\\\Desktops";
   string valueName = "Default";
   // TODO: first check of the Desktop value name in Software\\Wine\\Explorer
   string value = Helper::GetRegValue(filename, keyName, valueName);
@@ -328,10 +324,14 @@ string Helper::GetLastWineUpdated(const string prefix_path)
       stringStream << std::put_time(localtime(&secsSinceEpoch), "%c");
       return stringStream.str();
     } else {
-      throw std::runtime_error("Could not determ last time wine update timestamp");
+      throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + 
+      GetName(prefix_path) +
+      "\n\nFull location: " + prefix_path);
     }
   } else {
-    throw std::runtime_error("Could not determ last time wine update timestamp");
+    throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + 
+      GetName(prefix_path) +
+      "\n\nFull location: " + prefix_path);
   }
 }
 
@@ -371,7 +371,9 @@ string Helper::GetCLetterDrive(const string prefix_path)
      Helper::DirExists(c_drive_location)) {
        return c_drive_location;
   } else {
-    return "- Unknown C:\\ drive location -";
+    throw std::runtime_error("Could not determ C:\\ drive location, for Wine machine: " + 
+      GetName(prefix_path) +
+      "\n\nFull location: " + prefix_path);
   }
 }
 
@@ -419,7 +421,7 @@ string Helper::Exec(const char* cmd) {
 /**
  * \brief Get a value from the registery from disk
  * \param[in] filename  File of registery
- * \param[in] keyName   Full path of the subkey (eg. Software\\Wine\\Explorer)
+ * \param[in] keyName   Full path of the subkey (eg. Software\\\\Wine\\\\Explorer)
  * \param[in] valueName Specifies the registery value name (eg. Desktop)
  * \return Data of value name
  */
@@ -429,11 +431,10 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
   FILE *f;
   char buffer[100];
   // We add '[' & ']' around the key name
-  const char *keyPattern = ('[' + keyName + ']').c_str();
+  string keyPattern = '[' + keyName + ']';
   // We add double quotes around plus equal sign to the value name
-  const char *valuePattern = ('"' + valueName + "\"=").c_str();
+  string valuePattern = '"' + valueName + "\"=";
   char* match_pch = NULL;
-
   if(Helper::FileExists(filename)) 
   {
     if ((f = fopen(filename.c_str(), "r")) == NULL)
@@ -445,7 +446,7 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
       // It returns the pointer to the first occurrence until the null character (end of line)
       if(!match) {
         // Search first for the applicable subkey
-        if ((strstr(buffer, keyPattern)) != NULL) {
+        if ((strstr(buffer, keyPattern.c_str())) != NULL) {
           match = true;
           // Continue to search for the key now
         }
@@ -462,7 +463,8 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
         {
           // Search for the first occurence of the value name,
           // and put the strstr match char point in 'match_pch'
-          if ((match_pch = strstr(buffer, valuePattern)) != NULL) {
+          match_pch = strstr(buffer, valuePattern.c_str());
+          if (match_pch != NULL) {
             break;
           }
         }
@@ -509,6 +511,29 @@ string Helper::GetRegMetaData(const string& filename, const string& metaValueNam
   else {
     throw std::runtime_error("Registery file does not exists. Can not determ Windows settings.");
   }
+}
+
+/**
+ * \brief Get the 'Bottle Name' (directory) from the full prefix path
+ *  Can be used as fall-back.
+ * \param[in] prefix_path   Full bottle prefix path
+ * \return Bottle directory name
+ */
+string Helper::getBottleDirFromPrefix(const string& prefix_path)
+{
+  string name = "- Unknown -";
+  std::size_t last_index = prefix_path.find_last_of("/\\");
+  if (last_index != string::npos) {
+    // Get only the last directory name from path (+ remove slash)
+    name = prefix_path.substr(last_index+1);
+    // Remove dot if present (=hidden dir)
+    size_t dot_index = name.find_first_of('.');
+    if(dot_index == 0) {
+      // Remove dot at start
+      name = name.substr(1);
+    }
+  }
+  return name;
 }
 
 /**

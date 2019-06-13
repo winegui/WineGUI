@@ -97,17 +97,42 @@ std::vector<string> BottleManager::ReadBottles()
  */
 void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bottleDirs)
 {
+  string name = "";
+  string virtualDesktop = "";
+  bool status = false;
+  BottleTypes::Windows windows = BottleTypes::WindowsXP;
+  BottleTypes::Bit bit = BottleTypes::win32;
+  string cDriveLocation = "";
+  string lastTimeWineUpdated = "";
+  BottleTypes::AudioDriver audioDriver = BottleTypes::pulseaudio;
+  
   // Retrieve detailed info for each wine bottle prefix
   for(string prefix: bottleDirs) {
-    string name = Helper::GetName(prefix);
-    string virtualDesktop = Helper::GetVirtualDesktop(prefix);
-    bool status = Helper::GetBottleStatus(prefix);
-    BottleTypes::Windows windows = Helper::GetWindowsOSVersion(prefix);
-    BottleTypes::Bit bit = Helper::GetSystemBit(prefix);
-    string cDriveLocation = Helper::GetCLetterDrive(prefix);
-    string lastTimeWineUpdated = Helper::GetLastWineUpdated(prefix);
-    BottleTypes::AudioDriver audioDriver = Helper::GetAudioDriver(prefix);
-    
+    // Reset variables
+    name = "";
+    virtualDesktop = "Disabled";
+    status = false;
+    windows = BottleTypes::WindowsXP;
+    bit = BottleTypes::win32;
+    cDriveLocation = "- Unknown -";
+    lastTimeWineUpdated = " - Unkown -";
+    audioDriver = BottleTypes::pulseaudio;
+
+    try {
+      name = Helper::GetName(prefix);
+      virtualDesktop = Helper::GetVirtualDesktop(prefix);
+      status = Helper::GetBottleStatus(prefix);
+      windows = Helper::GetWindowsOSVersion(prefix);
+      bit = Helper::GetSystemBit(prefix);
+      cDriveLocation = Helper::GetCLetterDrive(prefix);
+      lastTimeWineUpdated = Helper::GetLastWineUpdated(prefix);
+      audioDriver = Helper::GetAudioDriver(prefix);
+    }
+    catch (const std::runtime_error& error)
+    {
+      mainWindow.ShowErrorMessage(error.what());
+    }
+
     WineBottle* bottle = new WineBottle(
       name,
       status,
@@ -119,7 +144,6 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
       lastTimeWineUpdated,
       audioDriver,
       virtualDesktop);
-
     bottles.push_back(*bottle);
   }
 }
