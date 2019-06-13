@@ -188,7 +188,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
     {
       // Check if version + build number matches
       if(((win_versions[i].versionNumber).compare(version) == 0) && 
-        (((win_versions[i].buildNumber).compare(buildNumberNT) == 0)) 
+        ((win_versions[i].buildNumber).compare(buildNumberNT) == 0))
       {
         return win_versions[i].windows;
       }
@@ -212,8 +212,8 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
     for (unsigned long i = 0; i < sizeof(win_versions); i++)
     {
       // Check if version + build number matches
-      if(((win_versions[i].versionNumber).compare(currentVersion) == 0) && 
-        (((win_versions[i].buildNumber).compare(currentBuildNumber) == 0))
+      if(((win_versions[i].versionNumber).compare(version) == 0) && 
+        ((win_versions[i].buildNumber).compare(buildNumberNT) == 0))
       {
         return win_versions[i].windows;
       }
