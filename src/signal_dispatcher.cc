@@ -44,11 +44,32 @@ void SignalDispatcher::DispatchSignals()
 {
   menu.signalQuit.connect(sigc::mem_fun(*this, &SignalDispatcher::on_quit));
   menu.signalShowAbout.connect(sigc::mem_fun(about, &AboutDialog::show));
+  menu.signalRefresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
   //manager.placeholder.connect(sigc::mem_fun(*mainWindow, &MainWindow::placeholder));
 }
 
+/**
+ * \brief Execute when close button is clicked
+ */
 void SignalDispatcher::on_quit()
 {
   // Signal hide main window and therefor it closes the app
   hideMainWindow();
+}
+
+bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
+{
+  // Single click with right mouse button?
+  if(event->type == GDK_BUTTON_PRESS && event->button == 3)
+  {
+    Gtk::Menu* popup = menu.getMachineMenu();
+    if (popup)
+    {
+      popup->popup(event->button, event->time);
+    }
+    return true;
+  }
+
+  // Event has not been handled:
+  return false;
 }

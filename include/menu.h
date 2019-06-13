@@ -30,18 +30,22 @@ class Menu: public Gtk::MenuBar
 {
 public:
   sigc::signal<void> signalQuit;
+  sigc::signal<void> signalRefresh;
   sigc::signal<void> signalShowAbout;
 
   Menu();
   virtual ~Menu();
+  Gtk::Menu* getMachineMenu();
 
 protected:
   // Child widgets
   Gtk::MenuItem file;
   Gtk::MenuItem view;
+  Gtk::MenuItem machine;
   Gtk::MenuItem help;
   Gtk::Menu file_submenu;
   Gtk::Menu view_submenu;
+  Gtk::Menu machine_submenu;
   Gtk::Menu help_submenu;
   Gtk::SeparatorMenuItem separator1;
   Gtk::SeparatorMenuItem separator2;

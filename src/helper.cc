@@ -102,7 +102,7 @@ std::vector<string> Helper::GetBottlesPaths(const string& dir_path)
       r.push_back(path);
     }
     name = dir.read_name();
-  }
+  }  
   return r;
 }
 

@@ -41,6 +41,7 @@ public:
   BottleManager(MainWindow& mainWindow);
   virtual ~BottleManager();
 
+  void UpdateBottles();
   // Signals are possible:
   // Eg. sigc::signal<void> some name;
 
@@ -50,6 +51,7 @@ private:
   std::vector<WineBottle> bottles;
   WineBottle* current_bottle;
 
+  string GetWineVersion();
   std::vector<string> ReadBottles();
   void CreateWineBottles(string wineVersion, std::vector<string> bottleDirs);
   void SetCurrentBottle(WineBottle* bottle);

@@ -21,7 +21,6 @@
 #include "bottle_manager.h"
 #include "main_window.h"
 
-#include <iostream>
 #include <stdexcept>
 
 /**
@@ -36,20 +35,30 @@ BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
   // TODO: Make it configurable via settings
   BOTTLE_LOCATION = Glib::get_home_dir() + "/.winegui/prefixes";
   
-  // Read wine version (is always the same for all bottles atm)
-  string wineVersion = "";
-  try
-  {
-    wineVersion = Helper::GetWineVersion();
+  // Retrieve the bottles and update UI
+  UpdateBottles();
+}
+
+/**
+ * \brief Destructor
+ */
+BottleManager::~BottleManager() {}
+
+/**
+ * \brief Update bottles from disk in GUI 
+ */
+void BottleManager::UpdateBottles()
+{
+  if(bottles.size() > 0) {
+    // Clean-up
+    bottles.clear();
   }
-  catch (const std::runtime_error& error)
-  {
-      mainWindow.ShowErrorMessage(error.what());
-  }
+
   // Read bottles from disk and create classes from it
   std::vector<string> bottleDirs = ReadBottles();
   if(bottleDirs.size() > 0) {
-    CreateWineBottles(wineVersion, bottleDirs);
+    // Create wine bottles from bottle directories and wine version
+    CreateWineBottles(GetWineVersion(), bottleDirs);
   
     if(bottles.size() > 0)
     {
@@ -62,10 +71,20 @@ BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
   }
 }
 
-/**
- * \brief Destructor
- */
-BottleManager::~BottleManager() {}
+string BottleManager::GetWineVersion()
+{
+  // Read wine version (is always the same for all bottles atm)
+  string wineVersion = "";
+  try
+  {
+    wineVersion = Helper::GetWineVersion();
+  }
+  catch (const std::runtime_error& error)
+  {
+      mainWindow.ShowErrorMessage(error.what());
+  }
+  return wineVersion;
+}
 
 /**
  * \brief Read Wine bottles from disk at start-up

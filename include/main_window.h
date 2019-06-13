@@ -44,6 +44,7 @@ public:
   virtual ~MainWindow();
   void SetDispatcher(SignalDispatcher& signalDispatcher);
 
+  void AppendWineBottle(const WineBottle& bottle);
   void SetWineBottles(const std::vector<WineBottle>& bottles);
   void SetDetailedInfo(WineBottle bottle);
   void ShowErrorMessage(const Glib::ustring& message);
@@ -78,6 +79,7 @@ private:
   
   void CreateLeftPanel();
   void CreateRightPanel();
+  void AddWineBottle(const WineBottle& bottle);
 
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* row, Gtk::ListBoxRow* before);
   static string str_tolower(string s);

@@ -24,13 +24,15 @@
  * \brief Contructor
  */
 Menu::Menu()
-: file("_File", true),
+: file("_File", true),  
   view("_View", true),
+  machine("_Machine", true),
   help("_Help", true)
 {
   // Add sub-menu's to menu items
   file.set_submenu(file_submenu);
   view.set_submenu(view_submenu);
+  machine.set_submenu(machine_submenu);
   help.set_submenu(help_submenu);
 
   // File submenu
@@ -42,7 +44,11 @@ Menu::Menu()
   exit->signal_activate().connect(signalQuit);
   
   // View submenu
-  auto refresh = CreateImageMenuItem("Refresh", "view-refresh");
+  auto refresh = CreateImageMenuItem("Refresh List", "view-refresh");
+  refresh->signal_activate().connect(signalRefresh);
+
+  // Machine submenu
+  auto remove = CreateImageMenuItem("Remove...", "edit-delete");
 
   // Help submenu
   auto about = CreateImageMenuItem("About WineGUI...", "help-about");
@@ -61,12 +67,16 @@ Menu::Menu()
   // View menu
   view_submenu.append(*refresh);
 
+  // Machine menu
+  machine_submenu.append(*remove);
+
   // Help menu
   help_submenu.append(*about);
   
   // Add menu items to menu bar
   append(file);
   append(view);
+  append(machine);
   append(help);
 }
 
@@ -74,6 +84,11 @@ Menu::Menu()
  * \brief Destructor
  */
 Menu::~Menu() {
+}
+
+
+Gtk::Menu* Menu::getMachineMenu() {
+  return &machine_submenu;
 }
 
 /**
