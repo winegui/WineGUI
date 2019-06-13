@@ -47,8 +47,9 @@ public:
   static bool FileExists(const string& filer_path);
 private:
   static string Exec(const char* cmd);
-  static string GetValueByKey(const string& filename, const string& key);
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
+  static string GetRegMetaData(const string& filename, const string& metaValueName);
+  static string CharPointerValueToString(char* charp);
   static std::vector<string> ReadFile(const string file_path);
   static std::vector<string> Split(const string& s, char delimiter);
 };

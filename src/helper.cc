@@ -177,35 +177,58 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
   // TODO: Try first reg keyNameNT (with nameNTVersion & nameNTBuild names) and otherwise reg keyName9x (with name9xVersion name)
 
   string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
-  string key = "\"ProductName\"=\"";
-  if(Helper::FileExists(filename)) {
-    string value = Helper::GetValueByKey(filename, key);
-    if(!value.empty()) {
-      if(value.compare("Microsoft Windows 2003") == 0) {
-        return BottleTypes::Windows::Windows2003;
-      } else if(value.compare("Microsoft Windows 2008") == 0) {
-        return BottleTypes::Windows::Windows2008;
-      } else if(value.compare("Microsoft Windows XP") == 0) {
-        return BottleTypes::Windows::WindowsXP;
-      } else if(value.compare("Microsoft Windows Vista") == 0) {
-        return BottleTypes::Windows::WindowsVista;
-      } else if(value.compare("Microsoft Windows 7") == 0) {
-        return BottleTypes::Windows::Windows7;
-      } else if(value.compare("Microsoft Windows 8") == 0) {
-        return BottleTypes::Windows::Windows8;
-      } else if(value.compare("Microsoft Windows 8.1") == 0) {
-        return BottleTypes::Windows::Windows81;
-      } else if(value.compare("Microsoft Windows 10") == 0) {
-        return BottleTypes::Windows::Windows10;        
-      } else {
-        throw std::runtime_error("Could not determ Windows OS version (Unknown version).");
+  /*
+  double versionNT = 0.0;
+  double version9x = 0.0;
+
+  if((versionNT = stod(Helper::GetRegValue(filename, keyNameNT, nameNTVersion))) != 0.0)
+  {
+    bool match = false;
+    double buildNumberNT = stod(Helper::GetRegValue(filename, keyNameNT, nameNTBuild));
+    // Find Windows version
+    for (int i = 0; i < sizeof(win_versions); i++)
+    {
+      if(win_versions[i].versionNumber == versionNT &&
+        win_versions[i].buildNumber == buildNumberNT) 
+      {
+        match = true;
+        string winVersion = win_versions[i].description;
+        if(winVersion.compare("Microsoft Windows 2003") == 0) {
+          return BottleTypes::Windows::Windows2003;
+        } else if(winVersion.compare("Microsoft Windows 2008") == 0) {
+          return BottleTypes::Windows::Windows2008;
+        } else if(winVersion.compare("Microsoft Windows XP") == 0) {
+          return BottleTypes::Windows::WindowsXP;
+        } else if(winVersion.compare("Microsoft Windows Vista") == 0) {
+          return BottleTypes::Windows::WindowsVista;
+        } else if(winVersion.compare("Microsoft Windows 7") == 0) {
+          return BottleTypes::Windows::Windows7;
+        } else if(winVersion.compare("Microsoft Windows 8") == 0) {
+          return BottleTypes::Windows::Windows8;
+        } else if(winVersion.compare("Microsoft Windows 8.1") == 0) {
+          return BottleTypes::Windows::Windows81;
+        } else if(winVersion.compare("Microsoft Windows 10") == 0) {
+          return BottleTypes::Windows::Windows10;        
+        } else {
+          throw std::runtime_error("Could not determ Windows OS version (Unknown version).");
+        }
       }
-    } else {
-      throw std::runtime_error("Could not determ Windows OS version.");    
     }
-  } else {
+    if(!match)
+    {
+      throw std::runtime_error("Could not determ Windows OS version.");
+    }
+  }
+  else if((versionNT = stod(Helper::GetRegValue(filename, keyName9x, name9xVersion))) != 0.0)    
+  {
+    // TODO old Windows releases
+  }
+  else
+  {
     throw std::runtime_error("Could not determ Windows OS version.");    
   }
+  */
+  return BottleTypes::Windows::WindowsXP;
 }
 
 /**
@@ -215,22 +238,19 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
 BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 {
   string filename = Glib::build_filename(prefix_path, USER_REG);
-  string key = "#arch=";
-  if(Helper::FileExists(filename)) {
-    string value = Helper::GetValueByKey(filename, key);
-    if(!value.empty()) {
-      if(value.compare("win32") == 0) {
-        return BottleTypes::Bit::win32;
-      } else if(value.compare("win64") == 0) {
-        return BottleTypes::Bit::win64;
-      } else {
-        throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64?).");
-      }
+
+  string metaValueName = "arch";
+  string value = Helper::Helper::GetRegMetaData(filename, metaValueName);
+  if(!value.empty()) {
+    if(value.compare("win32") == 0) {
+      return BottleTypes::Bit::win32;
+    } else if(value.compare("win64") == 0) {
+      return BottleTypes::Bit::win64;
     } else {
-      throw std::runtime_error("Could not determ Windows system bit.");
-    }    
+      throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64?).");
+    }
   } else {
-    throw std::runtime_error("Could not determ Windows system bit.\nDoes the Wine bottle exists?");
+    throw std::runtime_error("Could not determ Windows system bit.");
   }
 }
 
@@ -243,31 +263,27 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
   string filename = Glib::build_filename(prefix_path, USER_REG);
   // Reg key: "Software\\Wine\\Drivers"
   // Value name: "Audio"
-
-  string key = "\"Audio\"=";
-  if(Helper::FileExists(filename)) {
-    string value = Helper::GetValueByKey(filename, key);
-    if(!value.empty()) {
-      if(value.compare("pulse") == 0) {
-        return BottleTypes::AudioDriver::pulseaudio;
-      } else if(value.compare("alsa") == 0) {
-        return BottleTypes::AudioDriver::alsa;
-      } else if(value.compare("oss") == 0) {
-        return BottleTypes::AudioDriver::oss;
-      } else if(value.compare("coreaudio") == 0) {
-        return BottleTypes::AudioDriver::coreaudio;
-      } else if(value.compare("disabled") == 0) {
-        return BottleTypes::AudioDriver::disabled;
-      } else {
-        // Otherwise just return PulseAudio
-        return BottleTypes::AudioDriver::pulseaudio;
-      }
+  string keyName = "Software\\Wine\\Drivers";
+  string valueName = "Audio";
+  string value = Helper::GetRegValue(filename, keyName, valueName);
+  if(!value.empty()) {
+    if(value.compare("pulse") == 0) {
+      return BottleTypes::AudioDriver::pulseaudio;
+    } else if(value.compare("alsa") == 0) {
+      return BottleTypes::AudioDriver::alsa;
+    } else if(value.compare("oss") == 0) {
+      return BottleTypes::AudioDriver::oss;
+    } else if(value.compare("coreaudio") == 0) {
+      return BottleTypes::AudioDriver::coreaudio;
+    } else if(value.compare("disabled") == 0) {
+      return BottleTypes::AudioDriver::disabled;
     } else {
-      // If not found, it is set to PulseAudio
+      // Otherwise just return PulseAudio
       return BottleTypes::AudioDriver::pulseaudio;
     }
   } else {
-    throw std::runtime_error("Could not determ Audio driver");
+    // If not found, it is set to PulseAudio
+    return BottleTypes::AudioDriver::pulseaudio;
   }
 }
 
@@ -277,26 +293,23 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
  */
 string Helper::GetVirtualDesktop(const string prefix_path)
 {
-  // TODO: Virtual desktop is disabled once:
-  // The user.reg key: "Software\\Wine\\Explorer" Value name: "Desktop" is NOT set.
+  // TODO: Check if virtual desktop is enabled or disabled first! By looking if this value name is set:
+  // If the user.reg key: "Software\\Wine\\Explorer" Value name: "Desktop" is NOT set, its disabled.
   // If this value name is set (store the value of "Desktop"...), virtual desktop is enabled.
   //
   // The resolution can be found in Key: Software\\Wine\\Explorer\\Desktops with the Value name set as value 
   // (see above, "Default" is the default value). eg. "Default"="1920x1080"
 
   string filename = Glib::build_filename(prefix_path, USER_REG);
-  string key = "\"Default\"=";
-  if(Helper::FileExists(filename)) {
-    string value = Helper::GetValueByKey(filename, key);
-    if(!value.empty()) {
-      // Return the resolution
-      return value;
-    } else {
-      // If not found, it's disabled
-      return BottleTypes::VIRTUAL_DESKTOP_DISABLED;
-    }
+  string keyName = "Software\\Wine\\Explorer\\Desktops";
+  string valueName = "Default";
+  // TODO: first check of the Desktop value name in Software\\Wine\\Explorer
+  string value = Helper::GetRegValue(filename, keyName, valueName);
+  if(!value.empty()) {
+    // Return the resolution
+    return value;
   } else {
-    throw std::runtime_error("Could not determ Virtual Desktop");
+    return BottleTypes::VIRTUAL_DESKTOP_DISABLED;
   }
 }
 
@@ -400,18 +413,76 @@ string Helper::Exec(const char* cmd) {
 }
 
 /**
- * \brief Get the value by key from registery
- * \param[in] Filename location path (eg. reg file)
- * \param[in] Key pattern to search for
- * \return The value or empty if not found
- * TODO: Obsolete, implement GetRegValue() below instead! And move to GetRegValue
+ * \brief Get a value from the registery from disk
+ * \param[in] filename  - File of registery
+ * \param[in] keyName   - Full path of the subkey (eg. Software\\Wine\\Explorer)
+ * \param[in] valueName - Specifies the registery value name (eg. Desktop)
+ * \return Data of value name
  */
-string Helper::GetValueByKey(const string& filename, const string& key)
+string Helper::GetRegValue(const string& filename, const string& keyName, const string& valueName)
 {
   string matchStr = "";
   FILE *f;
   char buffer[100];
-  const char *pattern = key.c_str();
+  // We add '[' & ']' around the key name
+  const char *keyPattern = ('[' + keyName + ']').c_str();
+  // We add double quotes around plus equal sign to the value name
+  const char *valuePattern = ('"' + valueName + "\"=").c_str();
+  char* match_pch = NULL;
+
+  if(Helper::FileExists(filename)) 
+  {
+    if ((f = fopen(filename.c_str(), "r")) == NULL)
+    {
+      throw std::runtime_error("File could not be opened");
+    }
+    bool match = false;
+    while (fgets(buffer, sizeof(buffer), f)) {
+      // It returns the pointer to the first occurrence until the null character (end of line)
+      if(!match) {
+        // Search first for the applicable subkey
+        if ((strstr(buffer, keyPattern)) != NULL) {
+          match = true;
+          // Continue to search for the key now
+        }
+      }
+      else
+      {
+        // As long as there is no empty line (meaning end of the subkey section),
+        // continue to search for the key
+        if(strlen(buffer) == 0) {
+           // Too late, nothing found within this subkey
+          break;
+        }
+        else
+        {
+          // Search for the first occurence of the value name,
+          // and put the strstr match char point in 'match_pch'
+          if ((match_pch = strstr(buffer, valuePattern)) != NULL) {
+            break;
+          }
+        }
+      }
+    }
+    fclose(f);
+    return CharPointerValueToString(match_pch);
+  }
+  else {
+    throw std::runtime_error("Registery file does not exists. Can not determ Windows settings.");
+  }
+}
+
+/**
+ * \brief Get a meta value from the registery from disk
+ * \param[in] filename  - File of registery
+ * \param[in] metaValueName - Specifies the registery value name (eg. arch)
+ * \return Data of value name
+ */
+string Helper::GetRegMetaData(const string& filename, const string& metaValueName)
+{
+  FILE *f;
+  char buffer[100];
+  const char *valuePattern = ('#' + metaValueName + '=').c_str();
   char* match_pch = NULL;
 
   if(Helper::FileExists(filename)) 
@@ -423,28 +494,13 @@ string Helper::GetValueByKey(const string& filename, const string& key)
     while (fgets(buffer, sizeof(buffer), f)) {
       // Put the strstr match char point in 'match_pch'
       // It returns the pointer to the first occurrence until the null character (end of line)
-      if ((match_pch = strstr(buffer, pattern)) != NULL) {
+      if ((match_pch = strstr(buffer, valuePattern)) != NULL) {
         // Match!
         break;
       }
     }
     fclose(f);
-
-    if(match_pch != NULL) {
-      // Create string
-      matchStr = string(match_pch);
-
-      std::vector<string> results = Helper::Split(matchStr, '=');
-      if(results.size() >= 2 ) {
-        matchStr = results.at(1);
-        // TODO: Combine the removals in a single iteration?
-        // Remove double-quote chars
-        matchStr.erase(std::remove(matchStr.begin(), matchStr.end(), '\"' ), matchStr.end());
-        // Remove new lines
-        matchStr.erase(std::remove(matchStr.begin(), matchStr.end(), '\n'), matchStr.end());
-      }
-    }
-    return matchStr;
+    return CharPointerValueToString(match_pch);
   }
   else {
     throw std::runtime_error("Registery file does not exists. Can not determ Windows settings.");
@@ -452,15 +508,31 @@ string Helper::GetValueByKey(const string& filename, const string& key)
 }
 
 /**
- * \brief Get a value from the registery from disk
- * \param[in] filename  - File of registery
- * \param[in] keyName   - Full path of the subkey
- * \param[in] valueName - Specifies the registery value name
+ * \brief Create a string from a value name char pointer
+ * \param char pointer registery raw data value
+ * \return string with the data
  */
-string Helper::GetRegValue(const string& filename, const string& keyName, const string& valueName)
+string Helper::CharPointerValueToString(char* charp)
 {
-  // TODO
-  return "";
+  if(charp != NULL)
+  {
+    string ret = string(charp);
+
+    std::vector<string> results = Helper::Split(ret, '=');
+    if(results.size() >= 2 ) {
+      ret = results.at(1);
+      // TODO: Combine the removals in a single iteration?
+      // Remove double-quote chars
+      ret.erase(std::remove(ret.begin(), ret.end(), '\"' ), ret.end());
+      // Remove new lines
+      ret.erase(std::remove(ret.begin(), ret.end(), '\n'), ret.end());
+    }
+    return ret;
+  } 
+  else
+  {
+    return "";
+  }
 }
 
 /**
