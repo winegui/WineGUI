@@ -52,7 +52,6 @@ static const string name9xVersion = "VersionNumber";
 static const string WINEGUI_CONF = ".winegui.conf";
 static const string UPDATE_TIMESTAMP = ".update-timestamp";
 
-
 // Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L49
 // Build number is tranformed to decimal number
 static const struct

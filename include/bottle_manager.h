@@ -41,8 +41,8 @@ public:
   BottleManager(MainWindow& mainWindow);
   virtual ~BottleManager();
 
-  // Signals
-  sigc::signal<void> placeholder;
+  // Signals are possible:
+  // Eg. sigc::signal<void> some name;
 
 private:
   string BOTTLE_LOCATION;

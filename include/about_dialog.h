@@ -33,5 +33,5 @@ public:
   AboutDialog(Gtk::Window& parent);
   virtual ~AboutDialog();
 protected:
-  Gtk::Image logo;
+  Gtk::Image logo; /*!< The logo of the app for the about window */
 };

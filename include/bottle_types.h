@@ -26,7 +26,11 @@
  * \brief Bottle type enum definitions
  */
 struct BottleTypes {
+  // Emulate Virtual Desktop disabled string
   inline static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
+  
+  // List of Windows versions
+  // Don't forget to update the toString methods if required!
   enum Windows
   {
     Windows20,
@@ -49,11 +53,14 @@ struct BottleTypes {
     Windows10
   };
 
+  // Windows bit options
   enum Bit
   {
     win32,
     win64
   };
+  
+  // Wine supported Audio drivers
   enum AudioDriver 
   {
     pulseaudio,
@@ -74,6 +81,7 @@ struct BottleTypes {
   BottleTypes(Windows w) : w_(w) {}
   operator Windows () const {return w_;}
 
+  // Bit enum to string
   static std::string toString(Bit bit) {
     switch(bit) {
       case Bit::win32:
@@ -85,18 +93,41 @@ struct BottleTypes {
     }
   }
 
+  // Windows enum to string
+  // TODO: Move the helper.cc windows list to bottle_types,
+  // in order to have a single point of definition of Windows names
   static std::string toString(Windows win) {
     switch(win) {
-      case Windows::Windows2003:
-        return "Windows 2003";
-      case Windows::Windows2008:
-        return "Windows 2008";
+      case Windows::Windows20:
+        return "Windows 2.0";    
+      case Windows::Windows30:
+        return "Windows 3.0";
+      case Windows::Windows31:
+        return "Windows 3.1";
+      case Windows::WindowsNT351:
+        return "Windows NT 3.51";
+      case Windows::WindowsNT40:
+        return "Windows NT 4.0";
+      case Windows::Windows95:
+        return "Windows 95";
+      case Windows::Windows98:
+        return "Windows 98";
+      case Windows::WindowsME:
+        return "Windows ME";
+      case Windows::Windows2000:
+        return "Windows 2000";
       case Windows::WindowsXP:
         return "Windows XP";
+      case Windows::Windows2003:
+        return "Windows 2003";
       case Windows::WindowsVista:
         return "Windows Vista";
+      case Windows::Windows2008:
+        return "Windows 2008";
       case Windows::Windows7:
         return "Windows 7";
+      case Windows::Windows2008R2:
+        return "Windows 2008 R2";
       case Windows::Windows8:
         return "Windows 8";
       case Windows::Windows81:
@@ -104,10 +135,11 @@ struct BottleTypes {
       case Windows::Windows10:
         return "Windows 10";
       default:
-        return "- Unknown -";
+        return "- Unknown Windows OS -";
     }
   }
 
+  // AudioDriver enum to string
   static std::string toString(AudioDriver audio) {
     switch(audio) {
       case AudioDriver::pulseaudio:

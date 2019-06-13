@@ -25,10 +25,11 @@
 #include "menu.h"
 #include "wine_bottle.h"
 
-#define READY_IMAGE "../images/ready.png"
-#define NOT_READY_IMAGE "../images/not_ready.png"
-
 using std::string;
+
+#define READY_IMAGE "../images/ready.png" /*!< The ready image to show when Bottle is ready */
+#define NOT_READY_IMAGE "../images/not_ready.png" /*!< The non-ready image to show when Bottle is in trouble */
+
 
 // Forward declaration
 class SignalDispatcher;
