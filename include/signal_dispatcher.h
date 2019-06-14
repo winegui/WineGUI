@@ -29,8 +29,8 @@ class Menu;
 class AboutDialog;
 
 /**
- * \class Window
- * \brief GTK+ Window class
+ * \class SignalDispatcher
+ * \brief Dispatch and manage GTK signals across the app
  */
 class SignalDispatcher : public Gtk::Window
 {
