@@ -80,7 +80,7 @@ namespace BottleTypes {
   };
   
   // Bit enum to string
-  static std::string toString(Bit bit) {
+  inline static std::string toString(Bit bit) {
     switch(bit) {
       case Bit::win32:
         return "32";
@@ -94,7 +94,7 @@ namespace BottleTypes {
   // Windows enum to string
   // TODO: Move the helper.cc windows list to bottle_types,
   // in order to have a single point of definition of Windows names
-  static std::string toString(Windows win) {
+  inline static std::string toString(Windows win) {
     switch(win) {
       case Windows::Windows20:
         return "Windows 2.0";    
@@ -138,7 +138,7 @@ namespace BottleTypes {
   }
 
   // AudioDriver enum to string
-  static std::string toString(AudioDriver audio) {
+  inline static std::string toString(AudioDriver audio) {
     switch(audio) {
       case AudioDriver::pulseaudio:
         return "PulseAudio";
