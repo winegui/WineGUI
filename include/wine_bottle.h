@@ -85,26 +85,45 @@ public:
 
   /// set name
   void name(const string name) { _name = name; };
-  const string& name() const { return _name; }; /*!< get name */
-  void status(const bool status) { _is_status_ok = status; }; /*!< set status */
-  const bool status() const { return _is_status_ok; }; /*!< get status */
-  void windows(const BottleTypes::Windows win) { _win = win; }; /*!< set windows */
-  const BottleTypes::Windows windows() const { return _win; }; /*!< get windows */
-  void bit(const BottleTypes::Bit bit) { _bit = bit; }; /*!< set bit */
-  const BottleTypes::Bit bit() const { return _bit; }; /*!< get bit */
-  void wine_version(const string wine_version) { _wine_version = wine_version; }; /*!< set Wine version */
-  const string& wine_version() const { return _wine_version; }; /*!< get wine_version */
-  void wine_location(const string wine_location) { _wine_location = wine_location; }; /*!< set Wine location */
-  const string& wine_location() const { return _wine_location; }; /*!< get wine_location */
-  void wine_c_drive(const string wine_c_drive) { _wine_c_drive = wine_c_drive; }; /*!< set Wine C:\ drive location */
-  const string& wine_c_drive() const { return _wine_c_drive; }; /*!< get Wine C:\ drive location */
+  /// get name
+  const string& name() const { return _name; };
+  /// set status
+  void status(const bool status) { _is_status_ok = status; };
+  /// get status
+  const bool status() const { return _is_status_ok; };
+  /// set windows 
+  void windows(const BottleTypes::Windows win) { _win = win; };
+  /// get windows 
+  const BottleTypes::Windows windows() const { return _win; };
+  /// set bit
+  void bit(const BottleTypes::Bit bit) { _bit = bit; };
+  /// get bit
+  const BottleTypes::Bit bit() const { return _bit; };
+  /// set Wine version
+  void wine_version(const string wine_version) { _wine_version = wine_version; };
+  /// set Wine version
+  const string& wine_version() const { return _wine_version; };
+  /// set Wine location
+  void wine_location(const string wine_location) { _wine_location = wine_location; };
+  /// get Wine location
+  const string& wine_location() const { return _wine_location; };
+  /// set Wine c:\ drive location
+  void wine_c_drive(const string wine_c_drive) { _wine_c_drive = wine_c_drive; };
+  /// get Wine c:\ drive location
+  const string& wine_c_drive() const { return _wine_c_drive; };
   // TODO: Changed to datetime iso string
-  void wine_last_changed(const string wine_last_changed) { _wine_last_changed = wine_last_changed; }; /*!< set Wine last changed date */
-  const string& wine_last_changed() const { return _wine_last_changed; }; /*!< get Wine last changed date */
-  void audio_driver(const BottleTypes::AudioDriver audio_driver) { _audio_driver = audio_driver; }; /*!< set Wine audio driver */
-  const BottleTypes::AudioDriver audio_driver() const { return _audio_driver; }; /*!< get Wine audio driver */
-  void virtual_desktop(const string virtual_desktop) { _virtual_desktop = virtual_desktop; }; /*!< set Wine emulate virtual desktop */
-  const string& virtual_desktop() const { return _virtual_desktop; }; /*!< get Wine emulate virtual desktop */
+  /// set Wine last changed date
+  void wine_last_changed(const string wine_last_changed) { _wine_last_changed = wine_last_changed; };
+  /// get Wine last changed date
+  const string& wine_last_changed() const { return _wine_last_changed; };
+  /// set Wine audio driver
+  void audio_driver(const BottleTypes::AudioDriver audio_driver) { _audio_driver = audio_driver; };
+  /// get Wine audio driver
+  const BottleTypes::AudioDriver audio_driver() const { return _audio_driver; };
+  /// set Wine emulate virtual desktop
+  void virtual_desktop(const string virtual_desktop) { _virtual_desktop = virtual_desktop; };
+  /// get Wine emulate virtual desktop
+  const string& virtual_desktop() const { return _virtual_desktop; };
   
 private:
   string _name;
