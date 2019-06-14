@@ -25,6 +25,9 @@
 #include "menu.h"
 #include "about_dialog.h"
 
+/**
+ * \brief Constructor
+ */
 SignalDispatcher::SignalDispatcher(BottleManager& manager, Menu& menu, AboutDialog& about)
 : manager(manager),
   menu(menu),
@@ -32,6 +35,9 @@ SignalDispatcher::SignalDispatcher(BottleManager& manager, Menu& menu, AboutDial
 
 SignalDispatcher::~SignalDispatcher() {}
 
+/**
+ * \brief Set main window pointer to Signal Dispatcher
+ */
 void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
 {
   this->mainWindow = mainWindow;

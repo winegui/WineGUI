@@ -37,7 +37,8 @@ class SignalDispatcher : public Gtk::Window
   friend class MainWindow;
 
 public:
-  sigc::signal<void> hideMainWindow;
+  // Signals
+  sigc::signal<void> hideMainWindow; /*!< hide/quite main window signal */
 
   SignalDispatcher(BottleManager& manager, Menu& menu, AboutDialog& about);
   virtual ~SignalDispatcher();
