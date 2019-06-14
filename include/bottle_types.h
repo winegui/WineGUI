@@ -31,9 +31,9 @@ struct BottleTypes {
   inline static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
   
   /**
-   * \enum BottleTypes::Windows
-   * \brief  List of Windows versions
-   * Don't forget to update the toString methods if required!
+   * \enum Windows
+   * \brief List of Windows versions.
+   * \note Don't forget to update the toString methods if required!
    */
   enum Windows
   {
