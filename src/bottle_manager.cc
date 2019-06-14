@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2019 WineGUI
  *
- * \file    controller.cc
+ * \file    bottle_manager.cc
  * \brief   The controller controls it all
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
@@ -134,7 +134,7 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
     windows = BottleTypes::Windows::WindowsXP;
     bit = BottleTypes::Bit::win32;
     cDriveLocation = "- Unknown -";
-    lastTimeWineUpdated = " - Unknown -";
+    lastTimeWineUpdated = "- Unknown -";
     audioDriver = BottleTypes::AudioDriver::pulseaudio;
 
     try {

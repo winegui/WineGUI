@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2019 WineGUI
  *
- * \file    window.cc
- * \brief   GTK+ Window class
+ * \file    main_window.cc
+ * \brief   Main GTK+ Window class
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -139,7 +139,7 @@ void MainWindow::ShowErrorMessage(const Glib::ustring& message)
 {
   Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
   dialog.set_title("An error has occurred!");
-  dialog.set_modal(Gtk::DialogFlags::DIALOG_DESTROY_WITH_PARENT);
+  dialog.set_modal(true);
   dialog.run();
 }
 
