@@ -83,7 +83,8 @@ public:
    */
   ~WineBottle() {};
 
-  void name(const string name) { _name = name; }; /*!< set name */
+  /// set name
+  void name(const string name) { _name = name; };
   const string& name() const { return _name; }; /*!< get name */
   void status(const bool status) { _is_status_ok = status; }; /*!< set status */
   const bool status() const { return _is_status_ok; }; /*!< get status */
