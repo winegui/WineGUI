@@ -33,6 +33,9 @@ using std::string;
 class WineBottle
 {
 public:
+  /**
+   * \brief Contruct a new WineBottle with limited inputs
+   */
   WineBottle(
     string name, 
     string wine_version,
@@ -50,6 +53,9 @@ public:
     _audio_driver(BottleTypes::AudioDriver::pulseaudio),
     _virtual_desktop("disabled") {};
 
+  /**
+   * \brief Contruct a new WineBottle
+   */
   WineBottle(
     string name,
     bool status,
@@ -72,31 +78,33 @@ public:
     _audio_driver(audio_driver),
     _virtual_desktop(virtual_desktop) {};
 
+  /**
+   * \brief Destruct
+   */
   ~WineBottle() {};
 
-  void name(const string name) { _name = name; };
-  const string& name() const { return _name; };
-  void status(const bool status) { _is_status_ok = status; };
-  const bool status() const { return _is_status_ok; };
-  void windows(const BottleTypes::Windows win) { _win = win; };
-  const BottleTypes::Windows windows() const { return _win; };
-  void bit(const BottleTypes::Bit bit) { _bit = bit; };
-  const BottleTypes::Bit bit() const { return _bit; };
-  void wine_version(const string wine_version) { _wine_version = wine_version; };
-  const string& wine_version() const { return _wine_version; };
-  void wine_location(const string wine_location) { _wine_location = wine_location; };
-  const string& wine_location() const { return _wine_location; };
-  void wine_c_drive(const string wine_c_drive) { _wine_c_drive = wine_c_drive; };
-  const string& wine_c_drive() const { return _wine_c_drive; };
+  void name(const string name) { _name = name; }; /*!< set name */
+  const string& name() const { return _name; }; /*!< get name */
+  void status(const bool status) { _is_status_ok = status; }; /*!< set status */
+  const bool status() const { return _is_status_ok; }; /*!< get status */
+  void windows(const BottleTypes::Windows win) { _win = win; }; /*!< set windows */
+  const BottleTypes::Windows windows() const { return _win; }; /*!< get windows */
+  void bit(const BottleTypes::Bit bit) { _bit = bit; }; /*!< set bit */
+  const BottleTypes::Bit bit() const { return _bit; }; /*!< get bit */
+  void wine_version(const string wine_version) { _wine_version = wine_version; }; /*!< set Wine version */
+  const string& wine_version() const { return _wine_version; }; /*!< get wine_version */
+  void wine_location(const string wine_location) { _wine_location = wine_location; }; /*!< set Wine location */
+  const string& wine_location() const { return _wine_location; }; /*!< get wine_location */
+  void wine_c_drive(const string wine_c_drive) { _wine_c_drive = wine_c_drive; }; /*!< set Wine C:\ drive location */
+  const string& wine_c_drive() const { return _wine_c_drive; }; /*!< get Wine C:\ drive location */
   // TODO: Changed to datetime iso string
-  void wine_last_changed(const string wine_last_changed) { _wine_last_changed = wine_last_changed; };
-  const string& wine_last_changed() const { return _wine_last_changed; };
-  void audio_driver(const BottleTypes::AudioDriver audio_driver) { _audio_driver = audio_driver; };
-  const BottleTypes::AudioDriver audio_driver() const { return _audio_driver; };
-  void virtual_desktop(const string virtual_desktop) { _virtual_desktop = virtual_desktop; };
-  const string& virtual_desktop() const { return _virtual_desktop; };
+  void wine_last_changed(const string wine_last_changed) { _wine_last_changed = wine_last_changed; }; /*!< set Wine last changed date */
+  const string& wine_last_changed() const { return _wine_last_changed; }; /*!< get Wine last changed date */
+  void audio_driver(const BottleTypes::AudioDriver audio_driver) { _audio_driver = audio_driver; }; /*!< set Wine audio driver */
+  const BottleTypes::AudioDriver audio_driver() const { return _audio_driver; }; /*!< get Wine audio driver */
+  void virtual_desktop(const string virtual_desktop) { _virtual_desktop = virtual_desktop; }; /*!< set Wine emulate virtual desktop */
+  const string& virtual_desktop() const { return _virtual_desktop; }; /*!< get Wine emulate virtual desktop */
   
-
 private:
   string _name;
   bool _is_status_ok;
