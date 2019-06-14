@@ -51,27 +51,27 @@ public:
   
 protected:
   // Child widgets
-  Gtk::Box vbox;
-  Gtk::Paned paned;
+  Gtk::Box vbox; /*!< The main vertical box */
+  Gtk::Paned paned; /*!< The main paned panel (horizontal) */
 
   // Left widgets
-  Gtk::ScrolledWindow scrolled_window;
-  Gtk::ListBox listbox;
+  Gtk::ScrolledWindow scrolled_window; /*!< Scrolled Window container, which contains the listbox */
+  Gtk::ListBox listbox; /*!< Listbox in the left panel */
 
   // Right widgets
-  Gtk::Box right_box;
-  Gtk::Toolbar toolbar;
-  Gtk::Separator separator1;
-  Gtk::Grid detail_grid;
+  Gtk::Box right_box; /*!< Right panel horizontal box */
+  Gtk::Toolbar toolbar; /*!< Toolbar at top */
+  Gtk::Separator separator1; /*< Seperator */
+  Gtk::Grid detail_grid; /*< Grid layout container to have multiple rows & columns below the toolbar */
   // Detailed info labels on the right panel
-  Gtk::Label name;
-  Gtk::Label window_version;
-  Gtk::Label wine_version;
-  Gtk::Label wine_location;
-  Gtk::Label c_drive_location;
-  Gtk::Label wine_last_changed;
-  Gtk::Label audio_driver;
-  Gtk::Label virtual_desktop;
+  Gtk::Label name; /*< Bottle name */
+  Gtk::Label window_version; /*< Windows version text */
+  Gtk::Label wine_version; /*< Wine version text */
+  Gtk::Label wine_location; /*< Wine location text */
+  Gtk::Label c_drive_location; /*< C:\ drive location text */
+  Gtk::Label wine_last_changed; /*< Last changed text */
+  Gtk::Label audio_driver; /*< Audio driver text */
+  Gtk::Label virtual_desktop; /*< Virtual desktop text */
 
 private:
   // Slots

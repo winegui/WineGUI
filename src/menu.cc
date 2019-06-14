@@ -86,7 +86,10 @@ Menu::Menu()
 Menu::~Menu() {
 }
 
-
+/**
+ * \brief Return the machine sub menu only
+ * \return GTK::Menu pointer of the machine menu
+ */
 Gtk::Menu* Menu::getMachineMenu() {
   return &machine_submenu;
 }

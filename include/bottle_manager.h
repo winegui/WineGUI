@@ -32,7 +32,7 @@ using std::string;
 class MainWindow;
 
 /**
- * \class Controller
+ * \class BottleManager
  * \brief Controller that controls it all
  */
 class BottleManager
@@ -43,7 +43,7 @@ public:
 
   void UpdateBottles();
   // Signals are possible:
-  // Eg. sigc::signal<void> some name;
+  // Eg. sigc::signal<void> some_name; /*!< signal bla */
 
 private:
   string BOTTLE_LOCATION;

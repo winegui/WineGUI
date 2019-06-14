@@ -39,16 +39,16 @@ public:
 
 protected:
   // Child widgets
-  Gtk::MenuItem file;
-  Gtk::MenuItem view;
-  Gtk::MenuItem machine;
-  Gtk::MenuItem help;
-  Gtk::Menu file_submenu;
-  Gtk::Menu view_submenu;
-  Gtk::Menu machine_submenu;
-  Gtk::Menu help_submenu;
-  Gtk::SeparatorMenuItem separator1;
-  Gtk::SeparatorMenuItem separator2;
+  Gtk::MenuItem file; /*!< File menu button */
+  Gtk::MenuItem view; /*!< View menu button */
+  Gtk::MenuItem machine; /*!< Machine menu button */
+  Gtk::MenuItem help; /*!< Help menu button */
+  Gtk::Menu file_submenu; /*!< File sub menu */
+  Gtk::Menu view_submenu; /*!< View sub menu */
+  Gtk::Menu machine_submenu; /*!< Machine sub menu */
+  Gtk::Menu help_submenu; /*!< Help sub menu */
+  Gtk::SeparatorMenuItem separator1; /*!< Seperator */
+  Gtk::SeparatorMenuItem separator2; /*!< Seperator */
 
 private:
   Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);

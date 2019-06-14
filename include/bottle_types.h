@@ -23,14 +23,18 @@
 #include <string>
 
 /**
+ * \class BottleTypes
  * \brief Bottle type enum definitions
  */
 struct BottleTypes {
-  // \brief Emulate Virtual Desktop disabled string
+  //// Emulate Virtual Desktop disabled string
   inline static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
   
-  // \brief  List of Windows versions
-  // Don't forget to update the toString methods if required!
+  /**
+   * \enum BottleTypes::Windows
+   * \brief  List of Windows versions
+   * Don't forget to update the toString methods if required!
+   */
   enum Windows
   {
     Windows20,
@@ -53,14 +57,20 @@ struct BottleTypes {
     Windows10
   };
 
-  // \brief Windows bit options
+  /**
+   * \enum BottleTypes::Bit
+   * \brief Windows bit options
+   */
   enum Bit
   {
     win32,
     win64
   };
   
-  // Wine supported Audio drivers
+  /**
+   * \enum BottleTypes::AudioDriver
+   * \brief Wine supported audio drivers
+   */
   enum AudioDriver 
   {
     pulseaudio,
@@ -69,18 +79,16 @@ struct BottleTypes {
     oss,
     disabled
   };
-  // Define Bit so it keeps within the limits of the enum
-  Bit b_;
+  
+  Bit b_; /*!< Define Bit so it keeps within the limits of the enum */
   BottleTypes(Bit b) : b_(b) {}
   operator Bit () const {return b_;}
 
-  // Define AudioDriver so it keeps within the limits of the enum
-  AudioDriver ar_;
+  AudioDriver ar_; /*!< Define AudioDriver so it keeps within the limits of the enum */
   BottleTypes(AudioDriver ad) : ar_(ad) {}
   operator AudioDriver () const {return ar_;}
 
-  // Define Windows so it keeps within the limits of the enum
-  Windows w_;
+  Windows w_; /*!< Define Windows so it keeps within the limits of the enum */
   BottleTypes(Windows w) : w_(w) {}
   operator Windows () const {return w_;}
 
