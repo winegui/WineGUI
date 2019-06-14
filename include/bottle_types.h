@@ -23,10 +23,9 @@
 #include <string>
 
 /**
- * \class BottleTypes
  * \brief Bottle type enum definitions
  */
-struct BottleTypes {
+namespace BottleTypes {
   //// Emulate Virtual Desktop disabled string
   inline static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
   
@@ -35,7 +34,7 @@ struct BottleTypes {
    * \brief List of Windows versions.
    * \note Don't forget to update the toString methods if required!
    */
-  enum Windows
+  enum class Windows
   {
     Windows20,
     Windows30,
@@ -58,20 +57,20 @@ struct BottleTypes {
   };
 
   /**
-   * \enum BottleTypes::Bit
+   * \enum Bit
    * \brief Windows bit options
    */
-  enum Bit
+  enum class Bit
   {
     win32,
     win64
   };
   
   /**
-   * \enum BottleTypes::AudioDriver
+   * \enum AudioDriver
    * \brief Wine supported audio drivers
    */
-  enum AudioDriver 
+  enum class AudioDriver 
   {
     pulseaudio,
     alsa,
@@ -80,18 +79,6 @@ struct BottleTypes {
     disabled
   };
   
-  Bit b_; /*!< Define Bit so it keeps within the limits of the enum */
-  BottleTypes(Bit b) : b_(b) {}
-  operator Bit () const {return b_;}
-
-  AudioDriver ar_; /*!< Define AudioDriver so it keeps within the limits of the enum */
-  BottleTypes(AudioDriver ad) : ar_(ad) {}
-  operator AudioDriver () const {return ar_;}
-
-  Windows w_; /*!< Define Windows so it keeps within the limits of the enum */
-  BottleTypes(Windows w) : w_(w) {}
-  operator Windows () const {return w_;}
-
   // Bit enum to string
   static std::string toString(Bit bit) {
     switch(bit) {
@@ -165,9 +152,4 @@ struct BottleTypes {
         return "disabled";
     }
   }
-
-private:
-   //prevent automatic conversion for any other built-in types such as bool, int, etc
-   template<typename T>
-    operator T () const;
 };
