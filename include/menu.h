@@ -29,9 +29,9 @@
 class Menu: public Gtk::MenuBar
 {
 public:
-  sigc::signal<void> signalQuit;
-  sigc::signal<void> signalRefresh;
-  sigc::signal<void> signalShowAbout;
+  sigc::signal<void> signalQuit; /*!< Signal on click quite button */
+  sigc::signal<void> signalRefresh; /*!< Signal on click refresh button */
+  sigc::signal<void> signalShowAbout; /*!< Signal on click about button */
 
   Menu();
   virtual ~Menu();
