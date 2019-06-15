@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
   MainWindow mainWindow(menu);
   AboutDialog about(mainWindow);
   BottleManager bottleManager(mainWindow);
-
   SignalDispatcher signalDispatcher(bottleManager, menu, about);
 
   mainWindow.SetDispatcher(signalDispatcher);
@@ -49,7 +48,7 @@ int main(int argc, char *argv[])
 
   // Start the initial read from disk to fetch the bottles & update GUI
   bottleManager.UpdateBottles();
-  
+
   // Start main loop
   return app->run(mainWindow, argc, argv);
 }
