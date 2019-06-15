@@ -31,9 +31,6 @@ BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
 {
   // TODO: Make it configurable via settings
   BOTTLE_LOCATION = Glib::get_home_dir() + "/.winegui/prefixes";
-  
-  // Retrieve the bottles and update UI
-  UpdateBottles();
 }
 
 /**
