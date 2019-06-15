@@ -20,11 +20,11 @@
  */
 #pragma once
 
-#include <vector>
+#include <list>
 #include <map>
 #include <string>
 #include <glibmm/main.h>
-#include "wine_bottle.h"
+#include "bottle_item.h"
 #include "helper.h"
 
 using std::string;
@@ -49,11 +49,10 @@ public:
 private:
   string BOTTLE_LOCATION;
   MainWindow& mainWindow;
-  std::vector<WineBottle> bottles;
-  WineBottle* current_bottle;
+  // TODO: Since GTK is using a copy contructor, I think its wise to remove our local list
+  std::list<BottleItem> bottles;
 
   string GetWineVersion();
   std::map<string, unsigned long> ReadBottles();
   void CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs);
-  void SetCurrentBottle(WineBottle* bottle);
 };

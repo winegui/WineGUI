@@ -20,7 +20,6 @@
  */
 #include "main_window.h"
 
-#include <algorithm>
 #include "signal_dispatcher.h"
 #include <iostream>
 
@@ -71,6 +70,7 @@ void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
   signalDispatcher.hideMainWindow.connect(sigc::mem_fun(*this, &MainWindow::on_hide_window));
 
   // Send button signal to signaldispatcher class
+  listbox.signal_row_activated().connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_row_clicked));
   listbox.signal_button_press_event().connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_button_press_event));
 }
 
@@ -86,38 +86,37 @@ void MainWindow::on_hide_window()
  * \brief Append a single Wine Bottle to the left panel
  * \param[in] bottle - A single WineBottle class
  */
-void MainWindow::AppendWineBottle(const WineBottle& bottle)
+void MainWindow::AppendWineBottle(BottleItem& bottle)
 {
-  AddWineBottle(bottle);
+  listbox.add(bottle);
   // Update show
   show_all_children();
 }
 
 /**
- * \brief Set a vector of bottles to the left panel
- * \param[in] bottles - WineBottle vector array
+ * \brief Set a list/vector of bottles to the left panel
+ * \param[in] bottles - Wine Bottle item vector array
  */
-void MainWindow::SetWineBottles(const std::vector<WineBottle>& bottles)
+void MainWindow::SetWineBottles(std::list<BottleItem>& bottles)
 {
-  // Clear listbox
+  // Clear whole listbox
   std::vector<Gtk::Widget*> children = listbox.get_children();
   for(Gtk::Widget* el: children) {
     listbox.remove(*el);
   }
 
-  for(const WineBottle& bottle : bottles)
+  for(BottleItem& bottle : bottles)
   {
-    AddWineBottle(bottle);
+    listbox.add(bottle);
   }
-  // Update show
-  show_all_children();
+  listbox.show_all();
 }
 
 /**
  * \brief set the detailed info panel on the right
- * \param[in] bottle - WineBottle object
+ * \param[in] bottle - Wine Bottle item object
  */
-void MainWindow::SetDetailedInfo(WineBottle bottle)
+void MainWindow::SetDetailedInfo(BottleItem& bottle)
 {
   // Set right side of the GUI
   name.set_text(bottle.name());
@@ -294,68 +293,6 @@ void MainWindow::CreateRightPanel()
 }
 
 /**
- * \brief Add a Wine Bottle box to the left listbox
- * \param[in] bottle - A single WineBottle class
- */
-void MainWindow::AddWineBottle(const WineBottle& bottle)
-{
-  // To lower case
-  string windows = str_tolower(BottleTypes::toString(bottle.windows()));
-  // Remove spaces
-  windows.erase(std::remove_if(
-    std::begin(windows), std::end(windows),
-    [l = std::locale{}](auto ch) { return std::isspace(ch, l); }
-  ), end(windows));
-  Glib::ustring bit = BottleTypes::toString(bottle.bit());
-  Glib::ustring filename = windows + "_" + bit + ".png";
-  Glib::ustring name = bottle.name();
-  bool status = bottle.status();
-
-  // Set left side of the GUI
-  Gtk::Image* image = Gtk::manage(new Gtk::Image());
-  image->set("../images/windows/" + filename);
-  image->set_margin_top(8);
-  image->set_margin_end(8);
-  image->set_margin_bottom(8);
-  image->set_margin_start(8);
-
-  Gtk::Label* name_label = Gtk::manage(new Gtk::Label());
-  name_label->set_xalign(0.0);
-  name_label->set_markup("<span size=\"medium\"><b>" + name + "</b></span>");
-  
-  Glib::ustring status_text = "Ready";
-  Gtk::Image* status_icon = Gtk::manage(new Gtk::Image());
-  if(status) {
-    status_icon->set(READY_IMAGE);
-  } else {
-    status_text = "Not Ready";
-    status_icon->set(NOT_READY_IMAGE);
-  }
-  status_icon->set_size_request(2, -1);
-  status_icon->set_halign(Gtk::Align::ALIGN_START);
-
-  Gtk::Label* status_label = Gtk::manage(new Gtk::Label(status_text));
-  status_label->set_xalign(0.0);
-
-  Gtk::Grid* row = Gtk::manage(new Gtk::Grid());
-  row->set_column_spacing(8);
-  row->set_row_spacing(5);
-  row->set_border_width(4);
-
-  row->attach(*image, 0, 0, 1, 2);
-  // Agh, stupid GTK! Width 2 would be enough, add 8 extra = 10
-  // I can't control the gtk grid cell width
-  row->attach_next_to(*name_label, *image, Gtk::PositionType::POS_RIGHT, 10, 1);
-
-  row->attach(*status_icon, 1, 1, 1, 1);
-  row->attach_next_to(*status_label, *status_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
-
-  // Add the whole grid to the listbox
-  listbox.add(*row);
-  row->show();
-}
-
-/**
  * \brief Override update header function of GTK Listbox with custom layout
  * \param[in] row
  * \param[in] before
@@ -374,16 +311,4 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
     gtk_widget_show(current);
     gtk_list_box_row_set_header(row, current);
   }
-}
-
-/**
- * \brief String to lower string helper method
- * \param[in] string that needs lower case
- * \return lower case string
- */
-string MainWindow::str_tolower(string s) {
-    std::transform(s.begin(), s.end(), s.begin(), 
-      [](unsigned char c){ return std::tolower(c); }
-    );
-    return s;
 }

@@ -21,14 +21,12 @@
 #pragma once
 
 #include <gtkmm.h>
-#include <vector>
+#include <list>
 #include "menu.h"
-#include "wine_bottle.h"
+#include "bottle_item.h"
 
 using std::string;
 
-#define READY_IMAGE "../images/ready.png" /*!< The ready image to show when Bottle is ready */
-#define NOT_READY_IMAGE "../images/not_ready.png" /*!< The non-ready image to show when Bottle is in trouble */
 
 // Forward declaration
 class SignalDispatcher;
@@ -44,9 +42,9 @@ public:
   virtual ~MainWindow();
   void SetDispatcher(SignalDispatcher& signalDispatcher);
 
-  void AppendWineBottle(const WineBottle& bottle);
-  void SetWineBottles(const std::vector<WineBottle>& bottles);
-  void SetDetailedInfo(WineBottle bottle);
+  void AppendWineBottle(BottleItem& bottle);
+  void SetWineBottles(std::list<BottleItem>& bottles);
+  void SetDetailedInfo(BottleItem& bottle);
   void ShowErrorMessage(const Glib::ustring& message);
   
 protected:
@@ -79,8 +77,6 @@ private:
   
   void CreateLeftPanel();
   void CreateRightPanel();
-  void AddWineBottle(const WineBottle& bottle);
 
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* row, Gtk::ListBoxRow* before);
-  static string str_tolower(string s);
 };

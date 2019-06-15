@@ -1,0 +1,132 @@
+/**
+ * Copyright (c) 2019 WineGUI
+ *
+ * \file    bottle_item.h
+ * \brief   Wine Bottle item class definition (only header file)
+ * \author  Melroy van den Berg <webmaster1989@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#pragma once
+
+#include <gtkmm.h>
+#include <string>
+#include "bottle_types.h"
+
+#define READY_IMAGE "../images/ready.png" /*!< The ready image to show when Bottle is ready */
+#define NOT_READY_IMAGE "../images/not_ready.png" /*!< The non-ready image to show when Bottle is in trouble */
+
+/**
+ * \class WineBottle
+ * \brief Class object definition for a wine bottle (only header file)
+ */
+class BottleItem : public Gtk::ListBoxRow
+{
+public:
+  BottleItem();
+  BottleItem(const BottleItem& bottleItem);
+
+  BottleItem(Glib::ustring name, 
+    Glib::ustring wine_version,
+    Glib::ustring wine_location,
+    Glib::ustring wine_c_drive,
+    Glib::ustring wine_last_changed);
+
+  BottleItem(Glib::ustring name,
+    bool status,
+    BottleTypes::Windows win,
+    BottleTypes::Bit bit,
+    Glib::ustring wine_version,
+    Glib::ustring wine_location,
+    Glib::ustring wine_c_drive,
+    Glib::ustring wine_last_changed,
+    BottleTypes::AudioDriver audio_driver,
+    Glib::ustring virtual_desktop);
+
+  /**
+   * \brief Destruct
+   */
+  ~BottleItem() {};
+
+  /*
+   *  Getters & setters
+   */
+  /// get id
+  const unsigned int id() const { return _id; };
+  /// set name
+  void name(const Glib::ustring name) { _name = name; };
+  /// get name
+  const Glib::ustring& name() const { return _name; };
+  /// set status
+  void status(const bool status) { _is_status_ok = status; };
+  /// get status
+  const bool status() const { return _is_status_ok; };
+  /// set windows 
+  void windows(const BottleTypes::Windows win) { _win = win; };
+  /// get windows 
+  const BottleTypes::Windows windows() const { return _win; };
+  /// set bit
+  void bit(const BottleTypes::Bit bit) { _bit = bit; };
+  /// get bit
+  const BottleTypes::Bit bit() const { return _bit; };
+  /// set Wine version
+  void wine_version(const Glib::ustring wine_version) { _wine_version = wine_version; };
+  /// set Wine version
+  const Glib::ustring& wine_version() const { return _wine_version; };
+  /// set Wine location
+  void wine_location(const Glib::ustring wine_location) { _wine_location = wine_location; };
+  /// get Wine location
+  const Glib::ustring& wine_location() const { return _wine_location; };
+  /// set Wine c:\ drive location
+  void wine_c_drive(const Glib::ustring wine_c_drive) { _wine_c_drive = wine_c_drive; };
+  /// get Wine c:\ drive location
+  const Glib::ustring& wine_c_drive() const { return _wine_c_drive; };
+  // TODO: Changed to datetime iso Glib::ustring
+  /// set Wine last changed date
+  void wine_last_changed(const Glib::ustring wine_last_changed) { _wine_last_changed = wine_last_changed; };
+  /// get Wine last changed date
+  const Glib::ustring& wine_last_changed() const { return _wine_last_changed; };
+  /// set Wine audio driver
+  void audio_driver(const BottleTypes::AudioDriver audio_driver) { _audio_driver = audio_driver; };
+  /// get Wine audio driver
+  const BottleTypes::AudioDriver audio_driver() const { return _audio_driver; };
+  /// set Wine emulate virtual desktop
+  void virtual_desktop(const Glib::ustring virtual_desktop) { _virtual_desktop = virtual_desktop; };
+  /// get Wine emulate virtual desktop
+  const Glib::ustring& virtual_desktop() const { return _virtual_desktop; };
+
+protected:
+  // Widgets
+  Gtk::Grid grid;
+  Gtk::Image image;
+  Gtk::Label name_label;
+  Gtk::Image status_icon;
+  Gtk::Label status_label;
+
+private:
+  unsigned int _id;
+  Glib::ustring _name;
+  bool _is_status_ok;
+  BottleTypes::Windows _win;
+  BottleTypes::Bit _bit;
+  Glib::ustring _wine_version;
+  Glib::ustring _wine_location;
+  Glib::ustring _wine_c_drive;
+  Glib::ustring _wine_last_changed;
+  BottleTypes::AudioDriver _audio_driver;
+  Glib::ustring _virtual_desktop;
+
+  void CreateUI();
+  static std::string str_tolower(std::string s);
+};

@@ -52,7 +52,8 @@ private:
   // slots
   virtual void on_quit();
   virtual bool on_button_press_event(GdkEventButton* event);
-
+  virtual void on_row_clicked(Gtk::ListBoxRow* row);
+  
   MainWindow* mainWindow;
   BottleManager& manager;
   Menu& menu;

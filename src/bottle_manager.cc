@@ -29,9 +29,6 @@
  */
 BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
 {
-  // Set NULL during init
-  current_bottle = NULL;
-
   // TODO: Make it configurable via settings
   BOTTLE_LOCATION = Glib::get_home_dir() + "/.winegui/prefixes";
   
@@ -65,12 +62,18 @@ void BottleManager::UpdateBottles()
       // Update main Window
       mainWindow.SetWineBottles(bottles);
 
-      // Set first element as active (details)    
-      mainWindow.SetDetailedInfo(bottles.at(0));
+      // Set first element as active (details)  
+      // TODO : Improve this
+      auto front = bottles.begin();      
+      mainWindow.SetDetailedInfo(*front);
     }
   }
 }
 
+/**
+ * \brief Get Wine version
+ * \return Wine version
+ */
 string BottleManager::GetWineVersion()
 {
   // Read wine version (is always the same for all bottles atm)
@@ -153,7 +156,7 @@ void BottleManager::CreateWineBottles(string wineVersion, std::map<string, unsig
       mainWindow.ShowErrorMessage(error.what());
     }
 
-    WineBottle* bottle = new WineBottle(
+    BottleItem* bottle = new BottleItem(
       name,
       status,
       windows,
@@ -166,14 +169,4 @@ void BottleManager::CreateWineBottles(string wineVersion, std::map<string, unsig
       virtualDesktop);
     bottles.push_back(*bottle);
   }
-}
-
-/**
- * \brief Set the current selected bottle, the one you are working with
- * \param[in] bottle The bottle to be the current selected one
- * TODO: Should this be managed by the manager or GUI?
- */
-void BottleManager::SetCurrentBottle(WineBottle* bottle)
-{
-  current_bottle = bottle;
 }
