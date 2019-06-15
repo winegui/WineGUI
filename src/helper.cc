@@ -29,8 +29,10 @@
 #include <cstring>
 #include <fcntl.h>
 #include <array>
+#include <time.h>
 #include <glibmm.h>
 #include <giomm/file.h>
+#include <glibmm/timeval.h>
 #include <glibmm/fileutils.h>
 
 // Reg files
@@ -88,21 +90,21 @@ static const struct
 /**
  * \brief Get the bottle directories within the given path
  * \param[in] dir_path Path to search in
- * \return vector of strings of found directories (*full paths*)
+ * \return map of path names (strings) and modification time (in ms) of found directories (*full paths*)
  */
-std::vector<string> Helper::GetBottlesPaths(const string& dir_path)
+std::map<std::string, unsigned long> Helper::GetBottlesPaths(const string& dir_path) // , sort = DEFAULT, NAME, DATE>
 {
-  std::vector<std::string> r;
+  std::map<std::string, unsigned long> r;
   Glib::Dir dir(dir_path);
   auto name = dir.read_name();
   while(!name.empty())
-  {
+  {    
     auto path = Glib::build_filename(dir_path, name);
     if(Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR)) {
-      r.push_back(path);
+      r.insert(std::pair<string, unsigned long>(path, GetModifiedTime(path)));
     }
     name = dir.read_name();
-  }  
+  }
   return r;
 }
 
@@ -585,6 +587,18 @@ std::vector<string> Helper::ReadFile(const string file_path)
     throw std::runtime_error("Could not open file!");
   }
   return output;
+}
+
+/**
+ * \brief Get the last modified date of a file and/or folder
+ * \param[in] file_path File/Folder location
+ * \return Last modifiction time in milliseconds (ms)
+ */
+unsigned long Helper::GetModifiedTime(const string file_path)
+{
+    auto time_info = Gio::File::create_for_path(file_path)->query_info("time");
+    auto time = time_info->modification_time();
+    return (time.tv_sec*1000)+(time.tv_usec/1000);
 }
 
 /**

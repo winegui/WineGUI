@@ -21,6 +21,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 #include <string>
 #include <glibmm/main.h>
 #include "wine_bottle.h"
@@ -52,7 +53,7 @@ private:
   WineBottle* current_bottle;
 
   string GetWineVersion();
-  std::vector<string> ReadBottles();
-  void CreateWineBottles(string wineVersion, std::vector<string> bottleDirs);
+  std::map<string, unsigned long> ReadBottles();
+  void CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs);
   void SetCurrentBottle(WineBottle* bottle);
 };

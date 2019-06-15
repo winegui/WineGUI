@@ -55,7 +55,7 @@ void BottleManager::UpdateBottles()
   }
 
   // Read bottles from disk and create classes from it
-  std::vector<string> bottleDirs = ReadBottles();
+  std::map<string, unsigned long> bottleDirs = ReadBottles();
   if(bottleDirs.size() > 0) {
     // Create wine bottles from bottle directories and wine version
     CreateWineBottles(GetWineVersion(), bottleDirs);
@@ -88,8 +88,9 @@ string BottleManager::GetWineVersion()
 
 /**
  * \brief Read Wine bottles from disk at start-up
+ * \return Return a map of bottle paths (string) and modification time (in ms)
  */
-std::vector<string> BottleManager::ReadBottles()
+std::map<string, unsigned long> BottleManager::ReadBottles()
 {
   if(!Helper::DirExists(BOTTLE_LOCATION)) {
     // Create directory if not exist yet
@@ -97,7 +98,6 @@ std::vector<string> BottleManager::ReadBottles()
       printf("Failed to create WineGUI directory \"%s\": %s\n", BOTTLE_LOCATION.c_str(), g_strerror(errno));
     }
   }
-
   if(Helper::DirExists(BOTTLE_LOCATION)) {
     // Continue
     return Helper::GetBottlesPaths(BOTTLE_LOCATION);
@@ -106,7 +106,7 @@ std::vector<string> BottleManager::ReadBottles()
     mainWindow.ShowErrorMessage("Configuration directory not found (could not create):\n" + BOTTLE_LOCATION);
   }
   // Otherwise empty
-  return std::vector<string>();
+  return std::map<string, unsigned long>();
 }
 
 /**
@@ -114,7 +114,7 @@ std::vector<string> BottleManager::ReadBottles()
  * \param[in] wineVersion The current wine version used
  * \param[in] bottleDirs  The list of bottle directories
  */
-void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bottleDirs)
+void BottleManager::CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs)
 {
   string name = "";
   string virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
@@ -126,7 +126,8 @@ void BottleManager::CreateWineBottles(string wineVersion, std::vector<string> bo
   BottleTypes::AudioDriver audioDriver = BottleTypes::AudioDriver::pulseaudio;
   
   // Retrieve detailed info for each wine bottle prefix
-  for(string prefix: bottleDirs) {
+  for (const auto &[prefix, _]: bottleDirs ) {
+    std::ignore = _;
     // Reset variables
     name = "";
     virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;

@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include "bottle_types.h"
 
 using std::string;
@@ -36,7 +37,7 @@ using std::endl;
 class Helper
 {
 public:
-  static std::vector<string> GetBottlesPaths(const string& dir_path);
+  static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
   static string GetWineVersion();
   static string GetName(const string prefix_path);
   static BottleTypes::Windows GetWindowsOSVersion(const string prefix_path);
@@ -55,5 +56,6 @@ private:
   static string getBottleDirFromPrefix(const string& prefix_path);
   static string CharPointerValueToString(char* charp);
   static std::vector<string> ReadFile(const string file_path);
+  static unsigned long GetModifiedTime(const string file_path);
   static std::vector<string> Split(const string& s, char delimiter);
 };
