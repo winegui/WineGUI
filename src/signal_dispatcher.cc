@@ -63,13 +63,6 @@ void SignalDispatcher::on_quit()
   hideMainWindow();
 }
 
-void SignalDispatcher::on_row_clicked(Gtk::ListBoxRow* row)
-{
-  unsigned int id = ((BottleItem*) row)->id();
-  cout << "yes.." << id <<  endl;
-  //manager.SetCurrentBottle();
-}
-
 bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
 {
   // Single click with right mouse button?

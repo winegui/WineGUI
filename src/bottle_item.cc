@@ -21,10 +21,6 @@
  */
 #include "bottle_item.h"
 
-namespace counter {
-  static int c = 0;
-}
-
 /**
  * \brief Default contructor
  */
@@ -36,8 +32,7 @@ BottleItem::BottleItem() {
  * \brief Copy contructor, used by GTK+
  */
 BottleItem::BottleItem(const BottleItem& bottleItem) {
-  if( this != &bottleItem ){
-    _id = bottleItem.id();
+  if( this != &bottleItem ) {
     _name = bottleItem.name();
     _is_status_ok = bottleItem.status();
     _win = bottleItem.windows();
@@ -61,8 +56,7 @@ BottleItem::BottleItem(
   Glib::ustring wine_location,
   Glib::ustring wine_c_drive,
   Glib::ustring wine_last_changed)
-: 
-  _id(counter::c++),
+:
   _name(name),
   _is_status_ok(true),
   _win(BottleTypes::Windows::WindowsXP),
@@ -92,7 +86,6 @@ BottleItem::BottleItem(
   BottleTypes::AudioDriver audio_driver,
   Glib::ustring virtual_desktop)
 :
-  _id(counter::c++),
   _name(name),
   _is_status_ok(status),
   _win(win),

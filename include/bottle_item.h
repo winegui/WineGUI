@@ -62,8 +62,6 @@ public:
   /*
    *  Getters & setters
    */
-  /// get id
-  const unsigned int id() const { return _id; };
   /// set name
   void name(const Glib::ustring name) { _name = name; };
   /// get name
@@ -108,11 +106,11 @@ public:
 
 protected:
   // Widgets
-  Gtk::Grid grid;
-  Gtk::Image image;
-  Gtk::Label name_label;
-  Gtk::Image status_icon;
-  Gtk::Label status_label;
+  Gtk::Grid grid; /*!< The main grid for the listbox item */
+  Gtk::Image image; /*!< Windows logo of the Wine bottle */
+  Gtk::Label name_label; /*!< Name of the Wine Bottle */
+  Gtk::Image status_icon; /*!< Status icon of the Wine Bottle */
+  Gtk::Label status_label; /*!< Status of the Wine Bottle */
 
 private:
   unsigned int _id;

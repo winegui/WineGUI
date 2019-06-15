@@ -74,6 +74,7 @@ protected:
 private:
   // Slots
   virtual void on_hide_window();
+  virtual void on_row_clicked(Gtk::ListBoxRow* row);
   
   void CreateLeftPanel();
   void CreateRightPanel();

@@ -70,7 +70,7 @@ void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
   signalDispatcher.hideMainWindow.connect(sigc::mem_fun(*this, &MainWindow::on_hide_window));
 
   // Send button signal to signaldispatcher class
-  listbox.signal_row_activated().connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_row_clicked));
+  listbox.signal_row_activated().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
   listbox.signal_button_press_event().connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_button_press_event));
 }
 
@@ -80,6 +80,14 @@ void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
 void MainWindow::on_hide_window()
 {
   hide();
+}
+
+/**
+ * \brief Change detailed window on listbox row clicked event
+ */
+void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
+{
+  SetDetailedInfo(*(BottleItem*)row);
 }
 
 /**
