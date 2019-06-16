@@ -49,6 +49,7 @@ protected:
   Gtk::Menu help_submenu; /*!< Help sub menu */
   Gtk::SeparatorMenuItem separator1; /*!< Seperator */
   Gtk::SeparatorMenuItem separator2; /*!< Seperator */
+  Gtk::SeparatorMenuItem separator3; /*!< Seperator */
 
 private:
   Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);

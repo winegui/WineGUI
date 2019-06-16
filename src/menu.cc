@@ -48,6 +48,10 @@ Menu::Menu()
   refresh->signal_activate().connect(signalRefresh);
 
   // Machine submenu
+  auto newitem = CreateImageMenuItem("New...", "list-add");
+  auto run = CreateImageMenuItem("Run...", "system-run");
+  auto settings = CreateImageMenuItem("Settings...", "preferences-other");
+  auto manage = CreateImageMenuItem("Manage...", "system-software-install");
   auto remove = CreateImageMenuItem("Remove...", "edit-delete");
 
   // Help submenu
@@ -67,7 +71,12 @@ Menu::Menu()
   // View menu
   view_submenu.append(*refresh);
 
-  // Machine menu
+  // Machine menu  
+  machine_submenu.append(*newitem);
+  machine_submenu.append(separator3);
+  machine_submenu.append(*run);
+  machine_submenu.append(*settings);
+  machine_submenu.append(*manage);
   machine_submenu.append(*remove);
 
   // Help menu
