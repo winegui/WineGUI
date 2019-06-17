@@ -55,9 +55,6 @@ NewBottleAssistant::NewBottleAssistant()
   signal_prepare().connect(sigc::mem_fun(*this,
     &NewBottleAssistant::on_assistant_prepare));
 
-  m_entry.signal_changed().connect(sigc::mem_fun(*this,
-    &NewBottleAssistant::on_entry_changed));
-
   show_all_children();
 }
 
@@ -87,6 +84,9 @@ void NewBottleAssistant::createFirstPage()
   m_hbox_win.pack_start(windows_version_label);
   m_hbox_win.pack_start(windows_version_entry);
   m_vbox.pack_start(m_hbox_win, false, false);
+
+  name_entry.signal_changed().connect(sigc::mem_fun(*this,
+    &NewBottleAssistant::on_entry_changed));
 
   append_page(m_vbox);
 }
