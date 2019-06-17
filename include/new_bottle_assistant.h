@@ -51,10 +51,4 @@ private:
   Gtk::Label m_label1, m_label2;
   Gtk::CheckButton m_check;
   Gtk::Entry m_entry;
-
-protected:
-
-
-private:
-
 };
