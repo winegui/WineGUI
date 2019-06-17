@@ -27,9 +27,12 @@
  */
 NewBottleAssistant::NewBottleAssistant()
 : m_vbox(Gtk::ORIENTATION_VERTICAL, 2),
-  m_hbox(Gtk::ORIENTATION_HORIZONTAL, 12),
-  m_label1("Type text to allow the assistant to continue:"),
-  m_label2("Confirmation page"),
+  m_hbox_name(Gtk::ORIENTATION_HORIZONTAL, 12),
+  m_hbox_win(Gtk::ORIENTATION_HORIZONTAL, 12),
+  intro_label("Please use a descriptive name for the machine, and select which Windows version you want to use."),
+  name_label("Name:"),
+  windows_version_label("Windows version:"),
+  confirm_label("Confirmation page"),
   m_check("Optional extra information")
 {
   set_title("New Windows Machine");
@@ -38,23 +41,10 @@ NewBottleAssistant::NewBottleAssistant()
   // Only focus on assistant, disable interaction with other windows in app
   set_modal(true);
 
-  m_hbox.pack_start(m_label1);
-  m_hbox.pack_start(m_entry);
-  m_vbox.pack_start(m_hbox, false, false);
-
-  append_page(m_vbox);
-  append_page(m_check);
-  append_page(m_label2);
-
-  set_page_title(*get_nth_page(0), "Page 1");
-  set_page_title(*get_nth_page(1), "Page 2");
-  set_page_title(*get_nth_page(2), "Confirmation");
-
-  set_page_complete(m_check, true);
-  set_page_complete(m_label2, true);
-
-  set_page_type(m_vbox, Gtk::ASSISTANT_PAGE_INTRO);
-  set_page_type(m_label2, Gtk::ASSISTANT_PAGE_CONFIRM);
+  // Create pages
+  createFirstPage();
+  createSecondPage();
+  createThirdPage();
 
   signal_apply().connect(sigc::mem_fun(*this,
     &NewBottleAssistant::on_assistant_apply));
@@ -78,13 +68,63 @@ NewBottleAssistant::~NewBottleAssistant()
 {
 }
 
+
+/**
+ * \brief First page of the wizard
+ */
+void NewBottleAssistant::createFirstPage()
+{
+  // Intro page
+  set_page_type(m_vbox, Gtk::ASSISTANT_PAGE_INTRO);
+  set_page_title(*get_nth_page(0), "Create Windows Machine - Choose Name & Windows version");
+  
+  m_vbox.pack_start(intro_label);
+  
+  m_hbox_name.pack_start(name_label);
+  m_hbox_name.pack_start(name_entry);
+  m_vbox.pack_start(m_hbox_name, false, false);
+  
+  m_hbox_win.pack_start(windows_version_label);
+  m_hbox_win.pack_start(windows_version_entry);
+  m_vbox.pack_start(m_hbox_win, false, false);
+
+  append_page(m_vbox);
+}
+
+/**
+ * \brief Second page of the wizard
+ */
+void NewBottleAssistant::createSecondPage()
+{
+  set_page_title(*get_nth_page(1), "Create Windows Machine - Additional settings");
+  
+  set_page_complete(m_check, true);
+  
+  append_page(m_check);
+}
+
+/**
+ * \brief Last page of the wizard
+ */
+void NewBottleAssistant::createThirdPage()
+{
+  // Confirm page
+  set_page_type(confirm_label, Gtk::ASSISTANT_PAGE_CONFIRM);
+  set_page_title(*get_nth_page(2), "Create Windows Machine - Confirmation/Creating *loading bar...?*");
+  
+  set_page_complete(confirm_label, true);
+
+  append_page(confirm_label);
+}
+
 /**
  * \brief Retrieve the results (once wizard is finished)
  */
-void NewBottleAssistant::get_result(bool& check_state, Glib::ustring& entry_text)
+void NewBottleAssistant::get_result(bool& check_state, Glib::ustring& name, Glib::ustring& windows_version)
 {
   check_state = m_check.get_active();
-  entry_text = m_entry.get_text();
+  name = name_entry.get_text();
+  windows_version = windows_version_entry.get_text();
 }
 
 void NewBottleAssistant::on_assistant_apply()
@@ -115,8 +155,8 @@ void NewBottleAssistant::on_assistant_prepare(Gtk::Widget* /* widget */)
 
 void NewBottleAssistant::on_entry_changed()
 {
-  // The page is only complete if the entry contains text.
-  if(m_entry.get_text_length())
+  // The page is only complete if the name entry contains text.
+  if(name_entry.get_text_length())
     set_page_complete(m_vbox, true);
   else
     set_page_complete(m_vbox, false);
@@ -124,6 +164,8 @@ void NewBottleAssistant::on_entry_changed()
 
 void NewBottleAssistant::print_status()
 {
-  std::cout << ", entry contents: \"" << m_entry.get_text()
+  std::cout
+    << ", Name: \"" << name_entry.get_text()
+    << ", Windows version: \"" << windows_version_entry.get_text()
     << "\", checkbutton status: " << m_check.get_active() << std::endl;
 }

@@ -32,7 +32,7 @@ public:
   NewBottleAssistant();
   virtual ~NewBottleAssistant();
 
-  void get_result(bool& check_state, Glib::ustring& entry_text);
+  void get_result(bool& check_state, Glib::ustring& name, Glib::ustring& windows_version);
 
 private:
   // Signal handlers:
@@ -43,12 +43,16 @@ private:
   void on_entry_changed();
 
   // Member functions:
+  void createFirstPage();
+  void createSecondPage();
+  void createThirdPage();
   void print_status();
 
   // Child widgets:
   Gtk::Box m_vbox;
-  Gtk::Box m_hbox;
-  Gtk::Label m_label1, m_label2;
+  Gtk::Box m_hbox_name;
+  Gtk::Box m_hbox_win;
+  Gtk::Label intro_label, name_label, windows_version_label, confirm_label;
   Gtk::CheckButton m_check;
-  Gtk::Entry m_entry;
+  Gtk::Entry name_entry, windows_version_entry;
 };

@@ -338,10 +338,11 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
 void MainWindow::on_new_bottle_assistant_apply()
 {
   bool check_state;
-  Glib::ustring entry_text;
+  Glib::ustring name;
+  Glib::ustring windows_version;
 
-  newBottleAssistant.get_result(check_state, entry_text);
-  std::cout << "Applied: " << check_state << " - " << entry_text << std::endl;
+  newBottleAssistant.get_result(check_state, name, windows_version);
+  std::cout << "Applied: " << check_state << " - " << name << " - " << windows_version << std::endl;
   //m_check.set_active(check_state);
   //m_entry.set_text(entry_text);
 }
