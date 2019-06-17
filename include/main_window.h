@@ -24,6 +24,7 @@
 #include <list>
 #include "menu.h"
 #include "bottle_item.h"
+#include "new_bottle_assistant.h"
 
 using std::string;
 
@@ -71,11 +72,22 @@ protected:
   Gtk::Label audio_driver; /*!< Audio driver text */
   Gtk::Label virtual_desktop; /*!< Virtual desktop text */
 
+  // Toolbar buttons
+  Gtk::ToolButton new_button; /*!< New toolbar button */
+  Gtk::ToolButton run_button; /*!< Run... toolbar button */
+  Gtk::ToolButton settings_button; /*!< Settings toolbar button */
+  Gtk::ToolButton manage_button; /*!< Manage toolbar button */
+  Gtk::ToolButton reboot_button; /*!< Reboot toolbar button */
+
 private:
-  // Slots
+  NewBottleAssistant newBottleAssistant;  /*!< New bottle wizard (behind: new button toolbar) */
+
+  // Signal handlers:
   virtual void on_hide_window();
   virtual void on_row_clicked(Gtk::ListBoxRow* row);
-  
+  virtual void on_new_button_clicked();
+  virtual void on_new_bottle_assistant_apply();
+
   void CreateLeftPanel();
   void CreateRightPanel();
 

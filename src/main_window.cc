@@ -51,6 +51,12 @@ MainWindow::MainWindow(Menu& menu)
   // Using a Vertical box container
   add(vbox);
 
+  // Main Window signals
+  new_button.signal_clicked().connect(sigc::mem_fun(*this,
+    &MainWindow::on_new_button_clicked));
+  newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this,
+    &MainWindow::on_new_bottle_assistant_apply));
+
   // Show the widget children
   show_all_children();
 }
@@ -179,28 +185,33 @@ void MainWindow::CreateRightPanel()
   // Buttons in toolbar
   Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
   new_image->set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::ToolButton* new_button = Gtk::manage(new Gtk::ToolButton(*new_image, "New"));
-  toolbar.insert(*new_button, 0);
+  new_button.set_label("New");
+  new_button.set_icon_widget(*new_image);
+  toolbar.insert(new_button, 0);
 
   Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
   run_image->set_from_icon_name("system-run", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::ToolButton* run_button = Gtk::manage(new Gtk::ToolButton(*run_image, "Run Program..."));
-  toolbar.insert(*run_button, 1);
+  run_button.set_label("Run Program...");
+  run_button.set_icon_widget(*run_image);
+  toolbar.insert(run_button, 1);
 
   Gtk::Image* settings_image = Gtk::manage(new Gtk::Image());
   settings_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::ToolButton* settings_button = Gtk::manage(new Gtk::ToolButton(*settings_image, "Settings"));
-  toolbar.insert(*settings_button, 2);
+  settings_button.set_label("Settings");
+  settings_button.set_icon_widget(*settings_image);
+  toolbar.insert(settings_button, 2);
 
   Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
   manage_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::ToolButton* manage_button = Gtk::manage(new Gtk::ToolButton(*manage_image, "Manage"));
-  toolbar.insert(*manage_button, 3);
+  manage_button.set_label("Manage");
+  manage_button.set_icon_widget(*manage_image);
+  toolbar.insert(manage_button, 3);
 
   Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
   reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  Gtk::ToolButton* reboot_button = Gtk::manage(new Gtk::ToolButton(*reboot_image, "Reboot"));
-  toolbar.insert(*reboot_button, 4);
+  reboot_button.set_label("Reboot");
+  reboot_button.set_icon_widget(*reboot_image);
+  toolbar.insert(reboot_button, 4);
 
   // Add toolbar to right box
   right_box.add(toolbar);
@@ -319,4 +330,26 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
     gtk_widget_show(current);
     gtk_list_box_row_set_header(row, current);
   }
+}
+
+/**
+ * \brief Signal when the New bottle assistant Wizard is finished
+ */
+void MainWindow::on_new_bottle_assistant_apply()
+{
+  bool check_state;
+  Glib::ustring entry_text;
+
+  newBottleAssistant.get_result(check_state, entry_text);
+  std::cout << "Applied: " << check_state << " - " << entry_text << std::endl;
+  //m_check.set_active(check_state);
+  //m_entry.set_text(entry_text);
+}
+
+/**
+ * \brief Signal when the new button is clicked in Toolbar
+ */
+void MainWindow::on_new_button_clicked()
+{
+  newBottleAssistant.show();
 }

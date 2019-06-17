@@ -37,13 +37,14 @@ add_library(menu_lib src/menu.cc)
 add_library(main_window_lib src/main_window.cc)
 add_library(bottle_manager_lib src/bottle_manager.cc)
 add_library(bottle_item src/bottle_item.cc)
+add_library(new_bottle_assis_lib src/new_bottle_assistant.cc)
 add_library(about_dialog_lib src/about_dialog.cc)
 add_library(helper_lib src/helper.cc)
 add_library(signal_dispatcher_lib src/signal_dispatcher.cc)
 
 add_executable(winegui src/main.cc)
 
-target_link_libraries(winegui main_window_lib menu_lib bottle_manager_lib bottle_item about_dialog_lib helper_lib signal_dispatcher_lib ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+target_link_libraries(winegui main_window_lib menu_lib bottle_manager_lib bottle_item new_bottle_assis_lib about_dialog_lib helper_lib signal_dispatcher_lib ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
 # To create 'make run'
 add_custom_target( run

@@ -2,7 +2,7 @@
  * Copyright (c) 2019 WineGUI
  *
  * \file    bottle_item.h
- * \brief   Wine Bottle item class definition (only header file)
+ * \brief   Wine Bottle item class definition
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,8 +28,8 @@
 #define NOT_READY_IMAGE "../images/not_ready.png" /*!< The non-ready image to show when Bottle is in trouble */
 
 /**
- * \class WineBottle
- * \brief Class object definition for a wine bottle (only header file)
+ * \class BottleItem
+ * \brief Class object definition for a wine bottle item
  */
 class BottleItem : public Gtk::ListBoxRow
 {
