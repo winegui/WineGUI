@@ -67,7 +67,7 @@ namespace BottleTypes {
     win64
   };
 
-  typedef std::pair<Windows, Bit> WindowsAndBit;
+  typedef std::pair<Windows, Bit> WindowsAndBit; /*!< Windows + Bit pair, used within the list of supported Windows versions */
   
   /**
    * \brief Supported list of Windows version with their bit support

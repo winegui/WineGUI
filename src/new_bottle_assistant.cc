@@ -86,6 +86,7 @@ void NewBottleAssistant::createFirstPage()
     auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
     windows_version_combobox.insert(-1, std::to_string(index), BottleTypes::toString((*it).first) + " (" + BottleTypes::toString((*it).second) + ')');
   }
+  // Set default Windows version selection
   windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
 
   m_hbox_win.pack_start(windows_version_label, false, true);
