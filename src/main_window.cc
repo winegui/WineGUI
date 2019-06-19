@@ -135,7 +135,7 @@ void MainWindow::SetDetailedInfo(BottleItem& bottle)
   // Set right side of the GUI
   name.set_text(bottle.name());
   Glib::ustring windows = BottleTypes::toString(bottle.windows());
-  windows += " (" + BottleTypes::toString(bottle.bit()) + "-bit)";
+  windows += " (" + BottleTypes::toString(bottle.bit()) + ')';
   window_version.set_text(windows);
   wine_version.set_text("v" + bottle.wine_version());
   wine_location.set_text(bottle.wine_location());

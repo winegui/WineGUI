@@ -21,6 +21,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 /**
  * \brief Bottle type enum definitions
@@ -28,7 +29,7 @@
 namespace BottleTypes {
   //// Emulate Virtual Desktop disabled string
   inline static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
-  
+
   /**
    * \enum Windows
    * \brief List of Windows versions.
@@ -36,7 +37,7 @@ namespace BottleTypes {
    */
   enum class Windows
   {
-    Windows20,
+    Windows20 = 0,
     Windows30,
     Windows31,
     WindowsNT351,
@@ -65,7 +66,46 @@ namespace BottleTypes {
     win32,
     win64
   };
+
+  typedef std::pair<Windows, Bit> WindowsAndBit;
   
+  /**
+   * \brief Supported list of Windows version with their bit support
+   */
+  inline std::vector<WindowsAndBit> SupportedWindowsVersions =
+  {
+    std::pair(Windows::Windows20, Bit::win32),
+    std::pair(Windows::Windows30, Bit::win32),
+    std::pair(Windows::Windows31, Bit::win32),
+    std::pair(Windows::WindowsNT351, Bit::win32),
+    std::pair(Windows::WindowsNT40, Bit::win32),
+    std::pair(Windows::Windows95, Bit::win32),
+    std::pair(Windows::Windows98, Bit::win32),
+    std::pair(Windows::WindowsME, Bit::win32),
+    std::pair(Windows::Windows2000, Bit::win32),
+    std::pair(Windows::WindowsXP, Bit::win32),
+    std::pair(Windows::WindowsXP, Bit::win64),
+    std::pair(Windows::Windows2003, Bit::win32),
+    std::pair(Windows::Windows2003, Bit::win64),
+    std::pair(Windows::WindowsVista, Bit::win32),
+    std::pair(Windows::WindowsVista, Bit::win64),
+    std::pair(Windows::Windows2008, Bit::win32),
+    std::pair(Windows::Windows2008, Bit::win64),
+    std::pair(Windows::Windows7, Bit::win32),
+    std::pair(Windows::Windows7, Bit::win64),
+    std::pair(Windows::Windows2008R2, Bit::win32),
+    std::pair(Windows::Windows2008R2, Bit::win64),
+    std::pair(Windows::Windows8, Bit::win32),
+    std::pair(Windows::Windows8, Bit::win64),
+    std::pair(Windows::Windows81, Bit::win32),
+    std::pair(Windows::Windows81, Bit::win64),
+    std::pair(Windows::Windows10, Bit::win32),
+    std::pair(Windows::Windows10, Bit::win64),
+  };
+
+  //// Default Windows version (Windows XP 32-bit) as WineGUI Bottle
+  static const int DefaultBottleIndex = 9;
+
   /**
    * \enum AudioDriver
    * \brief Wine supported audio drivers
@@ -83,11 +123,11 @@ namespace BottleTypes {
   inline static std::string toString(Bit bit) {
     switch(bit) {
       case Bit::win32:
-        return "32";
+        return "32-bit";
       case Bit::win64:
-        return "64";
+        return "64-bit";
       default:
-        return "";
+        return "- Unkown OS bit -";
     }
   }
 

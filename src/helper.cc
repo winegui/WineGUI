@@ -63,7 +63,7 @@ static const struct
     const string buildNumber;
     const string servicePack;
     const BottleTypes::Windows windows;
-    const BottleTypes::Bit bitOnly;
+    const BottleTypes::Bit bit;
 } win_versions[] =
 {
   {"win10",     "Windows 10",      "10.0", "17134", "",     BottleTypes::Windows::Windows10},
@@ -74,17 +74,17 @@ static const struct
   {"win2008",   "Windows 2008",    "6.0",  "6002",  "SP2",  BottleTypes::Windows::Windows2008},
   {"vista",     "Windows Vista",   "6.0",  "6002",  "SP2",  BottleTypes::Windows::WindowsVista},
   {"win2003",   "Windows 2003",    "5.2",  "3790",  "SP2",  BottleTypes::Windows::Windows2003},
-  {"winxp64",   "Windows XP",      "5.2",  "3790",  "SP2",  BottleTypes::Windows::WindowsXP,    BottleTypes::Bit::win64},
-  {"winxp",     "Windows XP",      "5.1",  "2600",  "SP3",  BottleTypes::Windows::WindowsXP,    BottleTypes::Bit::win32},
-  {"win2k",     "Windows 2000",    "5.0",  "2195",  "SP4",  BottleTypes::Windows::Windows2000,  BottleTypes::Bit::win32},
-  {"winme",     "Windows ME",      "4.90", "3000",  "",     BottleTypes::Windows::WindowsME,    BottleTypes::Bit::win32},
-  {"win98",     "Windows 98",      "4.10", "2222",  "",     BottleTypes::Windows::Windows98,    BottleTypes::Bit::win32},
-  {"win95",     "Windows 95",      "4.0",  "950",   "",     BottleTypes::Windows::Windows95,    BottleTypes::Bit::win32},
-  {"nt40",      "Windows NT 4.0",  "4.0",  "1381",  "SP6a", BottleTypes::Windows::WindowsNT40,  BottleTypes::Bit::win32},
-  {"nt351",     "Windows NT 3.51", "3.51", "1057",  "SP5",  BottleTypes::Windows::WindowsNT351, BottleTypes::Bit::win32},
-  {"win31",     "Windows 3.1",     "3.10", "0",     "",     BottleTypes::Windows::Windows31,    BottleTypes::Bit::win32},
-  {"win30",     "Windows 3.0",     "3.0",  "0",     "",     BottleTypes::Windows::Windows30,    BottleTypes::Bit::win32},
-  {"win20",     "Windows 2.0",     "2.0",  "0",     "",     BottleTypes::Windows::Windows20,    BottleTypes::Bit::win32}
+  {"winxp64",   "Windows XP",      "5.2",  "3790",  "SP2",  BottleTypes::Windows::WindowsXP, BottleTypes::Bit::win64},
+  {"winxp",     "Windows XP",      "5.1",  "2600",  "SP3",  BottleTypes::Windows::WindowsXP, BottleTypes::Bit::win32},
+  {"win2k",     "Windows 2000",    "5.0",  "2195",  "SP4",  BottleTypes::Windows::Windows2000},
+  {"winme",     "Windows ME",      "4.90", "3000",  "",     BottleTypes::Windows::WindowsME},
+  {"win98",     "Windows 98",      "4.10", "2222",  "",     BottleTypes::Windows::Windows98},
+  {"win95",     "Windows 95",      "4.0",  "950",   "",     BottleTypes::Windows::Windows95},
+  {"nt40",      "Windows NT 4.0",  "4.0",  "1381",  "SP6a", BottleTypes::Windows::WindowsNT40},
+  {"nt351",     "Windows NT 3.51", "3.51", "1057",  "SP5",  BottleTypes::Windows::WindowsNT351},
+  {"win31",     "Windows 3.1",     "3.10", "0",     "",     BottleTypes::Windows::Windows31},
+  {"win30",     "Windows 3.0",     "3.0",  "0",     "",     BottleTypes::Windows::Windows30},
+  {"win20",     "Windows 2.0",     "2.0",  "0",     "",     BottleTypes::Windows::Windows20}
 };
 
 /**

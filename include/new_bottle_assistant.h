@@ -52,7 +52,8 @@ private:
   Gtk::Box m_vbox;
   Gtk::Box m_hbox_name;
   Gtk::Box m_hbox_win;
+  Gtk::ComboBoxText windows_version_combobox;
   Gtk::Label intro_label, name_label, windows_version_label, confirm_label;
   Gtk::CheckButton m_check;
-  Gtk::Entry name_entry, windows_version_entry;
+  Gtk::Entry name_entry;
 };
