@@ -28,6 +28,7 @@
 NewBottleAssistant::NewBottleAssistant()
 : m_vbox(Gtk::ORIENTATION_VERTICAL, 4),
   m_vbox2(Gtk::ORIENTATION_VERTICAL, 4),
+  m_vbox3(Gtk::ORIENTATION_VERTICAL, 4),
   m_hbox_name(Gtk::ORIENTATION_HORIZONTAL, 12),
   m_hbox_win(Gtk::ORIENTATION_HORIZONTAL, 12),
   name_label("Name:"),
@@ -35,6 +36,7 @@ NewBottleAssistant::NewBottleAssistant()
   audiodriver_label("Audio Driver:"),
   virtual_desktop_resolution_label("Window Resolution:"),
   confirm_label("Confirmation page"),
+  apply_label("Please wait, changes are getting applied."),
   virtual_desktop_check("Enable Virtual Desktop Window")
 {
   set_title("New Windows Machine");
@@ -161,14 +163,16 @@ void NewBottleAssistant::createSecondPage()
  */
 void NewBottleAssistant::createThirdPage()
 {
-  loading_bar.set_halign(Gtk::Align::ALIGN_CENTER);
-  loading_bar.set_valign(Gtk::Align::ALIGN_CENTER);
+  m_vbox3.set_halign(Gtk::Align::ALIGN_CENTER);
+  m_vbox3.set_valign(Gtk::Align::ALIGN_CENTER);
 
-  append_page(loading_bar);
+  m_vbox3.pack_start(apply_label, false, false);
+  m_vbox3.pack_start(loading_bar, false, false);
+  append_page(m_vbox3);
 
   // Wait before we close the window
-  set_page_complete(loading_bar, false);
-  set_page_type(loading_bar, Gtk::ASSISTANT_PAGE_PROGRESS);
+  set_page_complete(m_vbox3, false);
+  set_page_type(m_vbox3, Gtk::ASSISTANT_PAGE_PROGRESS);
   set_page_title(*get_nth_page(2), "Applying changes");
 }
 

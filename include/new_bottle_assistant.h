@@ -57,13 +57,21 @@ private:
   // Child widgets:
   Gtk::Box m_vbox;
   Gtk::Box m_vbox2;
+  Gtk::Box m_vbox3;
   Gtk::Box m_hbox_name;
   Gtk::Box m_hbox_win;
   Gtk::Box m_hbox_audio;
   Gtk::Box m_hbox_virtual_desktop;
+  Gtk::Label intro_label;
+  Gtk::Label name_label;
+  Gtk::Label windows_version_label;
+  Gtk::Label additional_label;
+  Gtk::Label audiodriver_label;
+  Gtk::Label virtual_desktop_resolution_label;
+  Gtk::Label confirm_label;
+  Gtk::Label apply_label;
   Gtk::ComboBoxText windows_version_combobox;
   Gtk::ComboBoxText audiodriver_combobox;
-  Gtk::Label intro_label, name_label, windows_version_label, additional_label, audiodriver_label, virtual_desktop_resolution_label, confirm_label;
   Gtk::CheckButton virtual_desktop_check;
   Gtk::Entry name_entry;
   Gtk::Entry virtual_desktop_resolution_entry;
