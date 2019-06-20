@@ -32,7 +32,10 @@ public:
   NewBottleAssistant();
   virtual ~NewBottleAssistant();
 
-  void get_result(bool& check_state, Glib::ustring& name, Glib::ustring& windows_version);
+  void get_result(bool& virtual_desktop_enabled,
+    Glib::ustring& virtual_desktop_resolution,
+    Glib::ustring& name,
+    Glib::ustring& windows_version);
 
 private:
   // Signal handlers:
@@ -41,6 +44,7 @@ private:
   void on_assistant_close();
   void on_assistant_prepare(Gtk::Widget* widget);
   void on_entry_changed();
+  void on_virtual_desktop_toggle();
 
   // Member functions:
   void createFirstPage();
@@ -50,10 +54,15 @@ private:
 
   // Child widgets:
   Gtk::Box m_vbox;
+  Gtk::Box m_vbox2;
   Gtk::Box m_hbox_name;
   Gtk::Box m_hbox_win;
+  Gtk::Box m_hbox_audio;
+  Gtk::Box m_hbox_virtual_desktop;
   Gtk::ComboBoxText windows_version_combobox;
-  Gtk::Label intro_label, name_label, windows_version_label, confirm_label;
-  Gtk::CheckButton m_check;
+  Gtk::ComboBoxText audiodriver_combobox;
+  Gtk::Label intro_label, name_label, windows_version_label, additional_label, audiodriver_label, virtual_desktop_resolution_label, confirm_label;
+  Gtk::CheckButton virtual_desktop_check;
   Gtk::Entry name_entry;
+  Gtk::Entry virtual_desktop_resolution_entry;
 };

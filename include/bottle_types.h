@@ -112,13 +112,21 @@ namespace BottleTypes {
    */
   enum class AudioDriver 
   {
-    pulseaudio,
+    pulseaudio = 0,
     alsa,
     coreaudio,
     oss,
     disabled
   };
   
+  //// Enum AudioDriver Start iterator
+  static const int AudioDriverStart = (int)AudioDriver::pulseaudio;
+  //// Enum AudioDriver End iterator
+  static const int AudioDriverEnd = (int)AudioDriver::disabled + 1;
+
+  //// Default AudioDriver for WineGui Bottle
+  static const int DefaultAudioDriverIndex = (int)AudioDriver::pulseaudio;
+
   // Bit enum to string
   inline static std::string toString(Bit bit) {
     switch(bit) {
@@ -189,7 +197,7 @@ namespace BottleTypes {
       case AudioDriver::oss:
         return "Open Sound System (OSS)";
       default:
-        return "disabled";
+        return "Disabled";
     }
   }
 };

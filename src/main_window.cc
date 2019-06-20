@@ -337,12 +337,13 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
  */
 void MainWindow::on_new_bottle_assistant_apply()
 {
-  bool check_state;
+  bool virtual_desktop_enabled;
+  Glib::ustring virtual_desktop_resolution;
   Glib::ustring name;
   Glib::ustring windows_version;
 
-  newBottleAssistant.get_result(check_state, name, windows_version);
-  std::cout << "Applied: " << check_state << " - " << name << " - " << windows_version << std::endl;
+  newBottleAssistant.get_result(virtual_desktop_enabled, virtual_desktop_resolution, name, windows_version);
+  std::cout << "Applied: " << virtual_desktop_enabled << " - " << virtual_desktop_resolution << " - " << name << " - " << windows_version << std::endl;
   //m_check.set_active(check_state);
   //m_entry.set_text(entry_text);
 }

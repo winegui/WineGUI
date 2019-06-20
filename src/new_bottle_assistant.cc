@@ -26,13 +26,16 @@
  * \brief Contructor
  */
 NewBottleAssistant::NewBottleAssistant()
-: m_vbox(Gtk::ORIENTATION_VERTICAL, 2),
+: m_vbox(Gtk::ORIENTATION_VERTICAL, 4),
+  m_vbox2(Gtk::ORIENTATION_VERTICAL, 4),
   m_hbox_name(Gtk::ORIENTATION_HORIZONTAL, 12),
   m_hbox_win(Gtk::ORIENTATION_HORIZONTAL, 12),
   name_label("Name:"),
-  windows_version_label("Windows version:"),
+  windows_version_label("Windows Version:"),
+  audiodriver_label("Audio Driver:"),
+  virtual_desktop_resolution_label("Window Resolution:"),
   confirm_label("Confirmation page"),
-  m_check("Optional extra information")
+  virtual_desktop_check("Enable Virtual Desktop Window")
 {
   set_title("New Windows Machine");
   set_border_width(8);
@@ -55,6 +58,9 @@ NewBottleAssistant::NewBottleAssistant()
     &NewBottleAssistant::on_assistant_prepare));
 
   show_all_children();
+
+  // By default hide resolution label & entry
+  m_hbox_virtual_desktop.hide();
 }
 
 /**
@@ -73,10 +79,11 @@ void NewBottleAssistant::createFirstPage()
   // Intro page
   intro_label.set_markup("<big><b>Create a New Machine</b></big>\n"
     "Please use a descriptive name for the Windows machine, and select which Windows version you want to use.");
+  intro_label.set_halign(Gtk::Align::ALIGN_START);
   intro_label.set_margin_bottom(25);
   m_vbox.pack_start(intro_label, false, false);
   
-  m_hbox_name.pack_start( name_label, false, true);
+  m_hbox_name.pack_start(name_label, false, true);
   m_hbox_name.pack_start(name_entry);
   m_vbox.pack_start(m_hbox_name, false, false);
   
@@ -105,9 +112,36 @@ void NewBottleAssistant::createFirstPage()
  * \brief Second page of the wizard
  */
 void NewBottleAssistant::createSecondPage()
-{ 
-  append_page(m_check);
-  set_page_complete(m_check, true);
+{
+  // Additional page
+  additional_label.set_markup("<big><b>Additional Settings</b></big>\n"
+    "There you could adapt some additional Windows settings.\n\n<b>Note:</b> If do not know what these settings will do, *do not* change the settings (left as default).");
+  additional_label.set_halign(Gtk::Align::ALIGN_START);
+  additional_label.set_margin_bottom(25);
+  m_vbox2.pack_start(additional_label, false, false);
+    
+  // Fill-in Windows versions in combobox
+  for(int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
+  {
+    audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::toString(BottleTypes::AudioDriver(i)));
+  }
+  audiodriver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
+
+  m_hbox_audio.pack_start(audiodriver_label, false, true);
+  m_hbox_audio.pack_start(audiodriver_combobox);
+  m_vbox2.pack_start(m_hbox_audio, false, false);
+  
+  m_vbox2.pack_start(virtual_desktop_check, false, false);
+  virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this,
+    &NewBottleAssistant::on_virtual_desktop_toggle));
+
+  virtual_desktop_resolution_entry.set_text("960x540");
+  m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_label, false, false);
+  m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_entry, false, false);
+  m_vbox2.pack_start(m_hbox_virtual_desktop, false, false);
+
+  append_page(m_vbox2);
+  set_page_complete(m_vbox2, true);
   set_page_title(*get_nth_page(1), "Additional settings");
 }
 
@@ -126,9 +160,13 @@ void NewBottleAssistant::createThirdPage()
 /**
  * \brief Retrieve the results (once wizard is finished)
  */
-void NewBottleAssistant::get_result(bool& check_state, Glib::ustring& name, Glib::ustring& windows_version)
+void NewBottleAssistant::get_result(bool& virtual_desktop_enabled,
+  Glib::ustring& virtual_desktop_resolution,
+  Glib::ustring& name,
+  Glib::ustring& windows_version)
 {
-  check_state = m_check.get_active();
+  virtual_desktop_enabled = virtual_desktop_check.get_active();
+  virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
   name = name_entry.get_text();
   windows_version = windows_version_combobox.get_active_text();
 }
@@ -168,6 +206,19 @@ void NewBottleAssistant::on_entry_changed()
     set_page_complete(m_vbox, false);
 }
 
+void NewBottleAssistant::on_virtual_desktop_toggle()
+{
+  if(virtual_desktop_check.get_active())
+  {
+    // Show resolution label & input field
+    m_hbox_virtual_desktop.show();
+  }
+  else
+  {
+    m_hbox_virtual_desktop.hide();
+  }
+}
+
 void NewBottleAssistant::print_status()
 {
   std::string::size_type sz;
@@ -179,7 +230,8 @@ void NewBottleAssistant::print_status()
     << ", Name: \"" << name_entry.get_text()
     << ", Windows name: \"" << BottleTypes::toString(currentWindowsBit.first)
     << ", Windows bit: \"" << BottleTypes::toString(currentWindowsBit.second)
-    << "\", checkbutton status: " << m_check.get_active() << std::endl;
+    << ", Enable virtual desktop: " << virtual_desktop_check.get_active() 
+    << ", Resolution: " << virtual_desktop_resolution_entry.get_text()  << std::endl;
   } catch(const std::exception& ex) {
     std::cout << " No windows version is selected..." << std::endl;
   }
