@@ -45,8 +45,10 @@ private:
   void on_assistant_prepare(Gtk::Widget* widget);
   void on_entry_changed();
   void on_virtual_desktop_toggle();
+  bool apply_changes_gradually();
 
   // Member functions:
+  void setDefaultValues();
   void createFirstPage();
   void createSecondPage();
   void createThirdPage();
@@ -65,4 +67,5 @@ private:
   Gtk::CheckButton virtual_desktop_check;
   Gtk::Entry name_entry;
   Gtk::Entry virtual_desktop_resolution_entry;
+  Gtk::ProgressBar loading_bar;
 };

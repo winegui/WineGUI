@@ -70,6 +70,20 @@ NewBottleAssistant::~NewBottleAssistant()
 {
 }
 
+/**
+ * \brief Set default values of all input fields from the wizard,
+ * so even after the second time, all values are correctly resetted.
+ */
+void NewBottleAssistant::setDefaultValues()
+{
+  name_entry.set_text("");
+  // TODO: Allow default to override from WineGUI settings?
+  windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
+  audiodriver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
+  virtual_desktop_check.set_active(false);
+  virtual_desktop_resolution_entry.set_text("960x540");
+  loading_bar.set_fraction(0);
+}
 
 /**
  * \brief First page of the wizard
@@ -93,8 +107,6 @@ void NewBottleAssistant::createFirstPage()
     auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
     windows_version_combobox.insert(-1, std::to_string(index), BottleTypes::toString((*it).first) + " (" + BottleTypes::toString((*it).second) + ')');
   }
-  // Set default Windows version selection
-  windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
 
   m_hbox_win.pack_start(windows_version_label, false, true);
   m_hbox_win.pack_start(windows_version_combobox);
@@ -125,7 +137,6 @@ void NewBottleAssistant::createSecondPage()
   {
     audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::toString(BottleTypes::AudioDriver(i)));
   }
-  audiodriver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
 
   m_hbox_audio.pack_start(audiodriver_label, false, true);
   m_hbox_audio.pack_start(audiodriver_combobox);
@@ -135,13 +146,13 @@ void NewBottleAssistant::createSecondPage()
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this,
     &NewBottleAssistant::on_virtual_desktop_toggle));
 
-  virtual_desktop_resolution_entry.set_text("960x540");
   m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_label, false, false);
   m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_entry, false, false);
   m_vbox2.pack_start(m_hbox_virtual_desktop, false, false);
 
   append_page(m_vbox2);
   set_page_complete(m_vbox2, true);
+  set_page_type(m_vbox2, Gtk::ASSISTANT_PAGE_CONFIRM);
   set_page_title(*get_nth_page(1), "Additional settings");
 }
 
@@ -150,11 +161,15 @@ void NewBottleAssistant::createSecondPage()
  */
 void NewBottleAssistant::createThirdPage()
 {
-  // Confirm page
-  append_page(confirm_label);
-  set_page_complete(confirm_label, true);
-  set_page_type(confirm_label, Gtk::ASSISTANT_PAGE_CONFIRM);
-  set_page_title(*get_nth_page(2), "Confirmation/Creating *loading bar...?*");
+  loading_bar.set_halign(Gtk::Align::ALIGN_CENTER);
+  loading_bar.set_valign(Gtk::Align::ALIGN_CENTER);
+
+  append_page(loading_bar);
+
+  // Wait before we close the window
+  set_page_complete(loading_bar, false);
+  set_page_type(loading_bar, Gtk::ASSISTANT_PAGE_PROGRESS);
+  set_page_title(*get_nth_page(2), "Appling changes");
 }
 
 /**
@@ -174,6 +189,10 @@ void NewBottleAssistant::get_result(bool& virtual_desktop_enabled,
 void NewBottleAssistant::on_assistant_apply()
 {
   std::cout << "Apply was clicked";
+  /* Start a timer to simulate changes taking a few seconds to apply. */
+   sigc::connection conn = Glib::signal_timeout().connect(
+      sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually),
+      100);
   print_status();
 }
 
@@ -193,6 +212,7 @@ void NewBottleAssistant::on_assistant_close()
 
 void NewBottleAssistant::on_assistant_prepare(Gtk::Widget* /* widget */)
 {
+  setDefaultValues();
   set_title(Glib::ustring::compose("Gtk::Assistant example (Page %1 of %2)",
     get_current_page() + 1, get_n_pages()));
 }
@@ -216,6 +236,21 @@ void NewBottleAssistant::on_virtual_desktop_toggle()
   else
   {
     m_hbox_virtual_desktop.hide();
+  }
+}
+
+bool NewBottleAssistant::apply_changes_gradually()
+{
+  double fraction = (loading_bar.get_fraction() + 0.05);
+  if (fraction < 1.0)
+  {
+    loading_bar.set_fraction(fraction);
+    return true;
+  } else {
+    // Close Assistant
+    this->hide();
+    // Stop timer
+    return false;
   }
 }
 
