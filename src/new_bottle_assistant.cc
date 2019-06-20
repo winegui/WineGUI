@@ -169,7 +169,7 @@ void NewBottleAssistant::createThirdPage()
   // Wait before we close the window
   set_page_complete(loading_bar, false);
   set_page_type(loading_bar, Gtk::ASSISTANT_PAGE_PROGRESS);
-  set_page_title(*get_nth_page(2), "Appling changes");
+  set_page_title(*get_nth_page(2), "Applying changes");
 }
 
 /**
