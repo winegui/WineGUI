@@ -35,6 +35,9 @@
 #include <glibmm/timeval.h>
 #include <glibmm/fileutils.h>
 
+// Wine exec
+static const string WINE_EXECUTABLE = "wine";
+
 // Reg files
 static const string SYSTEM_REG = "system.reg";
 static const string USER_REG = "user.reg";
@@ -114,7 +117,7 @@ std::map<std::string, unsigned long> Helper::GetBottlesPaths(const string& dir_p
  */
 string Helper::GetWineVersion()
 {
-  string result = Exec("wine --version");
+  string result = Exec((WINE_EXECUTABLE + " --version").c_str());
   if(!result.empty()) {
     std::vector<string> results = Split(result, '-');
     if(results.size() >= 2) {
@@ -128,6 +131,42 @@ string Helper::GetWineVersion()
   } else {
     throw std::runtime_error("Could not receive Wine version!\n\nIs wine installed?");
   }
+}
+
+/**
+ * \brief Create new Wine bottle from prefix
+ * \param[in] prefix_path - The path to create a Wine bottle from
+ * \param[in] bit - Create 32-bit Wine of 64-bit Wine bottle
+ */
+void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit)
+{
+  string winearch = "";
+  switch(bit) {
+    case BottleTypes::Bit::win32:
+      winearch = " WINEARCH=win32";
+      break;
+    case BottleTypes::Bit::win64:
+      winearch = " WINEARCH=win32";
+      break;
+  }
+  string result = Exec(("WINEPREFIX=" + prefix_path + winearch + " " + WINE_EXECUTABLE + " wineboot && echo $?").c_str());
+  if(!result.empty())
+  {
+    // Remove new lines
+    result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+    if(!(result.compare("0") == 0)) 
+    {
+      throw std::runtime_error("Something went wrong when creating a new Windows machine. For Wine machine: " + 
+        GetName(prefix_path) +
+        "\n\nFull location: " + prefix_path);
+    }
+  }
+  else
+  {
+    throw std::runtime_error("Something went wrong when creating a new Windows machine. For Wine machine:: " + 
+      GetName(prefix_path) +
+      "\n\nFull location: " + prefix_path);
+  }  
 }
 
 /**
@@ -214,7 +253,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
   {
     throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + 
       GetName(prefix_path) +
-      "\n\nFull location: " + prefix_path);    
+      "\n\nFull location: " + prefix_path);
   }
   // Function didn't return before (meaning no match found)
   throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + 
@@ -351,7 +390,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
      Helper::FileExists(Glib::build_filename(prefix_path, SYSTEM_REG))) {
       // TODO: Wine exec takes quite long, execute that in a seperate thread (don't block UI).
       // TODO: test the explorer /desktop=root part of the command
-      //string result = Exec(("WINEPREFIX=" + prefix_path + " wine explorer /desktop=root cmd /Q /C ver").c_str());
+      //string result = Exec(("WINEPREFIX=" + prefix_path + " " + WINE_EXECUTABLE + " explorer /desktop=root cmd /Q /C ver").c_str());
       // Check for 'Microsoft Windows' string present
       //if(result.find("Microsoft Windows") != string::npos) {
     return true;

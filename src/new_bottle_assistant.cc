@@ -233,7 +233,7 @@ void NewBottleAssistant::on_assistant_apply()
   /* Start a timer to simulate changes taking a few seconds to apply. */
    sigc::connection conn = Glib::signal_timeout().connect(
       sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually),
-      100);
+      200);
 }
 
 void NewBottleAssistant::on_assistant_cancel()
@@ -304,6 +304,9 @@ bool NewBottleAssistant::apply_changes_gradually()
   } else {
     // Close Assistant
     this->hide();
+    // Inform UI, emit signal newBottleDone
+    newBottleFinished.emit();
+
     // Stop timer
     return false;
   }

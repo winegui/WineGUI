@@ -75,9 +75,12 @@ void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
   // Trigger on_hide_window afer hide signal (for immidate response after pressing quit button)
   signalDispatcher.hideMainWindow.connect(sigc::mem_fun(*this, &MainWindow::on_hide_window));
 
-  // Send button signal to signaldispatcher class
   listbox.signal_row_activated().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
+  // Send listbox (left panel) signal to dispatcher
   listbox.signal_button_press_event().connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_button_press_event));
+
+  // Send New Bottle Assistant signal to dispatcher
+  newBottleAssistant.newBottleFinished.connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_new_bottle_finished));
 }
 
 /**

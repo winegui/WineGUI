@@ -25,7 +25,6 @@
 #include <string>
 #include <glibmm/main.h>
 #include "bottle_item.h"
-#include "helper.h"
 
 using std::string;
 

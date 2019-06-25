@@ -52,6 +52,7 @@ private:
   // slots
   virtual void on_quit();
   virtual bool on_button_press_event(GdkEventButton* event);
+  virtual void on_new_bottle_finished();
   
   MainWindow* mainWindow;
   BottleManager& manager;

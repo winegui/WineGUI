@@ -30,6 +30,9 @@
 class NewBottleAssistant : public Gtk::Assistant
 {
 public:
+  // Signal
+  sigc::signal<void> newBottleFinished; /*!< Signal when New Bottle Assistant is finished */
+
   NewBottleAssistant();
   virtual ~NewBottleAssistant();
 

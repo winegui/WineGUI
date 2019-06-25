@@ -20,6 +20,7 @@
  */
 #include "bottle_manager.h"
 #include "main_window.h"
+#include "helper.h"
 
 #include <stdexcept>
 
@@ -30,7 +31,8 @@
 BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
 {
   // TODO: Make it configurable via settings
-  BOTTLE_LOCATION = Glib::get_home_dir() + "/.winegui/prefixes";
+  std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui", "prefixes"};
+  BOTTLE_LOCATION = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
 }
 
 /**
@@ -82,14 +84,27 @@ void BottleManager::NewBottle(
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio)
 {
-  
-  std::cout << "Create bottle!\n\n" 
-  << "Name: " << name
-  << "\nRes: "  << virtual_desktop_resolution 
-  << "\nWindows: "  << BottleTypes::toString(windows_version) 
-  << "\nBit: " << BottleTypes::toString(bit)
-  << "\nAudio: " << BottleTypes::toString(audio)
-  << std::endl;
+  // Calculate prefix
+  std::vector<std::string> dirs{BOTTLE_LOCATION, name};
+  auto wine_prefix = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
+  try {
+    // First create a new Wine Bottle
+    Helper::CreateWineBottle(wine_prefix, bit);
+
+    std::cout << "\nBottle created!\n" 
+    << "Name: " << name
+    << "\nRes: "  << virtual_desktop_resolution 
+    << "\nWindows: "  << BottleTypes::toString(windows_version) 
+    << "\nBit: " << BottleTypes::toString(bit)
+    << "\nAudio: " << BottleTypes::toString(audio)
+    << std::endl;
+
+    // TODO: Next update Windows version, audio and virtual desktop...
+  }
+  catch (const std::runtime_error& error)
+  {
+    mainWindow.ShowErrorMessage(error.what());
+  }
 }
 
 /**
@@ -106,7 +121,7 @@ string BottleManager::GetWineVersion()
   }
   catch (const std::runtime_error& error)
   {
-      mainWindow.ShowErrorMessage(error.what());
+    mainWindow.ShowErrorMessage(error.what());
   }
   return wineVersion;
 }

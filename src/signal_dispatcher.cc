@@ -63,7 +63,7 @@ void SignalDispatcher::DispatchSignals()
 void SignalDispatcher::on_quit()
 {
   // Signal hide main window and therefor it closes the app
-  hideMainWindow();
+  hideMainWindow.emit();
 }
 
 bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
@@ -81,4 +81,12 @@ bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
 
   // Event has not been handled:
   return false;
+}
+
+/**
+ * \brief Signal handler when new Wine Bottle wizard is finished
+ */
+void SignalDispatcher::on_new_bottle_finished()
+{
+  manager.UpdateBottles();
 }

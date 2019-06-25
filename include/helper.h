@@ -39,6 +39,7 @@ class Helper
 public:
   static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
   static string GetWineVersion();
+  static void CreateWineBottle(const string prefix_path, BottleTypes::Bit bit);
   static string GetName(const string prefix_path);
   static BottleTypes::Windows GetWindowsOSVersion(const string prefix_path);
   static BottleTypes::Bit GetSystemBit(const string prefix_path);
