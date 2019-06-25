@@ -22,6 +22,8 @@
 #include "bottle_types.h"
 #include <iostream>
 
+#define LOADING_PAGE_INDEX 2 /*!< The loading page, 3rd page (2 when start counting from zero) */
+
 /**
  * \brief Contructor
  */
@@ -39,7 +41,6 @@ NewBottleAssistant::NewBottleAssistant()
   apply_label("Please wait, changes are getting applied."),
   virtual_desktop_check("Enable Virtual Desktop Window")
 {
-  set_title("New Windows Machine");
   set_border_width(8);
   set_default_size(640, 400);
   // Only focus on assistant, disable interaction with other windows in app
@@ -49,6 +50,9 @@ NewBottleAssistant::NewBottleAssistant()
   createFirstPage();
   createSecondPage();
   createThirdPage();
+
+  // Initial set defaults
+  setDefaultValues();
 
   signal_apply().connect(sigc::mem_fun(*this,
     &NewBottleAssistant::on_assistant_apply));
@@ -177,59 +181,103 @@ void NewBottleAssistant::createThirdPage()
 }
 
 /**
- * \brief Retrieve the results (once wizard is finished)
+ * \brief Retrieve the results (after the wizard is finished)
+ * And reset the values to default values again
+ * \param[out] name                        - Bottle Name
+ * \param[out] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)
+ * \param[out] windows_version             - Windows OS version
+ * \param[out] bit                         - Windows Bit (32/64-bit)
+ * \param[out] audio                       - Audio Driver type
  */
-void NewBottleAssistant::get_result(bool& virtual_desktop_enabled,
-  Glib::ustring& virtual_desktop_resolution,
+void NewBottleAssistant::get_result(
   Glib::ustring& name,
-  Glib::ustring& windows_version)
+  Glib::ustring& virtual_desktop_resolution,
+  BottleTypes::Windows& windows_version,
+  BottleTypes::Bit& bit,
+  BottleTypes::AudioDriver& audio)
 {
-  virtual_desktop_enabled = virtual_desktop_check.get_active();
-  virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
+  std::string::size_type sz;
+  windows_version = BottleTypes::Windows::WindowsXP;
+  bit = BottleTypes::Bit::win32;
+  audio = BottleTypes::AudioDriver::pulseaudio;
+
   name = name_entry.get_text();
-  windows_version = windows_version_combobox.get_active_text();
+  bool isDesktopEnabled = virtual_desktop_check.get_active();
+  if(isDesktopEnabled) {
+    virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
+  } else {
+    // Just empty
+    virtual_desktop_resolution = "";
+  }
+  try {
+    size_t winBitIndex = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
+    const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(winBitIndex);
+    windows_version = currentWindowsBit.first;
+    bit = currentWindowsBit.second;
+  } catch (...) {
+    // Ignore
+  }
+  try {
+    size_t audioIndex = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
+    audio = BottleTypes::AudioDriver(audioIndex);
+  } catch (...) {
+    // Ignore
+  }
+
+  // Reset defaults
+  setDefaultValues();
 }
 
 void NewBottleAssistant::on_assistant_apply()
 {
-  std::cout << "Apply was clicked";
   /* Start a timer to simulate changes taking a few seconds to apply. */
    sigc::connection conn = Glib::signal_timeout().connect(
       sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually),
       100);
-  print_status();
 }
 
 void NewBottleAssistant::on_assistant_cancel()
 {
-  std::cout << "Cancel was clicked";
-  print_status();
   hide();
 }
 
 void NewBottleAssistant::on_assistant_close()
 {
-  std::cout << "Assistant was closed";
-  print_status();
   hide();
 }
 
-void NewBottleAssistant::on_assistant_prepare(Gtk::Widget* /* widget */)
+/**
+ * \brief Prepare handler for each page, is emitted before making the page visable.
+ */
+void NewBottleAssistant::on_assistant_prepare(Gtk::Widget* /* widget*/)
 {
-  setDefaultValues();
   set_title(Glib::ustring::compose("Gtk::Assistant example (Page %1 of %2)",
     get_current_page() + 1, get_n_pages()));
+
+  /* The last page is the progress page.  The
+  * user clicked Apply to get here so we tell the assistant to commit,
+  * which means the changes up to this point are permanent and cannot
+  * be cancelled or revisited. */
+  if (get_current_page() == LOADING_PAGE_INDEX)
+    this->commit();
 }
 
+/**
+ * \brief Only complete the first page, when the name input field is *not* empty
+ */
 void NewBottleAssistant::on_entry_changed()
 {
   // The page is only complete if the name entry contains text.
-  if(name_entry.get_text_length())
+  if(name_entry.get_text_length() != 0)
     set_page_complete(m_vbox, true);
   else
     set_page_complete(m_vbox, false);
 }
 
+/**
+ * \brief Signal handler when the virtual desktop checkbox is checked.
+ * It will show the additional resolution input field.
+ */
 void NewBottleAssistant::on_virtual_desktop_toggle()
 {
   if(virtual_desktop_check.get_active())
@@ -243,6 +291,9 @@ void NewBottleAssistant::on_virtual_desktop_toggle()
   }
 }
 
+/**
+ * \brief Smooth loading bar
+ */
 bool NewBottleAssistant::apply_changes_gradually()
 {
   double fraction = (loading_bar.get_fraction() + 0.05);
@@ -255,23 +306,5 @@ bool NewBottleAssistant::apply_changes_gradually()
     this->hide();
     // Stop timer
     return false;
-  }
-}
-
-void NewBottleAssistant::print_status()
-{
-  std::string::size_type sz;
-  try {
-    // stoi could throw issues when empty string or invalid string is returned
-    size_t index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
-    const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(index);
-    std::cout
-    << ", Name: \"" << name_entry.get_text()
-    << ", Windows name: \"" << BottleTypes::toString(currentWindowsBit.first)
-    << ", Windows bit: \"" << BottleTypes::toString(currentWindowsBit.second)
-    << ", Enable virtual desktop: " << virtual_desktop_check.get_active() 
-    << ", Resolution: " << virtual_desktop_resolution_entry.get_text()  << std::endl;
-  } catch(const std::exception& ex) {
-    std::cout << " No windows version is selected..." << std::endl;
   }
 }

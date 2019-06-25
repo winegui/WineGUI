@@ -55,7 +55,7 @@ MainWindow::MainWindow(Menu& menu)
   new_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_new_button_clicked));
   newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this,
-    &MainWindow::on_new_bottle_assistant_apply));
+    &MainWindow::on_new_bottle_apply));
 
   // Show the widget children
   show_all_children();
@@ -333,25 +333,28 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
 }
 
 /**
- * \brief Signal when the New bottle assistant Wizard is finished
- */
-void MainWindow::on_new_bottle_assistant_apply()
-{
-  bool virtual_desktop_enabled;
-  Glib::ustring virtual_desktop_resolution;
-  Glib::ustring name;
-  Glib::ustring windows_version;
-
-  newBottleAssistant.get_result(virtual_desktop_enabled, virtual_desktop_resolution, name, windows_version);
-  std::cout << "Applied: " << virtual_desktop_enabled << " - " << virtual_desktop_resolution << " - " << name << " - " << windows_version << std::endl;
-  //m_check.set_active(check_state);
-  //m_entry.set_text(entry_text);
-}
-
-/**
- * \brief Signal when the new button is clicked in Toolbar
+ * \brief Signal when the new button is clicked in the top toolbar
  */
 void MainWindow::on_new_button_clicked()
 {
+  newBottleAssistant.set_transient_for(*this);
   newBottleAssistant.show();
+}
+
+/**
+ * \brief Signal when the new assistant/wizard is finished and applied
+ */
+void MainWindow::on_new_bottle_apply()
+{
+  Glib::ustring name;
+  Glib::ustring virtual_desktop_resolution;
+  BottleTypes::Windows windows_version;
+  BottleTypes::Bit bit;
+  BottleTypes::AudioDriver audio;
+
+  // Retrieve assistant results
+  newBottleAssistant.get_result(name, virtual_desktop_resolution, windows_version, bit, audio);
+
+  // Emit signal to Bottle Manager
+  newBottle.emit(name, virtual_desktop_resolution, windows_version, bit, audio);
 }

@@ -68,6 +68,31 @@ void BottleManager::UpdateBottles()
 }
 
 /**
+ * \brief Create a new Wine Bottle
+ * \param[in] name                        - Bottle Name
+ * \param[in] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)
+ * \param[in] windows_version             - Windows OS version
+ * \param[in] bit                         - Windows Bit (32/64-bit)
+ * \param[in] audio                       - Audio Driver type
+ */
+void BottleManager::NewBottle(
+    Glib::ustring& name,
+    Glib::ustring& virtual_desktop_resolution,
+    BottleTypes::Windows windows_version,
+    BottleTypes::Bit bit,
+    BottleTypes::AudioDriver audio)
+{
+  
+  std::cout << "Create bottle!\n\n" 
+  << "Name: " << name
+  << "\nRes: "  << virtual_desktop_resolution 
+  << "\nWindows: "  << BottleTypes::toString(windows_version) 
+  << "\nBit: " << BottleTypes::toString(bit)
+  << "\nAudio: " << BottleTypes::toString(audio)
+  << std::endl;
+}
+
+/**
  * \brief Get Wine version
  * \return Wine version
  */

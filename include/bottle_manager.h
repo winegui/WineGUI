@@ -43,6 +43,11 @@ public:
   virtual ~BottleManager();
 
   void UpdateBottles();
+  void NewBottle(Glib::ustring& name,
+    Glib::ustring& virtual_desktop_resolution,
+    BottleTypes::Windows windows_version,
+    BottleTypes::Bit bit,
+    BottleTypes::AudioDriver audio);
   // Signals are possible:
   // Eg. sigc::signal<void> some_name; /*!< signal bla */
 

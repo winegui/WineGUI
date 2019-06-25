@@ -21,6 +21,7 @@
 #pragma once
 
 #include <gtkmm.h>
+#include "bottle_types.h"
 
 /**
  * \class NewBottleAssistant
@@ -32,10 +33,12 @@ public:
   NewBottleAssistant();
   virtual ~NewBottleAssistant();
 
-  void get_result(bool& virtual_desktop_enabled,
-    Glib::ustring& virtual_desktop_resolution,
+  void get_result(
     Glib::ustring& name,
-    Glib::ustring& windows_version);
+    Glib::ustring& virtual_desktop_resolution,
+    BottleTypes::Windows& windows_version,
+    BottleTypes::Bit& bit,
+    BottleTypes::AudioDriver& audio);
 
 private:
   // Signal handlers:
@@ -52,7 +55,6 @@ private:
   void createFirstPage();
   void createSecondPage();
   void createThirdPage();
-  void print_status();
 
   // Child widgets:
   Gtk::Box m_vbox;

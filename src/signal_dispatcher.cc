@@ -51,6 +51,9 @@ void SignalDispatcher::DispatchSignals()
   menu.signalQuit.connect(sigc::mem_fun(*this, &SignalDispatcher::on_quit));
   menu.signalShowAbout.connect(sigc::mem_fun(about, &AboutDialog::show));
   menu.signalRefresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
+
+  mainWindow->newBottle.connect(sigc::mem_fun(manager, &BottleManager::NewBottle));
+
   //manager.placeholder.connect(sigc::mem_fun(*mainWindow, &MainWindow::placeholder));
 }
 

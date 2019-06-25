@@ -39,6 +39,9 @@ class SignalDispatcher;
 class MainWindow : public Gtk::Window
 {
 public:
+  // Signals
+  sigc::signal<void, Glib::ustring&, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, BottleTypes::AudioDriver> newBottle; /*!< Create new Wine Bottle Signal */
+
   MainWindow(Menu& menu);
   virtual ~MainWindow();
   void SetDispatcher(SignalDispatcher& signalDispatcher);
@@ -86,7 +89,7 @@ private:
   virtual void on_hide_window();
   virtual void on_row_clicked(Gtk::ListBoxRow* row);
   virtual void on_new_button_clicked();
-  virtual void on_new_bottle_assistant_apply();
+  virtual void on_new_bottle_apply();
 
   void CreateLeftPanel();
   void CreateRightPanel();
