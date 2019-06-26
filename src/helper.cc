@@ -147,10 +147,10 @@ void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit)
       winearch = " WINEARCH=win32";
       break;
     case BottleTypes::Bit::win64:
-      winearch = " WINEARCH=win32";
+      winearch = " WINEARCH=win64";
       break;
   }
-  string result = Exec(("WINEPREFIX=" + prefix_path + winearch + " " + WINE_EXECUTABLE + " wineboot && echo $?").c_str());
+  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + winearch + " " + WINE_EXECUTABLE + " wineboot && echo $?").c_str());
   if(!result.empty())
   {
     // Remove new lines
@@ -399,7 +399,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
     }
     // TODO: Wine exec takes quite long, execute that in a seperate thread (don't block UI).
     // TODO: test the explorer /desktop=root part of the command
-    //string result = Exec(("WINEPREFIX=" + prefix_path + " " + WINE_EXECUTABLE + " explorer /desktop=root cmd /Q /C ver").c_str());
+    //string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINE_EXECUTABLE + " explorer /desktop=root cmd /Q /C ver").c_str());
   } else {
     return false;
   }
