@@ -45,6 +45,16 @@ Clean the build via: `ninja clean`
 
 *Hint:* Run `ninja help` for all available targets.
 
+### Debug
+
+You can use the helper script: `./build_debug.sh`
+
+Start debugging in [GDB (GNU Debugger)](https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf):
+
+```
+gdb -ex=run build_debug/bin/winegui
+```
+
 ## Coding standard
 
 We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
