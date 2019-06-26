@@ -214,13 +214,13 @@ void NewBottleAssistant::get_result(
     const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(winBitIndex);
     windows_version = currentWindowsBit.first;
     bit = currentWindowsBit.second;
-  } catch (...) {
+  } catch (const std::runtime_error& error) {
     // Ignore
   }
   try {
     size_t audioIndex = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
     audio = BottleTypes::AudioDriver(audioIndex);
-  } catch (...) {
+  } catch (const std::runtime_error& error) {
     // Ignore
   }
 
