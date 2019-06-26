@@ -187,8 +187,6 @@ void BottleManager::CreateWineBottles(string wineVersion, std::map<string, unsig
       cDriveLocation = Helper::GetCLetterDrive(prefix);
       lastTimeWineUpdated = Helper::GetLastWineUpdated(prefix);
       audioDriver = Helper::GetAudioDriver(prefix);
-
-      std::cout << "Windows version: " << BottleTypes::toString(windows) << std::endl;
     }
     catch (const std::runtime_error& error)
     {

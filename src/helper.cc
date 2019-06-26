@@ -46,11 +46,13 @@ static const string USERDEF_REG = "userdef.reg";
 // Reg keys
 static const string keyName9x = "Software\\\\Microsoft\\\\Windows\\\\CurrentVersion";
 static const string keyNameNT = "Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion";
+static const string keyType   = "System\\\\CurrentControlSet\\\\Control\\\\ProductOptions";
 
 // Reg names
-static const string nameNTVersion = "CurrentVersion";
-static const string nameNTBuild  = "CurrentBuildNumber";
-static const string name9xVersion = "VersionNumber";
+static const string nameNTVersion   = "CurrentVersion";
+static const string nameNTBuild     = "CurrentBuildNumber";
+static const string name9xVersion   = "VersionNumber";
+static const string nameProductType = "ProductType";
 
 // Other files
 static const string WINEGUI_CONF = ".winegui.conf";
@@ -200,7 +202,6 @@ string Helper::GetName(const string prefix_path)
 
 /**
  * \brief Get current Windows OS version
- * TODO: szProductType! Since build version + major/minor is not unique enough :o!
  * \param[in] prefix_path The prefix directory path to the bottle prefix
  * \return Return the Windows OS version
  */
@@ -213,12 +214,16 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
   if(!(version = Helper::GetRegValue(filename, keyNameNT, nameNTVersion)).empty())
   {
     string buildNumberNT = Helper::GetRegValue(filename, keyNameNT, nameNTBuild);
+    string typeNT = Helper::GetRegValue(filename, keyType, nameProductType);
+
     // Find Windows version
     for (unsigned long i = 0; i < sizeof(win_versions); i++)
-    {
+    {      
       // Check if version + build number matches
-      if(((win_versions[i].versionNumber).compare(version) == 0) && 
-        ((win_versions[i].buildNumber).compare(buildNumberNT) == 0))
+      if( ((win_versions[i].versionNumber).compare(version) == 0) && 
+          ((win_versions[i].buildNumber).compare(buildNumberNT) == 0) &&
+          ((win_versions[i].productType).compare(typeNT) == 0)
+        )
       {
         return win_versions[i].windows;
       }
