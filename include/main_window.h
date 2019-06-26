@@ -51,6 +51,9 @@ public:
   void SetDetailedInfo(BottleItem& bottle);
   void ShowErrorMessage(const Glib::ustring& message);
   
+  // Signal handers
+  virtual void on_new_bottle_clicked();
+
 protected:
   // Child widgets
   Gtk::Box vbox; /*!< The main vertical box */
@@ -85,14 +88,13 @@ protected:
 private:
   NewBottleAssistant newBottleAssistant;  /*!< New bottle wizard (behind: new button toolbar) */
 
-  // Signal handlers:
+  // Signal handlers
   virtual void on_hide_window();
   virtual void on_row_clicked(Gtk::ListBoxRow* row);
-  virtual void on_new_button_clicked();
   virtual void on_new_bottle_apply();
 
+  // Private methods
   void CreateLeftPanel();
   void CreateRightPanel();
-
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* row, Gtk::ListBoxRow* before);
 };

@@ -41,14 +41,15 @@ Menu::Menu()
   auto save_item = CreateImageMenuItem("Save", "document-save");
   auto exit = CreateImageMenuItem("Exit", "application-exit");
   // Add appliaction quit signal to the exit button
-  exit->signal_activate().connect(signalQuit);
+  exit->signal_activate().connect(signal_quit);
   
   // View submenu
   auto refresh = CreateImageMenuItem("Refresh List", "view-refresh");
-  refresh->signal_activate().connect(signalRefresh);
+  refresh->signal_activate().connect(signal_refresh);
 
   // Machine submenu
   auto newitem = CreateImageMenuItem("New...", "list-add");
+  newitem->signal_activate().connect(signal_new_machine);
   auto run = CreateImageMenuItem("Run...", "system-run");
   auto settings = CreateImageMenuItem("Settings...", "preferences-other");
   auto manage = CreateImageMenuItem("Manage...", "system-software-install");
@@ -56,7 +57,7 @@ Menu::Menu()
 
   // Help submenu
   auto about = CreateImageMenuItem("About WineGUI...", "help-about");
-  about->signal_activate().connect(signalShowAbout);
+  about->signal_activate().connect(signal_show_about);
   // Template for creating a seperate method if addition actions are required:
   //    about->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_help_about));
   
@@ -99,7 +100,7 @@ Menu::~Menu() {
  * \brief Return the machine sub menu only
  * \return GTK::Menu pointer of the machine menu
  */
-Gtk::Menu* Menu::getMachineMenu() {
+Gtk::Menu* Menu::GetMachineMenu() {
   return &machine_submenu;
 }
 

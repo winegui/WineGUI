@@ -48,22 +48,14 @@ void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
  */
 void SignalDispatcher::DispatchSignals()
 {
-  menu.signalQuit.connect(sigc::mem_fun(*this, &SignalDispatcher::on_quit));
-  menu.signalShowAbout.connect(sigc::mem_fun(about, &AboutDialog::show));
-  menu.signalRefresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
+  menu.signal_quit.connect(hideMainWindow); /*!< Signal hide window and therefor closes the app */
+  menu.signal_show_about.connect(sigc::mem_fun(about, &AboutDialog::show));
+  menu.signal_refresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
+  menu.signal_new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_clicked));
 
   mainWindow->newBottle.connect(sigc::mem_fun(manager, &BottleManager::NewBottle));
 
   //manager.placeholder.connect(sigc::mem_fun(*mainWindow, &MainWindow::placeholder));
-}
-
-/**
- * \brief Execute when close button is clicked
- */
-void SignalDispatcher::on_quit()
-{
-  // Signal hide main window and therefor it closes the app
-  hideMainWindow.emit();
 }
 
 bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
@@ -71,7 +63,7 @@ bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
   // Single click with right mouse button?
   if(event->type == GDK_BUTTON_PRESS && event->button == 3)
   {
-    Gtk::Menu* popup = menu.getMachineMenu();
+    Gtk::Menu* popup = menu.GetMachineMenu();
     if (popup)
     {
       popup->popup(event->button, event->time);

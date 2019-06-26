@@ -53,7 +53,7 @@ MainWindow::MainWindow(Menu& menu)
 
   // Main Window signals
   new_button.signal_clicked().connect(sigc::mem_fun(*this,
-    &MainWindow::on_new_button_clicked));
+    &MainWindow::on_new_bottle_clicked));
   newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this,
     &MainWindow::on_new_bottle_apply));
 
@@ -338,9 +338,9 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
 }
 
 /**
- * \brief Signal when the new button is clicked in the top toolbar
+ * \brief Signal when the new button is clicked in the top toolbar/ or menu
  */
-void MainWindow::on_new_button_clicked()
+void MainWindow::on_new_bottle_clicked()
 {
   newBottleAssistant.set_transient_for(*this);
   newBottleAssistant.show();

@@ -29,13 +29,14 @@
 class Menu: public Gtk::MenuBar
 {
 public:
-  sigc::signal<void> signalQuit; /*!< Signal on click quite button */
-  sigc::signal<void> signalRefresh; /*!< Signal on click refresh button */
-  sigc::signal<void> signalShowAbout; /*!< Signal on click about button */
+  sigc::signal<void> signal_quit; /*!< on quite button clicked signal */
+  sigc::signal<void> signal_refresh; /*!< on refresh button clicked signal */
+  sigc::signal<void> signal_show_about; /*!< on about button clicked signal */
+  sigc::signal<void> signal_new_machine; /*!< on new new button clicked signal */
 
   Menu();
   virtual ~Menu();
-  Gtk::Menu* getMachineMenu();
+  Gtk::Menu* GetMachineMenu();
 
 protected:
   // Child widgets
