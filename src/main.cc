@@ -46,8 +46,9 @@ int main(int argc, char *argv[])
   // Do all the signal connections of the life time of the app
   signalDispatcher.DispatchSignals();
 
-  // Start the initial read from disk to fetch the bottles & update GUI
-  bottleManager.UpdateBottles();
+  // Call the Bottle Manager prepare method,
+  // it will prepare Winetricks & retrieve Wine Bottles
+  bottleManager.Prepare();
 
   // Start main loop
   return app->run(mainWindow, argc, argv);

@@ -41,6 +41,7 @@ public:
   BottleManager(MainWindow& mainWindow);
   virtual ~BottleManager();
 
+  void Prepare();
   void UpdateBottles();
   void NewBottle(Glib::ustring& name,
     Glib::ustring& virtual_desktop_resolution,

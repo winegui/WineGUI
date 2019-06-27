@@ -35,8 +35,9 @@
 #include <glibmm/timeval.h>
 #include <glibmm/fileutils.h>
 
-// Wine exec
-static const string WINE_EXECUTABLE = "wine";
+// Wine & Winetricks exec
+static const string WINE_EXECUTABLE = "wine"; /*!< Currently expect to be installed globally */
+static const string WINETRICKS_EXECUTABLE = Glib::build_filename(Glib::get_current_dir(), "winetricks"); /*!< winetricks shall be located locally */
 
 // Reg files
 static const string SYSTEM_REG = "system.reg";
@@ -92,6 +93,10 @@ static const struct
   {"win30",     "Windows 3.0",     "3.0",  "0",     "",         "",     BottleTypes::Windows::Windows30},
   {"win20",     "Windows 2.0",     "2.0",  "0",     "",         "",     BottleTypes::Windows::Windows20}
 };
+
+/****************************************************************************
+ *  Public methods                                                          *
+ ****************************************************************************/
 
 /**
  * \brief Get the bottle directories within the given path
@@ -152,7 +157,7 @@ void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit)
       winearch = " WINEARCH=win64";
       break;
   }
-  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + winearch + " " + WINE_EXECUTABLE + " wineboot && echo $?").c_str());
+  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + winearch + " " + WINE_EXECUTABLE + " wineboot >/dev/null 2>&1; echo $?").c_str());
   if(!result.empty())
   {
     // Remove new lines
@@ -449,6 +454,62 @@ bool Helper::FileExists(const string& file_path)
   return Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR);
 }
 
+/**
+ * \brief Install or update Winetricks (eg. when not found locally yet)
+ * Throws an error if the download and/or install was not successful.
+ */
+void Helper::InstallOrUpdateWinetricks()
+{
+  string deploymentDirectory = Glib::get_current_dir();
+  Exec(("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x winetricks && mv winetricks " + deploymentDirectory).c_str());
+  // Winetricks script should exists now...
+  if(!FileExists("winetricks"))
+  {
+    throw std::runtime_error("Winetrick helper script can not be found / installed. This could/will result into issues with WineGUI!");
+  }
+}
+
+/**
+ * \brief Update an existing local Winetricks, only useful if winetricks is already deployed.
+ */
+void Helper::SelfUpdateWinetricks()
+{
+  if(FileExists("winetricks"))
+  {
+    string result = Exec((WINETRICKS_EXECUTABLE + " --self-update >/dev/null 2>&1; echo $?").c_str());
+    if(!result.empty()) {
+      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+      if(result.compare("0") != 0) {
+        throw std::runtime_error("Something went wrong with the winetricks self-update");
+      }
+    } else {
+      throw std::runtime_error("Something went wrong with the winetricks self-update.");
+    }    
+  }
+}
+
+/**
+ * \brief Get the Winetrick version
+ * \return The version of Winetricks
+ */
+string Helper::GetWinetricksVersion()
+{
+  string version = "";
+  if(FileExists("winetricks")) {
+    string result = Exec((WINETRICKS_EXECUTABLE + " --version").c_str());
+    if(!result.empty())
+    {
+      if(result.length() >= 8) {
+        version = result.substr(0, 8); // Retrieve YYYYMMDD
+      }
+    }
+  }
+  return version;
+}
+
+/****************************************************************************
+ *  Private methods                                                         *
+ ****************************************************************************/
 
 /**
  * \brief Execute command on terminal. Return output.

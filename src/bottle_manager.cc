@@ -41,7 +41,41 @@ BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
 BottleManager::~BottleManager() {}
 
 /**
- * \brief Update bottles from disk in GUI 
+ * \brief Prepare method, called during initial start-up of the app
+ */
+void BottleManager::Prepare()
+{
+  // Install winetricks if not yet present,
+  // Winetricks script is used by WineGUI.
+  if(!Helper::FileExists("winetricks"))
+  {
+    try {
+      Helper::InstallOrUpdateWinetricks();
+    }
+    catch(const std::runtime_error& error)
+    {
+      mainWindow.ShowErrorMessage(error.what());
+    }
+  }
+  else
+  {
+    // Update existing script
+    try {
+      Helper::SelfUpdateWinetricks();
+    }
+    catch(const std::runtime_error& error)
+    {
+      string ver = Helper::GetWinetricksVersion();
+      std::cout << "WARN: Could not update winetricks, however winetrick version " << ver << " is already present." << std::endl;
+    }
+  }
+
+  // Start the initial read from disk to fetch the bottles & update GUI
+  UpdateBottles();
+}
+
+/**
+ * \brief Update bottles by reading the Wine Bottles from disk and update GUI 
  */
 void BottleManager::UpdateBottles()
 {

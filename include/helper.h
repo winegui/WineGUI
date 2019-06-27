@@ -50,6 +50,9 @@ public:
   static string GetCLetterDrive(const string prefix_path);
   static bool DirExists(const string& dir_path);
   static bool FileExists(const string& filer_path);
+  static void InstallOrUpdateWinetricks();
+  static void SelfUpdateWinetricks();
+  static string GetWinetricksVersion();
 private:
   static string Exec(const char* cmd);
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
