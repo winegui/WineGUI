@@ -53,6 +53,11 @@ public:
   static void InstallOrUpdateWinetricks();
   static void SelfUpdateWinetricks();
   static string GetWinetricksVersion();
+  static void ShowWinetricksGUI(const string prefix_path);
+  static void SetWindowsVersion(const string prefix_path, BottleTypes::Windows windows);
+  static void SetVirtualDesktop(const string prefix_path, string resolution);
+  static void DisableVirtualDesktop(const string prefix_path);
+  static void SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver);
 private:
   static string Exec(const char* cmd);
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);

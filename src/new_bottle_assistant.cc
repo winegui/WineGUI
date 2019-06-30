@@ -228,12 +228,19 @@ void NewBottleAssistant::get_result(
   setDefaultValues();
 }
 
+/**
+ * \brief Triggered when the apply is pressed
+ * apply_changes_gradually
+ */
 void NewBottleAssistant::on_assistant_apply()
 {
+  // TODO: The loading bar timer (apply_changes_grually), should be dynamic based on the amount of 'work/actions'
+  // Loading bar shall be the indicator, not the trigger to finish
+
   /* Start a timer to simulate changes taking a few seconds to apply. */
    sigc::connection conn = Glib::signal_timeout().connect(
       sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually),
-      200);
+      250);
 }
 
 void NewBottleAssistant::on_assistant_cancel()
@@ -302,6 +309,8 @@ bool NewBottleAssistant::apply_changes_gradually()
     loading_bar.set_fraction(fraction);
     return true;
   } else {
+    // TODO: Only send the close & emit done signal once the "wine/winetricks thread" is finished
+    
     // Close Assistant
     this->hide();
     // Inform UI, emit signal newBottleDone

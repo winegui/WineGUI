@@ -157,7 +157,7 @@ void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit)
       winearch = " WINEARCH=win64";
       break;
   }
-  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + winearch + " " + WINE_EXECUTABLE + " wineboot >/dev/null 2>&1; echo $?").c_str());
+  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + winearch + " " + WINE_EXECUTABLE + " wineboot>/dev/null 2>&1; echo $?").c_str());
   if(!result.empty())
   {
     // Remove new lines
@@ -220,17 +220,23 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
   {
     string buildNumberNT = Helper::GetRegValue(filename, keyNameNT, nameNTBuild);
     string typeNT = Helper::GetRegValue(filename, keyType, nameProductType);
-
     // Find Windows version
-    for (unsigned long i = 0; i < sizeof(win_versions); i++)
+    for (unsigned int i = 0; i < BottleTypes::WINDOWS_ENUM_SIZE; i++)
     {      
       // Check if version + build number matches
       if( ((win_versions[i].versionNumber).compare(version) == 0) && 
-          ((win_versions[i].buildNumber).compare(buildNumberNT) == 0) &&
-          ((win_versions[i].productType).compare(typeNT) == 0)
+          ((win_versions[i].buildNumber).compare(buildNumberNT) == 0)
         )
       {
-        return win_versions[i].windows;
+        if(!typeNT.empty())
+        {
+          if((win_versions[i].productType).compare(typeNT) == 0)
+          {
+            return win_versions[i].windows;
+          }
+        } else {
+          return win_versions[i].windows;
+        }        
       }
     }
   }
@@ -249,7 +255,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
     }
      
     // Find Windows version
-    for (unsigned long i = 0; i < sizeof(win_versions); i++)
+    for (unsigned int i = 0; i < BottleTypes::WINDOWS_ENUM_SIZE; i++)
     {
       // Check if version + build number matches
       if(((win_versions[i].versionNumber).compare(currentVersion) == 0) && 
@@ -505,6 +511,124 @@ string Helper::GetWinetricksVersion()
     }
   }
   return version;
+}
+
+/**
+ * \brief Show the Winetricks userinterface
+ */
+void Helper::ShowWinetricksGUI(const string prefix_path)
+{
+  if(FileExists("winetricks"))
+  {
+    Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " --gui").c_str());  
+  }
+}
+
+/**
+ * \brief Set Windows OS version by using Winetricks
+ */
+void Helper::SetWindowsVersion(const string prefix_path, BottleTypes::Windows windows)
+{
+  if(FileExists("winetricks"))
+  {
+    string win = BottleTypes::getWinetricksString(windows);
+    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " " + win + ">/dev/null 2>&1; echo $?").c_str());
+    if(!result.empty()) {
+      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+      if(result.compare("0") != 0) {
+        throw std::runtime_error("Could not set Windows OS version");
+      }
+    } else {
+      throw std::runtime_error("Could not set Windows OS version");
+    }    
+  }
+}
+
+/**
+ * \brief Set custom virtual desktop resolution by using Winetricks
+ */
+void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
+{
+  if(FileExists("winetricks"))
+  {
+    std::vector<string> res = Split(resolution, 'x');
+    if (res.size() >= 2)
+    {
+      int x = 0, y = 0;
+      try 
+      {
+        x = std::atoi(res.at(0).c_str());
+        y = std::atoi(res.at(1).c_str());
+      }
+      catch(std::exception const & e)
+      {
+        throw std::runtime_error("Could not set virtual desktop resolution (invalid input)");
+      }
+
+      if(x < 640 || y < 480)
+      {
+        // Set to minimum resolution
+        resolution = "640x480";
+      }
+
+      string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
+      // Another Bug in winetricks! It returns always 1 when using vd=. Even with the predefined inputs or vd=off..
+
+      /*if(!result.empty()) {
+        result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+        if(result.compare("0") != 0) {
+          throw std::runtime_error("Could not set virtual desktop resolution");
+        }
+      } else {
+        throw std::runtime_error("Could not set virtual desktop resolution");
+      }*/
+    }
+    else
+    {
+      throw std::runtime_error("Could not set virtual desktop resolution (invalid input)");
+    }
+  }
+}
+
+/**
+ * \brief Disable Virtual Desktop fully by using Winetricks
+ */
+void Helper::DisableVirtualDesktop(const string prefix_path)
+{
+  if(FileExists("winetricks"))
+  {
+    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off" + ">/dev/null 2>&1; echo $?").c_str());
+    // Bug in Winetricks vd=off is working, but it will always return 1
+    /*if(!result.empty()) {
+      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+      if(result.compare("0") != 0) {
+        throw std::runtime_error("Could not Disable Virtual Desktop");
+      }
+    } else {
+      throw std::runtime_error("Could not Disable Virtual Desktop");
+    }*/
+  }
+}
+
+/**
+ * \brief Set Audio Driver by using Winetricks
+ */
+void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver)
+{
+  if(FileExists("winetricks"))
+  {
+    string audio = BottleTypes::getWinetricksString(audio_driver);
+    // 
+    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " sound=" + audio + ">/dev/null 2>&1; echo $?").c_str());
+    if(!result.empty()) {
+      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+      if(result.compare("0") != 0) {
+        throw std::runtime_error("Could not set Audio driver");
+      }
+    } else {
+      throw std::runtime_error("Could not set Audio driver");
+    }  
+  }
 }
 
 /****************************************************************************

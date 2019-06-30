@@ -34,6 +34,7 @@ namespace BottleTypes {
    * \enum Windows
    * \brief List of Windows versions.
    * \note Don't forget to update the toString methods if required!
+   * \note Don't forget to update the hardcoded size below! C++ -,-
    */
   enum class Windows
   {
@@ -56,6 +57,9 @@ namespace BottleTypes {
     Windows81,
     Windows10
   };
+
+  //// Size of Windows enum class
+  static const unsigned int WINDOWS_ENUM_SIZE = 18;
 
   /**
    * \enum Bit
@@ -89,7 +93,6 @@ namespace BottleTypes {
     std::pair(Windows::Windows2003, Bit::win64),
     std::pair(Windows::WindowsVista, Bit::win32),
     std::pair(Windows::WindowsVista, Bit::win64),
-    std::pair(Windows::Windows2008, Bit::win32),
     std::pair(Windows::Windows2008, Bit::win64),
     std::pair(Windows::Windows7, Bit::win32),
     std::pair(Windows::Windows7, Bit::win64),
@@ -145,7 +148,7 @@ namespace BottleTypes {
   inline static std::string toString(Windows win) {
     switch(win) {
       case Windows::Windows20:
-        return "Windows 2.0";    
+        return "Windows 2.0";
       case Windows::Windows30:
         return "Windows 3.0";
       case Windows::Windows31:
@@ -185,6 +188,52 @@ namespace BottleTypes {
     }
   }
 
+  /**
+   * Get Winetricks Windows OS version string
+   */
+  inline static std::string getWinetricksString(Windows win) {
+    switch(win) {
+      case Windows::Windows20:
+        return "win20"; // Not yet implemented by Winetrick?
+      case Windows::Windows30:
+        return "win30"; // Not yet implemented by Winetrick?
+      case Windows::Windows31:
+        return "win31";
+      case Windows::WindowsNT351:
+        return "nt351"; // Not yet implemented by Winetricks?
+      case Windows::WindowsNT40:
+        return "nt40";
+      case Windows::Windows95:
+        return "win95";
+      case Windows::Windows98:
+        return "win98";
+      case Windows::WindowsME:
+        return "winme";
+      case Windows::Windows2000:
+        return "win2k";
+      case Windows::WindowsXP:
+        return "winxp";
+      case Windows::Windows2003:
+        return "win2k3";
+      case Windows::WindowsVista:
+        return "vista";
+      case Windows::Windows2008:
+        return "win2k8"; // Not yet implemented by Winetricks? Use 2008R2 atm
+      case Windows::Windows7:
+        return "win7";
+      case Windows::Windows2008R2:
+        return "win2k8"; // Bug in Winetricks, should be win2k8r2 to be unique with Windows 2000!
+      case Windows::Windows8:
+        return "win8";
+      case Windows::Windows81:
+        return "win81";
+      case Windows::Windows10:
+        return "win10";
+      default:
+        return "winxp";
+    }
+  }
+
   // AudioDriver enum to string
   inline static std::string toString(AudioDriver audio) {
     switch(audio) {
@@ -198,6 +247,24 @@ namespace BottleTypes {
         return "Open Sound System (OSS)";
       default:
         return "Disabled";
+    }
+  }
+
+  /**
+   * \brief Get Winetricks Audio driver string
+   */
+  inline static std::string getWinetricksString(AudioDriver audio) {
+    switch(audio) {
+      case AudioDriver::pulseaudio:
+        return "pulse";
+      case AudioDriver::alsa:
+        return "alsa";
+      case AudioDriver::coreaudio:
+        return "coreaudio";
+      case AudioDriver::oss:
+        return "oss";
+      default:
+        return "disabled";
     }
   }
 };

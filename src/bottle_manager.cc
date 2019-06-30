@@ -24,6 +24,12 @@
 
 #include <stdexcept>
 
+//// Default Windows OS Version of Wine
+static const BottleTypes::Windows DEFAULT_WINDOWS = BottleTypes::Windows::Windows7;
+
+//// Default AudioDriver of Wine
+static const BottleTypes::AudioDriver DEFAULT_AUDIO_DRIVER = BottleTypes::AudioDriver::pulseaudio;
+
 /**
  * \brief Constructor
  * \param mainWindow Address to the main Window
@@ -121,23 +127,61 @@ void BottleManager::NewBottle(
   // Calculate prefix
   std::vector<std::string> dirs{BOTTLE_LOCATION, name};
   auto wine_prefix = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
+  bool bottle_created = false;
   try {
     // First create a new Wine Bottle
     Helper::CreateWineBottle(wine_prefix, bit);
-
-    std::cout << "\nBottle created!\n" 
-    << "Name: " << name
-    << "\nRes: "  << virtual_desktop_resolution 
-    << "\nWindows: "  << BottleTypes::toString(windows_version) 
-    << "\nBit: " << BottleTypes::toString(bit)
-    << "\nAudio: " << BottleTypes::toString(audio)
-    << std::endl;
-
-    // TODO: Next update Windows version, audio and virtual desktop...
+    bottle_created = true;
   }
   catch (const std::runtime_error& error)
   {
-    mainWindow.ShowErrorMessage(error.what());
+    mainWindow.ShowErrorMessage("Something went wrong when creating a new Windows OS!\n" + 
+      Glib::ustring(error.what()));
+  }
+
+  // Continue with additional settings
+  if(bottle_created)
+  {
+    // Only change Windows OS when NOT default
+    if(windows_version != DEFAULT_WINDOWS)
+    {
+      try {
+        Helper::SetWindowsVersion(wine_prefix, windows_version);
+      }
+      catch (const std::runtime_error& error)
+      {
+        mainWindow.ShowErrorMessage("Something went wrong when creating a new Windows OS!\n" + 
+          Glib::ustring(error.what()));
+      } 
+    }
+
+    // Only if virtual desktop is not empty, enable it
+    if(!virtual_desktop_resolution.empty())
+    {
+      try {
+        Helper::SetVirtualDesktop(wine_prefix, virtual_desktop_resolution);
+      }
+      catch (const std::runtime_error& error)
+      {
+        mainWindow.ShowErrorMessage("Something went wrong when creating a new Windows OS!\n" + 
+          Glib::ustring(error.what()));
+      } 
+    }
+
+    // Only if Audio driver is not default, change it
+    if(audio != DEFAULT_AUDIO_DRIVER)
+    {
+      try {
+        Helper::SetAudioDriver(wine_prefix, audio);
+      }
+      catch (const std::runtime_error& error)
+      {
+        mainWindow.ShowErrorMessage("Something went wrong when creating a new Windows OS!\n" + 
+          Glib::ustring(error.what()));
+      } 
+    }
+
+    // TODO: Finally add name to WineGUI config file
   }
 }
 
