@@ -79,8 +79,8 @@ void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
   // Send listbox (left panel) signal to dispatcher
   listbox.signal_button_press_event().connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_button_press_event));
 
-  // Send New Bottle Assistant signal to dispatcher
-  newBottleAssistant.newBottleFinished.connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_new_bottle_finished));
+  // Redirect new Bottle Assistant signal to dispatcher
+  newBottleAssistant.newBottleFinished.connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_update_bottles));
 }
 
 /**
@@ -358,8 +358,17 @@ void MainWindow::on_new_bottle_apply()
   BottleTypes::AudioDriver audio;
 
   // Retrieve assistant results
-  newBottleAssistant.get_result(name, virtual_desktop_resolution, windows_version, bit, audio);
+  newBottleAssistant.GetResult(name, virtual_desktop_resolution, windows_version, bit, audio);
 
   // Emit signal to Bottle Manager
   newBottle.emit(name, virtual_desktop_resolution, windows_version, bit, audio);
+}
+
+/**
+ * \brief Handler when the bottle is created, notify the new bottle assistant.
+ * Pass through the signal from the dispatcher to the 'new bottle assistant'.
+ */
+void MainWindow::on_new_bottle_created()
+{
+  newBottleAssistant.BottleCreated();
 }

@@ -53,6 +53,7 @@ public:
   
   // Signal handers
   virtual void on_new_bottle_clicked();
+  virtual void on_new_bottle_created();
 
 protected:
   // Child widgets

@@ -2,7 +2,8 @@
  * Copyright (c) 2019 WineGUI
  *
  * \file    signal_dispatcher.cc
- * \brief   Gtkmm signal dispatcher
+ * \brief   Connect different signals and dispatch 
+ *          (eg. Menu button clicks and new bottle wizard signals) them to the proper calls within WineGUI
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,9 +32,19 @@
 SignalDispatcher::SignalDispatcher(BottleManager& manager, Menu& menu, AboutDialog& about)
 : manager(manager),
   menu(menu),
-  about(about) {}
+  about(about),
+  m_FinishDispatcher(),
+  m_ErrorMessageDispatcher(),
+  m_threadBottleManager(nullptr) {}
 
-SignalDispatcher::~SignalDispatcher() {}
+/**
+ * \brief Destructor, join (wait for) running threads, if applicable
+ */
+SignalDispatcher::~SignalDispatcher()
+{
+  // To avoid deamon threads
+  CleanUpBottleManagerThread();
+}
 
 /**
  * \brief Set main window pointer to Signal Dispatcher
@@ -53,9 +64,40 @@ void SignalDispatcher::DispatchSignals()
   menu.signal_refresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
   menu.signal_new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_clicked));
 
-  mainWindow->newBottle.connect(sigc::mem_fun(manager, &BottleManager::NewBottle));
+  mainWindow->newBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
 
-  //manager.placeholder.connect(sigc::mem_fun(*mainWindow, &MainWindow::placeholder));
+  m_FinishDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
+  m_ErrorMessageDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message));
+}
+
+/**
+ * \brief Signal finish is called from within thread, 
+ *  which can trigger the dispatcher so it can run a method 
+ * (connected to the dispatcher signal) in the GUI thread
+ */
+void SignalDispatcher::SignalBottleCreated()
+{
+  m_FinishDispatcher.emit();
+}
+
+/**
+ * \brief Signal error message
+ */
+void SignalDispatcher::SignalErrorMessage()
+{
+  // Show error message
+  m_ErrorMessageDispatcher.emit();
+}
+
+void SignalDispatcher::CleanUpBottleManagerThread()
+{
+  if(m_threadBottleManager)
+  {
+    if (m_threadBottleManager->joinable())
+        m_threadBottleManager->join();
+    delete m_threadBottleManager;
+    m_threadBottleManager = nullptr;
+  }
 }
 
 bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
@@ -76,9 +118,60 @@ bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
 }
 
 /**
- * \brief Signal handler when new Wine Bottle wizard is finished
+ * \brief Update bottles in GUI (typically when the new wizard is finished)
  */
-void SignalDispatcher::on_new_bottle_finished()
+void SignalDispatcher::on_update_bottles()
 {
   manager.UpdateBottles();
+}
+
+/**
+ * \brief New Bottle signal, starting NewBottle() within thread
+ */
+void SignalDispatcher::on_new_bottle(
+  Glib::ustring& name,
+  Glib::ustring& virtual_desktop_resolution,
+  BottleTypes::Windows windows_version,
+  BottleTypes::Bit bit,
+  BottleTypes::AudioDriver audio)
+{
+  if (m_threadBottleManager)
+  {
+    this->mainWindow->ShowErrorMessage("There is already running a thread. Please wait...");
+    // Always close the wizard (signal 'finish')
+    m_FinishDispatcher.emit();  
+  }
+  else
+  {
+    // Start a new manager thread (executing NewBottle())
+    m_threadBottleManager = new std::thread(
+      [this, name, virtual_desktop_resolution, windows_version, bit, audio]
+      {
+        manager.NewBottle(this, name, virtual_desktop_resolution, windows_version, bit, audio);
+      });
+  }
+}
+
+/**
+ * \brief Signal handler when a new bottle is created, dispatched from the manager thread
+ */
+void SignalDispatcher::on_new_bottle_created()
+{
+  CleanUpBottleManagerThread();
+
+  this->mainWindow->on_new_bottle_created();
+}
+
+/**
+ * \brief Fetch the error message from the manager (in a thread-safe manner), 
+ * and report it to the main window (runs on the GUI thread).
+ */
+void SignalDispatcher::on_error_message()
+{
+  CleanUpBottleManagerThread();
+
+  this->mainWindow->ShowErrorMessage(manager.GetErrorMessage());
+
+  // Always close the wizard (signal 'finish')
+  m_FinishDispatcher.emit();  
 }

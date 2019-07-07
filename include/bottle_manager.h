@@ -23,6 +23,8 @@
 #include <list>
 #include <map>
 #include <string>
+#include <thread>
+#include <mutex>
 #include <glibmm/main.h>
 #include "bottle_item.h"
 
@@ -30,6 +32,8 @@ using std::string;
 
 // Forward declaration
 class MainWindow;
+class SignalDispatcher;
+
 
 /**
  * \class BottleManager
@@ -43,21 +47,26 @@ public:
 
   void Prepare();
   void UpdateBottles();
-  void NewBottle(Glib::ustring& name,
-    Glib::ustring& virtual_desktop_resolution,
+  void NewBottle(
+    SignalDispatcher *caller,
+    Glib::ustring name,
+    Glib::ustring virtual_desktop_resolution,
     BottleTypes::Windows windows_version,
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio);
-  // Signals are possible:
-  // Eg. sigc::signal<void> some_name; /*!< signal bla */
-
+  const Glib::ustring& GetErrorMessage();
 private:
+  // Synchronizes access to data members
+  mutable std::mutex m_Mutex;
+
   string BOTTLE_LOCATION;
   MainWindow& mainWindow;
-  // TODO: Since GTK is using a copy contructor, I think its wise to remove our local list
   std::list<BottleItem> bottles;
 
+  //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
+  Glib::ustring error_message;
+
   string GetWineVersion();
-  std::map<string, unsigned long> ReadBottles();
-  void CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs);
+  std::map<string, unsigned long> GetBottlePaths();
+  std::list<BottleItem> CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs);
 };

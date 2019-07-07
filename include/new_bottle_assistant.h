@@ -36,12 +36,14 @@ public:
   NewBottleAssistant();
   virtual ~NewBottleAssistant();
 
-  void get_result(
+  void GetResult(
     Glib::ustring& name,
     Glib::ustring& virtual_desktop_resolution,
     BottleTypes::Windows& windows_version,
     BottleTypes::Bit& bit,
     BottleTypes::AudioDriver& audio);
+
+  void BottleCreated();
 
 private:
   // Signal handlers:

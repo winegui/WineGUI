@@ -20,6 +20,7 @@
  */
 #include "new_bottle_assistant.h"
 #include "bottle_types.h"
+#include "wine_defaults.h"
 #include <iostream>
 
 #define LOADING_PAGE_INDEX 2 /*!< The loading page, 3rd page (2 when start counting from zero) */
@@ -88,7 +89,7 @@ void NewBottleAssistant::setDefaultValues()
   audiodriver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
   virtual_desktop_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("960x540");
-  loading_bar.set_fraction(0);
+  loading_bar.set_fraction(0.0);
 }
 
 /**
@@ -189,7 +190,7 @@ void NewBottleAssistant::createThirdPage()
  * \param[out] bit                         - Windows Bit (32/64-bit)
  * \param[out] audio                       - Audio Driver type
  */
-void NewBottleAssistant::get_result(
+void NewBottleAssistant::GetResult(
   Glib::ustring& name,
   Glib::ustring& virtual_desktop_resolution,
   BottleTypes::Windows& windows_version,
@@ -210,22 +211,39 @@ void NewBottleAssistant::get_result(
     virtual_desktop_resolution = "";
   }
   try {
-    size_t winBitIndex = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
-    const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(winBitIndex);
+    size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
+    const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
     windows_version = currentWindowsBit.first;
     bit = currentWindowsBit.second;
-  } catch (const std::runtime_error& error) {
-    // Ignore
   }
-  try {
-    size_t audioIndex = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
-    audio = BottleTypes::AudioDriver(audioIndex);
-  } catch (const std::runtime_error& error) {
-    // Ignore
-  }
+  catch (const std::runtime_error& error) {} 
+  catch(std::invalid_argument& e){}
+  catch(std::out_of_range& e){}
+  // Ignore the catches
 
+  try {
+    size_t audio_index = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
+    audio = BottleTypes::AudioDriver(audio_index);
+  } 
+  catch (const std::runtime_error& error) {} 
+  catch(std::invalid_argument& e){}
+  catch(std::out_of_range& e){}
+  // Ignore the catches
+}
+
+/**
+ * \brief Triggered when the bottle is fully created (signal from the bottle manager thread)
+ */
+void NewBottleAssistant::BottleCreated()
+{  
   // Reset defaults
   setDefaultValues();
+
+  // Close Assistant
+  this->hide();
+  
+  // Inform UI, emit signal newBottleFinished (causes the GUI to refresh)
+  newBottleFinished.emit();
 }
 
 /**
@@ -234,13 +252,44 @@ void NewBottleAssistant::get_result(
  */
 void NewBottleAssistant::on_assistant_apply()
 {
-  // TODO: The loading bar timer (apply_changes_grually), should be dynamic based on the amount of 'work/actions'
-  // Loading bar shall be the indicator, not the trigger to finish
+  // Guess the time interval based on the user input
+  bool is_desktop_enabled = virtual_desktop_check.get_active();
+  bool is_non_default_windows = false;
+  bool is_non_default_audio_driver = false;
 
-  /* Start a timer to simulate changes taking a few seconds to apply. */
-   sigc::connection conn = Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually),
-      250);
+  std::string::size_type sz;
+  try {
+    size_t audio_index = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
+    auto audio = BottleTypes::AudioDriver(audio_index);
+    is_non_default_audio_driver = WineDefaults::AUDIO_DRIVER != audio;
+  }
+  catch (const std::runtime_error& error) {} 
+  catch(std::invalid_argument& e){}
+  catch(std::out_of_range& e){}
+  try {
+    size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
+    auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
+    is_non_default_windows = WineDefaults::WINDOWS_OS != currentWindowsBit.first;
+  }
+  catch (const std::runtime_error& error) {} 
+  catch(std::invalid_argument& e){}
+  catch(std::out_of_range& e){}
+
+  int time_interval = 300;
+  if(is_desktop_enabled) {
+    time_interval += 90;
+  }
+  if(is_non_default_windows) {
+    time_interval += 60;
+  }
+  if(is_non_default_audio_driver) {
+    time_interval += 90;
+  }
+
+  /* Start a timer to give the user feedback about the changes taking a few seconds to apply. */
+  sigc::connection conn = Glib::signal_timeout().connect(
+    sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually),
+    time_interval);
 }
 
 void NewBottleAssistant::on_assistant_cancel()
@@ -303,19 +352,12 @@ void NewBottleAssistant::on_virtual_desktop_toggle()
  */
 bool NewBottleAssistant::apply_changes_gradually()
 {
-  double fraction = (loading_bar.get_fraction() + 0.05);
+  double fraction = (loading_bar.get_fraction() + 0.02);
   if (fraction < 1.0)
   {
     loading_bar.set_fraction(fraction);
     return true;
   } else {
-    // TODO: Only send the close & emit done signal once the "wine/winetricks thread" is finished
-    
-    // Close Assistant
-    this->hide();
-    // Inform UI, emit signal newBottleDone
-    newBottleFinished.emit();
-
     // Stop timer
     return false;
   }

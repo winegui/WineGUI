@@ -5,15 +5,15 @@ cmake_minimum_required(VERSION 2.8.0)
 
 set(CMAKE_CXX_FLAGS "-g -Wall")
 
-if (CMAKE_VERSION VERSION_LESS "3.1")
-  add_definitions(-std=c++17)
-else()
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  if(NOT CYGWIN)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-  endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(NOT CYGWIN)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+FIND_PACKAGE(Threads REQUIRED)
 
 # Use the package PkgConfig to detect GTK+ headers/library files
 FIND_PACKAGE(PkgConfig REQUIRED)
@@ -44,7 +44,7 @@ add_library(signal_dispatcher_lib src/signal_dispatcher.cc)
 
 add_executable(winegui src/main.cc)
 
-target_link_libraries(winegui main_window_lib menu_lib bottle_manager_lib bottle_item new_bottle_assis_lib about_dialog_lib helper_lib signal_dispatcher_lib ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+target_link_libraries(winegui main_window_lib menu_lib bottle_manager_lib bottle_item new_bottle_assis_lib about_dialog_lib helper_lib signal_dispatcher_lib Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
 # To create 'make run'
 add_custom_target( run

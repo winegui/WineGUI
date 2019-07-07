@@ -20,21 +20,21 @@
  */
 #include "bottle_manager.h"
 #include "main_window.h"
+#include "signal_dispatcher.h"
 #include "helper.h"
+#include "wine_defaults.h"
 
+#include <chrono>
 #include <stdexcept>
-
-//// Default Windows OS Version of Wine
-static const BottleTypes::Windows DEFAULT_WINDOWS = BottleTypes::Windows::Windows7;
-
-//// Default AudioDriver of Wine
-static const BottleTypes::AudioDriver DEFAULT_AUDIO_DRIVER = BottleTypes::AudioDriver::pulseaudio;
 
 /**
  * \brief Constructor
  * \param mainWindow Address to the main Window
  */
-BottleManager::BottleManager(MainWindow& mainWindow): mainWindow(mainWindow)
+BottleManager::BottleManager(MainWindow& mainWindow):
+  m_Mutex(),
+  mainWindow(mainWindow),
+  error_message()
 {
   // TODO: Make it configurable via settings
   std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui", "prefixes"};
@@ -85,32 +85,47 @@ void BottleManager::Prepare()
  */
 void BottleManager::UpdateBottles()
 {
-  if(bottles.size() > 0) {
-    // Clean-up
+  // Clear bottles
+  if(bottles.size() > 0)
     bottles.clear();
+
+  // Get the bottle directories
+  std::map<string, unsigned long> bottleDirs;
+  try {
+    bottleDirs = GetBottlePaths();
+  }
+  catch(const std::runtime_error& error)
+  {
+    mainWindow.ShowErrorMessage(error.what());
+    return; // stop
   }
 
-  // Read bottles from disk and create classes from it
-  std::map<string, unsigned long> bottleDirs = ReadBottles();
   if(bottleDirs.size() > 0) {
-    // Create wine bottles from bottle directories and wine version
-    CreateWineBottles(GetWineVersion(), bottleDirs);
+    try {
+      // Create wine bottles from bottle directories and wine version
+      bottles = CreateWineBottles(GetWineVersion(), bottleDirs);
+    }
+    catch(const std::runtime_error& error)
+    {
+      mainWindow.ShowErrorMessage(error.what());
+      return; // stop
+    } 
   
     if(bottles.size() > 0)
     {
       // Update main Window
       mainWindow.SetWineBottles(bottles);
 
-      // Set first element as active (details)  
-      // TODO : Improve this
-      auto front = bottles.begin();      
-      mainWindow.SetDetailedInfo(*front);
+      // Set first element as active (details)
+      auto first = bottles.begin();      
+      mainWindow.SetDetailedInfo(*first);
     }
   }
 }
 
 /**
- * \brief Create a new Wine Bottle
+ * \brief Create a new Wine Bottle (runs in thread!)
+ * \param[in] caller                      - Signal Dispatcher pointer, in order to signal back events
  * \param[in] name                        - Bottle Name
  * \param[in] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)
  * \param[in] windows_version             - Windows OS version
@@ -118,8 +133,9 @@ void BottleManager::UpdateBottles()
  * \param[in] audio                       - Audio Driver type
  */
 void BottleManager::NewBottle(
-    Glib::ustring& name,
-    Glib::ustring& virtual_desktop_resolution,
+    SignalDispatcher *caller,
+    Glib::ustring name,
+    Glib::ustring virtual_desktop_resolution,
     BottleTypes::Windows windows_version,
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio)
@@ -131,27 +147,38 @@ void BottleManager::NewBottle(
   try {
     // First create a new Wine Bottle
     Helper::CreateWineBottle(wine_prefix, bit);
+    
     bottle_created = true;
   }
   catch (const std::runtime_error& error)
   {
-    mainWindow.ShowErrorMessage("Something went wrong when creating a new Windows OS!\n" + 
-      Glib::ustring(error.what()));
+    {
+      std::lock_guard<std::mutex> lock(m_Mutex);
+      error_message = ("Something went wrong during creation of a new Windows machine!\n" + 
+        Glib::ustring(error.what()));
+    }
+    caller->SignalErrorMessage();
+    return; // Stop thread
   }
 
   // Continue with additional settings
   if(bottle_created)
   {
     // Only change Windows OS when NOT default
-    if(windows_version != DEFAULT_WINDOWS)
+    if(windows_version != WineDefaults::WINDOWS_OS)
     {
       try {
         Helper::SetWindowsVersion(wine_prefix, windows_version);
       }
       catch (const std::runtime_error& error)
       {
-        mainWindow.ShowErrorMessage("Something went wrong when creating a new Windows OS!\n" + 
-          Glib::ustring(error.what()));
+        {
+          std::lock_guard<std::mutex> lock(m_Mutex);
+          error_message = ("Something went wrong during setting another Windows version.\n" + 
+            Glib::ustring(error.what()));
+        }
+        caller->SignalErrorMessage();
+        return; // Stop thread
       } 
     }
 
@@ -163,26 +190,56 @@ void BottleManager::NewBottle(
       }
       catch (const std::runtime_error& error)
       {
-        mainWindow.ShowErrorMessage("Something went wrong when creating a new Windows OS!\n" + 
-          Glib::ustring(error.what()));
+        {
+          std::lock_guard<std::mutex> lock(m_Mutex);
+          error_message = ("Something went wrong during enabling virtual desktop mode.\n" + 
+            Glib::ustring(error.what()));
+        }
+        caller->SignalErrorMessage();
+        return; // Stop thread
       } 
     }
 
     // Only if Audio driver is not default, change it
-    if(audio != DEFAULT_AUDIO_DRIVER)
+    if(audio != WineDefaults::AUDIO_DRIVER)
     {
       try {
         Helper::SetAudioDriver(wine_prefix, audio);
       }
       catch (const std::runtime_error& error)
       {
-        mainWindow.ShowErrorMessage("Something went wrong when creating a new Windows OS!\n" + 
-          Glib::ustring(error.what()));
+        {
+          std::lock_guard<std::mutex> lock(m_Mutex);
+          error_message = ("Something went wrong during setting another audio driver.\n" + 
+            Glib::ustring(error.what()));
+        }
+        caller->SignalErrorMessage();
+        return; // Stop thread
       } 
     }
 
     // TODO: Finally add name to WineGUI config file
   }
+
+  // Before we send a finish signal, wait until the status is OK, with a time-out.
+  // Especially needed when the user create a default Windows OS Wine bottle, with no additional settings
+  int time_out_counter = 0;
+  while(!Helper::GetBottleStatus(wine_prefix) && time_out_counter < 10)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    ++time_out_counter;
+  }
+  caller->SignalBottleCreated();
+}
+
+/**
+ * \brief Get error message (stored from manager thread)
+ * \return Return the error message
+ */
+const Glib::ustring& BottleManager::GetErrorMessage()
+{
+  std::lock_guard<std::mutex> lock(m_Mutex);
+  return error_message; 
 }
 
 /**
@@ -205,23 +262,24 @@ string BottleManager::GetWineVersion()
 }
 
 /**
- * \brief Read Wine bottles from disk at start-up
+ * \brief Get Bottle Paths
  * \return Return a map of bottle paths (string) and modification time (in ms)
  */
-std::map<string, unsigned long> BottleManager::ReadBottles()
+std::map<string, unsigned long> BottleManager::GetBottlePaths()
 {
   if(!Helper::DirExists(BOTTLE_LOCATION)) {
     // Create directory if not exist yet
     if(g_mkdir_with_parents(BOTTLE_LOCATION.c_str(), 0775) < 0 && errno != EEXIST) {
-      printf("Failed to create WineGUI directory \"%s\": %s\n", BOTTLE_LOCATION.c_str(), g_strerror(errno));
+      throw std::runtime_error("Failed to create WineGUI directory: " + BOTTLE_LOCATION + " (" + g_strerror(errno) + ")");
     }
   }
   if(Helper::DirExists(BOTTLE_LOCATION)) {
     // Continue
     return Helper::GetBottlesPaths(BOTTLE_LOCATION);
   }
-  else {
-    mainWindow.ShowErrorMessage("Configuration directory not found (could not create):\n" + BOTTLE_LOCATION);
+  else
+  {
+    throw std::runtime_error("Configuration directory not found (could not create):\n" + BOTTLE_LOCATION);
   }
   // Otherwise empty
   return std::map<string, unsigned long>();
@@ -232,8 +290,10 @@ std::map<string, unsigned long> BottleManager::ReadBottles()
  * \param[in] wineVersion The current wine version used
  * \param[in] bottleDirs  The list of bottle directories
  */
-void BottleManager::CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs)
+std::list<BottleItem> BottleManager::CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs)
 {
+  std::list<BottleItem> bottles;
+
   string name = "";
   string virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
   bool status = false;
@@ -284,4 +344,5 @@ void BottleManager::CreateWineBottles(string wineVersion, std::map<string, unsig
       virtualDesktop);
     bottles.push_back(*bottle);
   }
+  return bottles;
 }
