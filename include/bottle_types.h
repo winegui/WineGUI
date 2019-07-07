@@ -28,7 +28,7 @@
  */
 namespace BottleTypes {
   //// Emulate Virtual Desktop disabled string
-  inline static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
+  static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
 
   /**
    * \enum Windows
