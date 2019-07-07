@@ -42,7 +42,7 @@ SignalDispatcher::SignalDispatcher(BottleManager& manager, Menu& menu, AboutDial
  */
 SignalDispatcher::~SignalDispatcher()
 {
-  // To avoid deamon threads
+  // To avoid zombie threads
   CleanUpBottleManagerThread();
 }
 
