@@ -2,7 +2,7 @@
  * Copyright (c) 2019 WineGUI
  *
  * \file    bottle_types.h
- * \brief   Bottle enum definitions
+ * \brief   Bottle type enum definitions (like Windows OS, audio driver, supported Windows list)
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -218,11 +218,11 @@ namespace BottleTypes {
       case Windows::WindowsVista:
         return "vista";
       case Windows::Windows2008:
-        return "win2k8"; // Not yet implemented by Winetricks? Use 2008R2 atm
+        return "win2k8"; // Not yet implemented by Winetricks? Use 2008R2 atm (should be 'win2k8' eventually)
       case Windows::Windows7:
         return "win7";
       case Windows::Windows2008R2:
-        return "win2k8"; // Bug in Winetricks, should be win2k8r2 to be unique with Windows 2000!
+        return "win2k8"; // Bug in Winetricks, should be 'win2k8r2' to be unique with Windows 2000!
       case Windows::Windows8:
         return "win8";
       case Windows::Windows81:

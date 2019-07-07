@@ -2,7 +2,7 @@
  * Copyright (c) 2019 WineGUI
  *
  * \file    wine_defaults.h
- * \brief   Wine default Windows and Audio driver
+ * \brief   Wine default Windows and Audio driver settings
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify

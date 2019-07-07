@@ -59,39 +59,36 @@ static const string nameProductType = "ProductType";
 static const string WINEGUI_CONF = ".winegui.conf";
 static const string UPDATE_TIMESTAMP = ".update-timestamp";
 
+// Windows version table to convert Windows version in registery to BottleType Windows enum value
 // Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L49
-// Build number is tranformed to decimal number
+// Note: Build number is tranformed to decimal number
 static const struct
 {
-    const string version;
-    const string description;
-    const string versionNumber;
-    const string buildNumber;
-    const string productType;
-    const string servicePack;
-    const BottleTypes::Windows windows;
-    const BottleTypes::Bit bit;    
+  const BottleTypes::Windows windows;
+  const string versionNumber;
+  const string buildNumber;
+  const string productType;
 } win_versions[] =
 {
-  {"win10",     "Windows 10",      "10.0", "17134", "WinNT",    "",     BottleTypes::Windows::Windows10},
-  {"win81",     "Windows 8.1",     "6.3",  "9600",  "WinNT",    "",     BottleTypes::Windows::Windows81},
-  {"win8",      "Windows 8",       "6.2",  "9200",  "WinNT",    "",     BottleTypes::Windows::Windows8},
-  {"win2008r2", "Windows 2008 R2", "6.1",  "7601",  "ServerNT", "SP1",  BottleTypes::Windows::Windows2008R2},
-  {"win7",      "Windows 7",       "6.1",  "7601",  "WinNT",    "SP1",  BottleTypes::Windows::Windows7},
-  {"win2008",   "Windows 2008",    "6.0",  "6002",  "ServerNT", "SP2",  BottleTypes::Windows::Windows2008},
-  {"vista",     "Windows Vista",   "6.0",  "6002",  "WinNT",    "SP2",  BottleTypes::Windows::WindowsVista},
-  {"win2003",   "Windows 2003",    "5.2",  "3790",  "ServerNT", "SP2",  BottleTypes::Windows::Windows2003},
-  {"winxp64",   "Windows XP",      "5.2",  "3790",  "WinNT",    "SP2",  BottleTypes::Windows::WindowsXP, BottleTypes::Bit::win64},
-  {"winxp",     "Windows XP",      "5.1",  "2600",  "WinNT",    "SP3",  BottleTypes::Windows::WindowsXP, BottleTypes::Bit::win32},
-  {"win2k",     "Windows 2000",    "5.0",  "2195",  "WinNT",    "SP4",  BottleTypes::Windows::Windows2000},
-  {"winme",     "Windows ME",      "4.90", "3000",  "",         "",     BottleTypes::Windows::WindowsME},
-  {"win98",     "Windows 98",      "4.10", "2222",  "",         "",     BottleTypes::Windows::Windows98},
-  {"win95",     "Windows 95",      "4.0",  "950",   "",         "",     BottleTypes::Windows::Windows95},
-  {"nt40",      "Windows NT 4.0",  "4.0",  "1381",  "WinNT",    "SP6a", BottleTypes::Windows::WindowsNT40},
-  {"nt351",     "Windows NT 3.51", "3.51", "1057",  "WinNT",    "SP5",  BottleTypes::Windows::WindowsNT351},
-  {"win31",     "Windows 3.1",     "3.10", "0",     "",         "",     BottleTypes::Windows::Windows31},
-  {"win30",     "Windows 3.0",     "3.0",  "0",     "",         "",     BottleTypes::Windows::Windows30},
-  {"win20",     "Windows 2.0",     "2.0",  "0",     "",         "",     BottleTypes::Windows::Windows20}
+  {BottleTypes::Windows::Windows10,     "10.0", "17134", "WinNT"},
+  {BottleTypes::Windows::Windows81,     "6.3",  "9600",  "WinNT"},
+  {BottleTypes::Windows::Windows8,      "6.2",  "9200",  "WinNT"},
+  {BottleTypes::Windows::Windows2008R2, "6.1",  "7601",  "ServerNT"},
+  {BottleTypes::Windows::Windows7,      "6.1",  "7601",  "WinNT"},
+  {BottleTypes::Windows::Windows2008,   "6.0",  "6002",  "ServerNT"},
+  {BottleTypes::Windows::WindowsVista,  "6.0",  "6002",  "WinNT"},
+  {BottleTypes::Windows::Windows2003,   "5.2",  "3790",  "ServerNT"},
+  {BottleTypes::Windows::WindowsXP,     "5.2",  "3790",  "WinNT"}, // 64-bit
+  {BottleTypes::Windows::WindowsXP,     "5.1",  "2600",  "WinNT"}, // 32-bit
+  {BottleTypes::Windows::Windows2000,   "5.0",  "2195",  "WinNT"},
+  {BottleTypes::Windows::WindowsME,     "4.90", "3000",  ""},
+  {BottleTypes::Windows::Windows98,     "4.10", "2222",  ""},
+  {BottleTypes::Windows::Windows95,     "4.0",  "950",   ""},
+  {BottleTypes::Windows::WindowsNT40,   "4.0",  "1381",  "WinNT"},
+  {BottleTypes::Windows::WindowsNT351,  "3.51", "1057",  "WinNT"},
+  {BottleTypes::Windows::Windows31,     "3.10", "0",     ""},
+  {BottleTypes::Windows::Windows30,     "3.0",  "0",     ""},
+  {BottleTypes::Windows::Windows20,     "2.0",  "0",     ""}
 };
 
 /****************************************************************************
