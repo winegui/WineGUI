@@ -42,8 +42,7 @@ public:
   // Signals
   sigc::signal<void, BottleItem*> activeBottle; /*!< Set the active bottle in manager, based on the selected bottle */
   sigc::signal<void, Glib::ustring&, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, BottleTypes::AudioDriver> newBottle; /*!< Create new Wine Bottle Signal */
-  sigc::signal<void, string> runExeFilename; /*!< Run an EXE application in Wine with the filename */
-  sigc::signal<void, string> runMsiFilename; /*!< Run a MSI application in Wine with the filename */
+  sigc::signal<void, string, bool> runProgram; /*!< Run an EXE or MSI application in Wine with provided filename */
   
   MainWindow(Menu& menu);
   virtual ~MainWindow();

@@ -120,12 +120,12 @@ std::map<std::string, unsigned long> Helper::GetBottlesPaths(const string& dir_p
  * \brief Run program under Wine (run in thread, and dettach it)
  * \param[in] prefix_path - The path to create a Wine bottle from
  * \param[in] program - Program/executable that will be executed
- * \param[in] isMSI - Is the program a MSI installer, let's instal it (default false)
+ * \param[in] is_msi_file - Is the program a MSI installer, let's instal it (default false)
  */
-void Helper::RunProgram(const string prefix_path, const string program, bool isMSI)
+void Helper::RunProgram(string prefix_path, string program, bool is_msi_file)
 {
   string msi = "";
-  if(isMSI) {
+  if(is_msi_file) {
     msi = " msiexec /i";
   }
   // Ignore result of Exec()

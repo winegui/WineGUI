@@ -67,8 +67,7 @@ void SignalDispatcher::DispatchSignals()
 
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
   mainWindow->newBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
-  mainWindow->runExeFilename.connect(sigc::mem_fun(manager, &BottleManager::RunEXE));
-  mainWindow->runMsiFilename.connect(sigc::mem_fun(manager, &BottleManager::RunMSI));
+  mainWindow->runProgram.connect(sigc::mem_fun(manager, &BottleManager::RunProgram));
   m_FinishDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
   m_ErrorMessageDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message));
 }

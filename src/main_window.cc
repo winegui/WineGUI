@@ -410,16 +410,17 @@ void MainWindow::on_run_button_clicked()
       );
       if(ext == "exe")
       {
-        runExeFilename.emit(filename);
+        runProgram.emit(filename, false);
       }
       else if(ext == "msi")
       {
-        runMsiFilename.emit(filename);
+        // Run as MSI (true=MSI)
+        runProgram.emit(filename, true);
       }
       else 
       {
         // fall-back: try run as Exe
-        runExeFilename.emit(filename);
+        runProgram.emit(filename, false);
       }
       break;
     }

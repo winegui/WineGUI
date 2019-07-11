@@ -55,8 +55,7 @@ public:
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio);
   const Glib::ustring& GetErrorMessage();
-  void RunEXE(string filename);
-  void RunMSI(string filename);
+  void RunProgram(string filename, bool is_msi_file);
   void SetActiveBottle(BottleItem* bottle);
 private:
   // Synchronizes access to data members

@@ -247,39 +247,21 @@ const Glib::ustring& BottleManager::GetErrorMessage()
 }
 
 /**
- * \brief Run an EXE program in Wine (using the active selected bottle)
+ * \brief Run a program in Wine (using the active selected bottle)
  * TODO: Give error message on something goes wrong in Wine (maybe?)
  * \param[in] filename - Filename location of the program, selected by user
+ * \param[in] is_msi_file - Is the program you try to run a Windows Installer (MSI)?
  */
-void BottleManager::RunEXE(string filename)
+void BottleManager::RunProgram(string filename, bool is_msi_file)
 {
   // Check if there is an active bottle set
   if(activeBottle != nullptr)
   {
-    Glib::ustring winePrefix = activeBottle->wine_location();
-    // TODO: Executes RunProgram within a Thread and dettach it.. 
-    // so we can run as many programs as we want, without blocking the UI thread!
-    Helper::RunProgram(winePrefix, filename);
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    std::thread t(&Helper::RunProgram, wine_prefix, filename, is_msi_file); // false = EXE
+    t.detach(); 
   }
 }
-
-/**
- * \brief Run a MSI program in Wine (using the active selected bottle)
- * TODO: Give error message on something goes wrong in Wine (maybe?)
- * \param[in] filename - Filename location of the program, selected by user
- */
-void BottleManager::RunMSI(string filename)
-{
-  // Check if there is an active bottle set
-  if(activeBottle != nullptr)
-  {
-    Glib::ustring winePrefix = activeBottle->wine_location();
-    // TODO: Executes RunProgram within a Thread and dettach it.. 
-    // so we can run as many programs as we want, without blocking the UI thread!
-    Helper::RunProgram(winePrefix, filename, true); // true=MSI file
-  }
-}
-
 
 /**
  * \brief Update active bottle
