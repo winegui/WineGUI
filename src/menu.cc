@@ -51,6 +51,7 @@ Menu::Menu()
   auto newitem = CreateImageMenuItem("New...", "list-add");
   newitem->signal_activate().connect(signal_new_machine);
   auto run = CreateImageMenuItem("Run...", "system-run");
+  run->signal_activate().connect(signal_run);
   auto settings = CreateImageMenuItem("Settings...", "preferences-other");
   auto manage = CreateImageMenuItem("Manage...", "system-software-install");
   auto remove = CreateImageMenuItem("Remove...", "edit-delete");

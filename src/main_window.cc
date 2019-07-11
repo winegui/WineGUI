@@ -22,6 +22,7 @@
 
 #include "signal_dispatcher.h"
 #include <iostream>
+#include <locale>
 
 /**
  * \brief Contructor
@@ -53,9 +54,11 @@ MainWindow::MainWindow(Menu& menu)
 
   // Main Window signals
   new_button.signal_clicked().connect(sigc::mem_fun(*this,
-    &MainWindow::on_new_bottle_clicked));
+    &MainWindow::on_new_bottle_button_clicked));
   newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this,
     &MainWindow::on_new_bottle_apply));
+  run_button.signal_clicked().connect(sigc::mem_fun(*this,
+    &MainWindow::on_run_button_clicked));
 
   // Show the widget children
   show_all_children();
@@ -98,6 +101,8 @@ void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 {
   if(row != nullptr) {
     SetDetailedInfo(*(BottleItem*)row);
+    // Inform Bottle Manager
+    activeBottle.emit((BottleItem*)row);
   }
 }
 
@@ -338,9 +343,9 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
 }
 
 /**
- * \brief Signal when the new button is clicked in the top toolbar/ or menu
+ * \brief Signal when the new button is clicked in the top toolbar/menu
  */
-void MainWindow::on_new_bottle_clicked()
+void MainWindow::on_new_bottle_button_clicked()
 {
   newBottleAssistant.set_transient_for(*this);
   newBottleAssistant.show();
@@ -362,6 +367,73 @@ void MainWindow::on_new_bottle_apply()
 
   // Emit signal to Bottle Manager
   newBottle.emit(name, virtual_desktop_resolution, windows_version, bit, audio);
+}
+
+/**
+ * \brief Signal when the Run Program... button is clicked in top toolbar/menu
+ */
+void MainWindow::on_run_button_clicked()
+{
+  Gtk::FileChooserDialog dialog("Please choose a file",
+    Gtk::FILE_CHOOSER_ACTION_OPEN);
+  dialog.set_transient_for(*this);
+
+  //Add response buttons the the dialog:
+  dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+  dialog.add_button("_Open", Gtk::RESPONSE_OK);
+
+  auto filter_win = Gtk::FileFilter::create();
+  filter_win->set_name("Windows Executable/MSI Installer");
+  filter_win->add_mime_type("application/x-ms-dos-executable");
+  filter_win->add_mime_type("application/x-msi");
+  dialog.add_filter(filter_win);
+
+  auto filter_any = Gtk::FileFilter::create();
+  filter_any->set_name("Any file");
+  filter_any->add_pattern("*");
+  dialog.add_filter(filter_any);
+
+  //Show the dialog and wait for a user response:
+  int result = dialog.run();
+  
+  //Handle the response:
+  switch(result)
+  {
+    case(Gtk::RESPONSE_OK):
+    {
+      string filename = dialog.get_filename();
+      // Just guess based on extenstion
+      string ext = filename.substr(filename.find_last_of(".") + 1);
+      // To lower case
+      std::transform(ext.begin(), ext.end(), ext.begin(), 
+        [](unsigned char c){ return std::tolower(c); }
+      );
+      if(ext == "exe")
+      {
+        runExeFilename.emit(filename);
+      }
+      else if(ext == "msi")
+      {
+        runMsiFilename.emit(filename);
+      }
+      else 
+      {
+        // fall-back: try run as Exe
+        runExeFilename.emit(filename);
+      }
+      break;
+    }
+    case(Gtk::RESPONSE_CANCEL):
+    {
+      // Cancelled, do nothing
+      break;
+    }
+    default:
+    {
+      // Unexpected button, ignore
+      break;
+    }
+  }
 }
 
 /**

@@ -48,13 +48,16 @@ public:
   void Prepare();
   void UpdateBottles();
   void NewBottle(
-    SignalDispatcher *caller,
+    SignalDispatcher* caller,
     Glib::ustring name,
     Glib::ustring virtual_desktop_resolution,
     BottleTypes::Windows windows_version,
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio);
   const Glib::ustring& GetErrorMessage();
+  void RunEXE(string filename);
+  void RunMSI(string filename);
+  void SetActiveBottle(BottleItem* bottle);
 private:
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;
@@ -62,6 +65,7 @@ private:
   string BOTTLE_LOCATION;
   MainWindow& mainWindow;
   std::list<BottleItem> bottles;
+  BottleItem* activeBottle;
 
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
   Glib::ustring error_message;

@@ -34,6 +34,7 @@
 BottleManager::BottleManager(MainWindow& mainWindow):
   m_Mutex(),
   mainWindow(mainWindow),
+  activeBottle(nullptr),
   error_message()
 {
   // TODO: Make it configurable via settings
@@ -116,9 +117,12 @@ void BottleManager::UpdateBottles()
       // Update main Window
       mainWindow.SetWineBottles(bottles);
 
-      // Set first element as active (details)
-      auto first = bottles.begin();      
+      // Set first Bottle in the detailed info panel,
+      // begin() gives you an iterator
+      auto first = bottles.begin();
       mainWindow.SetDetailedInfo(*first);
+      // Set active bottle in BottleManager class
+      activeBottle = &(*first);
     }
   }
 }
@@ -133,7 +137,7 @@ void BottleManager::UpdateBottles()
  * \param[in] audio                       - Audio Driver type
  */
 void BottleManager::NewBottle(
-    SignalDispatcher *caller,
+    SignalDispatcher* caller,
     Glib::ustring name,
     Glib::ustring virtual_desktop_resolution,
     BottleTypes::Windows windows_version,
@@ -240,6 +244,52 @@ const Glib::ustring& BottleManager::GetErrorMessage()
 {
   std::lock_guard<std::mutex> lock(m_Mutex);
   return error_message; 
+}
+
+/**
+ * \brief Run an EXE program in Wine (using the active selected bottle)
+ * TODO: Give error message on something goes wrong in Wine (maybe?)
+ * \param[in] filename - Filename location of the program, selected by user
+ */
+void BottleManager::RunEXE(string filename)
+{
+  // Check if there is an active bottle set
+  if(activeBottle != nullptr)
+  {
+    Glib::ustring winePrefix = activeBottle->wine_location();
+    // TODO: Executes RunProgram within a Thread and dettach it.. 
+    // so we can run as many programs as we want, without blocking the UI thread!
+    Helper::RunProgram(winePrefix, filename);
+  }
+}
+
+/**
+ * \brief Run a MSI program in Wine (using the active selected bottle)
+ * TODO: Give error message on something goes wrong in Wine (maybe?)
+ * \param[in] filename - Filename location of the program, selected by user
+ */
+void BottleManager::RunMSI(string filename)
+{
+  // Check if there is an active bottle set
+  if(activeBottle != nullptr)
+  {
+    Glib::ustring winePrefix = activeBottle->wine_location();
+    // TODO: Executes RunProgram within a Thread and dettach it.. 
+    // so we can run as many programs as we want, without blocking the UI thread!
+    Helper::RunProgram(winePrefix, filename, true); // true=MSI file
+  }
+}
+
+
+/**
+ * \brief Update active bottle
+ */
+void BottleManager::SetActiveBottle(BottleItem* bottle)
+{
+  if(bottle != nullptr)
+  {
+    this->activeBottle = bottle;
+  }
 }
 
 /**
