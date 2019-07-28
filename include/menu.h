@@ -33,6 +33,7 @@ public:
   sigc::signal<void> signal_refresh; /*!< on refresh button clicked signal */
   sigc::signal<void> signal_show_about; /*!< on about button clicked signal */
   sigc::signal<void> signal_new_machine; /*!< on new new button clicked signal */
+  sigc::signal<void> signal_remove_machine; /*!< on new remove button clicked signal */
   sigc::signal<void> signal_run; /*!< on new new button clicked signal */
 
   Menu();

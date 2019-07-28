@@ -41,6 +41,7 @@ public:
   static void RunProgram(string prefix_path, string program, bool is_msi_file);
   static string GetWineVersion();
   static void CreateWineBottle(const string prefix_path, BottleTypes::Bit bit);
+  static void RemoveWineBottle(const string prefix_path);
   static string GetName(const string prefix_path);
   static BottleTypes::Windows GetWindowsOSVersion(const string prefix_path);
   static BottleTypes::Bit GetSystemBit(const string prefix_path);

@@ -5,6 +5,9 @@ doc/doxygen
 build
 build_debug
 
+# winetricks script
+winetricks
+
 # CMake
 CMakeLists.txt.user
 CMakeCache.txt

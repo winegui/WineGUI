@@ -1,4 +1,5 @@
 # Wine GUI
+
 Finally, an user-interface friendly [WINE](https://www.winehq.org/) (A compatibility layer capable of running Windows applications under Linux) Manager.
 
 User-interface is created by using GTK+ (gtkmm c++-interface) and C++ code.
@@ -31,7 +32,7 @@ Execute:
 
 Or go to the `build` directory and execute:
 
-```
+```sh
 ninja run
 ```
 
@@ -51,7 +52,7 @@ You can use the helper script: `./build_debug.sh`
 
 Start debugging in [GDB (GNU Debugger)](https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf):
 
-```
+```sh
 gdb -ex=run build_debug/bin/winegui
 ```
 
@@ -63,7 +64,7 @@ We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppgu
 
 Execute the following command to copy the binary from the Cloud IDE (Coder) to your local machine & execute WineGUI:
 
-```
+```sh
 scp melroy@server.melroy.org:/media/data/coder_projects/project/winegui/build/bin/winegui ~ && ~/winegui
 ```
 

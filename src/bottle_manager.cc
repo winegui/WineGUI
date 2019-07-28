@@ -121,9 +121,20 @@ void BottleManager::UpdateBottles()
       // begin() gives you an iterator
       auto first = bottles.begin();
       mainWindow.SetDetailedInfo(*first);
-      // Set active bottle in BottleManager class
-      activeBottle = &(*first);
+      // Set active bottle at the first
+      this->activeBottle = &(*first);
     }
+    else
+    {
+      mainWindow.ShowErrorMessage("Could not create an overview of Windows Machines. Empty list.");
+      // Set active bottle to NULL
+      this->activeBottle = nullptr;
+    }
+  }
+  else
+  {
+    // Set active bottle to NULL
+    this->activeBottle = nullptr;
   }
 }
 
@@ -237,6 +248,38 @@ void BottleManager::NewBottle(
 }
 
 /**
+ * \brief Remove the current active Wine bottle
+ */
+void BottleManager::DeleteBottle()
+{
+  if(activeBottle != nullptr)
+  {
+    try
+    {
+      Glib::ustring prefix_path = activeBottle->wine_location();
+      string windows = BottleTypes::toString(activeBottle->windows());
+      // Are you sure?'
+      if(mainWindow.ShowConfirmDialog("Are you sure you want to *permanently* remove machine named '" + Helper::GetName(prefix_path) + "' running " + windows + "?\n\nNote: This action cannot be undone!"))
+      {
+        Helper::RemoveWineBottle(prefix_path);
+        this->UpdateBottles();
+      }
+      else {
+        // Nothing, canceled
+      }
+    }
+    catch (const std::runtime_error& error)
+    {
+      mainWindow.ShowErrorMessage(error.what());
+    } 
+  }
+  else
+  {
+    mainWindow.ShowErrorMessage("No Windows Machine to remove, empty/no selection.");
+  }
+}
+
+/**
  * \brief Get error message (stored from manager thread)
  * \return Return the error message
  */
@@ -248,7 +291,6 @@ const Glib::ustring& BottleManager::GetErrorMessage()
 
 /**
  * \brief Run a program in Wine (using the active selected bottle)
- * TODO: Give error message on something goes wrong in Wine (maybe?)
  * \param[in] filename - Filename location of the program, selected by user
  * \param[in] is_msi_file - Is the program you try to run a Windows Installer (MSI)?
  */
@@ -260,6 +302,10 @@ void BottleManager::RunProgram(string filename, bool is_msi_file)
     Glib::ustring wine_prefix = activeBottle->wine_location();
     std::thread t(&Helper::RunProgram, wine_prefix, filename, is_msi_file); // false = EXE
     t.detach(); 
+  }
+  else
+  {
+    mainWindow.ShowErrorMessage("No Windows Machine selected/empty. First create a new machine. Aborted.");
   }
 }
 

@@ -54,6 +54,7 @@ public:
     BottleTypes::Windows windows_version,
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio);
+  void DeleteBottle();
   const Glib::ustring& GetErrorMessage();
   void RunProgram(string filename, bool is_msi_file);
   void SetActiveBottle(BottleItem* bottle);

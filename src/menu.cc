@@ -48,13 +48,14 @@ Menu::Menu()
   refresh->signal_activate().connect(signal_refresh);
 
   // Machine submenu
-  auto newitem = CreateImageMenuItem("New...", "list-add");
+  auto newitem = CreateImageMenuItem("New", "list-add");
   newitem->signal_activate().connect(signal_new_machine);
   auto run = CreateImageMenuItem("Run...", "system-run");
   run->signal_activate().connect(signal_run);
-  auto settings = CreateImageMenuItem("Settings...", "preferences-other");
-  auto manage = CreateImageMenuItem("Manage...", "system-software-install");
-  auto remove = CreateImageMenuItem("Remove...", "edit-delete");
+  auto settings = CreateImageMenuItem("Settings", "preferences-other");
+  auto manage = CreateImageMenuItem("Manage", "system-software-install");
+  auto remove = CreateImageMenuItem("Remove", "edit-delete");
+  remove->signal_activate().connect(signal_remove_machine);
 
   // Help submenu
   auto about = CreateImageMenuItem("About WineGUI...", "help-about");

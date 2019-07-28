@@ -52,6 +52,7 @@ public:
   void SetWineBottles(std::list<BottleItem>& bottles);
   void SetDetailedInfo(BottleItem& bottle);
   void ShowErrorMessage(const Glib::ustring& message);
+  bool ShowConfirmDialog(const Glib::ustring& message);
   
   // Signal handers
   virtual void on_new_bottle_button_clicked();

@@ -170,23 +170,55 @@ void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit)
       winearch = " WINEARCH=win64";
       break;
   }
-  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + winearch + " " + WINE_EXECUTABLE + " wineboot>/dev/null 2>&1; echo $?").c_str());
+  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + winearch + " " +
+    WINE_EXECUTABLE + " wineboot>/dev/null 2>&1; echo $?").c_str());
   if(!result.empty())
   {
     // Remove new lines
     result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
     if(!(result.compare("0") == 0)) 
     {
-      throw std::runtime_error("Something went wrong when creating a new Windows machine. For Wine machine: " + 
+      throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine machine: " + 
         GetName(prefix_path) +
-        "\n\nFull location: " + prefix_path);
+        "\n\nFull path location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Something went wrong when creating a new Windows machine. For Wine machine:: " + 
-      GetName(prefix_path) +
-      "\n\nFull location: " + prefix_path);
+    throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine machine:: " + 
+      GetName(prefix_path) + "\n\nFull location: " + prefix_path);
+  }  
+}
+
+/**
+ * \brief Remove existing Wine bottle using prefix
+ * \param[in] prefix_path - The wine bottle path which will be removed
+ */
+void Helper::RemoveWineBottle(const string prefix_path)
+{
+  if(Helper::DirExists(prefix_path))
+  {
+    string result = Exec(("rm -rf \"" + prefix_path + "\"; echo $?").c_str());
+    if(!result.empty())
+    {
+      // Remove new lines
+      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+      if(!(result.compare("0") == 0)) 
+      {
+        throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + 
+          GetName(prefix_path) + "\n\nFull path location: " + prefix_path);
+      }
+    }
+    else
+    {
+      throw std::runtime_error("Could not remove Windows Machine, no result. Wine machine: " + 
+        GetName(prefix_path) + "\n\nFull path location: " + prefix_path);
+    }
+  }
+  else
+  {
+    throw std::runtime_error("Could not remove Windows Machine, prefix is not a directory. Wine machine: " + 
+      GetName(prefix_path) + "\n\nFull path location: " + prefix_path);
   }  
 }
 

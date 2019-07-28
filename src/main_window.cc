@@ -157,13 +157,35 @@ void MainWindow::SetDetailedInfo(BottleItem& bottle)
 
 /**
  * \brief Just show an error message
+ * \param[in] message - Show this error message
  */
 void MainWindow::ShowErrorMessage(const Glib::ustring& message)
 {
+  // false = no markup
   Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
   dialog.set_title("An error has occurred!");
   dialog.set_modal(true);
   dialog.run();
+}
+
+/**
+ * \brief Confirm dialog (Yes/No message)
+ * \param[in] message - Show this message during confirmation
+ * \return True if user pressed confirm (yes), otherwise False
+ */
+bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
+{
+  // false = no markup
+  Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
+  dialog.set_title("Are you sure?");
+  dialog.set_modal(true);
+  int result = dialog.run();
+  bool return_value = false;
+  if(result == Gtk::RESPONSE_YES)
+  {
+    return_value = true;
+  }
+  return return_value;
 }
 
 /**

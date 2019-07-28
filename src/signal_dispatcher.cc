@@ -64,6 +64,7 @@ void SignalDispatcher::DispatchSignals()
   menu.signal_refresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
   menu.signal_new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
   menu.signal_run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
+  menu.signal_remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
 
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
   mainWindow->newBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
