@@ -59,11 +59,14 @@ void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
  */
 void SignalDispatcher::DispatchSignals()
 {
+  menu.signal_preferences.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_not_implemented)); // TODO: Impl.
   menu.signal_quit.connect(hideMainWindow); /*!< Signal hide window and therefor closes the app */
   menu.signal_show_about.connect(sigc::mem_fun(about, &AboutDialog::show));
   menu.signal_refresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
   menu.signal_new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
   menu.signal_run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
+  menu.signal_settings_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_not_implemented)); // TODO: Impl.
+  menu.signal_manage_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_not_implemented)); // TODO: Impl.
   menu.signal_remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
 
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));

@@ -38,9 +38,8 @@ Menu::Menu()
   // File submenu
   // Using text + image
   auto preferences = CreateImageMenuItem("Preferences", "preferences-other");
-  auto save_item = CreateImageMenuItem("Save", "document-save");
+  preferences->signal_activate().connect(signal_preferences);
   auto exit = CreateImageMenuItem("Exit", "application-exit");
-  // Add appliaction quit signal to the exit button
   exit->signal_activate().connect(signal_quit);
   
   // View submenu
@@ -53,7 +52,9 @@ Menu::Menu()
   auto run = CreateImageMenuItem("Run...", "system-run");
   run->signal_activate().connect(signal_run);
   auto settings = CreateImageMenuItem("Settings", "preferences-other");
+  settings->signal_activate().connect(signal_settings_machine);
   auto manage = CreateImageMenuItem("Manage", "system-software-install");
+  manage->signal_activate().connect(signal_manage_machine);
   auto remove = CreateImageMenuItem("Remove", "edit-delete");
   remove->signal_activate().connect(signal_remove_machine);
 
@@ -67,8 +68,6 @@ Menu::Menu()
   // File menu
   file_submenu.append(*preferences);
   file_submenu.append(separator1);
-  file_submenu.append(*save_item);
-  file_submenu.append(separator2);
   file_submenu.append(*exit);
 
   // View menu
@@ -76,7 +75,7 @@ Menu::Menu()
 
   // Machine menu  
   machine_submenu.append(*newitem);
-  machine_submenu.append(separator3);
+  machine_submenu.append(separator2);
   machine_submenu.append(*run);
   machine_submenu.append(*settings);
   machine_submenu.append(*manage);

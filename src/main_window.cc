@@ -52,13 +52,19 @@ MainWindow::MainWindow(Menu& menu)
   // Using a Vertical box container
   add(vbox);
 
-  // Main Window signals
+  // Right panel menu signals
   new_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_new_bottle_button_clicked));
   newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this,
     &MainWindow::on_new_bottle_apply));
   run_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_run_button_clicked));
+  settings_button.signal_clicked().connect(sigc::mem_fun(*this,
+    &MainWindow::on_not_implemented));
+  manage_button.signal_clicked().connect(sigc::mem_fun(*this,
+    &MainWindow::on_not_implemented));
+  reboot_button.signal_clicked().connect(sigc::mem_fun(*this,
+    &MainWindow::on_not_implemented));// TODO: Really handy at all?
 
   // Show the widget children
   show_all_children();
@@ -466,4 +472,15 @@ void MainWindow::on_run_button_clicked()
 void MainWindow::on_new_bottle_created()
 {
   newBottleAssistant.BottleCreated();
+}
+
+/**
+ * \brief Not implemented feature
+ */
+void MainWindow::on_not_implemented()
+{
+  Gtk::MessageDialog dialog(*this, "This feature is not yet implemented. Sorry :\\", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+  dialog.set_title("An error has occurred!");
+  dialog.set_modal(false);
+  dialog.run();
 }

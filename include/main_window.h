@@ -58,6 +58,7 @@ public:
   virtual void on_new_bottle_button_clicked();
   virtual void on_new_bottle_created();
   virtual void on_run_button_clicked();
+  virtual void on_not_implemented();
 
 protected:
   // Child widgets

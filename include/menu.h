@@ -29,12 +29,15 @@
 class Menu: public Gtk::MenuBar
 {
 public:
+  sigc::signal<void> signal_preferences; /*!< on preferences button clicked signal */
   sigc::signal<void> signal_quit; /*!< on quite button clicked signal */
   sigc::signal<void> signal_refresh; /*!< on refresh button clicked signal */
-  sigc::signal<void> signal_show_about; /*!< on about button clicked signal */
-  sigc::signal<void> signal_new_machine; /*!< on new new button clicked signal */
-  sigc::signal<void> signal_remove_machine; /*!< on new remove button clicked signal */
+  sigc::signal<void> signal_new_machine; /*!< on new button clicked signal */
   sigc::signal<void> signal_run; /*!< on new new button clicked signal */
+  sigc::signal<void> signal_settings_machine; /*!< on settings button clicked signal */
+  sigc::signal<void> signal_manage_machine; /*!< on manage button clicked signal */
+  sigc::signal<void> signal_remove_machine; /*!< on remove button clicked signal */
+  sigc::signal<void> signal_show_about; /*!< on about button clicked signal */
 
   Menu();
   virtual ~Menu();
@@ -52,7 +55,6 @@ protected:
   Gtk::Menu help_submenu; /*!< Help sub menu */
   Gtk::SeparatorMenuItem separator1; /*!< Seperator */
   Gtk::SeparatorMenuItem separator2; /*!< Seperator */
-  Gtk::SeparatorMenuItem separator3; /*!< Seperator */
 
 private:
   Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);

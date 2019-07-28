@@ -305,7 +305,7 @@ void BottleManager::RunProgram(string filename, bool is_msi_file)
   }
   else
   {
-    mainWindow.ShowErrorMessage("No Windows Machine selected/empty. First create a new machine. Aborted.");
+    mainWindow.ShowErrorMessage("No Windows Machine selected/empty. First create a new machine!\n\nAborted.");
   }
 }
 
