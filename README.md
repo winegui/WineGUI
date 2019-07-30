@@ -61,7 +61,7 @@ gdb -ex=run build_debug/bin/winegui
 
 For production build and DEB file package, you can run: `./build_prod.sh`
 
-Or use the `-Dprod=ON` during cmake.
+Or use the `cmake -DCMAKE_BUILD_TYPE=Release`.
 
 ## Coding standard
 
