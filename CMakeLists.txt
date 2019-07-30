@@ -24,10 +24,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Production
 if(prod)
   add_definitions(-DPRODUCTION=1)
-endif()
 
-# Include CPack settings
-include(CMakeCPack.cmake)
+  # Include CPack settings
+  include(CMakeCPack.cmake)
+endif()
 
 ################################
 # Normal Libraries & Executables
