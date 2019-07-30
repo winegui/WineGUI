@@ -25,7 +25,7 @@
  */
 AboutDialog::AboutDialog(Gtk::Window& parent) {
   // Set logo
-  logo.set("../images/logo_small.png");
+  logo.set(IMAGE_LOCATION "logo_small.png");
 
   std::vector<Glib::ustring> authors;
   authors.push_back("Melroy van den Berg <melroy@melroy.org>");

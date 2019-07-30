@@ -115,7 +115,7 @@ void BottleItem::CreateUI()
   bool status = this->status();
 
   // Set left side of the GUI
-  image.set("../images/windows/" + filename);
+  image.set(IMAGE_LOCATION "windows/" + filename);
   image.set_margin_top(8);
   image.set_margin_end(8);
   image.set_margin_bottom(8);
@@ -126,10 +126,10 @@ void BottleItem::CreateUI()
   
   Glib::ustring status_text = "Ready";
   if(status) {
-    status_icon.set(READY_IMAGE);
+    status_icon.set(IMAGE_LOCATION "ready.png");
   } else {
     status_text = "Not Ready";
-    status_icon.set(NOT_READY_IMAGE);
+    status_icon.set(IMAGE_LOCATION "not_ready.png");
   }
   status_icon.set_size_request(2, -1);
   status_icon.set_halign(Gtk::Align::ALIGN_START);

@@ -4,14 +4,15 @@ stages:
 
 build:
   stage: build
-  script: ./build.sh
+  script: ./build_prod.sh
   tags:
     - gtk
   artifacts:
-    name: "Documentation"
+    name: "Debian package + Documentation"
     expire_in: 1 week
     paths:
     - doc/doxygen/
+    - build/WineGUI-*.deb
   cache:
       key: "$CI_PIPELINE_ID"
       policy: push

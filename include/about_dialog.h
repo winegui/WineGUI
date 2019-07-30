@@ -23,6 +23,12 @@
 #include <gtkmm/aboutdialog.h>
 #include <gtkmm/image.h>
 
+#if defined(PRODUCTION)
+  #define IMAGE_LOCATION "/usr/share/winegui/images/" /*!< Image location */
+#else
+  #define IMAGE_LOCATION "../images/" /*!< Image location */
+#endif
+
 /**
  * \class AboutDialog
  * \brief The About dialog

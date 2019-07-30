@@ -25,15 +25,16 @@ Dependencies should be met before build:
 
 Run: `./build.sh`
 
+Or execute: `mkdir -p build && cd build && cmake -GNinja .. && ninja`
+
 ### Run
 
-Execute:
-`./build/bin/winegui`
+Execute within the build directory: `ninja run`
 
-Or go to the `build` directory and execute:
+Or:
 
 ```sh
-ninja run
+./build/bin/winegui
 ```
 
 ### Rebuild
@@ -56,11 +57,23 @@ Start debugging in [GDB (GNU Debugger)](https://cs.brown.edu/courses/cs033/docs/
 gdb -ex=run build_debug/bin/winegui
 ```
 
+### Production
+
+For production build and DEB file package, you can run: `./build_prod.sh`
+
+Or use the `-Dprod=ON` during cmake.
+
 ## Coding standard
 
 We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
 
-## How-to develop on a remote server (Cloud IDE)
+## Coding in the Cloud
+
+### Cloud IDE
+
+You may use our [Cloud IDE](https://ide.melroy.org) for developing remotely.
+
+### How-to develop on a remote server
 
 Execute the following command to copy the binary from the Cloud IDE (Coder) to your local machine & execute WineGUI:
 

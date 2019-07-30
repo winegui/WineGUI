@@ -1,11 +1,11 @@
 set(PROJECT_NAME WineGUI)
+set(PROJECT_TARGET winegui)
 project(${PROJECT_NAME})
 
 cmake_minimum_required(VERSION 2.8.0)
 
+# Cmake settings
 set(CMAKE_CXX_FLAGS "-g -Wall")
-
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CYGWIN)
@@ -21,6 +21,14 @@ PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Production
+if(prod)
+  add_definitions(-DPRODUCTION=1)
+endif()
+
+# Include CPack settings
+include(CMakeCPack.cmake)
+
 ################################
 # Normal Libraries & Executables
 ################################
@@ -31,7 +39,7 @@ include_directories(
   ${GTKMM_INCLUDE_DIRS}
 )
 link_directories(${GTKMM_LIBRARY_DIRS})
-add_definitions (${GTKMM_CFLAGS_OTHER})
+add_definitions(${GTKMM_CFLAGS_OTHER})
 
 add_library(menu_lib src/menu.cc)
 add_library(main_window_lib src/main_window.cc)
@@ -42,13 +50,19 @@ add_library(about_dialog_lib src/about_dialog.cc)
 add_library(helper_lib src/helper.cc)
 add_library(signal_dispatcher_lib src/signal_dispatcher.cc)
 
-add_executable(winegui src/main.cc)
+add_executable(${PROJECT_TARGET} src/main.cc)
 
-target_link_libraries(winegui main_window_lib menu_lib bottle_manager_lib bottle_item new_bottle_assis_lib about_dialog_lib helper_lib signal_dispatcher_lib Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+target_link_libraries(${PROJECT_TARGET} main_window_lib menu_lib bottle_manager_lib bottle_item new_bottle_assis_lib about_dialog_lib helper_lib signal_dispatcher_lib Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+
+install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
+install(DIRECTORY images DESTINATION share/winegui)
+# Could be easily extened with eg. scripts:
+#   DIRECTORY images scripts/ DESTINATION ....
+#   PATTERN "scripts/*"
 
 # To create 'make run'
 add_custom_target( run
-  COMMAND "bin/winegui" 
+  COMMAND "bin/${PROJECT_TARGET}" 
   COMMENT "Starting up..." )
 
 ############

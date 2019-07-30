@@ -24,8 +24,11 @@
 #include <string>
 #include "bottle_types.h"
 
-#define READY_IMAGE "../images/ready.png" /*!< The ready image to show when Bottle is ready */
-#define NOT_READY_IMAGE "../images/not_ready.png" /*!< The non-ready image to show when Bottle is in trouble */
+#if defined(PRODUCTION)
+  #define IMAGE_LOCATION "/usr/share/winegui/images/" /*!< Image location */
+#else
+  #define IMAGE_LOCATION "../images/" /*!< Image location */
+#endif
 
 /**
  * \class BottleItem

@@ -1,0 +1,10 @@
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "WineGUI is a user-friendly WINE graphical interface")
+set(CPACK_PACKAGE_VENDOR "Melroy van den Berg")
+set(CPACK_PACKAGE_CONTACT "Melroy van den Berg <melroy@melroy.org>")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_TARGET}-${CPACK_PACKAGE_VERSION}")
+
+# include CPack model once all variables are set
+include(CPack)
