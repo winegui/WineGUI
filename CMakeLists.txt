@@ -2,10 +2,14 @@ set(PROJECT_NAME WineGUI)
 set(PROJECT_TARGET winegui)
 project(${PROJECT_NAME})
 
+message("BUILD TYPE = ${CMAKE_BUILD_TYPE}")
+
 cmake_minimum_required(VERSION 2.8.0)
 
 # Cmake settings
-set(CMAKE_CXX_FLAGS "-g -Wall")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CYGWIN)
@@ -21,8 +25,8 @@ PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Production
-if(prod)
+# Production build
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
   add_definitions(-DPRODUCTION=1)
 
   # Include CPack settings

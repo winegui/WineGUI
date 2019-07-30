@@ -7,7 +7,6 @@ if [ ! -d "build_debug" ]; then
   mkdir build_debug
 fi
 
-echo "INFO: Debug build"
 cd build_debug
-cmake -DCMAKE_BUILD_TYPE=Debug ../
+cmake -DCMAKE_BUILD_TYPE=Debug ../ &&
 make

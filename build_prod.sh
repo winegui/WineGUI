@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # By: Melroy van den Berg
-# Description: Production build + create Debian package file (.deb)
+# Description: Release production build + create Debian package file (.deb)
 
 if [ ! -d "build" ]; then
   echo "Creating build directory..."
@@ -8,12 +8,11 @@ if [ ! -d "build" ]; then
 fi
 
 if [ -z "$(ls build)" ]; then
-  echo "INFO: Run cmake & ninja for production"
   cd build
-  cmake -GNinja -Ddoc=ON -Dprod=ON ..
+  cmake -GNinja -Ddoc=ON -DCMAKE_BUILD_TYPE=Release ..
 else
   echo "INFO: Only run ninja..."
   cd build
 fi
-ninja
+ninja &&
 cpack -G DEB

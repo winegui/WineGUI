@@ -339,7 +339,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
     } else if(value.compare("win64") == 0) {
       return BottleTypes::Bit::win64;
     } else {
-      throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64?), for Wine machine: " + 
+      throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64, value: " + value + "), for Wine machine: " + 
         GetName(prefix_path) +
         "\n\nFull location: " + prefix_path);
     }
@@ -709,7 +709,6 @@ string Helper::Exec(const char* cmd) {
  */
 string Helper::GetRegValue(const string& filename, const string& keyName, const string& valueName)
 {
-  string matchStr = "";
   FILE *f;
   char buffer[100];
   // We add '[' & ']' around the key name
@@ -770,9 +769,8 @@ string Helper::GetRegMetaData(const string& filename, const string& metaValueNam
 {
   FILE *f;
   char buffer[100];
-  const char *valuePattern = ('#' + metaValueName + '=').c_str();
+  string metaPattern = "#" + metaValueName + "=";
   char* match_pch = NULL;
-
   if(Helper::FileExists(filename)) 
   {
     if ((f = fopen(filename.c_str(), "r")) == NULL)
@@ -782,7 +780,8 @@ string Helper::GetRegMetaData(const string& filename, const string& metaValueNam
     while (fgets(buffer, sizeof(buffer), f)) {
       // Put the strstr match char point in 'match_pch'
       // It returns the pointer to the first occurrence until the null character (end of line)
-      if ((match_pch = strstr(buffer, valuePattern)) != NULL) {
+      match_pch = strstr(buffer, metaPattern.c_str());
+      if (match_pch != NULL) {
         // Match!
         break;
       }

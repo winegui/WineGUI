@@ -72,15 +72,15 @@ public:
   /// set status
   void status(const bool status) { _is_status_ok = status; };
   /// get status
-  const bool status() const { return _is_status_ok; };
+  bool status() const { return _is_status_ok; };
   /// set windows 
   void windows(const BottleTypes::Windows win) { _win = win; };
   /// get windows 
-  const BottleTypes::Windows windows() const { return _win; };
+  BottleTypes::Windows windows() const { return _win; };
   /// set bit
   void bit(const BottleTypes::Bit bit) { _bit = bit; };
   /// get bit
-  const BottleTypes::Bit bit() const { return _bit; };
+  BottleTypes::Bit bit() const { return _bit; };
   /// set Wine version
   void wine_version(const Glib::ustring wine_version) { _wine_version = wine_version; };
   /// set Wine version
@@ -101,7 +101,7 @@ public:
   /// set Wine audio driver
   void audio_driver(const BottleTypes::AudioDriver audio_driver) { _audio_driver = audio_driver; };
   /// get Wine audio driver
-  const BottleTypes::AudioDriver audio_driver() const { return _audio_driver; };
+  BottleTypes::AudioDriver audio_driver() const { return _audio_driver; };
   /// set Wine emulate virtual desktop
   void virtual_desktop(const Glib::ustring virtual_desktop) { _virtual_desktop = virtual_desktop; };
   /// get Wine emulate virtual desktop

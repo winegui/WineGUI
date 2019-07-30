@@ -31,7 +31,7 @@ BottleItem::BottleItem() {
 /**
  * \brief Copy contructor, used by GTK+
  */
-BottleItem::BottleItem(const BottleItem& bottleItem) {
+BottleItem::BottleItem(const BottleItem& bottleItem) : BottleItem() {
   if( this != &bottleItem ) {
     _name = bottleItem.name();
     _is_status_ok = bottleItem.status();
