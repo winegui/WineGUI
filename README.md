@@ -16,8 +16,12 @@ Dependencies should be met before build:
 * ninja-build
 * libgtkmm-3.0-dev (implicit dependency with libgtk-3-dev obviously)
 * pkg-config
+
+Optionally:
+
 * doxygen
 * graphviz
+* rpm
 
 **Hint:** You could execute `./deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
 

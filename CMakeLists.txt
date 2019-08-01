@@ -1,8 +1,12 @@
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif()
 set(PROJECT_NAME WineGUI)
 set(PROJECT_TARGET winegui)
-project(${PROJECT_NAME})
+project(${PROJECT_NAME} VERSION 1.0.0 DESCRIPTION "WineGUI is a user-friendly WINE graphical interface")
 
-message("BUILD TYPE = ${CMAKE_BUILD_TYPE}")
+message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+message("PROJECT_VERSION = ${PROJECT_VERSION}")
 
 cmake_minimum_required(VERSION 2.8.0)
 

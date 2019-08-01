@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # By: Melroy van den Berg
-# Description: Release production build + create Debian package file (.deb)
+# Description: Release production build + create Debian package file (.deb), 
+#   RPM [Red Hat] Package Manager (.rpm) and compressed file (.tgz/.tar.gz)
 
 if [ ! -d "build" ]; then
   echo "Creating build directory..."
@@ -14,5 +15,6 @@ else
   echo "INFO: Only run ninja..."
   cd build
 fi
-ninja &&
-cpack -G DEB
+ninja && 
+echo "INFO: Building packages...";
+cpack -G "TGZ;DEB;RPM"
