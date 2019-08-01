@@ -5,7 +5,6 @@ Finally, an user-interface friendly [WINE](https://www.winehq.org/) (A compatibi
 ![WineGUI](misc/winegui_screenshot.png)
 
 User-interface is created by using GTK+ (gtkmm c++-interface) and C++ code.
-An helper Windows application for fetching Wine bottle details is created by WineGUI developers, in order to give additional information regarding each bottle.
 
 ## Development
 
