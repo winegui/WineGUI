@@ -14,7 +14,7 @@ build:
     - doc/doxygen/
     - build/WineGUI-*.deb
     - build/WineGUI-*.rpm
-    - build/WineGUI-*.tgz
+    - build/WineGUI-*.tar.gz
   cache:
       key: "$CI_PIPELINE_ID"
       policy: push
