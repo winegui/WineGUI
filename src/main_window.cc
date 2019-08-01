@@ -38,6 +38,8 @@ MainWindow::MainWindow(Menu& menu)
   set_default_size(1000, 600);
   set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
+  this->set_icon_from_file(IMAGE_LOCATION "logo.png");
+
   // Add menu to box (top), no expand/fill
   vbox.pack_start(menu, false, false);
 

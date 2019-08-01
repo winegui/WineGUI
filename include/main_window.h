@@ -28,6 +28,11 @@
 
 using std::string;
 
+#if defined(PRODUCTION)
+  #define IMAGE_LOCATION "/usr/share/winegui/images/" /*!< Image location */
+#else
+  #define IMAGE_LOCATION "../images/" /*!< Image location */
+#endif
 
 // Forward declaration
 class SignalDispatcher;
