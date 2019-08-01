@@ -71,6 +71,11 @@ Or use the `cmake -DCMAKE_BUILD_TYPE=Release`.
 
 We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
 
+## CI
+
+For Contious Integration on the [Gitlab server](https://gitlab.melroy.org), we use our [Dockerfile](Dockerfile) as input for `danger89/gtk3-docker-cmake-ninja` image.
+This image is hosted on [Dockerhub](https://hub.docker.com/r/danger89/gtk3-docker-cmake-ninja), and managed by [danger89](https://hub.docker.com/u/danger89).
+
 ## Coding in the Cloud
 
 ### Cloud IDE
