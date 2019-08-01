@@ -76,7 +76,7 @@ We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppgu
 For Contious Integration on the [Gitlab server](https://gitlab.melroy.org), we use our [Dockerfile](Dockerfile) as input for `danger89/gtk3-docker-cmake-ninja` image.
 This image is hosted on [Dockerhub](https://hub.docker.com/r/danger89/gtk3-docker-cmake-ninja), and managed by [danger89](https://hub.docker.com/u/danger89).
 
-A helper script can be used: `upload_docker_image.sh` from within the repo root directory, after successfully identified via `docker login --username=<username>`.
+A helper script can be used: `./upload_docker_image.sh` from within the `misc` directory, after successfully identified via `docker login --username=<username>`.
 
 ## Coding in the Cloud
 

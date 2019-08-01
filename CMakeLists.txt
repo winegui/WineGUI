@@ -63,6 +63,9 @@ add_executable(${PROJECT_TARGET} src/main.cc)
 target_link_libraries(${PROJECT_TARGET} main_window_lib menu_lib bottle_manager_lib bottle_item new_bottle_assis_lib about_dialog_lib helper_lib signal_dispatcher_lib Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
 install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
+install(FILES misc/winegui.desktop DESTINATION share/applications)
+install(FILES misc/winegui.png DESTINATION share/icons/hicolor/48x48/apps)
+install(FILES misc/winegui.svg DESTINATION share/icons/hicolor/scalable/apps)
 install(DIRECTORY images DESTINATION share/winegui)
 # Could be easily extened with eg. scripts:
 #   DIRECTORY images scripts/ DESTINATION ....

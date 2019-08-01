@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=WineGUI
+Comment=A user-friendly graphical WINE manager
+Exec=/usr/bin/winegui
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=winegui
+Categories=Settings;Utility;
+Keywords=WINE;Graphical;Manager;Interface;

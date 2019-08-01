@@ -8,7 +8,7 @@ build:
   tags:
     - gtk
   artifacts:
-    name: "Debian package + Documentation"
+    name: "Packages + Documentation"
     expire_in: 1 week
     paths:
     - doc/doxygen/
