@@ -6,6 +6,12 @@ Finally, an user-interface friendly [WINE](https://www.winehq.org/) (A compatibi
 
 User-interface is created by using GTK+ (gtkmm c++-interface) and C++ code.
 
+## Download
+
+You can find the latest version on the [Releases page](https://gitlab.melroy.org/melroy/winegui/-/releases).
+
+Download the WineGUI package you require for your Linux distribution (we provided `.deb`, `.rpm` and `.tar.gz` files). Typically you should use `.deb` file for Ubuntu and Linux Mint distros.
+
 ## Development
 
 ### Requirements
