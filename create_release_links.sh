@@ -12,10 +12,24 @@ gitlab_url="https://gitlab.melroy.org"
 # Website location where you can find the WineGUI binaries
 webpage_prefix="https://winegui.melroy.org/downloads"
 
-if [[ $(curl -s "$gitlab_url/api/v4/projects/$project_id/releases/$APP_VERSION/assets/links?private_token=$PRIVATE_TOKEN") ]]; then
-    echo "INFO: Links already exists. Skipping creating new links for WineGUI $APP_VERSION!"
-else
-    # Upload new links
+if [ -z ${PRIVATE_TOKEN} ]; then
+    echo "ERROR: Private_token env. variable is not yet! Exit"
+    exit 1
+fi
+
+if [ -z ${APP_VERSION} ]; then
+    echo "ERROR: App_version env. variable is not yet! Exit"
+    exit 1
+fi
+
+output=$(curl -s "$gitlab_url/api/v4/projects/$project_id/releases/$APP_VERSION/assets/links?private_token=$PRIVATE_TOKEN")
+if [[ "$output" == "" ]]; then
+    echo "ERROR: Retrieving links from API returns an empty request! Something is wrong."
+    exit 1
+fi
+
+if [[ "$output" == "[]" ]]; then
+    # Upload new links if the request returns an empty list of links
     echo "INFO: Creating new release links for WineGUI $APP_VERSION!"
 
     curl --request POST \
@@ -35,4 +49,6 @@ else
         --data name="WineGUI Debian package (deb)" \
         --data url="$webpage_prefix/WineGUI-$APP_VERSION.deb" \
         "$gitlab_url/api/v4/projects/$project_id/releases/$APP_VERSION/assets/links"
+else
+    echo "INFO: Links already exists. Skipping creating new links for WineGUI $APP_VERSION!"
 fi
