@@ -24,11 +24,15 @@ build:
 
 publish:
   stage: publish
+  tags:
+    - gtk
   only:
     - master
   script:
     - export SSHPASS=$USER_PASS 
     - sshpass -e scp -o stricthostkeychecking=no ./build/WineGUI-v* melroy@server.melroy.org:/var/www/winegui.melroy.org/html/downloads
+  cache:
+      key: "$CI_PIPELINE_ID"
 
 #test:
 #  stage: test
