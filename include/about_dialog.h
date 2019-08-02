@@ -22,6 +22,10 @@
 
 #include <gtkmm/aboutdialog.h>
 #include <gtkmm/image.h>
+#include <string>
+
+// Use major.minor.patch syntax, don't forget to update CMakeLists.txt file as well!
+static const std::string VERSION = "v1.0.0";
 
 #if defined(PRODUCTION)
   #define IMAGE_LOCATION "/usr/share/winegui/images/" /*!< Image location */
@@ -38,6 +42,8 @@ class AboutDialog : public Gtk::AboutDialog
 public:
   AboutDialog(Gtk::Window& parent);
   virtual ~AboutDialog();
+  
+  static std::string GetVersion();
 protected:
   Gtk::Image logo; /*!< The logo of the app for the about window */
 };

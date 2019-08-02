@@ -25,6 +25,7 @@
 #include "signal_dispatcher.h"
 
 #include <gtkmm/application.h>
+#include <iostream>
 
 /**
  * \brief The beginning, start the main loop
@@ -32,24 +33,39 @@
  */
 int main(int argc, char *argv[])
 {
-  auto app = Gtk::Application::create("org.melroy.winegui");
-  
-  // Constructing the top level objects:
-  Menu menu;
-  MainWindow mainWindow(menu);
-  AboutDialog about(mainWindow);
-  BottleManager bottleManager(mainWindow);
-  SignalDispatcher signalDispatcher(bottleManager, menu, about);
+  if (argc > 1) {
+    for (int i = 1; i < argc; ++i) {
+      std::string arg = argv[i];
+      if (arg == "--version") {
+        // Retrieve version and print it
+        std::string version = AboutDialog::GetVersion();
+        std::cout << version << std::endl;
+        return 0;
+      }
+    }
+    std::cerr << "Error: Parameter not understood (only --version is an accepted parameter)!" << std::endl;
+    return 1;
+  }
+  else
+  {
+    auto app = Gtk::Application::create("org.melroy.winegui");
+    // Constructing the top level objects:
+    Menu menu;
+    MainWindow mainWindow(menu);
+    AboutDialog about(mainWindow);
+    BottleManager bottleManager(mainWindow);
+    SignalDispatcher signalDispatcher(bottleManager, menu, about);
 
-  mainWindow.SetDispatcher(signalDispatcher);
-  signalDispatcher.SetMainWindow(&mainWindow);
-  // Do all the signal connections of the life time of the app
-  signalDispatcher.DispatchSignals();
+    mainWindow.SetDispatcher(signalDispatcher);
+    signalDispatcher.SetMainWindow(&mainWindow);
+    // Do all the signal connections of the life time of the app
+    signalDispatcher.DispatchSignals();
 
-  // Call the Bottle Manager prepare method,
-  // it will prepare Winetricks & retrieve Wine Bottles
-  bottleManager.Prepare();
+    // Call the Bottle Manager prepare method,
+    // it will prepare Winetricks & retrieve Wine Bottles
+    bottleManager.Prepare();
 
-  // Start main loop
-  return app->run(mainWindow, argc, argv);
+    // Start main loop of GTK
+    return app->run(mainWindow, argc, argv);
+  }
 }

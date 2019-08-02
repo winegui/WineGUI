@@ -26,7 +26,7 @@
 AboutDialog::AboutDialog(Gtk::Window& parent) {
   // Set logo
   logo.set(IMAGE_LOCATION "logo.png");
-
+  // Set version
   std::vector<Glib::ustring> authors;
   authors.push_back("Melroy van den Berg <melroy@melroy.org>");
 
@@ -35,10 +35,17 @@ AboutDialog::AboutDialog(Gtk::Window& parent) {
   set_title("About WineGUI");
   set_logo(logo.get_pixbuf());
   set_authors(authors);
-  // Use major.minor.patch syntax, don't forget to update CMakeLists.txt file as well!
-  set_version("v1.0.0");
+  set_version(VERSION);
   set_copyright("Copyright © 2019 Melroy van den Berg");
   set_license_type(Gtk::LICENSE_AGPL_3_0);
 }
 
 AboutDialog::~AboutDialog() {}
+
+/**
+ * \brief Retrieve the app version
+ * \return Version number
+ */
+std::string AboutDialog::GetVersion() {
+  return VERSION;
+}
