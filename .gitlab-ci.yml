@@ -18,9 +18,9 @@ build:
     - build/WineGUI-*.tar.gz
   cache:
       key: "$CI_PIPELINE_ID"
-      policy: push
       paths:
-        - build/bin/
+        - build/bin
+      policy: push
 
 publish:
   stage: publish
@@ -35,6 +35,9 @@ publish:
     - ./create_release_links.sh
   cache:
       key: "$CI_PIPELINE_ID"
+      paths:
+        - build/bin
+      policy: pull
 
 #test:
 #  stage: test
