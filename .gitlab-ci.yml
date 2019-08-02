@@ -1,5 +1,6 @@
 stages:
   - build
+  - publish
 #  - test
 
 build:
@@ -20,6 +21,14 @@ build:
       policy: push
       paths:
         - build/bin/
+
+publish:
+  stage: publish
+  only:
+    - master
+  scripts:
+    - export SSHPASS=$USER_PASS 
+    - sshpass -e scp -o stricthostkeychecking=no ./build/WineGUI-v* melroy@server.melroy.org:/var/www/winegui.melroy.org/html/downloads
 
 #test:
 #  stage: test
