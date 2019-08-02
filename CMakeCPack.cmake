@@ -1,5 +1,6 @@
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "WineGUI is a user-friendly WINE graphical interface")
 set(CPACK_PACKAGE_VENDOR "Melroy van den Berg")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://winegui.melroy.org")
 set(CPACK_PACKAGE_CONTACT "Melroy van den Berg <melroy@melroy.org>")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
