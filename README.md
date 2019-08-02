@@ -12,6 +12,8 @@ You can find the latest version on the [Releases page](https://gitlab.melroy.org
 
 Download the WineGUI package you require for your Linux distribution (we provided `.deb`, `.rpm` and `.tar.gz` files). Typically you should use `.deb` file for Ubuntu and Linux Mint distros.
 
+Install the package and you are ready to go! WineGUI should be listed in your menu.
+
 ## Development
 
 ### Requirements
