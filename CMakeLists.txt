@@ -50,7 +50,7 @@ link_directories(${GTKMM_LIBRARY_DIRS})
 add_definitions(${GTKMM_CFLAGS_OTHER})
 
 add_library(menu_lib src/menu.cc)
-add_library(main_window_lib src/main_window.cc)
+add_library(windows_lib src/main_window.cc src/preferences_window.cc src/settings_window.cc)
 add_library(bottle_manager_lib src/bottle_manager.cc)
 add_library(bottle_item src/bottle_item.cc)
 add_library(new_bottle_assis_lib src/new_bottle_assistant.cc)
@@ -60,7 +60,7 @@ add_library(signal_dispatcher_lib src/signal_dispatcher.cc)
 
 add_executable(${PROJECT_TARGET} src/main.cc)
 
-target_link_libraries(${PROJECT_TARGET} main_window_lib menu_lib bottle_manager_lib bottle_item new_bottle_assis_lib about_dialog_lib helper_lib signal_dispatcher_lib Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+target_link_libraries(${PROJECT_TARGET} windows_lib menu_lib bottle_manager_lib bottle_item new_bottle_assis_lib about_dialog_lib helper_lib signal_dispatcher_lib Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
 install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
 install(FILES misc/winegui.desktop DESTINATION share/applications)

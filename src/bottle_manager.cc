@@ -313,7 +313,8 @@ void BottleManager::RunProgram(string filename, bool is_msi_file)
 }
 
 /**
- * \brief Update active bottle
+ * \brief Signal handler when the active bottle changes, update active bottle
+ * \param[in] bottle - New bottle
  */
 void BottleManager::SetActiveBottle(BottleItem* bottle)
 {

@@ -24,21 +24,28 @@
 #include "main_window.h"
 #include "bottle_manager.h"
 #include "menu.h"
+#include "preferences_window.h"
 #include "about_dialog.h"
+#include "settings_window.h"
 
 /**
- * \brief Constructor
+ * \brief Signal Dispatcher Constructor
  */
-SignalDispatcher::SignalDispatcher(BottleManager& manager, Menu& menu, AboutDialog& about)
+SignalDispatcher::SignalDispatcher(
+  BottleManager& manager, Menu& menu, 
+  PreferencesWindow& preferencesWindow, AboutDialog& about, 
+  SettingsWindow& settingsWindow) 
 : manager(manager),
   menu(menu),
+  preferencesWindow(preferencesWindow),
   about(about),
+  settingsWindow(settingsWindow),
   m_FinishDispatcher(),
   m_ErrorMessageDispatcher(),
   m_threadBottleManager(nullptr) {}
 
 /**
- * \brief Destructor, join (wait for) running threads, if applicable
+ * \brief Destructor, join (wait for) running threads, if applicable, to avoid zombies
  */
 SignalDispatcher::~SignalDispatcher()
 {
@@ -59,17 +66,20 @@ void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
  */
 void SignalDispatcher::DispatchSignals()
 {
-  menu.signal_preferences.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_not_implemented)); // TODO: Impl.
-  menu.signal_quit.connect(hideMainWindow); /*!< Signal hide window and therefor closes the app */
+  menu.signal_preferences.connect(sigc::mem_fun(preferencesWindow, &PreferencesWindow::show));
+  menu.signal_quit.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
   menu.signal_show_about.connect(sigc::mem_fun(about, &AboutDialog::show));
   menu.signal_refresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
   menu.signal_new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
   menu.signal_run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
-  menu.signal_settings_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_not_implemented)); // TODO: Impl.
+  menu.signal_settings_machine.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::show));
   menu.signal_manage_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_not_implemented)); // TODO: Impl.
   menu.signal_remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
 
+  signal_show_settings_window.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::show));
+
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
+  mainWindow->activeBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::SetActiveBottle));
   mainWindow->newBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
   mainWindow->runProgram.connect(sigc::mem_fun(manager, &BottleManager::RunProgram));
   m_FinishDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
@@ -87,7 +97,7 @@ void SignalDispatcher::SignalBottleCreated()
 }
 
 /**
- * \brief Signal error message
+ * \brief Helper method for Signal error message
  */
 void SignalDispatcher::SignalErrorMessage()
 {
@@ -95,6 +105,9 @@ void SignalDispatcher::SignalErrorMessage()
   m_ErrorMessageDispatcher.emit();
 }
 
+/**
+ * \brief Helper method for cleaning the manage thread
+ */
 void SignalDispatcher::CleanUpBottleManagerThread()
 {
   if(m_threadBottleManager)
@@ -106,7 +119,11 @@ void SignalDispatcher::CleanUpBottleManagerThread()
   }
 }
 
-bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
+/************************************
+ * Dispatch events from Main Window *
+ ************************************/
+
+bool SignalDispatcher::on_mouse_button_pressed(GdkEventButton* event)
 {
   // Single click with right mouse button?
   if(event->type == GDK_BUTTON_PRESS && event->button == 3)
@@ -119,7 +136,7 @@ bool SignalDispatcher::on_button_press_event(GdkEventButton* event)
     return true;
   }
 
-  // Event has not been handled:
+  // Event has not been handled
   return false;
 }
 
@@ -157,6 +174,11 @@ void SignalDispatcher::on_new_bottle(
       });
   }
 }
+
+/******************************************
+ * Dispatch events from dispatcher itself *
+ * (indirectly from other classes)        *
+ ******************************************/
 
 /**
  * \brief Signal handler when a new bottle is created, dispatched from the manager thread

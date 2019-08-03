@@ -19,9 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "main_window.h"
+#include "preferences_window.h"
 #include "menu.h"
 #include "bottle_manager.h"
 #include "about_dialog.h"
+#include "settings_window.h"
 #include "signal_dispatcher.h"
 
 #include <gtkmm/application.h>
@@ -52,9 +54,11 @@ int main(int argc, char *argv[])
     // Constructing the top level objects:
     Menu menu;
     MainWindow mainWindow(menu);
+    PreferencesWindow preferencesWindow(mainWindow);
+    SettingsWindow settingsWindow(mainWindow);
     AboutDialog about(mainWindow);
     BottleManager bottleManager(mainWindow);
-    SignalDispatcher signalDispatcher(bottleManager, menu, about);
+    SignalDispatcher signalDispatcher(bottleManager, menu, preferencesWindow, about, settingsWindow);
 
     mainWindow.SetDispatcher(signalDispatcher);
     signalDispatcher.SetMainWindow(&mainWindow);

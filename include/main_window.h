@@ -2,7 +2,7 @@
  * Copyright (c) 2019 WineGUI
  *
  * \file    main_window.h
- * \brief   GTK+ Main window class
+ * \brief   Main GTK+ window class
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -39,7 +39,7 @@ class SignalDispatcher;
 
 /**
  * \class MainWindow
- * \brief GTK+ Window class
+ * \brief Main GTK+ Window class
  */
 class MainWindow : public Gtk::Window
 {
@@ -63,7 +63,8 @@ public:
   virtual void on_new_bottle_button_clicked();
   virtual void on_new_bottle_created();
   virtual void on_run_button_clicked();
-  virtual void on_not_implemented();
+  virtual void on_hide_window();
+  virtual void on_not_implemented(); // Shall be removed later!
 
 protected:
   // Child widgets
@@ -100,7 +101,6 @@ private:
   NewBottleAssistant newBottleAssistant;  /*!< New bottle wizard (behind: new button toolbar) */
 
   // Signal handlers
-  virtual void on_hide_window();
   virtual void on_row_clicked(Gtk::ListBoxRow* row);
   virtual void on_new_bottle_apply();
 

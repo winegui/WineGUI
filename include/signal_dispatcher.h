@@ -28,7 +28,9 @@
 class MainWindow;
 class BottleManager;
 class Menu;
+class PreferencesWindow;
 class AboutDialog;
+class SettingsWindow;
 
 /**
  * \class SignalDispatcher
@@ -40,9 +42,9 @@ class SignalDispatcher : public Gtk::Window
 
 public:
   // Signals
-  sigc::signal<void> hideMainWindow; /*!< hide/quite main window signal */
+  sigc::signal<void> signal_show_settings_window; /*!< show settings window signal */
 
-  SignalDispatcher(BottleManager& manager, Menu& menu, AboutDialog& about);
+  SignalDispatcher(BottleManager& manager, Menu& menu, PreferencesWindow& preferencesWindow, AboutDialog& about, SettingsWindow& settingsWindow);
   virtual ~SignalDispatcher();
   void SetMainWindow(MainWindow* mainWindow);
   void DispatchSignals();  
@@ -57,7 +59,7 @@ private:
   void CleanUpBottleManagerThread();
 
   // slots
-  virtual bool on_button_press_event(GdkEventButton* event);
+  virtual bool on_mouse_button_pressed(GdkEventButton* event);
   virtual void on_update_bottles();
   virtual void on_new_bottle(Glib::ustring& name,
     Glib::ustring& virtual_desktop_resolution,
@@ -70,7 +72,9 @@ private:
   MainWindow* mainWindow;
   BottleManager& manager;
   Menu& menu;
+  PreferencesWindow& preferencesWindow;
   AboutDialog& about;
+  SettingsWindow& settingsWindow;
 
   // Dispatcher for handling signals from the thread towards a GUI thread
   Glib::Dispatcher m_FinishDispatcher;

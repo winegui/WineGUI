@@ -24,6 +24,10 @@
 #include <iostream>
 #include <locale>
 
+/************************
+ * Public methods       *
+ ************************/
+
 /**
  * \brief Contructor
  */
@@ -66,8 +70,7 @@ MainWindow::MainWindow(Menu& menu)
     &MainWindow::on_new_bottle_apply));
   run_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_run_button_clicked));
-  settings_button.signal_clicked().connect(sigc::mem_fun(*this,
-    &MainWindow::on_not_implemented));
+
   manage_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_not_implemented));
   reboot_button.signal_clicked().connect(sigc::mem_fun(*this,
@@ -84,39 +87,20 @@ MainWindow::~MainWindow() {
 }
 
 /**
- * \brief Set signal dispatcher
+ * \brief Helper method for setting the signal dispatcher.
+ * To avoid circular dependency in the main
+ * \param[in] signalDispatcher - Reference to the Signal Dispatcher class
  */
 void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
 {
-  // Trigger on_hide_window afer hide signal (for immidate response after pressing quit button)
-  signalDispatcher.hideMainWindow.connect(sigc::mem_fun(*this, &MainWindow::on_hide_window));
+  settings_button.signal_clicked().connect(signalDispatcher.signal_show_settings_window);
 
   listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
   // Send listbox (left panel) signal to dispatcher
-  listbox.signal_button_press_event().connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_button_press_event));
+  listbox.signal_button_press_event().connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_mouse_button_pressed));
 
   // Redirect new Bottle Assistant signal to dispatcher
   newBottleAssistant.newBottleFinished.connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_update_bottles));
-}
-
-/**
- * \brief Just hide the main window
- */
-void MainWindow::on_hide_window()
-{
-  hide();
-}
-
-/**
- * \brief Change detailed window on listbox row clicked event
- */
-void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
-{
-  if(row != nullptr) {
-    SetDetailedInfo(*(BottleItem*)row);
-    // Inform Bottle Manager
-    activeBottle.emit((BottleItem*)row);
-  }
 }
 
 /**
@@ -199,6 +183,146 @@ bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
     return_value = true;
   }
   return return_value;
+}
+
+/**
+ * \brief Signal when the new button is clicked in the top toolbar/menu
+ */
+void MainWindow::on_new_bottle_button_clicked()
+{
+  newBottleAssistant.set_transient_for(*this);
+  newBottleAssistant.show();
+}
+
+/**
+ * \brief Handler when the bottle is created, notify the new bottle assistant.
+ * Pass through the signal from the dispatcher to the 'new bottle assistant'.
+ */
+void MainWindow::on_new_bottle_created()
+{
+  newBottleAssistant.BottleCreated();
+}
+
+/**
+ * \brief Signal when the Run Program... button is clicked in top toolbar/menu
+ */
+void MainWindow::on_run_button_clicked()
+{
+  Gtk::FileChooserDialog dialog("Please choose a file",
+    Gtk::FILE_CHOOSER_ACTION_OPEN);
+  dialog.set_transient_for(*this);
+
+  //Add response buttons the the dialog:
+  dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+  dialog.add_button("_Open", Gtk::RESPONSE_OK);
+
+  auto filter_win = Gtk::FileFilter::create();
+  filter_win->set_name("Windows Executable/MSI Installer");
+  filter_win->add_mime_type("application/x-ms-dos-executable");
+  filter_win->add_mime_type("application/x-msi");
+  dialog.add_filter(filter_win);
+
+  auto filter_any = Gtk::FileFilter::create();
+  filter_any->set_name("Any file");
+  filter_any->add_pattern("*");
+  dialog.add_filter(filter_any);
+
+  //Show the dialog and wait for a user response:
+  int result = dialog.run();
+  
+  //Handle the response:
+  switch(result)
+  {
+    case(Gtk::RESPONSE_OK):
+    {
+      string filename = dialog.get_filename();
+      // Just guess based on extenstion
+      string ext = filename.substr(filename.find_last_of(".") + 1);
+      // To lower case
+      std::transform(ext.begin(), ext.end(), ext.begin(), 
+        [](unsigned char c){ return std::tolower(c); }
+      );
+      if(ext == "exe")
+      {
+        runProgram.emit(filename, false);
+      }
+      else if(ext == "msi")
+      {
+        // Run as MSI (true=MSI)
+        runProgram.emit(filename, true);
+      }
+      else 
+      {
+        // fall-back: try run as Exe
+        runProgram.emit(filename, false);
+      }
+      break;
+    }
+    case(Gtk::RESPONSE_CANCEL):
+    {
+      // Cancelled, do nothing
+      break;
+    }
+    default:
+    {
+      // Unexpected button, ignore
+      break;
+    }
+  }
+}
+
+/**
+ * \brief Just hide the main window
+ */
+void MainWindow::on_hide_window()
+{
+  hide();
+}
+
+/**
+ * \brief Not implemented feature
+ */
+void MainWindow::on_not_implemented()
+{
+  Gtk::MessageDialog dialog(*this, "This feature is not yet implemented. Sorry :\\", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+  dialog.set_title("An error has occurred!");
+  dialog.set_modal(false);
+  dialog.run();
+}
+
+
+/************************
+ * Private methods      *
+ ************************/
+
+/**
+ * \brief Change detailed window on listbox row clicked event
+ */
+void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
+{
+  if(row != nullptr) {
+    SetDetailedInfo(*(BottleItem*)row);
+    // Inform Bottle Manager
+    activeBottle.emit((BottleItem*)row);
+  }
+}
+
+/**
+ * \brief Signal when the new assistant/wizard is finished and applied
+ */
+void MainWindow::on_new_bottle_apply()
+{
+  Glib::ustring name;
+  Glib::ustring virtual_desktop_resolution;
+  BottleTypes::Windows windows_version;
+  BottleTypes::Bit bit;
+  BottleTypes::AudioDriver audio;
+
+  // Retrieve assistant results
+  newBottleAssistant.GetResult(name, virtual_desktop_resolution, windows_version, bit, audio);
+
+  // Emit signal to Bottle Manager
+  newBottle.emit(name, virtual_desktop_resolution, windows_version, bit, audio);
 }
 
 /**
@@ -375,119 +499,4 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
     gtk_widget_show(current);
     gtk_list_box_row_set_header(row, current);
   }
-}
-
-/**
- * \brief Signal when the new button is clicked in the top toolbar/menu
- */
-void MainWindow::on_new_bottle_button_clicked()
-{
-  newBottleAssistant.set_transient_for(*this);
-  newBottleAssistant.show();
-}
-
-/**
- * \brief Signal when the new assistant/wizard is finished and applied
- */
-void MainWindow::on_new_bottle_apply()
-{
-  Glib::ustring name;
-  Glib::ustring virtual_desktop_resolution;
-  BottleTypes::Windows windows_version;
-  BottleTypes::Bit bit;
-  BottleTypes::AudioDriver audio;
-
-  // Retrieve assistant results
-  newBottleAssistant.GetResult(name, virtual_desktop_resolution, windows_version, bit, audio);
-
-  // Emit signal to Bottle Manager
-  newBottle.emit(name, virtual_desktop_resolution, windows_version, bit, audio);
-}
-
-/**
- * \brief Signal when the Run Program... button is clicked in top toolbar/menu
- */
-void MainWindow::on_run_button_clicked()
-{
-  Gtk::FileChooserDialog dialog("Please choose a file",
-    Gtk::FILE_CHOOSER_ACTION_OPEN);
-  dialog.set_transient_for(*this);
-
-  //Add response buttons the the dialog:
-  dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-  dialog.add_button("_Open", Gtk::RESPONSE_OK);
-
-  auto filter_win = Gtk::FileFilter::create();
-  filter_win->set_name("Windows Executable/MSI Installer");
-  filter_win->add_mime_type("application/x-ms-dos-executable");
-  filter_win->add_mime_type("application/x-msi");
-  dialog.add_filter(filter_win);
-
-  auto filter_any = Gtk::FileFilter::create();
-  filter_any->set_name("Any file");
-  filter_any->add_pattern("*");
-  dialog.add_filter(filter_any);
-
-  //Show the dialog and wait for a user response:
-  int result = dialog.run();
-  
-  //Handle the response:
-  switch(result)
-  {
-    case(Gtk::RESPONSE_OK):
-    {
-      string filename = dialog.get_filename();
-      // Just guess based on extenstion
-      string ext = filename.substr(filename.find_last_of(".") + 1);
-      // To lower case
-      std::transform(ext.begin(), ext.end(), ext.begin(), 
-        [](unsigned char c){ return std::tolower(c); }
-      );
-      if(ext == "exe")
-      {
-        runProgram.emit(filename, false);
-      }
-      else if(ext == "msi")
-      {
-        // Run as MSI (true=MSI)
-        runProgram.emit(filename, true);
-      }
-      else 
-      {
-        // fall-back: try run as Exe
-        runProgram.emit(filename, false);
-      }
-      break;
-    }
-    case(Gtk::RESPONSE_CANCEL):
-    {
-      // Cancelled, do nothing
-      break;
-    }
-    default:
-    {
-      // Unexpected button, ignore
-      break;
-    }
-  }
-}
-
-/**
- * \brief Handler when the bottle is created, notify the new bottle assistant.
- * Pass through the signal from the dispatcher to the 'new bottle assistant'.
- */
-void MainWindow::on_new_bottle_created()
-{
-  newBottleAssistant.BottleCreated();
-}
-
-/**
- * \brief Not implemented feature
- */
-void MainWindow::on_not_implemented()
-{
-  Gtk::MessageDialog dialog(*this, "This feature is not yet implemented. Sorry :\\", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
-  dialog.set_title("An error has occurred!");
-  dialog.set_modal(false);
-  dialog.run();
 }
