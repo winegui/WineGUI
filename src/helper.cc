@@ -35,9 +35,12 @@
 #include <glibmm/timeval.h>
 #include <glibmm/fileutils.h>
 
+std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui"};
+static string WINEGUI_DIR = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
+
 // Wine & Winetricks exec
 static const string WINE_EXECUTABLE = "wine"; /*!< Currently expect to be installed globally */
-static const string WINETRICKS_EXECUTABLE = Glib::build_filename(Glib::get_current_dir(), "winetricks"); /*!< winetricks shall be located locally */
+static const string WINETRICKS_EXECUTABLE = Glib::build_filename(WINEGUI_DIR, "winetricks"); /*!< winetricks shall be located within the .winegui folder */
 
 // Reg files
 static const string SYSTEM_REG = "system.reg";
@@ -511,10 +514,9 @@ bool Helper::FileExists(const string& file_path)
  */
 void Helper::InstallOrUpdateWinetricks()
 {
-  string deploymentDirectory = Glib::get_current_dir();
-  Exec(("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x winetricks && mv winetricks " + deploymentDirectory).c_str());
+  Exec(("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x winetricks && mv winetricks " + WINEGUI_DIR).c_str());
   // Winetricks script should exists now...
-  if(!FileExists("winetricks"))
+  if(!FileExists(WINETRICKS_EXECUTABLE))
   {
     throw std::runtime_error("Winetrick helper script can not be found / installed. This could/will result into issues with WineGUI!");
   }
@@ -525,17 +527,23 @@ void Helper::InstallOrUpdateWinetricks()
  */
 void Helper::SelfUpdateWinetricks()
 {
-  if(FileExists("winetricks"))
+  if(FileExists(WINETRICKS_EXECUTABLE))
   {
     string result = Exec((WINETRICKS_EXECUTABLE + " --self-update >/dev/null 2>&1; echo $?").c_str());
-    if(!result.empty()) {
+    if(!result.empty())
+    {
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      if(result.compare("0") != 0) {
-        throw std::runtime_error("Something went wrong with the winetricks self-update");
+      if(result.compare("0") != 0)
+      {
+        throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::GetWinetricksVersion());
       }
     } else {
-      throw std::runtime_error("Something went wrong with the winetricks self-update.");
+      throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::GetWinetricksVersion());
     }    
+  }
+  else
+  {
+    throw std::runtime_error("Try to update the Winetricks script, while there is no winetricks installed/not found!");
   }
 }
 
@@ -546,7 +554,7 @@ void Helper::SelfUpdateWinetricks()
 string Helper::GetWinetricksVersion()
 {
   string version = "";
-  if(FileExists("winetricks")) {
+  if(FileExists(WINETRICKS_EXECUTABLE)) {
     string result = Exec((WINETRICKS_EXECUTABLE + " --version").c_str());
     if(!result.empty())
     {
@@ -563,7 +571,7 @@ string Helper::GetWinetricksVersion()
  */
 void Helper::ShowWinetricksGUI(const string prefix_path)
 {
-  if(FileExists("winetricks"))
+  if(FileExists(WINETRICKS_EXECUTABLE))
   {
     Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " --gui").c_str());  
   }
@@ -574,7 +582,7 @@ void Helper::ShowWinetricksGUI(const string prefix_path)
  */
 void Helper::SetWindowsVersion(const string prefix_path, BottleTypes::Windows windows)
 {
-  if(FileExists("winetricks"))
+  if(FileExists(WINETRICKS_EXECUTABLE))
   {
     string win = BottleTypes::getWinetricksString(windows);
     string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " " + win + ">/dev/null 2>&1; echo $?").c_str());
@@ -594,7 +602,7 @@ void Helper::SetWindowsVersion(const string prefix_path, BottleTypes::Windows wi
  */
 void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
 {
-  if(FileExists("winetricks"))
+  if(FileExists(WINETRICKS_EXECUTABLE))
   {
     std::vector<string> res = Split(resolution, 'x');
     if (res.size() >= 2)
@@ -640,7 +648,7 @@ void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
  */
 void Helper::DisableVirtualDesktop(const string prefix_path)
 {
-  if(FileExists("winetricks"))
+  if(FileExists(WINETRICKS_EXECUTABLE))
   {
     string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off" + ">/dev/null 2>&1; echo $?").c_str());
     // Bug in Winetricks vd=off is working, but it will always return 1
@@ -660,7 +668,7 @@ void Helper::DisableVirtualDesktop(const string prefix_path)
  */
 void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver)
 {
-  if(FileExists("winetricks"))
+  if(FileExists(WINETRICKS_EXECUTABLE))
   {
     string audio = BottleTypes::getWinetricksString(audio_driver);
     // 
@@ -674,6 +682,15 @@ void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver a
       throw std::runtime_error("Could not set Audio driver");
     }  
   }
+}
+
+/**
+ * \brief Get the Winetricks binary location
+ * \return the full path to Winetricks
+ */
+string Helper::GetWinetricksLocation()
+{
+  return WINETRICKS_EXECUTABLE;
 }
 
 /****************************************************************************

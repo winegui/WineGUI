@@ -60,6 +60,7 @@ public:
   static void SetVirtualDesktop(const string prefix_path, string resolution);
   static void DisableVirtualDesktop(const string prefix_path);
   static void SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver);
+  static string GetWinetricksLocation();
 private:
   static string Exec(const char* cmd);
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);

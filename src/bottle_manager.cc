@@ -54,7 +54,7 @@ void BottleManager::Prepare()
 {
   // Install winetricks if not yet present,
   // Winetricks script is used by WineGUI.
-  if(!Helper::FileExists("winetricks"))
+  if(!Helper::FileExists(Helper::GetWinetricksLocation()))
   {
     try {
       Helper::InstallOrUpdateWinetricks();
@@ -70,10 +70,13 @@ void BottleManager::Prepare()
     try {
       Helper::SelfUpdateWinetricks();
     }
+    catch(const std::invalid_argument& msg)
+    {
+      std::cout << "WARN: " << msg.what() << std::endl;
+    }
     catch(const std::runtime_error& error)
     {
-      string ver = Helper::GetWinetricksVersion();
-      std::cout << "WARN: Could not update winetricks, however winetrick version " << ver << " is already present." << std::endl;
+      mainWindow.ShowErrorMessage(error.what());
     }
   }
 
