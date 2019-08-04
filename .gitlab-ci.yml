@@ -32,6 +32,7 @@ publish:
     - export SSHPASS=$USER_PASS 
     - sshpass -e scp -o stricthostkeychecking=no ./build/WineGUI-v* melroy@server.melroy.org:/var/www/winegui.melroy.org/html/downloads
     - export APP_VERSION=`./build/bin/winegui --version`
+    - echo $APP_VERSION
     - ./create_release_links.sh
   cache:
       key: "$CI_PIPELINE_ID"

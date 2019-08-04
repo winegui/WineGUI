@@ -49,6 +49,8 @@ if [[ "$output" == "[]" ]]; then
         --data name="WineGUI Debian package (deb)" \
         --data url="$webpage_prefix/WineGUI-$APP_VERSION.deb" \
         "$gitlab_url/api/v4/projects/$project_id/releases/$APP_VERSION/assets/links"
+elif [[ "$output" == "{\"message\":\"404 Not found\"}" ]]; then
+    echo "WARN: Release doesn't yet exist yet/can't be found yet in Gitlab: $APP_VERSION..."
 else
     echo "INFO: Links already exists. Skipping creating new links for WineGUI $APP_VERSION!"
 fi
