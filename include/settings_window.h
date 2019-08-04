@@ -26,7 +26,7 @@
 using std::string;
 
 // Forward declaration
-class SignalDispatcher;
+//class SignalDispatcher;
 
 /**
  * \class SettingsWindow
@@ -37,7 +37,7 @@ class SettingsWindow : public Gtk::Window
 public:
   SettingsWindow(Gtk::Window& parent);
   virtual ~SettingsWindow();
-  void SetDispatcher(SignalDispatcher& signalDispatcher);
+  //void SetDispatcher(SignalDispatcher& signalDispatcher); Could be useful?
 
   void SetActiveBottle(BottleItem* bottle);
 
@@ -46,7 +46,7 @@ protected:
   Gtk::Box vbox; /*!< The main vertical box */
 
 private:
-  BottleItem* currentBottle;  /*!< Current bottle to manage settings */
+  BottleItem* currentBottle; /*!< Current bottle to manage settings */
 
   // Private methods
 

@@ -30,7 +30,6 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   set_title("Settings - Windows Machine");
   set_default_size(750, 540);
   set_modal(true);
-
 }
 
 /**

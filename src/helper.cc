@@ -35,7 +35,7 @@
 #include <glibmm/timeval.h>
 #include <glibmm/fileutils.h>
 
-std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui"};
+std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui config/storage directory path */
 static string WINEGUI_DIR = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
 
 // Wine & Winetricks exec
