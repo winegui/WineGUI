@@ -3,7 +3,7 @@ if (POLICY CMP0048)
 endif()
 set(PROJECT_NAME WineGUI)
 set(PROJECT_TARGET winegui)
-project(${PROJECT_NAME} VERSION 1.0.0 DESCRIPTION "WineGUI is a user-friendly WINE graphical interface")
+project(${PROJECT_NAME} VERSION 1.1.0 DESCRIPTION "WineGUI is a user-friendly WINE graphical interface")
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message("PROJECT_VERSION = ${PROJECT_VERSION}")
