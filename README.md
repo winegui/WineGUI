@@ -67,7 +67,8 @@ You can use the helper script: `./build_debug.sh`
 Start debugging in [GDB (GNU Debugger)](https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf):
 
 ```sh
-gdb -ex=run build_debug/bin/winegui
+cd build_debug
+gdb -ex=run bin/winegui
 ```
 
 ### Production
