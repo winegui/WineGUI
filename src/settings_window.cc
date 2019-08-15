@@ -25,11 +25,57 @@
  * \param parent Reference to parent GTK+ Window
  */
 SettingsWindow::SettingsWindow(Gtk::Window& parent)
+:
+  edit_button("Edit Configuration"),
+  delete_button("Delete Machine"),
+  wine_config_button("WineCfg")
 {
   set_transient_for(parent);
   set_title("Settings - Windows Machine");
   set_default_size(750, 540);
   set_modal(true);
+
+  add(settings_grid);
+  settings_grid.set_margin_top(5);
+  settings_grid.set_margin_end(5);
+  settings_grid.set_margin_bottom(8);
+  settings_grid.set_margin_start(8);
+  settings_grid.set_column_spacing(8);
+  settings_grid.set_row_spacing(12);
+
+  first_row_label.set_text("WineGUI Settings");
+  first_row_label.set_xalign(0);
+  second_row_label.set_text("Other Tools Settings");
+  second_row_label.set_xalign(0);
+
+  first_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
+  first_toolbar.set_halign(Gtk::ALIGN_CENTER);
+  first_toolbar.set_hexpand(true);
+  second_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
+  second_toolbar.set_halign(Gtk::ALIGN_CENTER);
+  second_toolbar.set_hexpand(true);
+
+  settings_grid.attach(first_row_label, 0, 0, 1, 1); 
+  settings_grid.attach(first_toolbar, 0, 1, 1, 1);
+  settings_grid.attach(second_row_label, 0, 2, 1, 1);
+  settings_grid.attach(second_toolbar, 0, 3, 1, 1);
+
+  // First row with buttons
+  Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
+  edit_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  edit_button.set_icon_widget(*edit_image);
+  first_toolbar.insert(edit_button, 0);
+
+  Gtk::Image* delete_image = Gtk::manage(new Gtk::Image());
+  delete_image->set_from_icon_name("edit-delete", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  delete_button.set_icon_widget(*delete_image);
+  delete_button.set_border_width(2);
+  first_toolbar.insert(delete_button, 1);
+
+  // Second row with buttons
+  second_toolbar.insert(wine_config_button, 0);
+
+  show_all_children();
 }
 
 /**

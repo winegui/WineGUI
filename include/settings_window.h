@@ -43,7 +43,19 @@ public:
 
 protected:
   // Child widgets
-  Gtk::Box vbox; /*!< The main vertical box */
+  Gtk::Grid settings_grid;
+  
+  Gtk::Label first_row_label;
+  Gtk::Label second_row_label;
+  Gtk::Toolbar first_toolbar;
+  Gtk::Toolbar second_toolbar;
+
+  // Buttons first row
+  Gtk::ToolButton edit_button; /*!< edit button */
+  Gtk::ToolButton delete_button; /*!< delete button */
+  
+  // Buttons second row
+  Gtk::ToolButton wine_config_button; /*!< Winecfg button */
 
 private:
   BottleItem* currentBottle; /*!< Current bottle to manage settings */
