@@ -78,6 +78,14 @@ For production build and DEB file package, you can run: `./build_prod.sh`
 
 Or use the `cmake -DCMAKE_BUILD_TYPE=Release`.
 
+### Releasing
+
+Before you can make a new release, align the version number in WineGUI with the version you want to release.
+Then create a new tagged version in Gitlab with the same version name.
+
+*Note:* Only the `master` branch will trigger the publish task.
+
+
 ## Coding standard
 
 We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
