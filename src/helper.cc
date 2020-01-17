@@ -524,10 +524,9 @@ bool Helper::FileExists(const string& file_path)
  */
 void Helper::InstallOrUpdateWinetricks()
 {
-  bool created = false;
   // Check if ~/.winegui directory is created
   if (!DirExists(WINEGUI_DIR)) {
-    created = CreateDir(WINEGUI_DIR);
+    bool created = CreateDir(WINEGUI_DIR);
     if(!created)
     {
       throw std::runtime_error("Incorrect permissions to create a .winegui configuration folder! Abort.");
@@ -746,8 +745,6 @@ string Helper::Exec(const char* cmd) {
  */
 string Helper::GetRegValue(const string& filename, const string& keyName, const string& valueName)
 {
-  FILE *f;
-  char buffer[100];
   // We add '[' & ']' around the key name
   string keyPattern = '[' + keyName + ']';
   // We add double quotes around plus equal sign to the value name
@@ -755,6 +752,8 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
   char* match_pch = NULL;
   if (Helper::FileExists(filename)) 
   {
+    FILE *f;
+    char buffer[100];
     if ((f = fopen(filename.c_str(), "r")) == NULL)
     {
       throw std::runtime_error("File could not be opened");
@@ -804,12 +803,12 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
  */
 string Helper::GetRegMetaData(const string& filename, const string& metaValueName)
 {
-  FILE *f;
-  char buffer[100];
   string metaPattern = "#" + metaValueName + "=";
   char* match_pch = NULL;
   if (Helper::FileExists(filename)) 
   {
+    FILE *f;
+    char buffer[100];
     if ((f = fopen(filename.c_str(), "r")) == NULL)
     {
       throw std::runtime_error("File could not be opened");

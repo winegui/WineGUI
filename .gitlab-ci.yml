@@ -22,6 +22,8 @@ build:
         - build/bin
       policy: push
 
+# TODO: Add static analysis check: cppcheck --enable=all --error-exitcode=1 ./src/
+
 publish:
   stage: publish
   tags:

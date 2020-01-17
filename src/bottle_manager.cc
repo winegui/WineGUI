@@ -393,7 +393,6 @@ std::list<BottleItem> BottleManager::CreateWineBottles(string wineVersion, std::
 
   string name = "";
   string virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
-  bool status = false;
   BottleTypes::Windows windows = BottleTypes::Windows::WindowsXP;
   BottleTypes::Bit bit = BottleTypes::Bit::win32;
   string cDriveLocation = "";
@@ -406,7 +405,7 @@ std::list<BottleItem> BottleManager::CreateWineBottles(string wineVersion, std::
     // Reset variables
     name = "";
     virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
-    status = false;
+    bool status = false;
     windows = BottleTypes::Windows::WindowsXP;
     bit = BottleTypes::Bit::win32;
     cDriveLocation = "- Unknown -";
