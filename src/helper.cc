@@ -145,10 +145,10 @@ string Helper::GetWineVersion()
   if (!result.empty()) {
     std::vector<string> results = Split(result, '-');
     if (results.size() >= 2) {
-      string result = results.at(1);;
+      string version = results.at(1);;
       // Remove new lines
-      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      return result;
+      version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
+      return version;
     } else {
       throw std::runtime_error("Could not determ wine version?\nSomething went wrong.");
     }
