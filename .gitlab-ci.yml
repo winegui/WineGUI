@@ -7,7 +7,7 @@ static_code_analysis:
   stage: test
   tags:
     - gtk
-  script: cppcheck --enable=all --error-exitcode=1 ./src/
+  script: cppcheck --enable=all --suppress=missingIncludeSystem --error-exitcode=1 -I ./include/ ./src/ 
 
 build:
   stage: build
