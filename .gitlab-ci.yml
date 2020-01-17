@@ -36,7 +36,7 @@ publish:
     - master
   script:
     - export APP_VERSION=`./build/bin/winegui --version`
-    - echo WineGUI version: $APP_VERSION
+    - echo 'WineGUI version: $APP_VERSION'
     - ./release.sh
     - ./create_release_links.sh
   cache:
