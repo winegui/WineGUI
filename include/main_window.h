@@ -49,11 +49,10 @@ public:
   sigc::signal<void, Glib::ustring&, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, BottleTypes::AudioDriver> newBottle; /*!< Create new Wine Bottle Signal */
   sigc::signal<void, string, bool> runProgram; /*!< Run an EXE or MSI application in Wine with provided filename */
   
-  MainWindow(Menu& menu);
+  explicit MainWindow(Menu& menu);
   virtual ~MainWindow();
   void SetDispatcher(SignalDispatcher& signalDispatcher);
 
-  void AppendWineBottle(BottleItem& bottle);
   void SetWineBottles(std::list<BottleItem>& bottles);
   void SetDetailedInfo(BottleItem& bottle);
   void ShowErrorMessage(const Glib::ustring& message);

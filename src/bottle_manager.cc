@@ -90,7 +90,7 @@ void BottleManager::Prepare()
 void BottleManager::UpdateBottles()
 {
   // Clear bottles
-  if (bottles.size() > 0)
+  if (!bottles.empty())
     bottles.clear();
 
   // Get the bottle directories
@@ -115,7 +115,7 @@ void BottleManager::UpdateBottles()
       return; // stop
     } 
   
-    if (bottles.size() > 0)
+    if (!bottles.empty())
     {
       // Update main Window
       mainWindow.SetWineBottles(bottles);
@@ -316,20 +316,6 @@ void BottleManager::RunProgram(string filename, bool is_msi_file)
     mainWindow.ShowErrorMessage("No Windows Machine selected/empty. First create a new machine!\n\nAborted.");
   }
 }
-
-/**
- * \brief Get the current active bottle name
- * \return Bottle name
- */
-const Glib::ustring& BottleManager::GetActiveBottleName() {
-  static const Glib::ustring EMPTY = Glib::ustring("");
-  if (activeBottle != nullptr) {
-    return activeBottle->name();
-  } else {
-    return EMPTY;
-  }
-}
-
 
 /**
  * \brief Signal handler when the active bottle changes, update active bottle

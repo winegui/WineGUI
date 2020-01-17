@@ -16,6 +16,11 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 
 ## Development
 
+Development has been done in Visual Studio Code editor, using the following extensions:
+
+* C/C++
+* CMake Tools
+
 ### Requirements
 
 Dependencies should be met before build:

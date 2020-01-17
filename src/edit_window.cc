@@ -29,7 +29,8 @@ EditWindow::EditWindow(Gtk::Window& parent)
 :
   edit_button("Edit Configuration"),
   delete_button("Delete Machine"),
-  wine_config_button("WineCfg")
+  wine_config_button("WineCfg"),
+  activeBottle(nullptr)
 {
   set_transient_for(parent);
   set_default_size(750, 540);

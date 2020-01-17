@@ -34,11 +34,30 @@
  * \class BottleItem
  * \brief Class object definition for a wine bottle item
  */
+
 class BottleItem : public Gtk::ListBoxRow
 {
 public:
   BottleItem();
+  // Copy constructor
   BottleItem(const BottleItem& bottleItem);
+  // Copy-&-swap
+  BottleItem& operator=(BottleItem tempBottleItem) {
+    this->swap(*this, tempBottleItem);
+    return *this;
+  }
+  void swap(BottleItem& a, BottleItem& b) {
+    using std::swap;
+    swap(a._name, b._name);
+    swap(a._is_status_ok, b._is_status_ok);
+    swap(a._win, b._win);
+    swap(a._bit, b._bit);
+    swap(a._wine_version, b._wine_version);
+    swap(a._wine_c_drive, b._wine_c_drive);
+    swap(a._wine_last_changed, b._wine_last_changed);
+    swap(a._audio_driver, b._audio_driver);
+    swap(a._virtual_desktop, b._virtual_desktop);
+  }
 
   BottleItem(Glib::ustring name, 
     Glib::ustring wine_version,
@@ -116,7 +135,6 @@ protected:
   Gtk::Label status_label; /*!< Status of the Wine Bottle */
 
 private:
-  unsigned int _id;
   Glib::ustring _name;
   bool _is_status_ok;
   BottleTypes::Windows _win;

@@ -35,7 +35,7 @@ class BottleItem;
 class SettingsWindow : public Gtk::Window
 {
 public:
-  SettingsWindow(Gtk::Window& parent);
+  explicit SettingsWindow(Gtk::Window& parent);
   virtual ~SettingsWindow();
 
   void Show();

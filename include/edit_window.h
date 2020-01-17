@@ -35,7 +35,7 @@ class BottleItem;
 class EditWindow : public Gtk::Window
 {
 public:
-  EditWindow(Gtk::Window& parent);
+  explicit EditWindow(Gtk::Window& parent);
   virtual ~EditWindow();
 
   void Show();

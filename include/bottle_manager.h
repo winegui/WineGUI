@@ -44,7 +44,7 @@ public:
   // Signals
   sigc::signal<void> resetActiveBottle; /*!< Send signal: Clear the current active bottle */
 
-  BottleManager(MainWindow& mainWindow);
+  explicit BottleManager(MainWindow& mainWindow);
   virtual ~BottleManager();
 
   void Prepare();
@@ -59,7 +59,6 @@ public:
   void DeleteBottle();
   const Glib::ustring& GetErrorMessage();
   void RunProgram(string filename, bool is_msi_file);
-  const Glib::ustring& GetActiveBottleName();
   void SetActiveBottle(BottleItem* bottle);
 private:
   // Synchronizes access to data members

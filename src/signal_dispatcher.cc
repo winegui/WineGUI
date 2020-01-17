@@ -39,7 +39,9 @@ SignalDispatcher::SignalDispatcher(
   AboutDialog& about, 
   EditWindow& editWindow,
   SettingsWindow& settingsWindow)
-: manager(manager),
+: 
+  mainWindow(nullptr),
+  manager(manager),
   menu(menu),
   preferencesWindow(preferencesWindow),
   about(about),
@@ -47,7 +49,10 @@ SignalDispatcher::SignalDispatcher(
   settingsWindow(settingsWindow),
   m_FinishDispatcher(),
   m_ErrorMessageDispatcher(),
-  m_threadBottleManager(nullptr) {}
+  m_threadBottleManager(nullptr)
+{
+  // Nothing
+}
 
 /**
  * \brief Destructor, join (wait for) running threads, if applicable, to avoid zombies

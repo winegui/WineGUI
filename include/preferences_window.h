@@ -29,7 +29,7 @@
 class PreferencesWindow : public Gtk::Window
 {
 public:
-  PreferencesWindow(Gtk::Window& parent);
+  explicit PreferencesWindow(Gtk::Window& parent);
   virtual ~PreferencesWindow();
 
 protected:

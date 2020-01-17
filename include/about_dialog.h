@@ -40,7 +40,7 @@ static const std::string VERSION = "v1.1.0";
 class AboutDialog : public Gtk::AboutDialog
 {
 public:
-  AboutDialog(Gtk::Window& parent);
+  explicit AboutDialog(Gtk::Window& parent);
   virtual ~AboutDialog();
   
   static std::string GetVersion();

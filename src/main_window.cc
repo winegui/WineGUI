@@ -103,17 +103,6 @@ void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
 }
 
 /**
- * \brief Append a single Wine Bottle to the left panel
- * \param[in] bottle - A single WineBottle class
- */
-void MainWindow::AppendWineBottle(BottleItem& bottle)
-{
-  listbox.add(bottle);
-  // Update show
-  show_all_children();
-}
-
-/**
  * \brief Set a list/vector of bottles to the left panel
  * \param[in] bottles - Wine Bottle item vector array
  */
@@ -303,10 +292,10 @@ void MainWindow::on_not_implemented()
 void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 {
   if (row != nullptr) {
-    SetDetailedInfo(*(BottleItem*)row);
+    SetDetailedInfo(*dynamic_cast<BottleItem*>(row));
     // Signal activate Bottle with current BottleItem as parameter to the dispatcher
     // Which updates the connected modules accordingly.
-    activeBottle.emit((BottleItem*)row);
+    activeBottle.emit(dynamic_cast<BottleItem*>(row));
   }
 }
 
