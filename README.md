@@ -31,6 +31,7 @@ Optionally:
 * doxygen
 * graphviz
 * rpm
+* cppcheck
 
 **Hint:** You could execute `./deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
 
