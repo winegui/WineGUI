@@ -9,11 +9,12 @@ if [ -z ${APP_VERSION} ]; then
 fi
 
 # Check if the version already exists
-output=$(sshpass -e ssh -o StrictHostKeyChecking=no melroy@server.melroy.org 'cd /var/www/winegui.melroy.org/html/downloads; find . -name "WineGUI*"')
-echo "$output"
-if [[ "$output" == "" ]]; then
+output=$(sshpass -e ssh -o StrictHostKeyChecking=no melroy@server.melroy.org 'cd /var/www/winegui.melroy.org/html/downloads; ls"')
+
+name="WineGUI-${APP_VERSION}"
+if [[ "$output" == "$name"* ]]; then
+    echo "INFO: Release is already rolled-out to the downloads folder."
+else
     # Roll-out the new release
     sshpass -e scp -o stricthostkeychecking=no ./build/WineGUI-v* melroy@server.melroy.org:/var/www/winegui.melroy.org/html/downloads
-else
-    echo "INFO: Release is already rolled-out to the downloads folder."
 fi
