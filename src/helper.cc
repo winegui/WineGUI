@@ -108,10 +108,10 @@ std::map<std::string, unsigned long> Helper::GetBottlesPaths(const string& dir_p
   std::map<std::string, unsigned long> r;
   Glib::Dir dir(dir_path);
   auto name = dir.read_name();
-  while(!name.empty())
+  while (!name.empty())
   {    
     auto path = Glib::build_filename(dir_path, name);
-    if(Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR)) {
+    if (Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR)) {
       r.insert(std::pair<string, unsigned long>(path, GetModifiedTime(path)));
     }
     name = dir.read_name();
@@ -128,7 +128,7 @@ std::map<std::string, unsigned long> Helper::GetBottlesPaths(const string& dir_p
 void Helper::RunProgram(string prefix_path, string program, bool is_msi_file)
 {
   string msi = "";
-  if(is_msi_file) {
+  if (is_msi_file) {
     msi = " msiexec /i";
   }
   // Ignore result of Exec()
@@ -142,9 +142,9 @@ void Helper::RunProgram(string prefix_path, string program, bool is_msi_file)
 string Helper::GetWineVersion()
 {
   string result = Exec((WINE_EXECUTABLE + " --version").c_str());
-  if(!result.empty()) {
+  if (!result.empty()) {
     std::vector<string> results = Split(result, '-');
-    if(results.size() >= 2) {
+    if (results.size() >= 2) {
       string result = results.at(1);;
       // Remove new lines
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
@@ -165,7 +165,7 @@ string Helper::GetWineVersion()
 void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit)
 {
   string winearch = "";
-  switch(bit) {
+  switch (bit) {
     case BottleTypes::Bit::win32:
       winearch = " WINEARCH=win32";
       break;
@@ -175,11 +175,11 @@ void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit)
   }
   string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + winearch + " " +
     WINE_EXECUTABLE + " wineboot>/dev/null 2>&1; echo $?").c_str());
-  if(!result.empty())
+  if (!result.empty())
   {
     // Remove new lines
     result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-    if(!(result.compare("0") == 0)) 
+    if (!(result.compare("0") == 0)) 
     {
       throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine machine: " + 
         GetName(prefix_path) +
@@ -199,14 +199,14 @@ void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit)
  */
 void Helper::RemoveWineBottle(const string prefix_path)
 {
-  if(Helper::DirExists(prefix_path))
+  if (Helper::DirExists(prefix_path))
   {
     string result = Exec(("rm -rf \"" + prefix_path + "\"; echo $?").c_str());
-    if(!result.empty())
+    if (!result.empty())
     {
       // Remove new lines
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      if(!(result.compare("0") == 0)) 
+      if (!(result.compare("0") == 0)) 
       {
         throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + 
           GetName(prefix_path) + "\n\nFull path location: " + prefix_path);
@@ -235,7 +235,7 @@ string Helper::GetName(const string prefix_path)
   try
   {
     std::vector<std::string> config = ReadFile(Glib::build_filename(prefix_path, WINEGUI_CONF));
-    for(std::vector<std::string>::iterator config_line = config.begin(); config_line != config.end(); ++config_line) {
+    for (std::vector<std::string>::iterator config_line = config.begin(); config_line != config.end(); ++config_line) {
       auto delimiterPos = (*config_line).find("=");
       auto name = (*config_line).substr(0, delimiterPos);
       auto value = (*config_line).substr(delimiterPos + 1);
@@ -264,7 +264,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
   string version = "";
   string version9x = "";
 
-  if(!(version = Helper::GetRegValue(filename, keyNameNT, nameNTVersion)).empty())
+  if (!(version = Helper::GetRegValue(filename, keyNameNT, nameNTVersion)).empty())
   {
     string buildNumberNT = Helper::GetRegValue(filename, keyNameNT, nameNTBuild);
     string typeNT = Helper::GetRegValue(filename, keyType, nameProductType);
@@ -272,11 +272,11 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
     for (unsigned int i = 0; i < BottleTypes::WINDOWS_ENUM_SIZE; i++)
     {      
       // Check if version + build number matches
-      if( ((win_versions[i].versionNumber).compare(version) == 0) && 
+      if ( ((win_versions[i].versionNumber).compare(version) == 0) && 
           ((win_versions[i].buildNumber).compare(buildNumberNT) == 0)
         )
       {
-        if(!typeNT.empty())
+        if (!typeNT.empty())
         {
           if((win_versions[i].productType).compare(typeNT) == 0)
           {
@@ -294,11 +294,11 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
     string currentBuildNumber = "";
     std::vector<string> versionList = Split(version, '.');
     // Only get minor & major
-    if(sizeof(versionList) >= 2) {
+    if (sizeof(versionList) >= 2) {
       currentVersion = versionList.at(0) + '.' + versionList.at(1);
     }
     // Get build number
-    if(sizeof(versionList) >= 3) {
+    if (sizeof(versionList) >= 3) {
       currentBuildNumber = versionList.at(2);
     }
      
@@ -336,7 +336,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 
   string metaValueName = "arch";
   string value = Helper::Helper::GetRegMetaData(filename, metaValueName);
-  if(!value.empty()) {
+  if (!value.empty()) {
     if(value.compare("win32") == 0) {
       return BottleTypes::Bit::win32;
     } else if(value.compare("win64") == 0) {
@@ -364,7 +364,7 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
   string keyName = "Software\\\\Wine\\\\Drivers";
   string valueName = "Audio";
   string value = Helper::GetRegValue(filename, keyName, valueName);
-  if(!value.empty()) {
+  if (!value.empty()) {
     if(value.compare("pulse") == 0) {
       return BottleTypes::AudioDriver::pulseaudio;
     } else if(value.compare("alsa") == 0) {
@@ -404,7 +404,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
   string valueName = "Default";
   // TODO: first check of the Desktop value name in Software\\Wine\\Explorer
   string value = Helper::GetRegValue(filename, keyName, valueName);
-  if(!value.empty()) {
+  if (!value.empty()) {
     // Return the resolution
     return value;
   } else {
@@ -420,9 +420,9 @@ string Helper::GetVirtualDesktop(const string prefix_path)
 string Helper::GetLastWineUpdated(const string prefix_path)
 {
   string filename = Glib::build_filename(prefix_path, UPDATE_TIMESTAMP);
-  if(Helper::FileExists(filename)) {
+  if (Helper::FileExists(filename)) {
     std::vector<string> epoch_time = ReadFile(filename);
-    if(epoch_time.size() >= 1) {
+    if (epoch_time.size() >= 1) {
       string time = epoch_time.at(0);
       time_t secsSinceEpoch = strtoul(time.c_str(), NULL, 0);
       std::stringstream stringStream;
@@ -451,7 +451,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
   // First check if directory exists at all (otherwise any wine command will create a new bottle)
   // And check if system.reg is present (important Wine file)
   // And finally if we can read-out the Windows OS version
-  if(Helper::DirExists(prefix_path) &&
+  if (Helper::DirExists(prefix_path) &&
      Helper::FileExists(Glib::build_filename(prefix_path, SYSTEM_REG))) {
     try
     {
@@ -478,7 +478,7 @@ string Helper::GetCLetterDrive(const string prefix_path)
 {
   // Determ C location
   string c_drive_location = Glib::build_filename(prefix_path, "/dosdevices/c:/");
-  if(Helper::DirExists(prefix_path) &&
+  if (Helper::DirExists(prefix_path) &&
      Helper::DirExists(c_drive_location)) {
        return c_drive_location;
   } else {
@@ -499,6 +499,16 @@ bool Helper::DirExists(const string& dir_path)
 }
 
 /**
+ * \brief Create directory (and intermediate parent directories if needed)
+ * \param[in] dir_path The directory to be created
+ * \return true if successfully created, otherwise false
+ */
+bool Helper::CreateDir(const string& dir_path)
+{
+  return (g_mkdir_with_parents(dir_path.c_str(), 0775) == 0);
+}
+
+/**
  * \brief Check if *file* exists or not
  * \param[in] file_path The file to be checked for existence
  * \return true if exists, otherwise false
@@ -514,9 +524,19 @@ bool Helper::FileExists(const string& file_path)
  */
 void Helper::InstallOrUpdateWinetricks()
 {
-  Exec(("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x winetricks && mv winetricks " + WINEGUI_DIR).c_str());
+  bool created = false;
+  // Check if ~/.winegui directory is created
+  if (!DirExists(WINEGUI_DIR)) {
+    created = CreateDir(WINEGUI_DIR);
+    if(!created)
+    {
+      throw std::runtime_error("Incorrect permissions to create a .winegui configuration folder! Abort.");
+    }
+  }
+
+  Exec(("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x winetricks && mv winetricks " + WINETRICKS_EXECUTABLE).c_str());
   // Winetricks script should exists now...
-  if(!FileExists(WINETRICKS_EXECUTABLE))
+  if (!FileExists(WINETRICKS_EXECUTABLE))
   {
     throw std::runtime_error("Winetrick helper script can not be found / installed. This could/will result into issues with WineGUI!");
   }
@@ -527,13 +547,13 @@ void Helper::InstallOrUpdateWinetricks()
  */
 void Helper::SelfUpdateWinetricks()
 {
-  if(FileExists(WINETRICKS_EXECUTABLE))
+  if (FileExists(WINETRICKS_EXECUTABLE))
   {
     string result = Exec((WINETRICKS_EXECUTABLE + " --self-update >/dev/null 2>&1; echo $?").c_str());
-    if(!result.empty())
+    if (!result.empty())
     {
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      if(result.compare("0") != 0)
+      if (result.compare("0") != 0)
       {
         throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::GetWinetricksVersion());
       }
@@ -554,11 +574,11 @@ void Helper::SelfUpdateWinetricks()
 string Helper::GetWinetricksVersion()
 {
   string version = "";
-  if(FileExists(WINETRICKS_EXECUTABLE)) {
+  if (FileExists(WINETRICKS_EXECUTABLE)) {
     string result = Exec((WINETRICKS_EXECUTABLE + " --version").c_str());
-    if(!result.empty())
+    if (!result.empty())
     {
-      if(result.length() >= 8) {
+      if (result.length() >= 8) {
         version = result.substr(0, 8); // Retrieve YYYYMMDD
       }
     }
@@ -571,7 +591,7 @@ string Helper::GetWinetricksVersion()
  */
 void Helper::ShowWinetricksGUI(const string prefix_path)
 {
-  if(FileExists(WINETRICKS_EXECUTABLE))
+  if (FileExists(WINETRICKS_EXECUTABLE))
   {
     Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " --gui").c_str());  
   }
@@ -582,13 +602,13 @@ void Helper::ShowWinetricksGUI(const string prefix_path)
  */
 void Helper::SetWindowsVersion(const string prefix_path, BottleTypes::Windows windows)
 {
-  if(FileExists(WINETRICKS_EXECUTABLE))
+  if (FileExists(WINETRICKS_EXECUTABLE))
   {
     string win = BottleTypes::getWinetricksString(windows);
     string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " " + win + ">/dev/null 2>&1; echo $?").c_str());
-    if(!result.empty()) {
+    if (!result.empty()) {
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      if(result.compare("0") != 0) {
+      if (result.compare("0") != 0) {
         throw std::runtime_error("Could not set Windows OS version");
       }
     } else {
@@ -602,7 +622,7 @@ void Helper::SetWindowsVersion(const string prefix_path, BottleTypes::Windows wi
  */
 void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
 {
-  if(FileExists(WINETRICKS_EXECUTABLE))
+  if (FileExists(WINETRICKS_EXECUTABLE))
   {
     std::vector<string> res = Split(resolution, 'x');
     if (res.size() >= 2)
@@ -618,7 +638,7 @@ void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
         throw std::runtime_error("Could not set virtual desktop resolution (invalid input)");
       }
 
-      if(x < 640 || y < 480)
+      if (x < 640 || y < 480)
       {
         // Set to minimum resolution
         resolution = "640x480";
@@ -648,7 +668,7 @@ void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
  */
 void Helper::DisableVirtualDesktop(const string prefix_path)
 {
-  if(FileExists(WINETRICKS_EXECUTABLE))
+  if (FileExists(WINETRICKS_EXECUTABLE))
   {
     string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off" + ">/dev/null 2>&1; echo $?").c_str());
     // Bug in Winetricks vd=off is working, but it will always return 1
@@ -668,7 +688,7 @@ void Helper::DisableVirtualDesktop(const string prefix_path)
  */
 void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver)
 {
-  if(FileExists(WINETRICKS_EXECUTABLE))
+  if (FileExists(WINETRICKS_EXECUTABLE))
   {
     string audio = BottleTypes::getWinetricksString(audio_driver);
     // 
@@ -733,7 +753,7 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
   // We add double quotes around plus equal sign to the value name
   string valuePattern = '"' + valueName + "\"=";
   char* match_pch = NULL;
-  if(Helper::FileExists(filename)) 
+  if (Helper::FileExists(filename)) 
   {
     if ((f = fopen(filename.c_str(), "r")) == NULL)
     {
@@ -742,7 +762,7 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
     bool match = false;
     while (fgets(buffer, sizeof(buffer), f)) {
       // It returns the pointer to the first occurrence until the null character (end of line)
-      if(!match) {
+      if (!match) {
         // Search first for the applicable subkey
         if ((strstr(buffer, keyPattern.c_str())) != NULL) {
           match = true;
@@ -788,7 +808,7 @@ string Helper::GetRegMetaData(const string& filename, const string& metaValueNam
   char buffer[100];
   string metaPattern = "#" + metaValueName + "=";
   char* match_pch = NULL;
-  if(Helper::FileExists(filename)) 
+  if (Helper::FileExists(filename)) 
   {
     if ((f = fopen(filename.c_str(), "r")) == NULL)
     {
@@ -841,7 +861,7 @@ string Helper::getBottleDirFromPrefix(const string& prefix_path)
  */
 string Helper::CharPointerValueToString(char* charp)
 {
-  if(charp != NULL)
+  if (charp != NULL)
   {
     string ret = string(charp);
 
@@ -871,7 +891,7 @@ std::vector<string> Helper::ReadFile(const string file_path)
 {
   std::vector<string> output;
   std::ifstream myfile(file_path);
-  if(myfile.is_open())
+  if (myfile.is_open())
   {
     std::string line;
     while(std::getline(myfile, line))
@@ -908,7 +928,7 @@ std::vector<string> Helper::Split(const string& s, char delimiter)
    std::vector<string> tokens;
    std::string token;
    std::istringstream tokenStream(s);
-   while(getline(tokenStream, token, delimiter))
+   while (getline(tokenStream, token, delimiter))
    {
       tokens.push_back(token);
    }

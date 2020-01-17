@@ -32,7 +32,7 @@ BottleItem::BottleItem() {
  * \brief Copy contructor, used by GTK+
  */
 BottleItem::BottleItem(const BottleItem& bottleItem) : BottleItem() {
-  if( this != &bottleItem ) {
+  if ( this != &bottleItem ) {
     _name = bottleItem.name();
     _is_status_ok = bottleItem.status();
     _win = bottleItem.windows();
@@ -125,7 +125,7 @@ void BottleItem::CreateUI()
   name_label.set_markup("<span size=\"medium\"><b>" + name + "</b></span>");
   
   Glib::ustring status_text = "Ready";
-  if(status) {
+  if (status) {
     status_icon.set(IMAGE_LOCATION "ready.png");
   } else {
     status_text = "Not Ready";

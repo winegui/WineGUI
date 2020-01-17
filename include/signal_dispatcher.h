@@ -30,6 +30,7 @@ class BottleManager;
 class Menu;
 class PreferencesWindow;
 class AboutDialog;
+class EditWindow;
 class SettingsWindow;
 
 /**
@@ -42,9 +43,15 @@ class SignalDispatcher : public Gtk::Window
 
 public:
   // Signals
-  sigc::signal<void> signal_show_settings_window; /*!< show settings window signal */
+  sigc::signal<void> signal_show_edit_window; /*!< show Edit window signal */
+  sigc::signal<void> signal_show_settings_window; /*!< show Settings window signal */
 
-  SignalDispatcher(BottleManager& manager, Menu& menu, PreferencesWindow& preferencesWindow, AboutDialog& about, SettingsWindow& settingsWindow);
+  SignalDispatcher(BottleManager& manager, 
+  Menu& menu,
+  PreferencesWindow& preferencesWindow,
+  AboutDialog& about,
+  EditWindow& editWindow,
+  SettingsWindow& settingsWindow);
   virtual ~SignalDispatcher();
   void SetMainWindow(MainWindow* mainWindow);
   void DispatchSignals();  
@@ -74,6 +81,7 @@ private:
   Menu& menu;
   PreferencesWindow& preferencesWindow;
   AboutDialog& about;
+  EditWindow& editWindow;
   SettingsWindow& settingsWindow;
 
   // Dispatcher for handling signals from the thread towards a GUI thread

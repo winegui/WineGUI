@@ -39,7 +39,6 @@ NewBottleAssistant::NewBottleAssistant()
   audiodriver_label("Audio Driver:"),
   virtual_desktop_resolution_label("Window Resolution:"),
   confirm_label("Confirmation page"),
-  apply_label("Please wait, changes are getting applied."),
   virtual_desktop_check("Enable Virtual Desktop Window")
 {
   set_border_width(8);
@@ -83,6 +82,7 @@ NewBottleAssistant::~NewBottleAssistant()
  */
 void NewBottleAssistant::setDefaultValues()
 {
+  apply_label.set_text("Please wait, changes are getting applied.");
   name_entry.set_text("");
   // TODO: Allow default to override from WineGUI settings?
   windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
@@ -109,7 +109,7 @@ void NewBottleAssistant::createFirstPage()
   m_vbox.pack_start(m_hbox_name, false, false);
   
   // Fill-in Windows versions in combobox
-  for(std::vector<BottleTypes::WindowsAndBit>::iterator it = BottleTypes::SupportedWindowsVersions.begin(); it != BottleTypes::SupportedWindowsVersions.end(); ++it)
+  for (std::vector<BottleTypes::WindowsAndBit>::iterator it = BottleTypes::SupportedWindowsVersions.begin(); it != BottleTypes::SupportedWindowsVersions.end(); ++it)
   {
     auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
     windows_version_combobox.insert(-1, std::to_string(index), BottleTypes::toString((*it).first) + " (" + BottleTypes::toString((*it).second) + ')');
@@ -140,7 +140,7 @@ void NewBottleAssistant::createSecondPage()
   m_vbox2.pack_start(additional_label, false, false);
     
   // Fill-in Windows versions in combobox
-  for(int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
+  for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
   {
     audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::toString(BottleTypes::AudioDriver(i)));
   }
@@ -204,7 +204,7 @@ void NewBottleAssistant::GetResult(
 
   name = name_entry.get_text();
   bool isDesktopEnabled = virtual_desktop_check.get_active();
-  if(isDesktopEnabled) {
+  if (isDesktopEnabled) {
     virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
   } else {
     // Just empty
@@ -217,8 +217,8 @@ void NewBottleAssistant::GetResult(
     bit = currentWindowsBit.second;
   }
   catch (const std::runtime_error& error) {} 
-  catch(std::invalid_argument& e){}
-  catch(std::out_of_range& e){}
+  catch (std::invalid_argument& e){}
+  catch (std::out_of_range& e){}
   // Ignore the catches
 
   try {
@@ -226,8 +226,8 @@ void NewBottleAssistant::GetResult(
     audio = BottleTypes::AudioDriver(audio_index);
   } 
   catch (const std::runtime_error& error) {} 
-  catch(std::invalid_argument& e){}
-  catch(std::out_of_range& e){}
+  catch (std::invalid_argument& e){}
+  catch (std::out_of_range& e){}
   // Ignore the catches
 }
 
@@ -264,25 +264,25 @@ void NewBottleAssistant::on_assistant_apply()
     is_non_default_audio_driver = WineDefaults::AUDIO_DRIVER != audio;
   }
   catch (const std::runtime_error& error) {} 
-  catch(std::invalid_argument& e){}
-  catch(std::out_of_range& e){}
+  catch (std::invalid_argument& e){}
+  catch (std::out_of_range& e){}
   try {
     size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
     auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
     is_non_default_windows = WineDefaults::WINDOWS_OS != currentWindowsBit.first;
   }
   catch (const std::runtime_error& error) {} 
-  catch(std::invalid_argument& e){}
-  catch(std::out_of_range& e){}
+  catch (std::invalid_argument& e){}
+  catch (std::out_of_range& e){}
 
   int time_interval = 300;
-  if(is_desktop_enabled) {
+  if (is_desktop_enabled) {
     time_interval += 90;
   }
-  if(is_non_default_windows) {
+  if (is_non_default_windows) {
     time_interval += 60;
   }
-  if(is_non_default_audio_driver) {
+  if (is_non_default_audio_driver) {
     time_interval += 90;
   }
 
@@ -324,7 +324,7 @@ void NewBottleAssistant::on_assistant_prepare(Gtk::Widget* /* widget*/)
 void NewBottleAssistant::on_entry_changed()
 {
   // The page is only complete if the name entry contains text.
-  if(name_entry.get_text_length() != 0)
+  if (name_entry.get_text_length() != 0)
     set_page_complete(m_vbox, true);
   else
     set_page_complete(m_vbox, false);
@@ -353,11 +353,13 @@ void NewBottleAssistant::on_virtual_desktop_toggle()
 bool NewBottleAssistant::apply_changes_gradually()
 {
   double fraction = (loading_bar.get_fraction() + 0.02);
-  if (fraction < 1.0)
+  if (fraction <= 1.0)
   {
     loading_bar.set_fraction(fraction);
     return true;
   } else {
+    // Say something else to the user
+    apply_label.set_text("Almost done creating the new machine...");
     // Stop timer
     return false;
   }

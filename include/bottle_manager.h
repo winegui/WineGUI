@@ -34,7 +34,6 @@ using std::string;
 class MainWindow;
 class SignalDispatcher;
 
-
 /**
  * \class BottleManager
  * \brief Controller that controls it all
@@ -42,6 +41,9 @@ class SignalDispatcher;
 class BottleManager
 {
 public:
+  // Signals
+  sigc::signal<void> resetActiveBottle; /*!< Send signal: Clear the current active bottle */
+
   BottleManager(MainWindow& mainWindow);
   virtual ~BottleManager();
 
@@ -57,6 +59,7 @@ public:
   void DeleteBottle();
   const Glib::ustring& GetErrorMessage();
   void RunProgram(string filename, bool is_msi_file);
+  const Glib::ustring& GetActiveBottleName();
   void SetActiveBottle(BottleItem* bottle);
 private:
   // Synchronizes access to data members
@@ -68,7 +71,7 @@ private:
   BottleItem* activeBottle;
 
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
-  Glib::ustring error_message;
+  Glib::ustring m_error_message;
 
   string GetWineVersion();
   std::map<string, unsigned long> GetBottlePaths();

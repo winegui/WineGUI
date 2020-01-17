@@ -51,6 +51,7 @@ public:
   static bool GetBottleStatus(const string prefix_path);
   static string GetCLetterDrive(const string prefix_path);
   static bool DirExists(const string& dir_path);
+  static bool CreateDir(const string& dir_path);
   static bool FileExists(const string& filer_path);
   static void InstallOrUpdateWinetricks();
   static void SelfUpdateWinetricks();

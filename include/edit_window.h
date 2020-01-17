@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2020 WineGUI
  *
- * \file    settings_window.h
- * \brief   Settings GTK+ window class
+ * \file    edit_window.h
+ * \brief   Edit GTK+ window class
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -32,11 +32,11 @@ class BottleItem;
  * \class SettingsWindow
  * \brief GTK+ Window class for the settings
  */
-class SettingsWindow : public Gtk::Window
+class EditWindow : public Gtk::Window
 {
 public:
-  SettingsWindow(Gtk::Window& parent);
-  virtual ~SettingsWindow();
+  EditWindow(Gtk::Window& parent);
+  virtual ~EditWindow();
 
   void Show();
   //void SetDispatcher(SignalDispatcher& signalDispatcher); Could be useful?
@@ -60,7 +60,7 @@ protected:
 
 private:
   BottleItem* activeBottle; /*!< Current active bottle */
-
+  
   // Private methods
 
 };

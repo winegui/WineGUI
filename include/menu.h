@@ -34,8 +34,8 @@ public:
   sigc::signal<void> signal_refresh; /*!< on refresh button clicked signal */
   sigc::signal<void> signal_new_machine; /*!< on new button clicked signal */
   sigc::signal<void> signal_run; /*!< on new new button clicked signal */
+  sigc::signal<void> signal_edit_machine; /*!< on edit button clicked signal */
   sigc::signal<void> signal_settings_machine; /*!< on settings button clicked signal */
-  sigc::signal<void> signal_manage_machine; /*!< on manage button clicked signal */
   sigc::signal<void> signal_remove_machine; /*!< on remove button clicked signal */
   sigc::signal<void> signal_show_about; /*!< on about button clicked signal */
 

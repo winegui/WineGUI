@@ -45,7 +45,7 @@ MainWindow::MainWindow(Menu& menu)
   try {
     set_icon_from_file(IMAGE_LOCATION "logo.png");
   }
-  catch(Glib::FileError& e) {
+  catch (Glib::FileError& e) {
     std::cout << "Catched " << e.what() << std::endl;
   }
 
@@ -71,8 +71,6 @@ MainWindow::MainWindow(Menu& menu)
   run_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_run_button_clicked));
 
-  manage_button.signal_clicked().connect(sigc::mem_fun(*this,
-    &MainWindow::on_not_implemented));
   reboot_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_not_implemented));// TODO: Really handy at all?
 
@@ -93,6 +91,7 @@ MainWindow::~MainWindow() {
  */
 void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
 {
+  edit_button.signal_clicked().connect(signalDispatcher.signal_show_edit_window);
   settings_button.signal_clicked().connect(signalDispatcher.signal_show_settings_window);
 
   listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
@@ -139,6 +138,9 @@ void MainWindow::SetWineBottles(std::list<BottleItem>& bottles)
  */
 void MainWindow::SetDetailedInfo(BottleItem& bottle)
 {
+  if (!bottle.is_selected())
+    this->listbox.select_row(bottle);
+
   // Set right side of the GUI
   name.set_text(bottle.name());
   Glib::ustring windows = BottleTypes::toString(bottle.windows());
@@ -178,7 +180,7 @@ bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
   dialog.set_modal(true);
   int result = dialog.run();
   bool return_value = false;
-  if(result == Gtk::RESPONSE_YES)
+  if (result == Gtk::RESPONSE_YES)
   {
     return_value = true;
   }
@@ -242,11 +244,11 @@ void MainWindow::on_run_button_clicked()
       std::transform(ext.begin(), ext.end(), ext.begin(), 
         [](unsigned char c){ return std::tolower(c); }
       );
-      if(ext == "exe")
+      if (ext == "exe")
       {
         runProgram.emit(filename, false);
       }
-      else if(ext == "msi")
+      else if (ext == "msi")
       {
         // Run as MSI (true=MSI)
         runProgram.emit(filename, true);
@@ -300,9 +302,10 @@ void MainWindow::on_not_implemented()
  */
 void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 {
-  if(row != nullptr) {
+  if (row != nullptr) {
     SetDetailedInfo(*(BottleItem*)row);
-    // Inform Bottle Manager
+    // Signal activate Bottle with current BottleItem as parameter to the dispatcher
+    // Which updates the connected modules accordingly.
     activeBottle.emit((BottleItem*)row);
   }
 }
@@ -359,22 +362,22 @@ void MainWindow::CreateRightPanel()
   toolbar.insert(new_button, 0);
 
   Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
-  run_image->set_from_icon_name("system-run", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  run_image->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   run_button.set_label("Run Program...");
   run_button.set_icon_widget(*run_image);
   toolbar.insert(run_button, 1);
 
-  Gtk::Image* settings_image = Gtk::manage(new Gtk::Image());
-  settings_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  settings_button.set_label("Settings");
-  settings_button.set_icon_widget(*settings_image);
-  toolbar.insert(settings_button, 2);
+  Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
+  edit_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  edit_button.set_label("Edit");
+  edit_button.set_icon_widget(*edit_image);
+  toolbar.insert(edit_button, 2);
 
   Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
-  manage_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  manage_button.set_label("Manage");
-  manage_button.set_icon_widget(*manage_image);
-  toolbar.insert(manage_button, 3);
+  manage_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  settings_button.set_label("Settings");
+  settings_button.set_icon_widget(*manage_image);
+  toolbar.insert(settings_button, 3);
 
   Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
   reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));

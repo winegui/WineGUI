@@ -18,14 +18,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "settings_window.h"
+#include "edit_window.h"
 #include "bottle_item.h"
 
 /**
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-SettingsWindow::SettingsWindow(Gtk::Window& parent)
+EditWindow::EditWindow(Gtk::Window& parent)
 :
   edit_button("Edit Configuration"),
   delete_button("Delete Machine"),
@@ -81,16 +81,16 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
 /**
  * \brief Destructor
  */
-SettingsWindow::~SettingsWindow() {}
+EditWindow::~EditWindow() {}
 
 /**
  * \brief Same as show() but will also update the Window title
  */
-void SettingsWindow::Show() {
+void EditWindow::Show() {
   if (activeBottle != nullptr)
-    set_title("Settings of machine - " + activeBottle->name());
+    set_title("Edit Machine - " + activeBottle->name());
   else
-    set_title("Settings for machine (Unknown machine)");
+    set_title("Edit Machine (Unknown machine)");
   // Call parent show
   Gtk::Widget::show();
 }
@@ -99,7 +99,7 @@ void SettingsWindow::Show() {
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void SettingsWindow::SetActiveBottle(BottleItem* bottle)
+void EditWindow::SetActiveBottle(BottleItem* bottle)
 {
   this->activeBottle = bottle;
 }
@@ -107,7 +107,7 @@ void SettingsWindow::SetActiveBottle(BottleItem* bottle)
 /**
  * \brief Signal handler for resetting the active bottle to null
  */
-void SettingsWindow::ResetActiveBottle()
+void EditWindow::ResetActiveBottle()
 {
   this->activeBottle = nullptr;
 }

@@ -93,8 +93,8 @@ protected:
   // Toolbar buttons
   Gtk::ToolButton new_button; /*!< New toolbar button */
   Gtk::ToolButton run_button; /*!< Run... toolbar button */
+  Gtk::ToolButton edit_button; /*!< Edit toolbar button */
   Gtk::ToolButton settings_button; /*!< Settings toolbar button */
-  Gtk::ToolButton manage_button; /*!< Manage toolbar button */
   Gtk::ToolButton reboot_button; /*!< Reboot toolbar button */
 
 private:

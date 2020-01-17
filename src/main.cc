@@ -23,11 +23,15 @@
 #include "menu.h"
 #include "bottle_manager.h"
 #include "about_dialog.h"
+#include "edit_window.h"
 #include "settings_window.h"
 #include "signal_dispatcher.h"
 
 #include <gtkmm/application.h>
 #include <iostream>
+
+// Prototype
+static MainWindow& setupApplication();
 
 /**
  * \brief The beginning, start the main loop
@@ -51,25 +55,31 @@ int main(int argc, char *argv[])
   else
   {
     auto app = Gtk::Application::create("org.melroy.winegui");
-    // Constructing the top level objects:
-    Menu menu;
-    MainWindow mainWindow(menu);
-    PreferencesWindow preferencesWindow(mainWindow);
-    SettingsWindow settingsWindow(mainWindow);
-    AboutDialog about(mainWindow);
-    BottleManager bottleManager(mainWindow);
-    SignalDispatcher signalDispatcher(bottleManager, menu, preferencesWindow, about, settingsWindow);
-
-    mainWindow.SetDispatcher(signalDispatcher);
-    signalDispatcher.SetMainWindow(&mainWindow);
-    // Do all the signal connections of the life time of the app
-    signalDispatcher.DispatchSignals();
-
-    // Call the Bottle Manager prepare method,
-    // it will prepare Winetricks & retrieve Wine Bottles
-    bottleManager.Prepare();
-
+    // Setup
+    MainWindow& mainWindow = setupApplication();
     // Start main loop of GTK
     return app->run(mainWindow, argc, argv);
   }
+}
+
+static MainWindow& setupApplication() {
+  // Constructing the top level objects:
+  static Menu menu;
+  static MainWindow mainWindow(menu);
+  static PreferencesWindow preferencesWindow(mainWindow);
+  static AboutDialog about(mainWindow);
+  static EditWindow editWindow(mainWindow);
+  static SettingsWindow settingsWindow(mainWindow);
+  static BottleManager manager(mainWindow);
+  static SignalDispatcher signalDispatcher(manager, menu, preferencesWindow, about, editWindow, settingsWindow);
+
+  mainWindow.SetDispatcher(signalDispatcher);
+  signalDispatcher.SetMainWindow(&mainWindow);
+  // Do all the signal connections of the life time of the app
+  signalDispatcher.DispatchSignals();
+
+  // Call the Bottle Manager prepare method,
+  // it will prepare Winetricks & retrieve Wine Bottles
+  manager.Prepare();
+  return mainWindow;
 }
