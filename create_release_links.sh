@@ -13,12 +13,12 @@ gitlab_url="https://gitlab.melroy.org"
 webpage_prefix="https://winegui.melroy.org/downloads"
 
 if [ -z ${PRIVATE_TOKEN} ]; then
-    echo "ERROR: Private_token env. variable is not yet! Exit"
+    echo "ERROR: Private_token env. variable is not set! Exit"
     exit 1
 fi
 
 if [ -z ${APP_VERSION} ]; then
-    echo "ERROR: App_version env. variable is not yet! Exit"
+    echo "ERROR: App_version env. variable is not set! Exit"
     exit 1
 fi
 
