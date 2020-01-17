@@ -35,7 +35,6 @@ publish:
   only:
     - master
   script:
-    - export SSHPASS=$USER_PASS
     - export APP_VERSION=`./build/bin/winegui --version`
     - echo "WineGUI version: $APP_VERSION"
     - ./release.sh
