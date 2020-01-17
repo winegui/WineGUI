@@ -1,13 +1,19 @@
 stages:
+  - test
   - build
   - publish
-#  - test
+
+static_code_analysis:
+  stage: test
+  tags:
+    - gtk
+  script: cppcheck --enable=all --error-exitcode=1 ./src/
 
 build:
   stage: build
-  script: ./build_prod.sh
   tags:
     - gtk
+  script: ./build_prod.sh
   artifacts:
     name: "Packages + Documentation"
     expire_in: 1 week
@@ -21,8 +27,6 @@ build:
       paths:
         - build/bin
       policy: push
-
-# TODO: Add static analysis check: cppcheck --enable=all --error-exitcode=1 ./src/
 
 publish:
   stage: publish
@@ -42,7 +46,7 @@ publish:
         - build/bin
       policy: pull
 
-#test:
+#unit_test:
 #  stage: test
 #  script: ./build/bin/runTests
 #  tags:
