@@ -25,10 +25,10 @@ Development has been done in Visual Studio Code editor, using the following exte
 
 Dependencies should be met before build:
 
-* gcc/g++ (v8.3 or later)
-* cmake (v3.13 or later)
+* gcc/g++ (adviced: v7.3 or later)
+* cmake (adviced: v3.10 or later)
 * ninja-build
-* libgtkmm-3.0-dev (implicit dependency with libgtk-3-dev obviously)
+* libgtkmm-3.0-dev (implicit dependency with libgtk-3-dev)
 * pkg-config
 
 Optionally:
