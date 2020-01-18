@@ -52,8 +52,9 @@ protected:
   Gtk::Toolbar second_toolbar;
 
   // Buttons first row
-  Gtk::ToolButton edit_button; /*!< edit button */
-  Gtk::ToolButton delete_button; /*!< delete button */
+  Gtk::ToolButton install_directx; /*!< DirectX button */
+  Gtk::ToolButton install_vulkan; /*!< Vulkan support button */
+  Gtk::ToolButton install_dotnet; /*!< .NET button */
   
   // Buttons second row
   Gtk::ToolButton wine_config_button; /*!< Winecfg button */

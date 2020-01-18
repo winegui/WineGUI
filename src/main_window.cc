@@ -70,6 +70,8 @@ MainWindow::MainWindow(Menu& menu)
     &MainWindow::on_new_bottle_apply));
   run_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_run_button_clicked));
+  open_c_driver_button.signal_clicked().connect(sigc::mem_fun(*this,
+    &MainWindow::on_not_implemented));
 
   reboot_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_not_implemented));// TODO: Really handy at all?
@@ -356,23 +358,29 @@ void MainWindow::CreateRightPanel()
   run_button.set_icon_widget(*run_image);
   toolbar.insert(run_button, 1);
 
+  Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
+  open_c_drive_image->set_from_icon_name("drive-harddisk", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  open_c_driver_button.set_label("Open C: Drive");
+  open_c_driver_button.set_icon_widget(*open_c_drive_image);
+  toolbar.insert(open_c_driver_button, 2);
+
   Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
   edit_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   edit_button.set_label("Edit");
   edit_button.set_icon_widget(*edit_image);
-  toolbar.insert(edit_button, 2);
+  toolbar.insert(edit_button, 3);
 
   Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
   manage_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   settings_button.set_label("Settings");
   settings_button.set_icon_widget(*manage_image);
-  toolbar.insert(settings_button, 3);
+  toolbar.insert(settings_button, 4);
 
   Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
   reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   reboot_button.set_label("Reboot");
   reboot_button.set_icon_widget(*reboot_image);
-  toolbar.insert(reboot_button, 4);
+  toolbar.insert(reboot_button, 5);
 
   // Add toolbar to right box
   right_box.add(toolbar);

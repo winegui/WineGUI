@@ -27,8 +27,9 @@
  */
 SettingsWindow::SettingsWindow(Gtk::Window& parent)
 :
-  edit_button("Edit Configuration"),
-  delete_button("Delete Machine"),
+  install_directx("Install DirectX v9"),
+  install_vulkan("Install Vulkan"),
+  install_dotnet("Install .NET v4.0"),
   wine_config_button("WineCfg"),
   activeBottle(nullptr)
 {
@@ -44,9 +45,9 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   settings_grid.set_column_spacing(8);
   settings_grid.set_row_spacing(12);
 
-  first_row_label.set_text("WineGUI Settings");
+  first_row_label.set_text("Install additional packages");
   first_row_label.set_xalign(0);
-  second_row_label.set_text("Other Tools Settings");
+  second_row_label.set_text("Other Tools");
   second_row_label.set_xalign(0);
 
   first_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
@@ -61,19 +62,26 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   settings_grid.attach(second_row_label, 0, 2, 1, 1);
   settings_grid.attach(second_toolbar, 0, 3, 1, 1);
 
-  // First row with buttons
-  Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
-  edit_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  edit_button.set_icon_widget(*edit_image);
-  first_toolbar.insert(edit_button, 0);
+  // First row buttons
+  Gtk::Image* directx_image = Gtk::manage(new Gtk::Image());
+  directx_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  install_directx.set_icon_widget(*directx_image);
+  first_toolbar.insert(install_directx, 0);
 
-  Gtk::Image* delete_image = Gtk::manage(new Gtk::Image());
-  delete_image->set_from_icon_name("edit-delete", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  delete_button.set_icon_widget(*delete_image);
-  delete_button.set_border_width(2);
-  first_toolbar.insert(delete_button, 1);
+  Gtk::Image* vulkan_image = Gtk::manage(new Gtk::Image());
+  vulkan_image->set_from_icon_name("edit-delete", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  install_vulkan.set_icon_widget(*vulkan_image);
+  first_toolbar.insert(install_vulkan, 1);
 
-  // Second row with buttons
+  Gtk::Image* dotnet_image = Gtk::manage(new Gtk::Image());
+  dotnet_image->set_from_icon_name("edit-delete", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  install_dotnet.set_icon_widget(*dotnet_image);
+  first_toolbar.insert(install_dotnet, 1);
+
+  // Second row buttons
+  Gtk::Image* winecfg_image = Gtk::manage(new Gtk::Image());
+  winecfg_image->set_from_icon_name("edit-delete", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  wine_config_button.set_icon_widget(*winecfg_image);
   second_toolbar.insert(wine_config_button, 0);
 
   show_all_children();
