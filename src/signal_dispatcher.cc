@@ -28,6 +28,7 @@
 #include "about_dialog.h"
 #include "edit_window.h"
 #include "settings_window.h"
+#include "helper.h"
 
 /**
  * \brief Signal Dispatcher Constructor
@@ -101,6 +102,12 @@ void SignalDispatcher::DispatchSignals()
   mainWindow->runProgram.connect(sigc::mem_fun(manager, &BottleManager::RunProgram));
   m_FinishDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
   m_ErrorMessageDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message));
+
+  Helper* helper = Helper::getInstance();
+  // Using Dispatcher instead of signal, will result in that the message box runs in the main thread.
+  if (helper != NULL) {
+    helper->failureOnExec.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_exec_failure));
+  }
 }
 
 /**

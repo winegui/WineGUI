@@ -22,11 +22,14 @@
 
 #include <gtkmm.h>
 #include <list>
+#include <iostream>
 #include "menu.h"
 #include "bottle_item.h"
 #include "new_bottle_assistant.h"
 
 using std::string;
+using std::cout;
+using std::endl;
 
 #if defined(PRODUCTION)
   #define IMAGE_LOCATION "/usr/share/winegui/images/" /*!< Image location */
@@ -64,6 +67,7 @@ public:
   virtual void on_run_button_clicked();
   virtual void on_hide_window();
   virtual void on_not_implemented(); // Shall be removed later!
+  virtual void on_exec_failure();
 
 protected:
   // Child widgets

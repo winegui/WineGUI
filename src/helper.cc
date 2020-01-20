@@ -94,6 +94,17 @@ static const struct
   {BottleTypes::Windows::Windows20,     "2.0",  "0",     ""}
 };
 
+// Singleton
+Helper* Helper::helper = 0;
+
+Helper* Helper::getInstance() {
+  if (helper == 0)
+  {
+    helper = new Helper();
+  }
+  return helper;
+}
+
 /****************************************************************************
  *  Public methods                                                          *
  ****************************************************************************/
@@ -131,8 +142,8 @@ void Helper::RunProgram(string prefix_path, string program, bool is_msi_file)
   if (is_msi_file) {
     msi = " msiexec /i";
   }
-  // Ignore result of Exec()
-  Exec(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + WINE_EXECUTABLE + " " + program).c_str());
+  // Execute the command and show the user a message when exit code is non-zero
+  WineExec(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + WINE_EXECUTABLE + " " + program).c_str());
 }
 
 /**
@@ -724,9 +735,10 @@ string Helper::GetWinetricksLocation()
 string Helper::Exec(const char* cmd) {
   // Max 128 characters
   std::array<char, 128> buffer;
-  string result;
-  // Execute command using popen
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+  string result = "";
+  
+  // Execute command using popen  
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), &pclose);
   if (!pipe) {
     throw std::runtime_error("popen() failed!");
   }
@@ -734,6 +746,45 @@ string Helper::Exec(const char* cmd) {
     result += buffer.data();
   }
   return result;
+}
+
+/**
+ * \brief Execute command on terminal. Return output.
+ * \param[in] cmd The command to be executed
+ * \param[in] enableTracing Enable debugging tracing to log file
+ * \return Terminal stdout
+ */
+void Helper::WineExec(const char* cmd, bool enableTracing) {
+  // Max 128 characters
+  std::array<char, 128> buffer;
+  string result = "";
+
+  // Execute command using popen
+  // Use a custom delete method (CloseFile)
+  std::unique_ptr<FILE, decltype(&CloseFile)> pipe(popen(cmd, "r"), &CloseFile);
+  if (!pipe) {
+    throw std::runtime_error("popen() failed!");
+  }
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    result += buffer.data();
+  }
+  
+  if (enableTracing) {
+    // TODO: Dump result to log file.
+  }
+}
+
+int Helper::CloseFile(std::FILE* file) {
+  if (file) {
+    if (std::fclose(file) != 0) {
+      // Dispatcher will run the connected slot in the main loop,
+      // instead of the same context/thread in case of a signal.emit() call.
+      // This is needed because the CloseFile is called in a different context then usual!
+      // Signal error message to the user:
+      helper->failureOnExec();
+    }
+  }
+  return 0; // Just always return OK
 }
 
 /**

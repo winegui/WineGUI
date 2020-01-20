@@ -21,7 +21,6 @@
 #include "main_window.h"
 
 #include "signal_dispatcher.h"
-#include <iostream>
 #include <locale>
 
 /************************
@@ -46,7 +45,7 @@ MainWindow::MainWindow(Menu& menu)
     set_icon_from_file(IMAGE_LOCATION "logo.png");
   }
   catch (Glib::FileError& e) {
-    std::cout << "Catched " << e.what() << std::endl;
+    cout << "Catched " << e.what() << endl;
   }
 
   // Add menu to box (top), no expand/fill
@@ -278,11 +277,21 @@ void MainWindow::on_hide_window()
 void MainWindow::on_not_implemented()
 {
   Gtk::MessageDialog dialog(*this, "This feature is not yet implemented. Sorry :\\", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
-  dialog.set_title("An error has occurred!");
+  dialog.set_title("Not implemented!");
   dialog.set_modal(false);
   dialog.run();
 }
 
+/**
+ * \brief Not implemented feature
+ */
+void MainWindow::on_exec_failure()
+{
+  Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+  dialog.set_title("An error has occurred during Wine application execution!");
+  dialog.set_modal(false);
+  dialog.run();
+}
 
 /************************
  * Private methods      *

@@ -20,10 +20,12 @@
  */
 #pragma once
 
+#include <gtkmm.h>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <map>
+
 #include "bottle_types.h"
 
 using std::string;
@@ -37,6 +39,12 @@ using std::endl;
 class Helper
 {
 public:
+  // Signals
+  Glib::Dispatcher failureOnExec; /*!< Dispatch signal (thus in main thread) when exit code was non-zero */
+  
+  // Singleton
+  static Helper* getInstance();
+
   static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
   static void RunProgram(string prefix_path, string program, bool is_msi_file);
   static string GetWineVersion();
@@ -63,7 +71,11 @@ public:
   static void SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver);
   static string GetWinetricksLocation();
 private:
+  static Helper* helper; /*< Singleton class storage */
+
   static string Exec(const char* cmd);
+  static void WineExec(const char* cmd, bool enableTracing = false);
+  static int CloseFile(std::FILE* file);
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
   static string GetRegMetaData(const string& filename, const string& metaValueName);
   static string getBottleDirFromPrefix(const string& prefix_path);

@@ -300,15 +300,15 @@ const Glib::ustring& BottleManager::GetErrorMessage()
 /**
  * \brief Run a program in Wine (using the active selected bottle)
  * \param[in] filename - Filename location of the program, selected by user
- * \param[in] is_msi_file - Is the program you try to run a Windows Installer (MSI)?
+ * \param[in] is_msi_file - Is the program you try to run a Windows Installer (MSI)? False is EXE.
  */
-void BottleManager::RunProgram(string filename, bool is_msi_file)
+void BottleManager::RunProgram(string filename, bool is_msi_file = false)
 {
   // Check if there is an active bottle set
   if (activeBottle != nullptr)
   {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgram, wine_prefix, filename, is_msi_file); // false = EXE
+    std::thread t(&Helper::RunProgram, wine_prefix, filename, is_msi_file);
     t.detach(); 
   }
   else
