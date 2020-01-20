@@ -57,9 +57,14 @@ public:
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio);
   void DeleteBottle();
-  const Glib::ustring& GetErrorMessage();
-  void RunProgram(string filename, bool is_msi_file);
   void SetActiveBottle(BottleItem* bottle);
+  const Glib::ustring& GetErrorMessage();
+
+  void RunProgram(string filename, bool is_msi_file);
+  void OpenDriveC();
+  void Reboot();
+  void Update();
+  void KillProcesses();
 private:
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;
@@ -72,6 +77,7 @@ private:
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
   Glib::ustring m_error_message;
 
+  bool isBottleNotNull();
   string GetWineVersion();
   std::map<string, unsigned long> GetBottlePaths();
   std::list<BottleItem> CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs);

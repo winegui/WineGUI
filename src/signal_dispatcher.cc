@@ -77,12 +77,14 @@ void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
  */
 void SignalDispatcher::DispatchSignals()
 {
+  // Menu signals
   menu.signal_preferences.connect(sigc::mem_fun(preferencesWindow, &PreferencesWindow::show));
   menu.signal_quit.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
   menu.signal_show_about.connect(sigc::mem_fun(about, &AboutDialog::show));
   menu.signal_refresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
   menu.signal_new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
   menu.signal_run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
+  menu.signal_open_drive_c.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
   menu.signal_edit_machine.connect(sigc::mem_fun(editWindow, &EditWindow::show));
   menu.signal_settings_machine.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
   menu.signal_remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
@@ -97,12 +99,20 @@ void SignalDispatcher::DispatchSignals()
   // Distribute the reset bottle signal
   manager.resetActiveBottle.connect(sigc::mem_fun(editWindow, &EditWindow::ResetActiveBottle));
   manager.resetActiveBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::ResetActiveBottle));
+  manager.resetActiveBottle.connect(sigc::mem_fun(*mainWindow, &MainWindow::ResetDetailedInfo));
 
   mainWindow->newBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
   mainWindow->runProgram.connect(sigc::mem_fun(manager, &BottleManager::RunProgram));
+  mainWindow->openDriveC.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
+  mainWindow->rebootBottle.connect(sigc::mem_fun(manager, &BottleManager::Reboot));
+  mainWindow->updateBottle.connect(sigc::mem_fun(manager, &BottleManager::Update));
+  mainWindow->killRunningProcesses.connect(sigc::mem_fun(manager, &BottleManager::KillProcesses));
+
+  // When bottle created, the finish (or error message) event is called
   m_FinishDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
   m_ErrorMessageDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message));
 
+  // When the WineExec() results into a non-zero exit code the failureOnExec it triggered
   Helper* helper = Helper::getInstance();
   // Using Dispatcher instead of signal, will result in that the message box runs in the main thread.
   if (helper != NULL) {

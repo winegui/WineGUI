@@ -62,6 +62,9 @@ MainWindow::MainWindow(Menu& menu)
   // Using a Vertical box container
   add(vbox);
 
+  // Reset the right panel to default values
+  this->ResetDetailedInfo();
+
   // Right panel menu signals
   new_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_new_bottle_button_clicked));
@@ -69,11 +72,11 @@ MainWindow::MainWindow(Menu& menu)
     &MainWindow::on_new_bottle_apply));
   run_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_run_button_clicked));
-  open_c_driver_button.signal_clicked().connect(sigc::mem_fun(*this,
-    &MainWindow::on_not_implemented));
+  open_c_driver_button.signal_clicked().connect(openDriveC);
 
-  reboot_button.signal_clicked().connect(sigc::mem_fun(*this,
-    &MainWindow::on_not_implemented));// TODO: Really handy at all?
+  reboot_button.signal_clicked().connect(rebootBottle);// TODO: execute wineboot -r
+  update_button.signal_clicked().connect(updateBottle);// TODO: execute wineboot -u
+  kill_processes_button.signal_clicked().connect(killRunningProcesses);// TODO: execute wineboot -k
 
   // Show the widget children
   show_all_children();
@@ -142,6 +145,21 @@ void MainWindow::SetDetailedInfo(BottleItem& bottle)
   wine_last_changed.set_text(bottle.wine_last_changed());
   audio_driver.set_text(BottleTypes::toString(bottle.audio_driver()));
   virtual_desktop.set_text(bottle.virtual_desktop());
+}
+
+/**
+ * \brief Reset the detailed info panel
+ */
+void MainWindow::ResetDetailedInfo()
+{
+  name.set_text("-");
+  window_version.set_text("");
+  wine_version.set_text("v?");
+  wine_location.set_text("");
+  c_drive_location.set_text("");
+  wine_last_changed.set_text("");
+  audio_driver.set_text("");
+  virtual_desktop.set_text("");
 }
 
 /**
@@ -274,17 +292,6 @@ void MainWindow::on_hide_window()
 /**
  * \brief Not implemented feature
  */
-void MainWindow::on_not_implemented()
-{
-  Gtk::MessageDialog dialog(*this, "This feature is not yet implemented. Sorry :\\", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
-  dialog.set_title("Not implemented!");
-  dialog.set_modal(false);
-  dialog.run();
-}
-
-/**
- * \brief Not implemented feature
- */
 void MainWindow::on_exec_failure()
 {
   Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
@@ -358,24 +365,28 @@ void MainWindow::CreateRightPanel()
   Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
   new_image->set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   new_button.set_label("New");
+  new_button.set_tooltip_text("Create a new machine!");
   new_button.set_icon_widget(*new_image);
   toolbar.insert(new_button, 0);
 
   Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
   run_image->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   run_button.set_label("Run Program...");
+  run_button.set_tooltip_text("Run exe or msi in Wine Machine");
   run_button.set_icon_widget(*run_image);
   toolbar.insert(run_button, 1);
 
   Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
   open_c_drive_image->set_from_icon_name("drive-harddisk", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   open_c_driver_button.set_label("Open C: Drive");
+  open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
   open_c_driver_button.set_icon_widget(*open_c_drive_image);
   toolbar.insert(open_c_driver_button, 2);
 
   Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
   edit_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   edit_button.set_label("Edit");
+  edit_button.set_tooltip_text("Edit Wine Machine");
   edit_button.set_icon_widget(*edit_image);
   toolbar.insert(edit_button, 3);
 
@@ -388,8 +399,23 @@ void MainWindow::CreateRightPanel()
   Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
   reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   reboot_button.set_label("Reboot");
+  reboot_button.set_tooltip_text("Reboot the Wine Machine");
   reboot_button.set_icon_widget(*reboot_image);
   toolbar.insert(reboot_button, 5);
+
+  Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
+  update_image->set_from_icon_name("system-software-update", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  update_button.set_label("Update");
+  update_button.set_tooltip_text("Update the Wine Machine");
+  update_button.set_icon_widget(*update_image);
+  toolbar.insert(update_button, 6);
+  
+  Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
+  kill_processes_image->set_from_icon_name("process-stop", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  kill_processes_button.set_label("Kill processes");
+  kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
+  kill_processes_button.set_icon_widget(*kill_processes_image);
+  toolbar.insert(kill_processes_button, 7);
 
   // Add toolbar to right box
   right_box.add(toolbar);

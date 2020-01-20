@@ -51,13 +51,18 @@ public:
   sigc::signal<void, BottleItem*> activeBottle; /*!< Set the active bottle in manager, based on the selected bottle */
   sigc::signal<void, Glib::ustring&, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, BottleTypes::AudioDriver> newBottle; /*!< Create new Wine Bottle Signal */
   sigc::signal<void, string, bool> runProgram; /*!< Run an EXE or MSI application in Wine with provided filename */
-  
+  sigc::signal<void> openDriveC;
+  sigc::signal<void> rebootBottle;
+  sigc::signal<void> updateBottle;
+  sigc::signal<void> killRunningProcesses;
+
   explicit MainWindow(Menu& menu);
   virtual ~MainWindow();
   void SetDispatcher(SignalDispatcher& signalDispatcher);
 
   void SetWineBottles(std::list<BottleItem>& bottles);
   void SetDetailedInfo(BottleItem& bottle);
+  void ResetDetailedInfo();
   void ShowErrorMessage(const Glib::ustring& message);
   bool ShowConfirmDialog(const Glib::ustring& message);
   
@@ -66,7 +71,6 @@ public:
   virtual void on_new_bottle_created();
   virtual void on_run_button_clicked();
   virtual void on_hide_window();
-  virtual void on_not_implemented(); // Shall be removed later!
   virtual void on_exec_failure();
 
 protected:
@@ -100,6 +104,8 @@ protected:
   Gtk::ToolButton edit_button; /*!< Edit toolbar button */
   Gtk::ToolButton settings_button; /*!< Settings toolbar button */
   Gtk::ToolButton reboot_button; /*!< Reboot toolbar button */
+  Gtk::ToolButton update_button; /*!< Update toolbar button */
+  Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
 
 private:
   NewBottleAssistant newBottleAssistant;  /*!< New bottle wizard (behind: new button toolbar) */

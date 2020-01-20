@@ -90,6 +90,10 @@ void NewBottleAssistant::setDefaultValues()
   virtual_desktop_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("960x540");
   loading_bar.set_fraction(0.0);
+
+  if (timer) {
+    timer.disconnect();
+  }
 }
 
 /**
@@ -287,7 +291,7 @@ void NewBottleAssistant::on_assistant_apply()
   }
 
   /* Start a timer to give the user feedback about the changes taking a few seconds to apply. */
-  sigc::connection conn = Glib::signal_timeout().connect(
+  timer = Glib::signal_timeout().connect(
     sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually),
     time_interval);
 }
@@ -348,7 +352,8 @@ void NewBottleAssistant::on_virtual_desktop_toggle()
 }
 
 /**
- * \brief Smooth loading bar
+ * \brief Smooth loading bar and pulse loading bar when
+ * it takes longer than expected
  */
 bool NewBottleAssistant::apply_changes_gradually()
 {
@@ -356,11 +361,12 @@ bool NewBottleAssistant::apply_changes_gradually()
   if (fraction <= 1.0)
   {
     loading_bar.set_fraction(fraction);
-    return true;
   } else {
-    // Say something else to the user
+    loading_bar.set_pulse_step(0.3);
+    loading_bar.pulse();
+    // Say it takes a bit longer
     apply_label.set_text("Almost done creating the new machine...");
-    // Stop timer
-    return false;
   }
+  // Never stop the timer (only when disconnect() is called)
+  return true;
 }

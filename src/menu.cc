@@ -49,8 +49,10 @@ Menu::Menu()
   // Machine submenu
   auto newitem = CreateImageMenuItem("New", "list-add");
   newitem->signal_activate().connect(signal_new_machine);
-  auto run = CreateImageMenuItem("Run...", "system-run");
+  auto run = CreateImageMenuItem("Run...", "media-playback-start");
   run->signal_activate().connect(signal_run);
+  auto open_drive_c = CreateImageMenuItem("Open C: Drive", "drive-harddisk");
+  open_drive_c->signal_activate().connect(signal_open_drive_c);  
   auto edit = CreateImageMenuItem("Edit", "document-edit");
   edit->signal_activate().connect(signal_edit_machine);
   auto settings = CreateImageMenuItem("Settings", "preferences-other");
@@ -77,6 +79,7 @@ Menu::Menu()
   machine_submenu.append(*newitem);
   machine_submenu.append(separator2);
   machine_submenu.append(*run);
+  machine_submenu.append(*open_drive_c);  
   machine_submenu.append(*edit);
   machine_submenu.append(*settings);
   machine_submenu.append(*remove);

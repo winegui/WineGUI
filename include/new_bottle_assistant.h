@@ -61,6 +61,8 @@ private:
   void createSecondPage();
   void createThirdPage();
 
+  sigc::connection timer; /*!< Timer connection */
+
   // Child widgets:
   Gtk::Box m_vbox;
   Gtk::Box m_vbox2;
