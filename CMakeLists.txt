@@ -4,7 +4,7 @@ endif()
 set(PROJECT_NAME WineGUI)
 set(PROJECT_TARGET winegui)
 # Don't forget to update the about_dialog.h VERSION as well
-project(${PROJECT_NAME} VERSION 1.2.0 DESCRIPTION "WineGUI is a user-friendly WINE graphical interface")
+project(${PROJECT_NAME} VERSION 1.3.0 DESCRIPTION "WineGUI is a user-friendly WINE graphical interface")
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message("PROJECT_VERSION = ${PROJECT_VERSION}")
