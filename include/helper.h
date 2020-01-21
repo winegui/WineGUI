@@ -43,7 +43,7 @@ public:
   Glib::Dispatcher failureOnExec; /*!< Dispatch signal (thus in main thread) when exit code was non-zero */
   
   // Singleton
-  static Helper* getInstance();
+  static Helper& getInstance();
 
   static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
   static void RunProgram(string prefix_path, string program, bool is_msi_file);
@@ -71,7 +71,10 @@ public:
   static void SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver);
   static string GetWinetricksLocation();
 private:
-  static Helper* helper; /*< Singleton class storage */
+  Helper();
+  ~Helper();
+  Helper(const Helper&)= delete;
+  Helper& operator=(const Helper&)= delete;
 
   static string Exec(const char* cmd);
   static void WineExec(const char* cmd, bool enableTracing = false);

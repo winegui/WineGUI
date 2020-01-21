@@ -113,11 +113,9 @@ void SignalDispatcher::DispatchSignals()
   m_ErrorMessageDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message));
 
   // When the WineExec() results into a non-zero exit code the failureOnExec it triggered
-  Helper* helper = Helper::getInstance();
+  Helper& helper = Helper::getInstance();
   // Using Dispatcher instead of signal, will result in that the message box runs in the main thread.
-  if (helper != NULL) {
-    helper->failureOnExec.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_exec_failure));
-  }
+  helper.failureOnExec.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_exec_failure));
 }
 
 /**

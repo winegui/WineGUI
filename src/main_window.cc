@@ -399,7 +399,7 @@ void MainWindow::CreateRightPanel()
   Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
   reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   reboot_button.set_label("Reboot");
-  reboot_button.set_tooltip_text("Reboot the Wine Machine");
+  reboot_button.set_tooltip_text("Simulate Machine Reboot");
   reboot_button.set_icon_widget(*reboot_image);
   toolbar.insert(reboot_button, 5);
 

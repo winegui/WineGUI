@@ -94,15 +94,13 @@ static const struct
   {BottleTypes::Windows::Windows20,     "2.0",  "0",     ""}
 };
 
-// Singleton
-Helper* Helper::helper = 0;
+// Meyers Singleton
+Helper::Helper()= default;
+Helper::~Helper()= default;
 
-Helper* Helper::getInstance() {
-  if (helper == 0)
-  {
-    helper = new Helper();
-  }
-  return helper;
+Helper& Helper::getInstance() {
+  static Helper instance;
+  return instance;
 }
 
 /****************************************************************************
@@ -781,7 +779,7 @@ int Helper::CloseFile(std::FILE* file) {
       // instead of the same context/thread in case of a signal.emit() call.
       // This is needed because the CloseFile is called in a different context then usual!
       // Signal error message to the user:
-      helper->failureOnExec();
+      Helper::getInstance().failureOnExec.emit();
     }
   }
   return 0; // Just always return OK
