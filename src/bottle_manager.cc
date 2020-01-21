@@ -44,6 +44,8 @@ BottleManager::BottleManager(MainWindow& mainWindow):
   // TODO: Make it configurable via settings
   std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui", "prefixes"};
   BOTTLE_LOCATION = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
+
+  // TODO: Enable/disable tracing for the RunProgram commands (and make it configurable)
 }
 
 /**
@@ -298,7 +300,7 @@ void BottleManager::RunProgram(string filename, bool is_msi_file = false)
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgram, wine_prefix, filename, is_msi_file);
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, filename, false, is_msi_file);
     t.detach(); 
   }
 }
@@ -324,7 +326,7 @@ void BottleManager::Reboot()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgram, wine_prefix, "wineboot -r", false);
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineboot -r", false, false);
     t.detach(); 
   }
 }
@@ -336,7 +338,7 @@ void BottleManager::Update()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgram, wine_prefix, "wineboot -u", false);
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineboot -u", false, false);
     t.detach(); 
   }
 }
@@ -348,7 +350,32 @@ void BottleManager::KillProcesses()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgram, wine_prefix, "wineboot -k", false);
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineboot -k", false, false);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Open Winecfg tool (expected to be installed)
+ */
+void BottleManager::OpenWinecfg()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();    
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, "winecfg", false, true);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Open Winetricks tool in GUI mode
+ */
+void BottleManager::OpenWinetricks()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    string program = Helper::GetWinetricksLocation() + " --gui";
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, false);
     t.detach(); 
   }
 }

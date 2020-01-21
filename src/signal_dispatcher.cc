@@ -93,9 +93,6 @@ void SignalDispatcher::DispatchSignals()
   menu.menu_settings_machine.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
   menu.menu_remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
 
-  // signal_show_edit_window.connect(sigc::mem_fun(editWindow, &EditWindow::Show));
-  // signal_show_settings_window.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
-
   // Distribute the active bottle signal
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
   mainWindow->activeBottle.connect(sigc::mem_fun(editWindow, &EditWindow::SetActiveBottle));
@@ -129,8 +126,9 @@ void SignalDispatcher::DispatchSignals()
   helper.failureOnExec.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_exec_failure));
 
   // Settings buttons
-  // settingsWindow.directx.connect()
-  // settingsWindow.winetricks.connect()
+  //settingsWindow.directx.connect()
+  settingsWindow.winetricks.connect(sigc::mem_fun(manager, &BottleManager::OpenWinetricks));
+  settingsWindow.winecfg.connect(sigc::mem_fun(manager, &BottleManager::OpenWinecfg));
 }
 
 /**

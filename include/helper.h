@@ -46,7 +46,8 @@ public:
   static Helper& getInstance();
 
   static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
-  static void RunProgram(string prefix_path, string program, bool is_msi_file);
+  static void RunProgramUnderWine(string prefix_path, string program, bool enable_tracing, bool is_msi_file);
+  static void RunProgramWithPrefix(string prefix_path, string program, bool enable_tracing, bool give_error);
   static string GetWineVersion();
   static void CreateWineBottle(const string prefix_path, BottleTypes::Bit bit);
   static void RemoveWineBottle(const string prefix_path);
@@ -77,7 +78,7 @@ private:
   Helper& operator=(const Helper&)= delete;
 
   static string Exec(const char* cmd);
-  static void WineExec(const char* cmd, bool enableTracing = false);
+  static void ExecTracing(const char* cmd, bool enableTracing);
   static int CloseFile(std::FILE* file);
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
   static string GetRegMetaData(const string& filename, const string& metaValueName);

@@ -129,19 +129,45 @@ std::map<std::string, unsigned long> Helper::GetBottlesPaths(const string& dir_p
 }
 
 /**
- * \brief Run program under Wine (run in thread, and dettach it)
- * \param[in] prefix_path - The path to create a Wine bottle from
+ * \brief Run a Windows program under Wine (run in thread, and dettach it)
+ * \param[in] prefix_path - The path to bottle wine
  * \param[in] program - Program/executable that will be executed
- * \param[in] is_msi_file - Is the program a MSI installer, let's instal it (default false)
+ * \param[in] enable_tracing - Enable debugging tracing to file
+ * \param[in] is_msi_file - Is the program a MSI installer, let's instal it
  */
-void Helper::RunProgram(string prefix_path, string program, bool is_msi_file)
+void Helper::RunProgramUnderWine(string prefix_path, string program, bool enable_tracing, bool is_msi_file)
 {
   string msi = "";
   if (is_msi_file) {
     msi = " msiexec /i";
   }
   // Execute the command and show the user a message when exit code is non-zero
-  WineExec(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + WINE_EXECUTABLE + " " + program).c_str());
+  ExecTracing(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + WINE_EXECUTABLE + " " + program).c_str(), enable_tracing);
+}
+
+/**
+ * \brief Run any program with only setting the WINEPREFIX env variable.
+ * \param[in] prefix_path - The path to wine bottle
+ * \param[in] program - Program that gets executed (ideally full path)
+ * \param[in] enable_tracing - Enable debugging tracing to file (give_error should be true as well!)
+ * \param[in] give_error - Inform user when application exit with non-zero exit code
+ */
+void Helper::RunProgramWithPrefix(string prefix_path, string program, bool enable_tracing, bool give_error)
+{
+  bool execTracing = false;
+  if (enable_tracing) {
+    execTracing = true;
+  }
+  if(!give_error) {
+    execTracing = false;
+  }
+  if (execTracing) {
+    // Execute the command and show the user a message when exit code is non-zero
+    ExecTracing(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str(), enable_tracing);
+  } else {
+    // No tracing and no error message when exit code is non-zero
+    Exec(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
+  }
 }
 
 /**
@@ -595,17 +621,6 @@ string Helper::GetWinetricksVersion()
 }
 
 /**
- * \brief Show the Winetricks userinterface
- */
-void Helper::ShowWinetricksGUI(const string prefix_path)
-{
-  if (FileExists(WINETRICKS_EXECUTABLE))
-  {
-    Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " --gui").c_str());  
-  }
-}
-
-/**
  * \brief Set Windows OS version by using Winetricks
  */
 void Helper::SetWindowsVersion(const string prefix_path, BottleTypes::Windows windows)
@@ -718,7 +733,14 @@ void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver a
  */
 string Helper::GetWinetricksLocation()
 {
-  return WINETRICKS_EXECUTABLE;
+  string path = "";
+  if (FileExists(WINETRICKS_EXECUTABLE))
+  {
+    path = WINETRICKS_EXECUTABLE;
+  } else {
+    g_warning("Could not find winetricks executable!");
+  }
+  return path;
 }
 
 /****************************************************************************
@@ -747,12 +769,13 @@ string Helper::Exec(const char* cmd) {
 }
 
 /**
- * \brief Execute command on terminal. Return output.
+ * \brief Execute command on terminal, give user an error went something went wrong.
+ * Also write output to log (if debugging is enabled).
  * \param[in] cmd The command to be executed
- * \param[in] enableTracing Enable debugging tracing to log file
+ * \param[in] enableTracing Enable debugging tracing to log file (default false)
  * \return Terminal stdout
  */
-void Helper::WineExec(const char* cmd, bool enableTracing) {
+void Helper::ExecTracing(const char* cmd, bool enableTracing) {
   // Max 128 characters
   std::array<char, 128> buffer;
   string result = "";

@@ -60,11 +60,14 @@ public:
   void SetActiveBottle(BottleItem* bottle);
   const Glib::ustring& GetErrorMessage();
 
+  // Signal handlers
   void RunProgram(string filename, bool is_msi_file);
   void OpenDriveC();
   void Reboot();
   void Update();
   void KillProcesses();
+  void OpenWinecfg();
+  void OpenWinetricks();
 private:
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;
