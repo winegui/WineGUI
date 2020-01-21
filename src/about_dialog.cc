@@ -36,7 +36,7 @@ AboutDialog::AboutDialog(Gtk::Window& parent) {
   set_logo(logo.get_pixbuf());
   set_authors(authors);
   set_version(VERSION);
-  set_copyright("Copyright © 2019 Melroy van den Berg");
+  set_copyright("Copyright © 2019-2020 Melroy van den Berg");
   set_license_type(Gtk::LICENSE_AGPL_3_0);
 }
 

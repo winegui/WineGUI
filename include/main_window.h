@@ -37,9 +37,6 @@ using std::endl;
   #define IMAGE_LOCATION "../images/" /*!< Image location */
 #endif
 
-// Forward declaration
-class SignalDispatcher;
-
 /**
  * \class MainWindow
  * \brief Main GTK+ Window class
@@ -48,7 +45,10 @@ class MainWindow : public Gtk::Window
 {
 public:
   // Signals
+  sigc::signal<void> finishedNewBottle; /*!< Finished signal */
   sigc::signal<void, BottleItem*> activeBottle; /*!< Set the active bottle in manager, based on the selected bottle */
+  sigc::signal<void> showEditWindow; /*!< show Edit window signal */
+  sigc::signal<void> showSettingsWindow; /*!< show Settings window signal */
   sigc::signal<void, Glib::ustring&, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, BottleTypes::AudioDriver> newBottle; /*!< Create new Wine Bottle Signal */
   sigc::signal<void, string, bool> runProgram; /*!< Run an EXE or MSI application in Wine with provided filename */
   sigc::signal<void> openDriveC;
@@ -56,9 +56,10 @@ public:
   sigc::signal<void> updateBottle;
   sigc::signal<void> killRunningProcesses;
 
+  sigc::signal<bool, GdkEventButton*> rightClickMenu;
+
   explicit MainWindow(Menu& menu);
   virtual ~MainWindow();
-  void SetDispatcher(SignalDispatcher& signalDispatcher);
 
   void SetWineBottles(std::list<BottleItem>& bottles);
   void SetDetailedInfo(BottleItem& bottle);
@@ -66,7 +67,7 @@ public:
   void ShowErrorMessage(const Glib::ustring& message);
   bool ShowConfirmDialog(const Glib::ustring& message);
   
-  // Signal handers
+  // Signal handlers
   virtual void on_new_bottle_button_clicked();
   virtual void on_new_bottle_created();
   virtual void on_run_button_clicked();

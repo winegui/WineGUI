@@ -73,9 +73,8 @@ static MainWindow& setupApplication() {
   static BottleManager manager(mainWindow);
   static SignalDispatcher signalDispatcher(manager, menu, preferencesWindow, about, editWindow, settingsWindow);
 
-  mainWindow.SetDispatcher(signalDispatcher);
   signalDispatcher.SetMainWindow(&mainWindow);
-  // Do all the signal connections of the life time of the app
+  // Do all the signal connections of the life-time of the app
   signalDispatcher.DispatchSignals();
 
   // Call the Bottle Manager prepare method,

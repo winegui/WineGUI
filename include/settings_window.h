@@ -26,7 +26,6 @@ using std::string;
 
 // Forward declaration
 class BottleItem;
-//class SignalDispatcher;
 
 /**
  * \class SettingsWindow
@@ -35,11 +34,16 @@ class BottleItem;
 class SettingsWindow : public Gtk::Window
 {
 public:
+  sigc::signal<void> directx; /*!< Install DirectX signal */
+  sigc::signal<void> vulkan; /*!< Install DXVK signal */
+  sigc::signal<void> dotnet; /*!< Install .NET signal */
+  sigc::signal<void> winecfg; /*!< Open Winecfg signal */
+  sigc::signal<void> winetricks; /*!< Open Winetricks signal */
+
   explicit SettingsWindow(Gtk::Window& parent);
   virtual ~SettingsWindow();
 
   void Show();
-  //void SetDispatcher(SignalDispatcher& signalDispatcher); Could be useful?
   void SetActiveBottle(BottleItem* bottle);
   void ResetActiveBottle();
 protected:
@@ -52,16 +56,14 @@ protected:
   Gtk::Toolbar second_toolbar;
 
   // Buttons first row
-  Gtk::ToolButton install_directx; /*!< DirectX button */
-  Gtk::ToolButton install_vulkan; /*!< Vulkan support button */
-  Gtk::ToolButton install_dotnet; /*!< .NET button */
+  Gtk::ToolButton install_directx; /*!< DirectX install button */
+  Gtk::ToolButton install_vulkan; /*!< DXVK install button */
+  Gtk::ToolButton install_dotnet; /*!< .NET v4.0 install button */
   
   // Buttons second row
   Gtk::ToolButton wine_config_button; /*!< Winecfg button */
+  Gtk::ToolButton winetricks_button; /*!< Winetricks button */
 
 private:
   BottleItem* activeBottle; /*!< Current active bottle */
-
-  // Private methods
-
 };

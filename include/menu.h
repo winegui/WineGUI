@@ -29,16 +29,16 @@
 class Menu: public Gtk::MenuBar
 {
 public:
-  sigc::signal<void> signal_preferences; /*!< preferences button clicked signal */
-  sigc::signal<void> signal_quit; /*!< quite button clicked signal */
-  sigc::signal<void> signal_refresh; /*!< refresh button clicked signal */
-  sigc::signal<void> signal_new_machine; /*!< new machine button clicked signal */
-  sigc::signal<void> signal_run; /*!< run button clicked signal */
-  sigc::signal<void> signal_open_drive_c; /*!< open C: drive clicked signal */
-  sigc::signal<void> signal_edit_machine; /*!< edit button clicked signal */
-  sigc::signal<void> signal_settings_machine; /*!< settings button clicked signal */
-  sigc::signal<void> signal_remove_machine; /*!< remove button clicked signal */
-  sigc::signal<void> signal_show_about; /*!< about button clicked signal */
+  sigc::signal<void> menu_preferences; /*!< preferences button clicked signal */
+  sigc::signal<void> menu_quit; /*!< quite button clicked signal */
+  sigc::signal<void> menu_refresh; /*!< refresh button clicked signal */
+  sigc::signal<void> menu_new_machine; /*!< new machine button clicked signal */
+  sigc::signal<void> menu_run; /*!< run button clicked signal */
+  sigc::signal<void> menu_open_drive_c; /*!< open C: drive clicked signal */
+  sigc::signal<void> menu_edit_machine; /*!< edit button clicked signal */
+  sigc::signal<void> menu_settings_machine; /*!< settings button clicked signal */
+  sigc::signal<void> menu_remove_machine; /*!< remove button clicked signal */
+  sigc::signal<void> menu_show_about; /*!< about button clicked signal */
 
   Menu();
   virtual ~Menu();

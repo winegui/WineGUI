@@ -36,7 +36,6 @@ protected:
   // Child widgets
   Gtk::Box vbox; /*!< The main vertical box */
   Gtk::Label text; /*!< text... */
-
 private:
 
 };

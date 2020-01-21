@@ -65,18 +65,29 @@ MainWindow::MainWindow(Menu& menu)
   // Reset the right panel to default values
   this->ResetDetailedInfo();
 
-  // Right panel menu signals
+  // Left side (listbox)
+
+  listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
+  listbox.signal_button_press_event().connect(rightClickMenu); // TODO: pass the bottle clicked on?
+  
+  // Right panel toolbar menu buttons
+  // New button pressed signal
   new_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_new_bottle_button_clicked));
+  // Apply button signal
   newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this,
     &MainWindow::on_new_bottle_apply));
+  // Finished signal
+  newBottleAssistant.newBottleFinished.connect(finishedNewBottle);
+
+  edit_button.signal_clicked().connect(showEditWindow);
+  settings_button.signal_clicked().connect(showSettingsWindow);
   run_button.signal_clicked().connect(sigc::mem_fun(*this,
     &MainWindow::on_run_button_clicked));
   open_c_driver_button.signal_clicked().connect(openDriveC);
-
-  reboot_button.signal_clicked().connect(rebootBottle);// TODO: execute wineboot -r
-  update_button.signal_clicked().connect(updateBottle);// TODO: execute wineboot -u
-  kill_processes_button.signal_clicked().connect(killRunningProcesses);// TODO: execute wineboot -k
+  reboot_button.signal_clicked().connect(rebootBottle);
+  update_button.signal_clicked().connect(updateBottle);
+  kill_processes_button.signal_clicked().connect(killRunningProcesses);
 
   // Show the widget children
   show_all_children();
@@ -85,26 +96,7 @@ MainWindow::MainWindow(Menu& menu)
 /**
  * \brief Destructor
  */
-MainWindow::~MainWindow() {
-}
-
-/**
- * \brief Helper method for setting the signal dispatcher.
- * To avoid circular dependency in the main
- * \param[in] signalDispatcher - Reference to the Signal Dispatcher class
- */
-void MainWindow::SetDispatcher(SignalDispatcher& signalDispatcher)
-{
-  edit_button.signal_clicked().connect(signalDispatcher.signal_show_edit_window);
-  settings_button.signal_clicked().connect(signalDispatcher.signal_show_settings_window);
-
-  listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
-  // Send listbox (left panel) signal to dispatcher
-  listbox.signal_button_press_event().connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_mouse_button_pressed));
-
-  // Redirect new Bottle Assistant signal to dispatcher
-  newBottleAssistant.newBottleFinished.connect(sigc::mem_fun(signalDispatcher, &SignalDispatcher::on_update_bottles));
-}
+MainWindow::~MainWindow() {}
 
 /**
  * \brief Set a list/vector of bottles to the left panel

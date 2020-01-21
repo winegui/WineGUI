@@ -69,7 +69,11 @@ SignalDispatcher::~SignalDispatcher()
  */
 void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
 {
-  this->mainWindow = mainWindow;
+  if (this->mainWindow == nullptr) {
+    this->mainWindow = mainWindow;
+  } else {
+    g_error("Something really strange is going on with setting the main window!");
+  }
 }
 
 /**
@@ -77,20 +81,20 @@ void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
  */
 void SignalDispatcher::DispatchSignals()
 {
-  // Menu signals
-  menu.signal_preferences.connect(sigc::mem_fun(preferencesWindow, &PreferencesWindow::show));
-  menu.signal_quit.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
-  menu.signal_show_about.connect(sigc::mem_fun(about, &AboutDialog::show));
-  menu.signal_refresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
-  menu.signal_new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
-  menu.signal_run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
-  menu.signal_open_drive_c.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
-  menu.signal_edit_machine.connect(sigc::mem_fun(editWindow, &EditWindow::show));
-  menu.signal_settings_machine.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
-  menu.signal_remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
+  // Menu buttons
+  menu.menu_preferences.connect(sigc::mem_fun(preferencesWindow, &PreferencesWindow::show));
+  menu.menu_quit.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
+  menu.menu_show_about.connect(sigc::mem_fun(about, &AboutDialog::show));
+  menu.menu_refresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
+  menu.menu_new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
+  menu.menu_run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
+  menu.menu_open_drive_c.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
+  menu.menu_edit_machine.connect(sigc::mem_fun(editWindow, &EditWindow::show));
+  menu.menu_settings_machine.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
+  menu.menu_remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
 
-  signal_show_edit_window.connect(sigc::mem_fun(editWindow, &EditWindow::Show));
-  signal_show_settings_window.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
+  // signal_show_edit_window.connect(sigc::mem_fun(editWindow, &EditWindow::Show));
+  // signal_show_settings_window.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
 
   // Distribute the active bottle signal
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
@@ -101,12 +105,19 @@ void SignalDispatcher::DispatchSignals()
   manager.resetActiveBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::ResetActiveBottle));
   manager.resetActiveBottle.connect(sigc::mem_fun(*mainWindow, &MainWindow::ResetDetailedInfo));
 
+  // Menu / Toolbar actions
   mainWindow->newBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
+  mainWindow->finishedNewBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_update_bottles));
+  mainWindow->showEditWindow.connect(sigc::mem_fun(editWindow, &EditWindow::Show));
+  mainWindow->showSettingsWindow.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
   mainWindow->runProgram.connect(sigc::mem_fun(manager, &BottleManager::RunProgram));
   mainWindow->openDriveC.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
   mainWindow->rebootBottle.connect(sigc::mem_fun(manager, &BottleManager::Reboot));
   mainWindow->updateBottle.connect(sigc::mem_fun(manager, &BottleManager::Update));
   mainWindow->killRunningProcesses.connect(sigc::mem_fun(manager, &BottleManager::KillProcesses));
+
+  // Right click menu in listbox
+  mainWindow->rightClickMenu.connect(sigc::mem_fun(this, &SignalDispatcher::on_mouse_button_pressed));
 
   // When bottle created, the finish (or error message) event is called
   m_FinishDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
@@ -116,6 +127,10 @@ void SignalDispatcher::DispatchSignals()
   Helper& helper = Helper::getInstance();
   // Using Dispatcher instead of signal, will result in that the message box runs in the main thread.
   helper.failureOnExec.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_exec_failure));
+
+  // Settings buttons
+  // settingsWindow.directx.connect()
+  // settingsWindow.winetricks.connect()
 }
 
 /**

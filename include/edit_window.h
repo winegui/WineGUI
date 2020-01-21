@@ -26,7 +26,6 @@ using std::string;
 
 // Forward declaration
 class BottleItem;
-//class SignalDispatcher;
 
 /**
  * \class SettingsWindow
@@ -39,7 +38,6 @@ public:
   virtual ~EditWindow();
 
   void Show();
-  //void SetDispatcher(SignalDispatcher& signalDispatcher); Could be useful?
   void SetActiveBottle(BottleItem* bottle);
   void ResetActiveBottle();
 protected:
@@ -60,7 +58,4 @@ protected:
 
 private:
   BottleItem* activeBottle; /*!< Current active bottle */
-  
-  // Private methods
-
 };

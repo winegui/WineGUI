@@ -31,6 +31,7 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   install_vulkan("Install Vulkan"),
   install_dotnet("Install .NET v4.0"),
   wine_config_button("WineCfg"),
+  winetricks_button("Winetricks"),
   activeBottle(nullptr)
 {
   set_transient_for(parent);
@@ -62,27 +63,39 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   settings_grid.attach(second_row_label, 0, 2, 1, 1);
   settings_grid.attach(second_toolbar, 0, 3, 1, 1);
 
-  // First row buttons
+  install_directx.signal_clicked().connect(directx);
+  install_vulkan.signal_clicked().connect(vulkan);
+  install_dotnet.signal_clicked().connect(dotnet);
+  
+  wine_config_button.signal_clicked().connect(winecfg);
+  winetricks_button.signal_clicked().connect(winetricks);
+
+  // First row buttons, 1-button installs
   Gtk::Image* directx_image = Gtk::manage(new Gtk::Image());
-  directx_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  directx_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_directx.set_icon_widget(*directx_image);
   first_toolbar.insert(install_directx, 0);
 
   Gtk::Image* vulkan_image = Gtk::manage(new Gtk::Image());
-  vulkan_image->set_from_icon_name("edit-delete", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  vulkan_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_vulkan.set_icon_widget(*vulkan_image);
   first_toolbar.insert(install_vulkan, 1);
 
   Gtk::Image* dotnet_image = Gtk::manage(new Gtk::Image());
-  dotnet_image->set_from_icon_name("edit-delete", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  dotnet_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_dotnet.set_icon_widget(*dotnet_image);
-  first_toolbar.insert(install_dotnet, 1);
+  first_toolbar.insert(install_dotnet, 2);
 
-  // Second row buttons
+  // Second row buttons/other tools
   Gtk::Image* winecfg_image = Gtk::manage(new Gtk::Image());
-  winecfg_image->set_from_icon_name("edit-delete", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  winecfg_image->set_from_icon_name("applications-system-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   wine_config_button.set_icon_widget(*winecfg_image);
   second_toolbar.insert(wine_config_button, 0);
+
+  Gtk::Image* winetricks_image = Gtk::manage(new Gtk::Image());
+  winetricks_image->set_from_icon_name("preferences-other-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  winetricks_button.set_icon_widget(*winetricks_image);
+  second_toolbar.insert(winetricks_button, 1);
 
   show_all_children();
 }

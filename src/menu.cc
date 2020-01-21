@@ -38,31 +38,31 @@ Menu::Menu()
   // File submenu
   // Using text + image
   auto preferences = CreateImageMenuItem("Preferences", "system-run");
-  preferences->signal_activate().connect(signal_preferences);
+  preferences->signal_activate().connect(menu_preferences);
   auto exit = CreateImageMenuItem("Exit", "application-exit");
-  exit->signal_activate().connect(signal_quit);
+  exit->signal_activate().connect(menu_quit);
   
   // View submenu
   auto refresh = CreateImageMenuItem("Refresh List", "view-refresh");
-  refresh->signal_activate().connect(signal_refresh);
+  refresh->signal_activate().connect(menu_refresh);
 
   // Machine submenu
   auto newitem = CreateImageMenuItem("New", "list-add");
-  newitem->signal_activate().connect(signal_new_machine);
+  newitem->signal_activate().connect(menu_new_machine);
   auto run = CreateImageMenuItem("Run...", "media-playback-start");
-  run->signal_activate().connect(signal_run);
+  run->signal_activate().connect(menu_run);
   auto open_drive_c = CreateImageMenuItem("Open C: Drive", "drive-harddisk");
-  open_drive_c->signal_activate().connect(signal_open_drive_c);  
+  open_drive_c->signal_activate().connect(menu_open_drive_c);  
   auto edit = CreateImageMenuItem("Edit", "document-edit");
-  edit->signal_activate().connect(signal_edit_machine);
+  edit->signal_activate().connect(menu_edit_machine);
   auto settings = CreateImageMenuItem("Settings", "preferences-other");
-  settings->signal_activate().connect(signal_settings_machine);
+  settings->signal_activate().connect(menu_settings_machine);
   auto remove = CreateImageMenuItem("Remove", "edit-delete");
-  remove->signal_activate().connect(signal_remove_machine);
+  remove->signal_activate().connect(menu_remove_machine);
 
   // Help submenu
   auto about = CreateImageMenuItem("About WineGUI...", "help-about");
-  about->signal_activate().connect(signal_show_about);
+  about->signal_activate().connect(menu_show_about);
   // Template for creating a seperate method if addition actions are required:
   //    about->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_help_about));
   
