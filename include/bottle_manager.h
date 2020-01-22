@@ -68,6 +68,9 @@ public:
   void KillProcesses();
   void OpenWinecfg();
   void OpenWinetricks();
+  void InstallD3DX9(Glib::ustring version);
+  void InstallDXVK(Glib::ustring version);
+  void InstallGalliumNine(Glib::ustring version);
 private:
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;

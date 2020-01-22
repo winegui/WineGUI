@@ -34,8 +34,9 @@ class BottleItem;
 class SettingsWindow : public Gtk::Window
 {
 public:
-  sigc::signal<void> directx; /*!< Install DirectX signal */
-  sigc::signal<void> vulkan; /*!< Install DXVK signal */
+  sigc::signal<void> directx9; /*!< Install d3dx9 for Direct3D 9 signal */
+  sigc::signal<void> vulkan; /*!< Install DXVK for Direct3D 9/10/11 using Vulkan signal */
+  sigc::signal<void> gallium_directx9; /*!< Install Gallium Nine signal */
   sigc::signal<void> dotnet; /*!< Install .NET signal */
   sigc::signal<void> winecfg; /*!< Open Winecfg signal */
   sigc::signal<void> winetricks; /*!< Open Winetricks signal */
@@ -50,17 +51,24 @@ protected:
   // Child widgets
   Gtk::Grid settings_grid;
   
-  Gtk::Label first_row_label;
-  Gtk::Label second_row_label;
   Gtk::Toolbar first_toolbar;
   Gtk::Toolbar second_toolbar;
+  Gtk::Toolbar third_toolbar;
+  
+  Gtk::Label first_row_label;
+  Gtk::Label hint_label;  
+  Gtk::Label second_row_label;
+  Gtk::Label third_row_label;
 
-  // Buttons first row
-  Gtk::ToolButton install_directx; /*!< DirectX install button */
-  Gtk::ToolButton install_vulkan; /*!< DXVK install button */
+  // Buttons First row (Gaming)
+  Gtk::ToolButton install_d3dx9; /*!< d3dx9 install button */
+  Gtk::ToolButton install_dxvk; /*!< DXVK install button */
+  Gtk::ToolButton install_gallium_nine; /*!< Gallium Nine install button */
+
+  // Buttons Second row
   Gtk::ToolButton install_dotnet; /*!< .NET v4.0 install button */
   
-  // Buttons second row
+  // Buttons Third row (other tools)
   Gtk::ToolButton wine_config_button; /*!< Winecfg button */
   Gtk::ToolButton winetricks_button; /*!< Winetricks button */
 

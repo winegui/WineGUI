@@ -126,7 +126,9 @@ void SignalDispatcher::DispatchSignals()
   helper.failureOnExec.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_exec_failure));
 
   // Settings buttons
-  //settingsWindow.directx.connect()
+  settingsWindow.directx9.connect(sigc::bind<Glib::ustring>(sigc::mem_fun(manager, &BottleManager::InstallD3DX9), ""));
+  settingsWindow.vulkan.connect(sigc::bind<Glib::ustring>(sigc::mem_fun(manager, &BottleManager::InstallDXVK), "latest"));
+  settingsWindow.gallium_directx9.connect(sigc::bind<Glib::ustring>(sigc::mem_fun(manager, &BottleManager::InstallGalliumNine), "latest"));
   settingsWindow.winetricks.connect(sigc::mem_fun(manager, &BottleManager::OpenWinetricks));
   settingsWindow.winecfg.connect(sigc::mem_fun(manager, &BottleManager::OpenWinecfg));
 }

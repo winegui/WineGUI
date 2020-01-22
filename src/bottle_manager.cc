@@ -374,8 +374,63 @@ void BottleManager::OpenWinetricks()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    string program = Helper::GetWinetricksLocation() + " --gui";
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, false);
+    Glib::ustring program = Helper::GetWinetricksLocation() + " --gui";
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Install D3DX9 (DirectX 9)
+ * \param[in] version Version of additional DirectX 9 DLLs, eg. 26 (for default use: "")
+ */
+void BottleManager::InstallD3DX9(Glib::ustring version)
+{
+  if (isBottleNotNull()) {
+    Glib::ustring package = "d3dx9";
+    if (version != "") {
+      package += "_" + version;
+    }
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Install DXVK (Vulkan based DirectX 9/10/11)
+ * Note: initially only Direct3D 10 & 11 was supported by DXVK.
+ * \param[in] version Version of DXVK, eg. 151 (for default use: "latest")
+ */
+void BottleManager::InstallDXVK(Glib::ustring version)
+{
+  if (isBottleNotNull()) {
+    Glib::ustring package = "dxvk";
+    if (version != "latest") {
+      package += version;
+    }
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Install Gallium Nine Standalone (DirectX 9)
+ * \param[in] version Version of Gallium Nine, eg. 05 (for default use: "latest")
+ */
+void BottleManager::InstallGalliumNine(Glib::ustring version)
+{
+  if (isBottleNotNull()) {
+    Glib::ustring package = "galliumnine";
+    if (version != "latest") {
+      package += version;
+    }
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
     t.detach(); 
   }
 }
