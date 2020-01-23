@@ -39,7 +39,8 @@ NewBottleAssistant::NewBottleAssistant()
   audiodriver_label("Audio Driver:"),
   virtual_desktop_resolution_label("Window Resolution:"),
   confirm_label("Confirmation page"),
-  virtual_desktop_check("Enable Virtual Desktop Window")
+  virtual_desktop_check("Enable Virtual Desktop Window"),
+  disable_gecko_mono_check("Disable Gecko & Mono")
 {
   set_border_width(8);
   set_default_size(640, 400);
@@ -88,6 +89,7 @@ void NewBottleAssistant::setDefaultValues()
   windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
   audiodriver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
   virtual_desktop_check.set_active(false);
+  disable_gecko_mono_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("960x540");
   loading_bar.set_fraction(0.0);
 
@@ -143,7 +145,7 @@ void NewBottleAssistant::createSecondPage()
   additional_label.set_margin_bottom(25);
   m_vbox2.pack_start(additional_label, false, false);
     
-  // Fill-in Windows versions in combobox
+  // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
   {
     audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::toString(BottleTypes::AudioDriver(i)));
@@ -160,6 +162,8 @@ void NewBottleAssistant::createSecondPage()
   m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_label, false, false);
   m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_entry, false, false);
   m_vbox2.pack_start(m_hbox_virtual_desktop, false, false);
+
+  m_vbox2.pack_start(disable_gecko_mono_check, false, false);
 
   append_page(m_vbox2);
   set_page_complete(m_vbox2, true);
@@ -188,15 +192,18 @@ void NewBottleAssistant::createThirdPage()
 /**
  * \brief Retrieve the results (after the wizard is finished)
  * And reset the values to default values again
- * \param[out] name                        - Bottle Name
- * \param[out] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)
- * \param[out] windows_version             - Windows OS version
- * \param[out] bit                         - Windows Bit (32/64-bit)
- * \param[out] audio                       - Audio Driver type
+ * Idea: use one struct as in/out parameter
+ * \param[in/out] name                        - Bottle Name
+ * \param[in/out] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)
+ * \param[in/out] disable_gecko_mono          - Enable/Disable Gecko/Mono during install
+ * \param[in/out] windows_version             - Windows OS version
+ * \param[in/out] bit                         - Windows Bit (32/64-bit)
+ * \param[in/out] audio                       - Audio Driver type
  */
 void NewBottleAssistant::GetResult(
   Glib::ustring& name,
   Glib::ustring& virtual_desktop_resolution,
+  bool& disable_gecko_mono,
   BottleTypes::Windows& windows_version,
   BottleTypes::Bit& bit,
   BottleTypes::AudioDriver& audio)
@@ -207,6 +214,7 @@ void NewBottleAssistant::GetResult(
   audio = BottleTypes::AudioDriver::pulseaudio;
 
   name = name_entry.get_text();
+
   bool isDesktopEnabled = virtual_desktop_check.get_active();
   if (isDesktopEnabled) {
     virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
@@ -214,6 +222,9 @@ void NewBottleAssistant::GetResult(
     // Just empty
     virtual_desktop_resolution = "";
   }
+
+  disable_gecko_mono = disable_gecko_mono_check.get_active();
+
   try {
     size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
     const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);

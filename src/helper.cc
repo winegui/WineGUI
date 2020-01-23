@@ -194,21 +194,25 @@ string Helper::GetWineVersion()
 
 /**
  * \brief Create new Wine bottle from prefix
+ * \throw Throw an error when something went wrong during the creation of the bottle
  * \param[in] prefix_path - The path to create a Wine bottle from
  * \param[in] bit - Create 32-bit Wine of 64-bit Wine bottle
+ * \param[in] disable_gecko_mono - Do NOT install Mono & Gecko (by default should be false)
  */
-void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit)
+void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
 {
-  string winearch = "";
+  string wineArch = "";
   switch (bit) {
     case BottleTypes::Bit::win32:
-      winearch = " WINEARCH=win32";
+      wineArch = " WINEARCH=win32";
       break;
     case BottleTypes::Bit::win64:
-      winearch = " WINEARCH=win64";
+      wineArch = " WINEARCH=win64";
       break;
   }
-  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + winearch + " " +
+  string wineDLLOverrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
+
+  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + wineArch + wineDLLOverrides + " " +
     WINE_EXECUTABLE + " wineboot>/dev/null 2>&1; echo $?").c_str());
   if (!result.empty())
   {

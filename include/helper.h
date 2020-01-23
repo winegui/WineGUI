@@ -49,7 +49,7 @@ public:
   static void RunProgramUnderWine(string prefix_path, string program, bool enable_tracing, bool is_msi_file);
   static void RunProgramWithPrefix(string prefix_path, string program, bool enable_tracing, bool give_error);
   static string GetWineVersion();
-  static void CreateWineBottle(const string prefix_path, BottleTypes::Bit bit);
+  static void CreateWineBottle(const string prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
   static void RemoveWineBottle(const string prefix_path);
   static string GetName(const string prefix_path);
   static BottleTypes::Windows GetWindowsOSVersion(const string prefix_path);

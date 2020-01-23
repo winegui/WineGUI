@@ -145,6 +145,7 @@ void BottleManager::UpdateBottles()
  * \param[in] caller                      - Signal Dispatcher pointer, in order to signal back events
  * \param[in] name                        - Bottle Name
  * \param[in] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)
+ * \param[in] disable_gecko_mono          - Disable Gecko/Mono install
  * \param[in] windows_version             - Windows OS version
  * \param[in] bit                         - Windows Bit (32/64-bit)
  * \param[in] audio                       - Audio Driver type
@@ -153,6 +154,7 @@ void BottleManager::NewBottle(
     SignalDispatcher* caller,
     Glib::ustring name,
     Glib::ustring virtual_desktop_resolution,
+    bool disable_gecko_mono,
     BottleTypes::Windows windows_version,
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio)
@@ -163,7 +165,7 @@ void BottleManager::NewBottle(
   bool bottle_created = false;
   try {
     // First create a new Wine Bottle
-    Helper::CreateWineBottle(wine_prefix, bit);    
+    Helper::CreateWineBottle(wine_prefix, bit, disable_gecko_mono);    
     bottle_created = true;
   }
   catch (const std::runtime_error& error) {
@@ -381,10 +383,58 @@ void BottleManager::OpenWinetricks()
 }
 
 /**
+ * \brief Open Uninstaller
+ */
+void BottleManager::OpenUninstaller()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, "wine uninstaller", false, false);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Open Task manager
+ */
+void BottleManager::OpenTaskManager()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, "wine taskmgr", false, false);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Open Registery Editor
+ */
+void BottleManager::OpenRegistertyEditor()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "regedit", false, false);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Open Notepad
+ */
+void BottleManager::OpenNotepad()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "notepad", false, false);
+    t.detach(); 
+  }
+}
+
+/**
  * \brief Install D3DX9 (DirectX 9)
  * \param[in] version Version of additional DirectX 9 DLLs, eg. 26 (for default use: "")
  */
-void BottleManager::InstallD3DX9(Glib::ustring version)
+void BottleManager::InstallD3DX9(const Glib::ustring& version)
 {
   if (isBottleNotNull()) {
     Glib::ustring package = "d3dx9";
@@ -403,7 +453,7 @@ void BottleManager::InstallD3DX9(Glib::ustring version)
  * Note: initially only Direct3D 10 & 11 was supported by DXVK.
  * \param[in] version Version of DXVK, eg. 151 (for default use: "latest")
  */
-void BottleManager::InstallDXVK(Glib::ustring version)
+void BottleManager::InstallDXVK(const Glib::ustring& version)
 {
   if (isBottleNotNull()) {
     Glib::ustring package = "dxvk";
@@ -418,18 +468,44 @@ void BottleManager::InstallDXVK(Glib::ustring version)
 }
 
 /**
- * \brief Install Gallium Nine Standalone (DirectX 9)
- * \param[in] version Version of Gallium Nine, eg. 05 (for default use: "latest")
+ * \brief Install MS Visual C++ Redistributable Package
+ * \param[in] version Version of Visual C++, eg. 2010, 2013, 2015 (no default)
  */
-void BottleManager::InstallGalliumNine(Glib::ustring version)
+void BottleManager::InstallVisualCppPackage(const Glib::ustring& version)
 {
   if (isBottleNotNull()) {
-    Glib::ustring package = "galliumnine";
-    if (version != "latest") {
-      package += version;
-    }
+    Glib::ustring package = "vcrun" + version;
     Glib::ustring wine_prefix = activeBottle->wine_location();
     Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Install MS .NET
+ * Idea: Install dotnet_verifier by default with it?
+ * \param[in] version Version of .NET, eg. '35' for 3.5, '471' for 4.7.1 or '35sp1' for 3.5 SP1 (no default)
+ */
+void BottleManager::InstallDotNet(const Glib::ustring& version)
+{
+  if (isBottleNotNull()) {
+    Glib::ustring package = "dotnet" + version;
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
+    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Install core fonts (often enough)
+ */
+void BottleManager::InstallCoreFonts()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring program = Helper::GetWinetricksLocation() + " corefonts";
     std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
     t.detach(); 
   }

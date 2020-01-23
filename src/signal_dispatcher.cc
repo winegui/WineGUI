@@ -125,10 +125,22 @@ void SignalDispatcher::DispatchSignals()
   // Using Dispatcher instead of signal, will result in that the message box runs in the main thread.
   helper.failureOnExec.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_exec_failure));
 
-  // Settings buttons
-  settingsWindow.directx9.connect(sigc::bind<Glib::ustring>(sigc::mem_fun(manager, &BottleManager::InstallD3DX9), ""));
-  settingsWindow.vulkan.connect(sigc::bind<Glib::ustring>(sigc::mem_fun(manager, &BottleManager::InstallDXVK), "latest"));
-  settingsWindow.gallium_directx9.connect(sigc::bind<Glib::ustring>(sigc::mem_fun(manager, &BottleManager::InstallGalliumNine), "latest"));
+  // Settings gaming package buttons
+  settingsWindow.directx9.connect(sigc::mem_fun(manager, &BottleManager::InstallD3DX9));
+  settingsWindow.vulkan.connect(sigc::mem_fun(manager, &BottleManager::InstallDXVK));
+
+  // Settings additional package buttons
+  settingsWindow.corefonts.connect(sigc::mem_fun(manager, &BottleManager::InstallCoreFonts));
+  settingsWindow.dotnet.connect(sigc::mem_fun(manager, &BottleManager::InstallDotNet));
+  settingsWindow.visual_cpp_package.connect(sigc::mem_fun(manager, &BottleManager::InstallVisualCppPackage));
+
+  // Settings additional tool buttons
+  settingsWindow.uninstaller.connect(sigc::mem_fun(manager, &BottleManager::OpenUninstaller));
+  settingsWindow.notepad.connect(sigc::mem_fun(manager, &BottleManager::OpenNotepad));
+  settingsWindow.task_manager.connect(sigc::mem_fun(manager, &BottleManager::OpenTaskManager));
+  settingsWindow.regedit.connect(sigc::mem_fun(manager, &BottleManager::OpenRegistertyEditor));
+
+  // Settings fallback tool buttons
   settingsWindow.winetricks.connect(sigc::mem_fun(manager, &BottleManager::OpenWinetricks));
   settingsWindow.winecfg.connect(sigc::mem_fun(manager, &BottleManager::OpenWinecfg));
 }
@@ -199,8 +211,9 @@ void SignalDispatcher::on_update_bottles()
  * \brief New Bottle signal, starting NewBottle() within thread
  */
 void SignalDispatcher::on_new_bottle(
-  Glib::ustring& name,
+  Glib::ustring& name,  
   Glib::ustring& virtual_desktop_resolution,
+  bool& disable_geck_mono,
   BottleTypes::Windows windows_version,
   BottleTypes::Bit bit,
   BottleTypes::AudioDriver audio)
@@ -215,9 +228,9 @@ void SignalDispatcher::on_new_bottle(
   {
     // Start a new manager thread (executing NewBottle())
     m_threadBottleManager = new std::thread(
-      [this, name, virtual_desktop_resolution, windows_version, bit, audio]
+      [this, name, virtual_desktop_resolution, disable_geck_mono, windows_version, bit, audio]
       {
-        manager.NewBottle(this, name, virtual_desktop_resolution, windows_version, bit, audio);
+        manager.NewBottle(this, name, virtual_desktop_resolution, disable_geck_mono, windows_version, bit, audio);
       });
   }
 }

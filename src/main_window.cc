@@ -311,20 +311,22 @@ void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 
 /**
  * \brief Signal when the new assistant/wizard is finished and applied
+ * Retrieve the results from the assistant and send it to the manager (via the dispatcher)
  */
 void MainWindow::on_new_bottle_apply()
 {
   Glib::ustring name;
   Glib::ustring virtual_desktop_resolution;
+  bool disable_gecko_mono;
   BottleTypes::Windows windows_version;
   BottleTypes::Bit bit;
   BottleTypes::AudioDriver audio;
 
   // Retrieve assistant results
-  newBottleAssistant.GetResult(name, virtual_desktop_resolution, windows_version, bit, audio);
+  newBottleAssistant.GetResult(name, virtual_desktop_resolution, disable_gecko_mono, windows_version, bit, audio);
 
-  // Emit signal to Bottle Manager
-  newBottle.emit(name, virtual_desktop_resolution, windows_version, bit, audio);
+  // Emit new bottle signal (see dispatcher)
+  newBottle.emit(name, virtual_desktop_resolution, disable_gecko_mono, windows_version, bit, audio);
 }
 
 /**
@@ -382,9 +384,12 @@ void MainWindow::CreateRightPanel()
   edit_button.set_icon_widget(*edit_image);
   toolbar.insert(edit_button, 3);
 
+  // Idea: Extra button for the configurations? And call settings just 'install packages'..?
+
   Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
   manage_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   settings_button.set_label("Settings");
+  settings_button.set_tooltip_text("Install additional packages");
   settings_button.set_icon_widget(*manage_image);
   toolbar.insert(settings_button, 4);
 
@@ -397,8 +402,8 @@ void MainWindow::CreateRightPanel()
 
   Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
   update_image->set_from_icon_name("system-software-update", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  update_button.set_label("Update");
-  update_button.set_tooltip_text("Update the Wine Machine");
+  update_button.set_label("Update Config");
+  update_button.set_tooltip_text("Update the Wine Machine configuration");
   update_button.set_icon_widget(*update_image);
   toolbar.insert(update_button, 6);
   

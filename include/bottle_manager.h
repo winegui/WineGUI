@@ -53,6 +53,7 @@ public:
     SignalDispatcher* caller,
     Glib::ustring name,
     Glib::ustring virtual_desktop_resolution,
+    bool disable_gecko_mono,
     BottleTypes::Windows windows_version,
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio);
@@ -68,9 +69,15 @@ public:
   void KillProcesses();
   void OpenWinecfg();
   void OpenWinetricks();
-  void InstallD3DX9(Glib::ustring version);
-  void InstallDXVK(Glib::ustring version);
-  void InstallGalliumNine(Glib::ustring version);
+  void OpenUninstaller();
+  void OpenTaskManager();
+  void OpenRegistertyEditor();
+  void OpenNotepad();
+  void InstallD3DX9(const Glib::ustring& version);
+  void InstallDXVK(const Glib::ustring& version);
+  void InstallVisualCppPackage(const Glib::ustring& version);
+  void InstallDotNet(const Glib::ustring& version);
+  void InstallCoreFonts();
 private:
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;

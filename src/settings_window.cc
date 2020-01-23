@@ -27,10 +27,15 @@
  */
 SettingsWindow::SettingsWindow(Gtk::Window& parent)
 :
-  install_d3dx9("Install DirectX v9 (Wine Driver, no Vulkan)"),
-  install_dxvk("Install DirectX v9/v10/v11 (Vulkan)"),
-  install_gallium_nine("Install DirectX v9 (Mesa 3D)"),
-  install_dotnet("Install .NET v4.0"),  
+  install_d3dx9_button("Install DirectX v9 (OpenGL)"),
+  install_dxvk_button("Install DirectX v9/v10/v11 (Vulkan)"),
+  install_core_fonts_button("Install Core Fonts"),
+  install_dotnet_button("Install .NET v4.5.2"),
+  install_visual_cpp_button("Install Visual C++ 2013"),
+  wine_uninstall_button("Uninstaller"),
+  open_notepad_button("Notepad"),
+  wine_task_manager_button("Task manager"),
+  wine_regedit_button("Windows Registery Editor"),
   wine_config_button("WineCfg"),
   winetricks_button("Winetricks"),
   activeBottle(nullptr)
@@ -42,30 +47,46 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   add(settings_grid);
   settings_grid.set_margin_top(5);
   settings_grid.set_margin_end(5);
-  settings_grid.set_margin_bottom(8);
-  settings_grid.set_margin_start(8);
-  settings_grid.set_column_spacing(8);
-  settings_grid.set_row_spacing(12);
+  settings_grid.set_margin_bottom(6);
+  settings_grid.set_margin_start(6);
+  settings_grid.set_column_spacing(6);
+  settings_grid.set_row_spacing(8);
 
   first_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
   first_toolbar.set_halign(Gtk::ALIGN_CENTER);
+  first_toolbar.set_valign(Gtk::ALIGN_CENTER);
   first_toolbar.set_hexpand(true);
+  first_toolbar.set_vexpand(true);
+
   second_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
   second_toolbar.set_halign(Gtk::ALIGN_CENTER);
+  second_toolbar.set_valign(Gtk::ALIGN_CENTER);
   second_toolbar.set_hexpand(true);
+  second_toolbar.set_vexpand(true);
+
   third_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
   third_toolbar.set_halign(Gtk::ALIGN_CENTER);
+  third_toolbar.set_valign(Gtk::ALIGN_CENTER);
   third_toolbar.set_hexpand(true);
+  third_toolbar.set_vexpand(true);
+
+  fourth_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
+  fourth_toolbar.set_halign(Gtk::ALIGN_CENTER);
+  fourth_toolbar.set_valign(Gtk::ALIGN_CENTER);
+  fourth_toolbar.set_hexpand(true);
+  fourth_toolbar.set_vexpand(true);
 
   first_row_label.set_text("Gaming packages");
   first_row_label.set_xalign(0);
-  hint_label.set_markup("<b>Hint:</b> Hover mouse over the buttons for more info...");
+  hint_label.set_markup("<b>Hint:</b> Hover the mouse over the buttons for more info...");
   hint_label.set_margin_top(8);
   hint_label.set_margin_bottom(4);
   second_row_label.set_text("Additional packages");
   second_row_label.set_xalign(0);
-  third_row_label.set_text("Other Tools");
+  third_row_label.set_text("Supporting Tools");
   third_row_label.set_xalign(0);
+  fourth_row_label.set_text("Fallback Tools");
+  fourth_row_label.set_xalign(0);
 
   settings_grid.attach(first_row_label,  0, 0, 1, 1); 
   settings_grid.attach(first_toolbar,    0, 1, 1, 1);
@@ -74,57 +95,93 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   settings_grid.attach(second_toolbar,   0, 4, 1, 1);
   settings_grid.attach(third_row_label,  0, 5, 1, 1);
   settings_grid.attach(third_toolbar,    0, 6, 1, 1);
-
-  // First row signals
-  install_d3dx9.signal_clicked().connect(directx9);
-  install_dxvk.signal_clicked().connect(vulkan);
-  install_gallium_nine.signal_clicked().connect(gallium_directx9);
-
-  // Second row signals
-  install_dotnet.signal_clicked().connect(dotnet);
-  
-  // Third row signals
-  wine_config_button.signal_clicked().connect(winecfg);
-  winetricks_button.signal_clicked().connect(winetricks);
+  settings_grid.attach(fourth_row_label, 0, 7, 1, 1);
+  settings_grid.attach(fourth_toolbar,   0, 8, 1, 1);
 
   // First row buttons, 1-button installs
   Gtk::Image* d3dx9_image = Gtk::manage(new Gtk::Image());
   d3dx9_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_d3dx9.set_tooltip_text("Installs D3DX9: Ideal for DirectX 9 games, if your videocard doesn't support Vulkan");
-  install_d3dx9.set_icon_widget(*d3dx9_image);
-  first_toolbar.insert(install_d3dx9, 0);
+  install_d3dx9_button.signal_clicked().connect(sigc::bind<Glib::ustring>(directx9, ""));
+  install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL");
+  install_d3dx9_button.set_icon_widget(*d3dx9_image);
+  first_toolbar.insert(install_d3dx9_button, 0);
 
   Gtk::Image* vulkan_image = Gtk::manage(new Gtk::Image());
   vulkan_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_dxvk.set_tooltip_text("Installs DXVK: Ideal for DirectX 9/10/11 games using Vulkan");
-  install_dxvk.set_icon_widget(*vulkan_image);
-  first_toolbar.insert(install_dxvk, 1);
-
-  Gtk::Image* gallium_nine_image = Gtk::manage(new Gtk::Image());
-  gallium_nine_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_gallium_nine.set_tooltip_text("Installs Gallium Nine: Ideal for DirectX 9 games using Mesa 3D driver");
-  install_gallium_nine.set_icon_widget(*gallium_nine_image);
-  first_toolbar.insert(install_gallium_nine, 2);
-
+  install_dxvk_button.signal_clicked().connect(sigc::bind<Glib::ustring>(vulkan, "latest"));
+  install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9/10/11 games, by using Vulkan");
+  install_dxvk_button.set_icon_widget(*vulkan_image);
+  first_toolbar.insert(install_dxvk_button, 1);
+  
   // TODO: esync wine build?
+  // Note: Gallium nine (using Mesa 3D) currently not supported, since it requires still a patched Wine version.
   // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
   // Second row, additional packages
+  Gtk::Image* corefonts_image = Gtk::manage(new Gtk::Image());
+  corefonts_image->set_from_icon_name("font-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  install_core_fonts_button.signal_clicked().connect(corefonts);
+  install_core_fonts_button.set_tooltip_text("Installs MS Core Fonts");
+  install_core_fonts_button.set_icon_widget(*corefonts_image);
+  second_toolbar.insert(install_core_fonts_button, 0);
+
   Gtk::Image* dotnet_image = Gtk::manage(new Gtk::Image());
   dotnet_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_dotnet.set_icon_widget(*dotnet_image);
-  second_toolbar.insert(install_dotnet, 2);
+  install_dotnet_button.signal_clicked().connect(sigc::bind<Glib::ustring>(dotnet, "452"));
+  install_dotnet_button.set_tooltip_text("Installs .NET 4.0, .NET 4.5 and .NET 4.5.2");
+  install_dotnet_button.set_icon_widget(*dotnet_image);
+  second_toolbar.insert(install_dotnet_button, 1);
 
-  // Third row buttons, other tools
+  Gtk::Image* visual_cpp_image = Gtk::manage(new Gtk::Image());
+  visual_cpp_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  install_visual_cpp_button.signal_clicked().connect(sigc::bind<Glib::ustring>(visual_cpp_package, "2013"));
+  install_visual_cpp_button.set_tooltip_text("Installs Visual C++ 2013 package");
+  install_visual_cpp_button.set_icon_widget(*visual_cpp_image);
+  second_toolbar.insert(install_visual_cpp_button, 2);
+
+  // Third row buttons, supporting tools
+  Gtk::Image* uninstaller_image = Gtk::manage(new Gtk::Image());
+  uninstaller_image->set_from_icon_name("applications-system-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  wine_uninstall_button.signal_clicked().connect(uninstaller);
+  wine_uninstall_button.set_tooltip_text("Open Wine uninstaller");
+  wine_uninstall_button.set_icon_widget(*uninstaller_image);
+  third_toolbar.insert(wine_uninstall_button, 0);
+
+  Gtk::Image* notepad_image = Gtk::manage(new Gtk::Image());
+  notepad_image->set_from_icon_name("accessories-text-editor", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  open_notepad_button.signal_clicked().connect(notepad);
+  open_notepad_button.set_tooltip_text("Open Notepad Editor");
+  open_notepad_button.set_icon_widget(*notepad_image);
+  third_toolbar.insert(open_notepad_button, 1);
+
+  Gtk::Image* task_manager_image = Gtk::manage(new Gtk::Image());
+  task_manager_image->set_from_icon_name("task-past-due", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  wine_task_manager_button.signal_clicked().connect(task_manager);
+  wine_task_manager_button.set_tooltip_text("Open Wine task manager");
+  wine_task_manager_button.set_icon_widget(*task_manager_image);
+  third_toolbar.insert(wine_task_manager_button, 2);
+
+  Gtk::Image* regedit_image = Gtk::manage(new Gtk::Image());
+  regedit_image->set_from_icon_name("applications-system-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  wine_regedit_button.signal_clicked().connect(regedit);
+  wine_regedit_button.set_tooltip_text("Open Windows Registry editor (For advanced users!)");
+  wine_regedit_button.set_icon_widget(*regedit_image);
+  third_toolbar.insert(wine_regedit_button, 3);
+
+  // Fourth row buttons, fallback tools
   Gtk::Image* winecfg_image = Gtk::manage(new Gtk::Image());
-  winecfg_image->set_from_icon_name("applications-system-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  winecfg_image->set_from_icon_name("preferences-system", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  wine_config_button.signal_clicked().connect(winecfg);
+  wine_config_button.set_tooltip_text("FALLBACK: Open winecfg GUI");
   wine_config_button.set_icon_widget(*winecfg_image);
-  third_toolbar.insert(wine_config_button, 0);
+  fourth_toolbar.insert(wine_config_button, 0);
 
   Gtk::Image* winetricks_image = Gtk::manage(new Gtk::Image());
   winetricks_image->set_from_icon_name("preferences-other-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  winetricks_button.signal_clicked().connect(winetricks);
+  winetricks_button.set_tooltip_text("FALLBACK: Winetricks GUI");
   winetricks_button.set_icon_widget(*winetricks_image);
-  third_toolbar.insert(winetricks_button, 1);
+  fourth_toolbar.insert(winetricks_button, 1);
 
   show_all_children();
 }

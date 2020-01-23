@@ -39,6 +39,7 @@ public:
   void GetResult(
     Glib::ustring& name,
     Glib::ustring& virtual_desktop_resolution,
+    bool& disable_gecko_mono,
     BottleTypes::Windows& windows_version,
     BottleTypes::Bit& bit,
     BottleTypes::AudioDriver& audio);
@@ -82,6 +83,7 @@ private:
   Gtk::ComboBoxText windows_version_combobox;
   Gtk::ComboBoxText audiodriver_combobox;
   Gtk::CheckButton virtual_desktop_check;
+  Gtk::CheckButton disable_gecko_mono_check;
   Gtk::Entry name_entry;
   Gtk::Entry virtual_desktop_resolution_entry;
   Gtk::ProgressBar loading_bar;

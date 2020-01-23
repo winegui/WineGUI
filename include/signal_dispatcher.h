@@ -70,6 +70,7 @@ private:
   virtual void on_update_bottles();
   virtual void on_new_bottle(Glib::ustring& name,
     Glib::ustring& virtual_desktop_resolution,
+    bool& disable_geck_mono,
     BottleTypes::Windows windows_version,
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio);
