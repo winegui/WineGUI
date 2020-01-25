@@ -828,6 +828,29 @@ int Helper::CloseFile(std::FILE* file) {
 }
 
 /**
+ * \brief Write C buffer (gchar *) to file
+ * \param[in] filename
+ * \param[in] contents - File data
+ * \param[in] length - Length (-1 for nul-termined string)
+ * \return True when successful otherwise False
+ */
+bool Helper::WriteFile(const string& filename, const gchar* contents, const gsize length)
+{
+  return g_file_set_contents(filename.c_str(), contents, length, NULL);
+}
+
+/**
+ * \brief Read file to C buffer (gchar *)
+ * \param[in] filename
+ * \param[out] contents - File data
+ * \return True when successful otherwise False
+ */
+bool Helper::ReadFile(const string& filename, gchar* contents)
+{
+  return g_file_get_contents(filename.c_str(), &contents, NULL, NULL);
+}
+
+/**
  * \brief Get a value from the registery from disk
  * \param[in] filename  File of registery
  * \param[in] keyName   Full path of the subkey (eg. Software\\\\Wine\\\\Explorer)

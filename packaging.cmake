@@ -27,16 +27,15 @@ endif ()
 
 if(${LINUX_DISTRO} MATCHES "openSUSE")
   # OpenSuse/Leap
-  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm3, json-glib")
+  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm3")
 else()
   # Redhat/CentOS/Fedora/etc.
-  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm30, json-glib")
+  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm30")
 endif()
 
 # Debian Jessie/Ubuntu Trusty/Mint Qiana (libgtkmm-3.0-1) or 
 # Debian Stretch, Buster or newer, Ubuntu Xenial, Artful, Bionic or newer, Linux Mint Sarah, Tessa, Tina or newer (libgtkmm-3.0-1v5)
-# And add JSON-GLib package (libjson-glib-1.0-0)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-3.0-1 | libgtkmm-3.0-1v5, libjson-glib-1.0-0")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-3.0-1 | libgtkmm-3.0-1v5")
 
 # include CPack model once all variables are set
 include(CPack)

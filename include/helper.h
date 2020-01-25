@@ -21,7 +21,6 @@
 #pragma once
 
 #include <gtkmm.h>
-#include <json-glib/json-glib.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -82,6 +81,8 @@ private:
   static string Exec(const char* cmd);
   static void ExecTracing(const char* cmd, bool enableTracing);
   static int CloseFile(std::FILE* file);
+  static bool WriteFile(const string& filename, const gchar* contents, const gsize length);
+  static bool ReadFile(const string& filename, char* contents);
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
   static string GetRegMetaData(const string& filename, const string& metaValueName);
   static string getBottleDirFromPrefix(const string& prefix_path);
