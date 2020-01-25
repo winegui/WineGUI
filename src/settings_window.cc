@@ -128,7 +128,7 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   Gtk::Image* dotnet_image = Gtk::manage(new Gtk::Image());
   dotnet_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_dotnet_button.signal_clicked().connect(sigc::bind<Glib::ustring>(dotnet, "452"));
-  install_dotnet_button.set_tooltip_text("Installs .NET 4.0, .NET 4.5 and .NET 4.5.2");
+  install_dotnet_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
   install_dotnet_button.set_icon_widget(*dotnet_image);
   second_toolbar.insert(install_dotnet_button, 1);
 
