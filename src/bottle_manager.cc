@@ -257,17 +257,13 @@ void BottleManager::DeleteBottle()
        Helper::GetName(prefix_path) + "' running " + windows + "?\n\nNote: This action cannot be undone!")) {
         Helper::RemoveWineBottle(prefix_path);
         this->UpdateBottles();
-      }
-      else {
+      } else {
         // Nothing, canceled
       }
-    }
-    catch (const std::runtime_error& error) {
+    } catch (const std::runtime_error& error) {
       mainWindow.ShowErrorMessage(error.what());
     } 
-  }
-  else
-  {
+  } else {
     mainWindow.ShowErrorMessage("No Windows Machine to remove, empty/no selection.");
   }
 }
@@ -490,21 +486,25 @@ void BottleManager::InstallVisualCppPackage(const Glib::ustring& version)
 void BottleManager::InstallDotNet(const Glib::ustring& version)
 {
   if (isBottleNotNull()) {
-    Glib::ustring program = "";
-    Glib::ustring deinstallCommand = this->GetDeinstallMonoCommand();
+    if (mainWindow.ShowConfirmDialog("Important note: Wine Mono & Gecko support is often sufficient enough.\n\nWine Mono will be *uninstalled* before native .NET will be installed.\n\nAre you sure you want to continue?")) {
+      Glib::ustring program = "";
+      Glib::ustring deinstallCommand = this->GetDeinstallMonoCommand();
 
-    Glib::ustring package = "dotnet" + version;
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring installCommand = Helper::GetWinetricksLocation() + " " + package;
+      Glib::ustring package = "dotnet" + version;
+      Glib::ustring wine_prefix = activeBottle->wine_location();
+      Glib::ustring installCommand = Helper::GetWinetricksLocation() + " " + package;
 
-    if (!deinstallCommand.empty()) {
-      // First deinstall Mono then install native .NET
-      program = deinstallCommand + "; " + installCommand;
+      if (!deinstallCommand.empty()) {
+        // First deinstall Mono then install native .NET
+        program = deinstallCommand + "; " + installCommand;
+      } else {
+        program = installCommand;
+      }
+      std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+      t.detach(); 
     } else {
-      program = installCommand;
+      // Nothing, canceled
     }
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
-    t.detach(); 
   }
 }
 
@@ -587,7 +587,7 @@ std::map<string, unsigned long> BottleManager::GetBottlePaths()
 {
   if (!Helper::DirExists(BOTTLE_LOCATION)) {
     // Create directory if not exist yet
-    if(!Helper::CreateDir(BOTTLE_LOCATION)) {
+    if (!Helper::CreateDir(BOTTLE_LOCATION)) {
       throw std::runtime_error("Failed to create the Wine bottles directory: " + BOTTLE_LOCATION);
     }
   }

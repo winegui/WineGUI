@@ -351,15 +351,11 @@ void NewBottleAssistant::on_entry_changed()
  */
 void NewBottleAssistant::on_virtual_desktop_toggle()
 {
-  if(virtual_desktop_check.get_active())
-  {
+  if (virtual_desktop_check.get_active())
     // Show resolution label & input field
     m_hbox_virtual_desktop.show();
-  }
   else
-  {
     m_hbox_virtual_desktop.hide();
-  }
 }
 
 /**
@@ -369,8 +365,7 @@ void NewBottleAssistant::on_virtual_desktop_toggle()
 bool NewBottleAssistant::apply_changes_gradually()
 {
   double fraction = (loading_bar.get_fraction() + 0.02);
-  if (fraction <= 1.0)
-  {
+  if (fraction <= 1.0) {
     loading_bar.set_fraction(fraction);
   } else {
     loading_bar.set_pulse_step(0.3);

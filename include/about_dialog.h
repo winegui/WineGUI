@@ -25,7 +25,7 @@
 #include <string>
 
 // Use major.minor.patch syntax, don't forget to update CMakeLists.txt file as well!
-static const std::string VERSION = "v1.2.0";
+static const std::string VERSION = "v1.3.0";
 
 #if defined(PRODUCTION)
   #define IMAGE_LOCATION "/usr/share/winegui/images/" /*!< Image location */

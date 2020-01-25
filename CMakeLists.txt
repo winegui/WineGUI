@@ -24,9 +24,10 @@ endif()
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 FIND_PACKAGE(Threads REQUIRED)
 
-# Use the package PkgConfig to detect GTK+ headers/library files
+# Use the package PkgConfig to detect (any version) of GTK+ headers/library files
 FIND_PACKAGE(PkgConfig REQUIRED)
 PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
+PKG_CHECK_MODULES(JSONGLIB REQUIRED json-glib-1.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -46,8 +47,12 @@ endif()
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
   ${GTKMM_INCLUDE_DIRS}
+  ${JSONGLIB_INCLUDE_DIRS}
 )
-link_directories(${GTKMM_LIBRARY_DIRS})
+link_directories(
+  ${GTKMM_LIBRARY_DIRS}
+  ${JSONGLIB_LIBRARY_DIRS}
+)
 add_definitions(${GTKMM_CFLAGS_OTHER})
 
 add_library(menu_lib src/menu.cc)

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <gtkmm.h>
+#include <json-glib/json-glib.h>
 #include <iostream>
 #include <string>
 #include <vector>

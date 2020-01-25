@@ -105,7 +105,7 @@ void BottleItem::CreateUI()
   // To lower case
   std::string windows = BottleItem::str_tolower(BottleTypes::toString(this->windows()));
   // Remove spaces
-  windows.erase(std::remove_if(
+  windows.erase(std::remove_if (
     std::begin(windows), std::end(windows),
     [l = std::locale{}](auto ch) { return std::isspace(ch, l); }
   ), end(windows));

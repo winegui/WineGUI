@@ -30,8 +30,8 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   install_d3dx9_button("Install DirectX v9 (OpenGL)"),
   install_dxvk_button("Install DirectX v9/v10/v11 (Vulkan)"),
   install_core_fonts_button("Install Core Fonts"),
-  install_dotnet_button("Install .NET v4.5.2"),
   install_visual_cpp_button("Install Visual C++ 2013"),
+  install_dotnet_button("Install .NET v4.5.2"),
   wine_uninstall_button("Uninstaller"),
   open_notepad_button("Notepad"),
   wine_task_manager_button("Task manager"),
@@ -125,22 +125,21 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   install_core_fonts_button.set_icon_widget(*corefonts_image);
   second_toolbar.insert(install_core_fonts_button, 0);
 
-  Gtk::Image* dotnet_image = Gtk::manage(new Gtk::Image());
-  dotnet_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_dotnet_button.signal_clicked().connect(sigc::bind<Glib::ustring>(dotnet, "452"));
-  install_dotnet_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
-  install_dotnet_button.set_icon_widget(*dotnet_image);
-  second_toolbar.insert(install_dotnet_button, 1);
-
-  // TODO: Create pop-up message that Mono will be uninstalled first (wine uninstaller --remove '{E45D8920-A758-4088-B6C6-31DBB276992E}'),
-  // since .NET and Mono will conflict. Only continue when user pressed 'Accept'.
-
   Gtk::Image* visual_cpp_image = Gtk::manage(new Gtk::Image());
   visual_cpp_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_visual_cpp_button.signal_clicked().connect(sigc::bind<Glib::ustring>(visual_cpp_package, "2013"));
   install_visual_cpp_button.set_tooltip_text("Installs Visual C++ 2013 package");
   install_visual_cpp_button.set_icon_widget(*visual_cpp_image);
-  second_toolbar.insert(install_visual_cpp_button, 2);
+  second_toolbar.insert(install_visual_cpp_button, 1);
+
+  // TODO: Create pop-up message that Mono will be uninstalled first
+  // since .NET and Mono will conflict. Only continue when user pressed 'Accept'.
+  Gtk::Image* dotnet_image = Gtk::manage(new Gtk::Image());
+  dotnet_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  install_dotnet_button.signal_clicked().connect(sigc::bind<Glib::ustring>(dotnet, "452"));
+  install_dotnet_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
+  install_dotnet_button.set_icon_widget(*dotnet_image);
+  second_toolbar.insert(install_dotnet_button, 2);
 
   // Third row buttons, supporting tools
   Gtk::Image* uninstaller_image = Gtk::manage(new Gtk::Image());
@@ -158,7 +157,7 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   third_toolbar.insert(open_notepad_button, 1);
 
   Gtk::Image* task_manager_image = Gtk::manage(new Gtk::Image());
-  task_manager_image->set_from_icon_name("task-past-due", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  task_manager_image->set_from_icon_name("open-menu", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   wine_task_manager_button.signal_clicked().connect(task_manager);
   wine_task_manager_button.set_tooltip_text("Open Wine task manager");
   wine_task_manager_button.set_icon_widget(*task_manager_image);
