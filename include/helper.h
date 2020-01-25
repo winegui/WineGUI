@@ -71,6 +71,7 @@ public:
   static void DisableVirtualDesktop(const string prefix_path);
   static void SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver);
   static string GetWinetricksLocation();
+  static string GetWineGUID(const string prefix_path, const string application_name);
 private:
   Helper();
   ~Helper();

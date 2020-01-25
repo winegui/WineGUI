@@ -91,6 +91,7 @@ private:
   Glib::ustring m_error_message;
 
   bool isBottleNotNull();
+  Glib::ustring GetDeinstallMonoCommand();
   string GetWineVersion();
   std::map<string, unsigned long> GetBottlePaths();
   std::list<BottleItem> CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs);

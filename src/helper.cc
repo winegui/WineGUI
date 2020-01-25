@@ -712,6 +712,7 @@ void Helper::DisableVirtualDesktop(const string prefix_path)
 
 /**
  * \brief Set Audio Driver by using Winetricks
+ * \param[in] audio_driver - Audio driver to be set
  */
 void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver)
 {
@@ -745,6 +746,20 @@ string Helper::GetWinetricksLocation()
     g_warning("Could not find winetricks executable!");
   }
   return path;
+}
+
+/**
+ * \brief Get the Wine Mono GUID
+ * \param[in] application_name - Application name to search for
+ * \return GUID
+ */
+string Helper::GetWineGUID(const string prefix_path, const string application_name)
+{
+  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1").c_str());
+  if(!result.empty()) {
+    result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+  }
+  return result;
 }
 
 /****************************************************************************

@@ -132,6 +132,9 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   install_dotnet_button.set_icon_widget(*dotnet_image);
   second_toolbar.insert(install_dotnet_button, 1);
 
+  // TODO: Create pop-up message that Mono will be uninstalled first (wine uninstaller --remove '{E45D8920-A758-4088-B6C6-31DBB276992E}'),
+  // since .NET and Mono will conflict. Only continue when user pressed 'Accept'.
+
   Gtk::Image* visual_cpp_image = Gtk::manage(new Gtk::Image());
   visual_cpp_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_visual_cpp_button.signal_clicked().connect(sigc::bind<Glib::ustring>(visual_cpp_package, "2013"));

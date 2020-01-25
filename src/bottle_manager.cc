@@ -483,16 +483,26 @@ void BottleManager::InstallVisualCppPackage(const Glib::ustring& version)
 }
 
 /**
- * \brief Install MS .NET
+ * \brief Install MS .NET (deinstall Mono first if needed)
  * Idea: Install dotnet_verifier by default with it?
  * \param[in] version Version of .NET, eg. '35' for 3.5, '471' for 4.7.1 or '35sp1' for 3.5 SP1 (no default)
  */
 void BottleManager::InstallDotNet(const Glib::ustring& version)
 {
   if (isBottleNotNull()) {
+    Glib::ustring program = "";
+    Glib::ustring deinstallCommand = this->GetDeinstallMonoCommand();
+
     Glib::ustring package = "dotnet" + version;
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
+    Glib::ustring installCommand = Helper::GetWinetricksLocation() + " " + package;
+
+    if (!deinstallCommand.empty()) {
+      // First deinstall Mono then install native .NET
+      program = deinstallCommand + "; " + installCommand;
+    } else {
+      program = installCommand;
+    }
     std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
     t.detach(); 
   }
@@ -522,6 +532,34 @@ bool BottleManager::isBottleNotNull()
     mainWindow.ShowErrorMessage("No Windows Machine selected/empty. First create a new machine!\n\nAborted.");
   }
   return !isNull;
+}
+
+/**
+ * \brief Wine Mono deinstall command, run before installing native .NET
+ * \return uninstall Mono command
+ * Note: When nothing todo, the command will be an empty string.
+ */
+Glib::ustring BottleManager::GetDeinstallMonoCommand()
+{
+  string command = "";
+  if (activeBottle != nullptr) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    string GUID = Helper::GetWineGUID(wine_prefix, "Wine Mono Runtime");
+
+    if (!GUID.empty()) {
+      Glib::ustring uninstaller = "";
+      switch (activeBottle->bit()) {
+        case BottleTypes::Bit::win32:
+          uninstaller = "wine uninstaller --remove";
+          break;
+        case BottleTypes::Bit::win64:
+          uninstaller = "wine64 uninstaller --remove";
+          break;
+      }
+      command = uninstaller + " '{" + GUID + "}'";
+    }
+  }
+  return command;
 }
 
 /**
