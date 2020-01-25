@@ -672,9 +672,9 @@ void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
       }
 
       string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
-      // Another Bug in winetricks! It returns always 1 when using vd=. Even with the predefined inputs or vd=off..
-
-      /*if(!result.empty()) {
+      // Something returns non-zero... winetricks on the command line, does return zero ..
+      /*
+      if(!result.empty()) {
         result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
         if(result.compare("0") != 0) {
           throw std::runtime_error("Could not set virtual desktop resolution");
@@ -697,8 +697,8 @@ void Helper::DisableVirtualDesktop(const string prefix_path)
 {
   if (FileExists(WINETRICKS_EXECUTABLE))
   {
-    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off" + ">/dev/null 2>&1; echo $?").c_str());
-    // Bug in Winetricks vd=off is working, but it will always return 1
+    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off>/dev/null 2>&1; echo $?").c_str());
+    // Something returns non-zero... winetricks on the command line, does return zero ..
     /*if(!result.empty()) {
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
       if(result.compare("0") != 0) {
