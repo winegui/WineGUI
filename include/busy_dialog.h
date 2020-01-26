@@ -34,9 +34,17 @@ public:
   explicit BusyDialog(Gtk::Window& parent);
   virtual ~BusyDialog();
 
+  void show();
+  void close();
+
   void SetMessage(const Glib::ustring& message);
 protected:
   Gtk::Label message_label;
+  Gtk::ProgressBar loading_bar;
 
 private:
+  sigc::connection timer; /*!< Timer connection */
+  Gtk::Window& defaultParent;
+  
+  virtual bool Pulsing();
 };

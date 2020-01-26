@@ -35,11 +35,11 @@ class SettingsWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void, Glib::ustring&> directx9; /*!< Install d3dx9 for Direct3D 9 signal */
-  sigc::signal<void, Glib::ustring&> vulkan; /*!< Install DXVK for Direct3D 9/10/11 using Vulkan signal */
-  sigc::signal<void> corefonts; /*!< Install Core fonts signal */
-  sigc::signal<void, Glib::ustring&> visual_cpp_package; /*!< Install Visual C++ package signal */
-  sigc::signal<void, Glib::ustring&> dotnet; /*!< Install .NET signal */
+  sigc::signal<void, Gtk::Window&, Glib::ustring&> directx9; /*!< Install d3dx9 for Direct3D 9 signal */
+  sigc::signal<void, Gtk::Window&, Glib::ustring&> vulkan; /*!< Install DXVK for Direct3D 9/10/11 using Vulkan signal */
+  sigc::signal<void, Gtk::Window&> corefonts; /*!< Install Core fonts signal */
+  sigc::signal<void, Gtk::Window&, Glib::ustring&> visual_cpp_package; /*!< Install Visual C++ package signal */
+  sigc::signal<void, Gtk::Window&, Glib::ustring&> dotnet; /*!< Install .NET signal */
   sigc::signal<void> uninstaller; /*!< Open Wine Uninstaller signal */
   sigc::signal<void> notepad; /*!< Open Notepad editor signal */
   sigc::signal<void> task_manager; /*!< Open Wine Task Manager signal */

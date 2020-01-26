@@ -73,11 +73,11 @@ public:
   void OpenTaskManager();
   void OpenRegistertyEditor();
   void OpenNotepad();
-  void InstallD3DX9(const Glib::ustring& version);
-  void InstallDXVK(const Glib::ustring& version);
-  void InstallVisualCppPackage(const Glib::ustring& version);
-  void InstallDotNet(const Glib::ustring& version);
-  void InstallCoreFonts();
+  void InstallD3DX9(Gtk::Window& parent, const Glib::ustring& version);
+  void InstallDXVK(Gtk::Window& parent, const Glib::ustring& version);
+  void InstallVisualCppPackage(Gtk::Window& parent, const Glib::ustring& version);
+  void InstallDotNet(Gtk::Window& parent, const Glib::ustring& version);
+  void InstallCoreFonts(Gtk::Window& parent);
 private:
   Glib::Dispatcher finishedPackageInstall; /*!< Signal that Wine package install is completed */
   // Synchronizes access to data members

@@ -68,6 +68,7 @@ public:
   void ShowErrorMessage(const Glib::ustring& message);
   bool ShowConfirmDialog(const Glib::ustring& message);
   void ShowBusyDialog(const Glib::ustring& message);
+  void ShowBusyDialog(Gtk::Window& parent, const Glib::ustring& message);
   void CloseBusyDialog();
 
   // Signal handlers

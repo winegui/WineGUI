@@ -98,45 +98,42 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   settings_grid.attach(fourth_row_label, 0, 7, 1, 1);
   settings_grid.attach(fourth_toolbar,   0, 8, 1, 1);
 
+
+  // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
+
   // First row buttons, 1-button installs
   Gtk::Image* d3dx9_image = Gtk::manage(new Gtk::Image());
   d3dx9_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_d3dx9_button.signal_clicked().connect(sigc::bind<Glib::ustring>(directx9, ""));
+  install_d3dx9_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(directx9, *this, ""));
   install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL");
   install_d3dx9_button.set_icon_widget(*d3dx9_image);
   first_toolbar.insert(install_d3dx9_button, 0);
 
   Gtk::Image* vulkan_image = Gtk::manage(new Gtk::Image());
   vulkan_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_dxvk_button.signal_clicked().connect(sigc::bind<Glib::ustring>(vulkan, "latest"));
+  install_dxvk_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(vulkan, *this, "latest"));
   install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9/10/11 games, by using Vulkan");
   install_dxvk_button.set_icon_widget(*vulkan_image);
   first_toolbar.insert(install_dxvk_button, 1);
   
-  // TODO: esync wine build?
-  // Note: Gallium nine (using Mesa 3D) currently not supported, since it requires still a patched Wine version.
-  // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
-
   // Second row, additional packages
   Gtk::Image* corefonts_image = Gtk::manage(new Gtk::Image());
   corefonts_image->set_from_icon_name("font-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_core_fonts_button.signal_clicked().connect(corefonts);
+  install_core_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(corefonts, *this));
   install_core_fonts_button.set_tooltip_text("Installs MS Core Fonts");
   install_core_fonts_button.set_icon_widget(*corefonts_image);
   second_toolbar.insert(install_core_fonts_button, 0);
 
   Gtk::Image* visual_cpp_image = Gtk::manage(new Gtk::Image());
   visual_cpp_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_visual_cpp_button.signal_clicked().connect(sigc::bind<Glib::ustring>(visual_cpp_package, "2013"));
+  install_visual_cpp_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2013"));
   install_visual_cpp_button.set_tooltip_text("Installs Visual C++ 2013 package");
   install_visual_cpp_button.set_icon_widget(*visual_cpp_image);
   second_toolbar.insert(install_visual_cpp_button, 1);
 
-  // TODO: Create pop-up message that Mono will be uninstalled first
-  // since .NET and Mono will conflict. Only continue when user pressed 'Accept'.
   Gtk::Image* dotnet_image = Gtk::manage(new Gtk::Image());
   dotnet_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_dotnet_button.signal_clicked().connect(sigc::bind<Glib::ustring>(dotnet, "452"));
+  install_dotnet_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
   install_dotnet_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
   install_dotnet_button.set_icon_widget(*dotnet_image);
   second_toolbar.insert(install_dotnet_button, 2);

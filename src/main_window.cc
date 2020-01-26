@@ -195,11 +195,18 @@ bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
  */
 void MainWindow::ShowBusyDialog(const Glib::ustring& message)
 {
-  // TODO: Create some custom dialog...
-  // TODO: Add this object/class to the main window (header file), so we always has a reference to it
-  // TODO: This function should .show() it, and HideBusyDialog() method should hide this dialog.
-  // false = no markup
   busyDialog.SetMessage(message);
+  busyDialog.show();
+}
+
+/**
+ * \brief Show busy indicator, with another parent
+ * \param[in] message - Given the user more information what is going on
+ */
+void MainWindow::ShowBusyDialog(Gtk::Window& parent, const Glib::ustring& message)
+{
+  busyDialog.SetMessage(message);
+  busyDialog.set_transient_for(parent);
   busyDialog.show();
 }
 

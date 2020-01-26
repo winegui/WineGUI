@@ -26,14 +26,21 @@
  */
 BusyDialog::BusyDialog(Gtk::Window& parent)
 : Gtk::Dialog("Busy, please wait until finished..."),
-  message_label("Jaja")
+  message_label("Jaja"),
+  defaultParent(parent)
 {
   set_transient_for(parent);
   set_default_size(400, 120);
   set_modal(true);
-  
-  get_vbox()->pack_start(message_label);
+  set_deletable(false);
 
+  Gtk::Box* box = get_vbox();
+  loading_bar.set_pulse_step(0.3);
+  loading_bar.set_hexpand(true);
+
+  box->pack_start(message_label, true, false);
+  box->pack_start(loading_bar, true, false);
+  
   show_all_children();
 }
 
@@ -49,4 +56,35 @@ BusyDialog::~BusyDialog() {}
 void BusyDialog::SetMessage(const Glib::ustring& message)
 {
   this->message_label.set_text(message + " Please wait...");
+}
+
+void BusyDialog::show()
+{
+  if (!timer.empty() && timer.connected()) {
+    timer.disconnect();
+  }
+
+  int time_interval = 200;
+  timer = Glib::signal_timeout().connect(
+    sigc::mem_fun(*this, &BusyDialog::Pulsing),
+    time_interval);
+  Gtk::Dialog::show();
+}
+
+void BusyDialog::close()
+{
+  // Reset default parent
+  set_transient_for(defaultParent);
+  
+  // Stop pulsing timer
+  if (!timer.empty() && timer.connected()) {
+    timer.disconnect();
+  }
+  Gtk::Dialog::close();
+}
+
+bool BusyDialog::Pulsing()
+{
+  loading_bar.pulse();
+  return true;
 }

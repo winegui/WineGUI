@@ -431,52 +431,67 @@ void BottleManager::OpenNotepad()
 
 /**
  * \brief Install D3DX9 (DirectX 9)
+ * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of additional DirectX 9 DLLs, eg. 26 (for default use: "")
  */
-void BottleManager::InstallD3DX9(const Glib::ustring& version)
+void BottleManager::InstallD3DX9(Gtk::Window& parent, const Glib::ustring& version)
 {
   if (isBottleNotNull()) {
+    // Before we execute the install, show busy dialog
+    mainWindow.ShowBusyDialog(parent, "Installing D3DX9 (OpenGL implementation of DirectX 9).");
+
     Glib::ustring package = "d3dx9";
     if (version != "") {
       package += "_" + version;
     }
     Glib::ustring wine_prefix = activeBottle->wine_location();
     Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
-    std::thread t(&Helper::RunProgram, wine_prefix, program, false, true);
+    // finishedPackageInstall signal is needed in order to close the busy dialog again
+    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 
   }
 }
 
 /**
  * \brief Install DXVK (Vulkan based DirectX 9/10/11)
- * Note: initially only Direct3D 10 & 11 was supported by DXVK.
+ * Note: initially only Direct3D 10 & 11 was supported by DXVK. But now also Direct3D 9.
+ * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of DXVK, eg. 151 (for default use: "latest")
  */
-void BottleManager::InstallDXVK(const Glib::ustring& version)
+void BottleManager::InstallDXVK(Gtk::Window& parent, const Glib::ustring& version)
 {
   if (isBottleNotNull()) {
+    // Before we execute the install, show busy dialog
+    mainWindow.ShowBusyDialog(parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
+
     Glib::ustring package = "dxvk";
     if (version != "latest") {
       package += version;
     }
     Glib::ustring wine_prefix = activeBottle->wine_location();
     Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
-    std::thread t(&Helper::RunProgram, wine_prefix, program, false, true);
+    // finishedPackageInstall signal is needed in order to close the busy dialog again
+    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 
   }
 }
 
 /**
  * \brief Install MS Visual C++ Redistributable Package
+ * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of Visual C++, eg. 2010, 2013, 2015 (no default)
  */
-void BottleManager::InstallVisualCppPackage(const Glib::ustring& version)
+void BottleManager::InstallVisualCppPackage(Gtk::Window& parent, const Glib::ustring& version)
 {
   if (isBottleNotNull()) {
+    // Before we execute the install, show busy dialog
+    mainWindow.ShowBusyDialog(parent, "Installing Visual C++ package.");
+
     Glib::ustring package = "vcrun" + version;
     Glib::ustring wine_prefix = activeBottle->wine_location();
     Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
-    std::thread t(&Helper::RunProgram, wine_prefix, program, false, true);
+    // finishedPackageInstall signal is needed in order to close the busy dialog again
+    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 
   }
 }
@@ -484,12 +499,16 @@ void BottleManager::InstallVisualCppPackage(const Glib::ustring& version)
 /**
  * \brief Install MS .NET (deinstall Mono first if needed)
  * Idea: Install dotnet_verifier by default with it?
+ * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of .NET, eg. '35' for 3.5, '471' for 4.7.1 or '35sp1' for 3.5 SP1 (no default)
  */
-void BottleManager::InstallDotNet(const Glib::ustring& version)
+void BottleManager::InstallDotNet(Gtk::Window& parent, const Glib::ustring& version)
 {
   if (isBottleNotNull()) {
     if (mainWindow.ShowConfirmDialog("Important note: Wine Mono & Gecko support is often sufficient enough.\n\nWine Mono will be *uninstalled* before native .NET will be installed.\n\nAre you sure you want to continue?")) {
+      // Before we execute the install, show busy dialog
+      mainWindow.ShowBusyDialog(parent, "Installing Native .NET redistributable packages. This may take a while.\n");
+
       Glib::ustring program = "";
       Glib::ustring deinstallCommand = this->GetDeinstallMonoCommand();
 
@@ -503,7 +522,8 @@ void BottleManager::InstallDotNet(const Glib::ustring& version)
       } else {
         program = installCommand;
       }
-      std::thread t(&Helper::RunProgram, wine_prefix, program, false, true);
+      // finishedPackageInstall signal is needed in order to close the busy dialog again
+      std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
       t.detach(); 
     } else {
       // Nothing, canceled
@@ -512,16 +532,18 @@ void BottleManager::InstallDotNet(const Glib::ustring& version)
 }
 
 /**
- * \brief Install core fonts (often enough)
+ * \brief Install core fonts (which is often enough)
+ * \param[in] parent Parent GTK window were the request is coming from
  */
-void BottleManager::InstallCoreFonts()
+void BottleManager::InstallCoreFonts(Gtk::Window& parent)
 {
   if (isBottleNotNull()) {
-    // Before we execute the install, show busy indicator
-    mainWindow.ShowBusyDialog("Installing Core fonts.");
+    // Before we execute the install, show busy dialog
+    mainWindow.ShowBusyDialog(parent, "Installing Core fonts.");
 
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " corefonts";    
+    Glib::ustring program = Helper::GetWinetricksLocation() + " corefonts";
+    // finishedPackageInstall signal is needed in order to close the busy dialog again
     std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 
   }
