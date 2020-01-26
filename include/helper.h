@@ -67,7 +67,6 @@ public:
   static bool FileExists(const string& filer_path);
   static void InstallOrUpdateWinetricks();
   static void SelfUpdateWinetricks();
-  static void ShowWinetricksGUI(const string prefix_path);
   static void SetWindowsVersion(const string prefix_path, BottleTypes::Windows windows);
   static void SetVirtualDesktop(const string prefix_path, string resolution);
   static void DisableVirtualDesktop(const string prefix_path);
@@ -83,7 +82,7 @@ private:
   static void ExecTracing(const char* cmd, bool enableTracing);
   static int CloseFile(std::FILE* file);
   static bool WriteFile(const string& filename, const gchar* contents, const gsize length);
-  static bool ReadFile(const string& filename, char* contents);
+  static bool ReadFile(const string& filename, gchar* contents);
   static string GetWinetricksVersion();
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
   static string GetRegMetaData(const string& filename, const string& metaValueName);

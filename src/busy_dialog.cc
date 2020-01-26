@@ -25,8 +25,7 @@
  * \param parent Reference to parent GTK+ Window
  */
 BusyDialog::BusyDialog(Gtk::Window& parent)
-: Gtk::Dialog("Busy, please wait until finished..."),
-  message_label("Jaja"),
+: Gtk::Dialog("Applying Changes"),
   defaultParent(parent)
 {
   set_transient_for(parent);
@@ -34,10 +33,18 @@ BusyDialog::BusyDialog(Gtk::Window& parent)
   set_modal(true);
   set_deletable(false);
 
-  Gtk::Box* box = get_vbox();
+  heading_label.set_markup("<big><b>Installing software</b></big>");
+  heading_label.set_alignment(0.0);
+  message_label.set_alignment(0.0);
   loading_bar.set_pulse_step(0.3);
-  loading_bar.set_hexpand(true);
 
+  Gtk::Box* box = get_vbox();
+  box->set_margin_top(10);
+  box->set_margin_right(10);
+  box->set_margin_bottom(10);
+  box->set_margin_left(10);
+
+  box->pack_start(heading_label, false, false);
   box->pack_start(message_label, true, false);
   box->pack_start(loading_bar, true, false);
   
@@ -58,6 +65,9 @@ void BusyDialog::SetMessage(const Glib::ustring& message)
   this->message_label.set_text(message + " Please wait...");
 }
 
+/**
+ * \brief Show the busy dialog (override the show(), calls parent show())
+ */
 void BusyDialog::show()
 {
   if (!timer.empty() && timer.connected()) {
@@ -71,6 +81,9 @@ void BusyDialog::show()
   Gtk::Dialog::show();
 }
 
+/**
+ * \brief Close the busy dialog (override the close(), calls parent close())
+ */
 void BusyDialog::close()
 {
   // Reset default parent
@@ -83,6 +96,9 @@ void BusyDialog::close()
   Gtk::Dialog::close();
 }
 
+/**
+ * \brief Trigger the loading bar, until timer is disconnected
+ */
 bool BusyDialog::Pulsing()
 {
   loading_bar.pulse();

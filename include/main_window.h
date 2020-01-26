@@ -52,12 +52,12 @@ public:
   sigc::signal<void> showSettingsWindow; /*!< show Settings window signal */
   sigc::signal<void, Glib::ustring&, Glib::ustring&, bool&, BottleTypes::Windows, BottleTypes::Bit, BottleTypes::AudioDriver> newBottle; /*!< Create new Wine Bottle Signal */
   sigc::signal<void, string, bool> runProgram; /*!< Run an EXE or MSI application in Wine with provided filename */
-  sigc::signal<void> openDriveC;
-  sigc::signal<void> rebootBottle;
-  sigc::signal<void> updateBottle;
-  sigc::signal<void> killRunningProcesses;
+  sigc::signal<void> openDriveC; /*!< Open C: drive signal */
+  sigc::signal<void> rebootBottle; /*!< Emulate reboot signal */
+  sigc::signal<void> updateBottle; /*!< Update Wine bottle signal */
+  sigc::signal<void> killRunningProcesses; /*!< Kill all running processes signal */
 
-  sigc::signal<bool, GdkEventButton*> rightClickMenu;
+  sigc::signal<bool, GdkEventButton*> rightClickMenu; /*!< Right-mouse click in list box signal */
 
   explicit MainWindow(Menu& menu);
   virtual ~MainWindow();
@@ -113,8 +113,7 @@ protected:
   Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
 
   // Busy dialog
-  BusyDialog busyDialog;
-
+  BusyDialog busyDialog; /*!< Busy dialog, when the user should wait until install is finished */
 private:
   NewBottleAssistant newBottleAssistant;  /*!< New bottle wizard (behind: new button toolbar) */
 

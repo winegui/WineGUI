@@ -190,15 +190,15 @@ void NewBottleAssistant::createThirdPage()
 }
 
 /**
- * \brief Retrieve the results (after the wizard is finished)
- * And reset the values to default values again
+ * \brief Retrieve the results (after the wizard is finished). 
+ * And reset the values to default values again.
  * Idea: use one struct as in/out parameter
- * \param[in/out] name                        - Bottle Name
- * \param[in/out] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)
- * \param[in/out] disable_gecko_mono          - Enable/Disable Gecko/Mono during install
- * \param[in/out] windows_version             - Windows OS version
- * \param[in/out] bit                         - Windows Bit (32/64-bit)
- * \param[in/out] audio                       - Audio Driver type
+ * \param[inout] name                        Bottle Name
+ * \param[inout] virtual_desktop_resolution  Virtual desktop resolution (empty if disabled)
+ * \param[inout] disable_gecko_mono          Enable/Disable Gecko/Mono during install
+ * \param[inout] windows_version             Windows OS version
+ * \param[inout] bit                         Windows Bit (32/64-bit)
+ * \param[inout] audio                       Audio Driver type
  */
 void NewBottleAssistant::GetResult(
   Glib::ustring& name,

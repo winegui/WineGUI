@@ -94,10 +94,15 @@ static const struct
   {BottleTypes::Windows::Windows20,     "2.0",  "0",     ""}
 };
 
-// Meyers Singleton
+/// Meyers Singleton
 Helper::Helper()= default;
+/// Destructor
 Helper::~Helper()= default;
 
+/**
+ * \brief Get singleton instance
+ * \return Helper reference (singleton)
+ */
 Helper& Helper::getInstance() {
   static Helper instance;
   return instance;
@@ -331,7 +336,7 @@ void Helper::RemoveWineBottle(const string prefix_path)
 
 /**
  * \brief Get Wine Bottle Name from configuration file (if possible)
- * \param[in] prefix_path The prefix directory path to the bottle prefix
+ * \param[in] prefix_path - Bottle prefix
  * \return Bottle name
  */
 string Helper::GetName(const string prefix_path)
@@ -359,7 +364,7 @@ string Helper::GetName(const string prefix_path)
 
 /**
  * \brief Get current Windows OS version
- * \param[in] prefix_path The prefix directory path to the bottle prefix
+ * \param[in] prefix_path - Bottle prefix
  * \return Return the Windows OS version
  */
 BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
@@ -431,7 +436,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
 
 /**
  * \brief Get system processor bit (32/64). *Throw runtime_error* when not found.
- * \param[in] prefix_path The prefix directory path to the bottle prefix
+ * \param[in] prefix_path - Bottle prefix
  * \return 32-bit or 64-bit
  */
 BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
@@ -459,7 +464,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 
 /**
  * \brief Get Audio driver
- * \param[in] prefix_path The prefix directory path to the bottle prefix
+ * \param[in] prefix_path - Bottle prefix
  * \return Audio Driver (eg. alsa/coreaudio/oss/pulse)
  */
 BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
@@ -491,7 +496,7 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
 
 /**
  * \brief Get emulation resolution
- * \param[in] prefix_path The prefix directory path to the bottle prefix
+ * \param[in] prefix_path - Bottle prefix
  * \return Return the virtual desktop resolution or 'disabled' when disabled fully.
  */
 string Helper::GetVirtualDesktop(const string prefix_path)
@@ -518,7 +523,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
 
 /**
  * \brief Get the date/time of the last time the Wine Inf file was updated
- * \param[in] prefix_path The prefix directory path to the bottle prefix
+ * \param[in] prefix_path - Bottle prefix
  * \return Date/time of last update
  */
 string Helper::GetLastWineUpdated(const string prefix_path)
@@ -546,8 +551,8 @@ string Helper::GetLastWineUpdated(const string prefix_path)
 
 /**
  * \brief Get Bottle Status (is Bottle ready or not)
- * \param[in] prefix_path The prefix directory path to the bottle prefix
- * TODO: Maybe do not make this call blocking but async
+ * \param[in] prefix_path - Bottle prefix
+ * TODO: Maybe do not make this call blocking but async, using a thread & dispatcher signal
  * \return True if everything is OK, otherwise false
  */
 bool Helper::GetBottleStatus(const string prefix_path)
@@ -575,7 +580,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
 
 /**
  * \brief Get C:\ Drive location
- * \param[in] prefix_path The prefix directory path to the bottle prefix
+ * \param[in] prefix_path - Bottle prefix
  * \return Location of C:\ location under unix
  */
 string Helper::GetCLetterDrive(const string prefix_path)
@@ -672,6 +677,8 @@ void Helper::SelfUpdateWinetricks()
 
 /**
  * \brief Set Windows OS version by using Winetricks
+ * \param[in] prefix_path - Bottle prefix
+ * \param[in] windows - Windows version (enum)
  */
 void Helper::SetWindowsVersion(const string prefix_path, BottleTypes::Windows windows)
 {
@@ -692,6 +699,8 @@ void Helper::SetWindowsVersion(const string prefix_path, BottleTypes::Windows wi
 
 /**
  * \brief Set custom virtual desktop resolution by using Winetricks
+ * \param[in] prefix_path - Bottle prefix
+ * \param[in] resolution - New screen resolution (eg. 1920x1080)
  */
 void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
 {
@@ -738,6 +747,7 @@ void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
 
 /**
  * \brief Disable Virtual Desktop fully by using Winetricks
+ * \param[in] prefix_path - Bottle prefix
  */
 void Helper::DisableVirtualDesktop(const string prefix_path)
 {
@@ -758,6 +768,7 @@ void Helper::DisableVirtualDesktop(const string prefix_path)
 
 /**
  * \brief Set Audio Driver by using Winetricks
+ * \param[in] prefix_path - Bottle prefix
  * \param[in] audio_driver - Audio driver to be set
  */
 void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver)
@@ -780,6 +791,7 @@ void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver a
 
 /**
  * \brief Get the Wine Mono GUID
+ * \param[in] prefix_path - Bottle prefix
  * \param[in] application_name - Application name to search for
  * \return GUID
  */

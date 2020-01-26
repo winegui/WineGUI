@@ -39,13 +39,16 @@ class BottleItem : public Gtk::ListBoxRow
 {
 public:
   BottleItem();
-  // Copy constructor
+  /// Copy constructor
   BottleItem(const BottleItem& bottleItem);
-  // Copy-&-swap
+
+  /// Copy-&-swap equal overloader method
   BottleItem& operator=(BottleItem tempBottleItem) {
     this->swap(*this, tempBottleItem);
     return *this;
   }
+  
+  /// swap helper method
   void swap(BottleItem& a, BottleItem& b) {
     using std::swap;
     swap(a._name, b._name);

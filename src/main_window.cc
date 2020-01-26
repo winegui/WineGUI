@@ -191,7 +191,7 @@ bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
 
 /**
  * \brief Show busy indicator (like busy installing corefonts in Wine bottle)
- * \param[in] message - Given the user more information what is going on
+ * \param[in] message Given the user more information what is going on
  */
 void MainWindow::ShowBusyDialog(const Glib::ustring& message)
 {
@@ -201,7 +201,8 @@ void MainWindow::ShowBusyDialog(const Glib::ustring& message)
 
 /**
  * \brief Show busy indicator, with another parent
- * \param[in] message - Given the user more information what is going on
+ * \param[in] parent Parent GTK Window (set to be the GTK transient for)
+ * \param[in] message Given the user more information what is going on
  */
 void MainWindow::ShowBusyDialog(Gtk::Window& parent, const Glib::ustring& message)
 {

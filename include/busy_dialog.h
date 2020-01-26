@@ -25,7 +25,7 @@
 using std::string;
 
 /**
- * \class SettingsWindow
+ * \class BusyDialog
  * \brief GTK+ Window class for the settings
  */
 class BusyDialog : public Gtk::Dialog
@@ -39,8 +39,9 @@ public:
 
   void SetMessage(const Glib::ustring& message);
 protected:
-  Gtk::Label message_label;
-  Gtk::ProgressBar loading_bar;
+  Gtk::Label heading_label; /*!< Heading label */
+  Gtk::Label message_label; /*!< Message box label */
+  Gtk::ProgressBar loading_bar; /*!< Loading bar */
 
 private:
   sigc::connection timer; /*!< Timer connection */

@@ -55,18 +55,18 @@ public:
   void ResetActiveBottle();
 protected:
   // Child widgets
-  Gtk::Grid settings_grid;
+  Gtk::Grid settings_grid; /*!< The overall settings GTK grid */
   
-  Gtk::Toolbar first_toolbar;
-  Gtk::Toolbar second_toolbar;
-  Gtk::Toolbar third_toolbar;
-  Gtk::Toolbar fourth_toolbar;
+  Gtk::Toolbar first_toolbar; /*!< 1st row toolbar */
+  Gtk::Toolbar second_toolbar; /*!< 2nd row toolbar */
+  Gtk::Toolbar third_toolbar; /*!< 3rd row toolbar */
+  Gtk::Toolbar fourth_toolbar; /*!< 4th row toolbar */
 
-  Gtk::Label first_row_label;
-  Gtk::Label hint_label;  
-  Gtk::Label second_row_label;
-  Gtk::Label third_row_label;
-  Gtk::Label fourth_row_label;
+  Gtk::Label first_row_label; /*!< 1st row label */
+  Gtk::Label hint_label; /*!< Extra hint label info for user */
+  Gtk::Label second_row_label; /*!< 2nd row label */
+  Gtk::Label third_row_label; /*!< 3rd row label */
+  Gtk::Label fourth_row_label; /*!< 4th row label */
 
   // Buttons First row (Gaming)
   Gtk::ToolButton install_d3dx9_button; /*!< d3dx9 install button */
