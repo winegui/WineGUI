@@ -33,7 +33,9 @@ publish:
   tags:
     - gtk
   only:
-    - master
+    - tags
+  except:
+    - branches
   script:
     - export APP_VERSION=`./build/bin/winegui --version`
     - echo $APP_VERSION
