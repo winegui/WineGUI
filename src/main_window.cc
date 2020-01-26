@@ -34,7 +34,8 @@ MainWindow::MainWindow(Menu& menu)
 : vbox(Gtk::ORIENTATION_VERTICAL),
   paned(Gtk::ORIENTATION_HORIZONTAL),
   right_box(Gtk::Orientation::ORIENTATION_VERTICAL),
-  separator1(Gtk::ORIENTATION_HORIZONTAL)
+  separator1(Gtk::ORIENTATION_HORIZONTAL),
+  busyDialog(*this)
 {
   // Set some Window properties
   set_title("WineGUI - WINE Manager");
@@ -155,7 +156,8 @@ void MainWindow::ResetDetailedInfo()
 }
 
 /**
- * \brief Just show an error message
+ * \brief Show an error message with the provided text.
+ * User can only click 'OK'
  * \param[in] message - Show this error message
  */
 void MainWindow::ShowErrorMessage(const Glib::ustring& message)
@@ -185,6 +187,28 @@ bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
     return_value = true;
   }
   return return_value;
+}
+
+/**
+ * \brief Show busy indicator (like busy installing corefonts in Wine bottle)
+ * \param[in] message - Given the user more information what is going on
+ */
+void MainWindow::ShowBusyDialog(const Glib::ustring& message)
+{
+  // TODO: Create some custom dialog...
+  // TODO: Add this object/class to the main window (header file), so we always has a reference to it
+  // TODO: This function should .show() it, and HideBusyDialog() method should hide this dialog.
+  // false = no markup
+  busyDialog.SetMessage(message);
+  busyDialog.show();
+}
+
+/**
+ * \brief Close the busy dialog again
+ */
+void MainWindow::CloseBusyDialog()
+{
+  busyDialog.close();
 }
 
 /**

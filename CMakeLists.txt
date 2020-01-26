@@ -53,7 +53,7 @@ link_directories(
 add_definitions(${GTKMM_CFLAGS_OTHER})
 
 add_library(menu_lib src/menu.cc)
-add_library(windows_lib src/main_window.cc src/preferences_window.cc src/edit_window.cc src/settings_window.cc)
+add_library(windows_lib src/main_window.cc src/preferences_window.cc src/edit_window.cc src/settings_window.cc src/busy_dialog.cc)
 add_library(bottle_manager_lib src/bottle_manager.cc)
 add_library(bottle_item src/bottle_item.cc)
 add_library(new_bottle_assis_lib src/new_bottle_assistant.cc)

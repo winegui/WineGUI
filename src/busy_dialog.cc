@@ -1,10 +1,10 @@
 /**
  * Copyright (c) 2020 WineGUI
  *
- * \file    edit_window.h
- * \brief   Edit GTK+ window class
+ * \file    busy_dialog.cc
+ * \brief   GTK+ Busy dialog
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -18,40 +18,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#pragma once
-
-#include <gtkmm.h>
-
-using std::string;
-
-// Forward declaration
-class BottleItem;
+#include "busy_dialog.h"
 
 /**
- * \class EditWindow
- * \brief GTK+ Window class for the settings
+ * \brief Constructor
+ * \param parent Reference to parent GTK+ Window
  */
-class EditWindow : public Gtk::Window
+BusyDialog::BusyDialog(Gtk::Window& parent)
+: Gtk::Dialog("Busy, please wait until finished..."),
+  message_label("Jaja")
 {
-public:
-  explicit EditWindow(Gtk::Window& parent);
-  virtual ~EditWindow();
-
-  void Show();
-  void SetActiveBottle(BottleItem* bottle);
-  void ResetActiveBottle();
-protected:
-  // Child widgets
-  Gtk::Grid settings_grid;
+  set_transient_for(parent);
+  set_default_size(400, 120);
+  set_modal(true);
   
-  Gtk::Label label;
+  get_vbox()->pack_start(message_label);
 
-  Gtk::ToolButton save_button; /*!< save button */
-  Gtk::ToolButton delete_button; /*!< delete button */
-  
-  // Buttons second row
-  Gtk::ToolButton wine_config_button; /*!< Winecfg button */
+  show_all_children();
+}
 
-private:
-  BottleItem* activeBottle; /*!< Current active bottle */
-};
+/**
+ * \brief Destructor
+ */
+BusyDialog::~BusyDialog() {}
+
+/**
+ * \brief Set busy message
+ * \param[in] message - Message
+ */
+void BusyDialog::SetMessage(const Glib::ustring& message)
+{
+  this->message_label.set_text(message + " Please wait...");
+}

@@ -45,6 +45,9 @@ BottleManager::BottleManager(MainWindow& mainWindow):
   std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui", "prefixes"};
   BOTTLE_LOCATION = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
 
+  // During install a busy dialog will pop-up, when the finished signal is triggered hide this dialog again
+  this->finishedPackageInstall.connect(sigc::mem_fun(mainWindow, &MainWindow::CloseBusyDialog));
+
   // TODO: Enable/disable tracing for the RunProgram commands (and make it configurable)
 }
 
@@ -235,7 +238,7 @@ void BottleManager::NewBottle(
   // Before we send a finish signal, wait until the status is OK, with a time-out.
   // Especially needed when the user create a default Windows OS Wine bottle, with no additional settings
   int time_out_counter = 0;
-  while(!Helper::GetBottleStatus(wine_prefix) && time_out_counter < 10)
+  while(!Helper::GetBottleStatus(wine_prefix) && time_out_counter < 15)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     ++time_out_counter;
@@ -360,7 +363,7 @@ void BottleManager::OpenWinecfg()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();    
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, "winecfg", false, true);
+    std::thread t(&Helper::RunProgram, wine_prefix, "winecfg", false, true);
     t.detach(); 
   }
 }
@@ -373,7 +376,7 @@ void BottleManager::OpenWinetricks()
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
     Glib::ustring program = Helper::GetWinetricksLocation() + " --gui";
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    std::thread t(&Helper::RunProgram, wine_prefix, program, false, true);
     t.detach(); 
   }
 }
@@ -385,7 +388,7 @@ void BottleManager::OpenUninstaller()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, "wine uninstaller", false, false);
+    std::thread t(&Helper::RunProgram, wine_prefix, "wine uninstaller", false, false);
     t.detach(); 
   }
 }
@@ -397,7 +400,7 @@ void BottleManager::OpenTaskManager()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, "wine taskmgr", false, false);
+    std::thread t(&Helper::RunProgram, wine_prefix, "wine taskmgr", false, false);
     t.detach(); 
   }
 }
@@ -409,8 +412,8 @@ void BottleManager::OpenRegistertyEditor()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "regedit", false, false);
-    t.detach(); 
+    std::thread t(&Helper::RunProgram, wine_prefix, "wine regedit", false, true);
+    t.detach();
   }
 }
 
@@ -439,7 +442,7 @@ void BottleManager::InstallD3DX9(const Glib::ustring& version)
     }
     Glib::ustring wine_prefix = activeBottle->wine_location();
     Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    std::thread t(&Helper::RunProgram, wine_prefix, program, false, true);
     t.detach(); 
   }
 }
@@ -458,7 +461,7 @@ void BottleManager::InstallDXVK(const Glib::ustring& version)
     }
     Glib::ustring wine_prefix = activeBottle->wine_location();
     Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    std::thread t(&Helper::RunProgram, wine_prefix, program, false, true);
     t.detach(); 
   }
 }
@@ -473,7 +476,7 @@ void BottleManager::InstallVisualCppPackage(const Glib::ustring& version)
     Glib::ustring package = "vcrun" + version;
     Glib::ustring wine_prefix = activeBottle->wine_location();
     Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    std::thread t(&Helper::RunProgram, wine_prefix, program, false, true);
     t.detach(); 
   }
 }
@@ -500,7 +503,7 @@ void BottleManager::InstallDotNet(const Glib::ustring& version)
       } else {
         program = installCommand;
       }
-      std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+      std::thread t(&Helper::RunProgram, wine_prefix, program, false, true);
       t.detach(); 
     } else {
       // Nothing, canceled
@@ -514,9 +517,12 @@ void BottleManager::InstallDotNet(const Glib::ustring& version)
 void BottleManager::InstallCoreFonts()
 {
   if (isBottleNotNull()) {
+    // Before we execute the install, show busy indicator
+    mainWindow.ShowBusyDialog("Installing Core fonts.");
+
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " corefonts";
-    std::thread t(&Helper::RunProgramWithPrefix, wine_prefix, program, false, true);
+    Glib::ustring program = Helper::GetWinetricksLocation() + " corefonts";    
+    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 
   }
 }

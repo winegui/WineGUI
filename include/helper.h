@@ -46,8 +46,11 @@ public:
   static Helper& getInstance();
 
   static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
+  static void RunProgram(string prefix_path, string program, bool enable_tracing, bool give_error);
   static void RunProgramUnderWine(string prefix_path, string program, bool enable_tracing, bool is_msi_file);
-  static void RunProgramWithPrefix(string prefix_path, string program, bool enable_tracing, bool give_error);
+  static void RunProgramWithFinishCallback(string prefix_path, string program, bool enable_tracing, bool give_error, bool is_msi_file, Glib::Dispatcher* finishSignal);
+  static string GetWineExecutableLocation();
+  static string GetWinetricksLocation();
   static string GetWineVersion();
   static void CreateWineBottle(const string prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
   static void RemoveWineBottle(const string prefix_path);
@@ -64,13 +67,11 @@ public:
   static bool FileExists(const string& filer_path);
   static void InstallOrUpdateWinetricks();
   static void SelfUpdateWinetricks();
-  static string GetWinetricksVersion();
   static void ShowWinetricksGUI(const string prefix_path);
   static void SetWindowsVersion(const string prefix_path, BottleTypes::Windows windows);
   static void SetVirtualDesktop(const string prefix_path, string resolution);
   static void DisableVirtualDesktop(const string prefix_path);
   static void SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver);
-  static string GetWinetricksLocation();
   static string GetWineGUID(const string prefix_path, const string application_name);
 private:
   Helper();
@@ -83,6 +84,7 @@ private:
   static int CloseFile(std::FILE* file);
   static bool WriteFile(const string& filename, const gchar* contents, const gsize length);
   static bool ReadFile(const string& filename, char* contents);
+  static string GetWinetricksVersion();
   static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
   static string GetRegMetaData(const string& filename, const string& metaValueName);
   static string getBottleDirFromPrefix(const string& prefix_path);

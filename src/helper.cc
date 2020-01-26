@@ -129,30 +129,13 @@ std::map<std::string, unsigned long> Helper::GetBottlesPaths(const string& dir_p
 }
 
 /**
- * \brief Run a Windows program under Wine (run in thread, and dettach it)
- * \param[in] prefix_path - The path to bottle wine
- * \param[in] program - Program/executable that will be executed
- * \param[in] enable_tracing - Enable debugging tracing to file
- * \param[in] is_msi_file - Is the program a MSI installer, let's instal it
- */
-void Helper::RunProgramUnderWine(string prefix_path, string program, bool enable_tracing, bool is_msi_file)
-{
-  string msi = "";
-  if (is_msi_file) {
-    msi = " msiexec /i";
-  }
-  // Execute the command and show the user a message when exit code is non-zero
-  ExecTracing(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + WINE_EXECUTABLE + " " + program).c_str(), enable_tracing);
-}
-
-/**
- * \brief Run any program with only setting the WINEPREFIX env variable.
+ * \brief Run any program with only setting the WINEPREFIX env variable (run this method async)
  * \param[in] prefix_path - The path to wine bottle
  * \param[in] program - Program that gets executed (ideally full path)
  * \param[in] enable_tracing - Enable debugging tracing to file (give_error should be true as well!)
  * \param[in] give_error - Inform user when application exit with non-zero exit code
  */
-void Helper::RunProgramWithPrefix(string prefix_path, string program, bool enable_tracing, bool give_error)
+void Helper::RunProgram(string prefix_path, string program, bool enable_tracing, bool give_error)
 {
   bool execTracing = false;
   if (enable_tracing) {
@@ -171,12 +154,94 @@ void Helper::RunProgramWithPrefix(string prefix_path, string program, bool enabl
 }
 
 /**
+ * \brief Run a Windows program under Wine (run this method async)
+ * \param[in] prefix_path - The path to bottle wine
+ * \param[in] program - Program/executable that will be executed
+ * \param[in] enable_tracing - Enable debugging tracing to file
+ * \param[in] is_msi_file - Is the program a MSI installer
+ */
+void Helper::RunProgramUnderWine(string prefix_path, string program, bool enable_tracing, bool is_msi_file)
+{
+  string msi = "";
+  if (is_msi_file) {
+    msi = " msiexec /i";
+  }
+  // Execute the command and show the user a message when exit code is non-zero
+  ExecTracing(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + Helper::GetWineExecutableLocation() + " " + program).c_str(), enable_tracing);
+}
+
+/**
+ * \brief Run a Windows program under Wine  (run this method async)
+ * \param[in] prefix_path - The path to bottle wine
+ * \param[in] program - Program/executable that will be executed
+ * \param[in] enable_tracing - Enable debugging tracing to file
+ * \param[in] give_error - Inform user when application exit with non-zero exit code
+ * \param[in] is_msi_file - Is the program a MSI installer (don't forget to add GetWineExecutableLocation() to the program parameter)
+ * \param[in] finishSignal - Signal handler to be called when execution is finished
+ */
+void Helper::RunProgramWithFinishCallback(string prefix_path,
+                                          string program,
+                                          bool enable_tracing,
+                                          bool give_error,
+                                          bool is_msi_file,
+                                          Glib::Dispatcher* finishSignal)
+{
+  bool execTracing = false;
+  if (enable_tracing) {
+    execTracing = true;
+  }
+  if (!give_error) {
+    execTracing = false;
+  }
+  if (execTracing) {
+    string msi = "";
+    if (is_msi_file) {
+      msi = " msiexec /i";
+    }
+    // Execute the command and show the user a message when exit code is non-zero
+    ExecTracing(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + program).c_str(), enable_tracing);
+  } else {
+    // No tracing and no error message when exit code is non-zero
+    Exec(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
+  }
+
+  if (finishSignal != nullptr) {
+    finishSignal->emit();
+  }
+}
+
+/**
+ * \brief Retrieve the Wine executable (full path if applicable)
+ * \return Wine location
+ */
+string Helper::GetWineExecutableLocation()
+{
+  return WINE_EXECUTABLE;
+}
+
+/**
+ * \brief Get the Winetricks binary location
+ * \return the full path to Winetricks
+ */
+string Helper::GetWinetricksLocation()
+{
+  string path = "";
+  if (FileExists(WINETRICKS_EXECUTABLE))
+  {
+    path = WINETRICKS_EXECUTABLE;
+  } else {
+    g_warning("Could not find winetricks executable!");
+  }
+  return path;
+}
+
+/**
  * \brief Get Wine version from CLI
  * \return Return the wine version
  */
 string Helper::GetWineVersion()
 {
-  string result = Exec((WINE_EXECUTABLE + " --version").c_str());
+  string result = Exec((Helper::GetWineExecutableLocation() + " --version").c_str());
   if (!result.empty()) {
     std::vector<string> results = Split(result, '-');
     if (results.size() >= 2) {
@@ -213,7 +278,7 @@ void Helper::CreateWineBottle(const string prefix_path, BottleTypes::Bit bit, co
   string wineDLLOverrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
 
   string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + wineArch + wineDLLOverrides + " " +
-    WINE_EXECUTABLE + " wineboot>/dev/null 2>&1; echo $?").c_str());
+    Helper::GetWineExecutableLocation() + " wineboot>/dev/null 2>&1; echo $?").c_str());
   if (!result.empty())
   {
     // Remove new lines
@@ -502,7 +567,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
     }
     // TODO: Wine exec takes quite long, execute that in a seperate thread (don't block UI).
     // TODO: test the explorer /desktop=root part of the command
-    //string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINE_EXECUTABLE + " explorer /desktop=root cmd /Q /C ver").c_str());
+    //string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::GetWineExecutableLocation() + " explorer /desktop=root cmd /Q /C ver").c_str());
   } else {
     return false;
   }
@@ -603,25 +668,6 @@ void Helper::SelfUpdateWinetricks()
   {
     throw std::runtime_error("Try to update the Winetricks script, while there is no winetricks installed/not found!");
   }
-}
-
-/**
- * \brief Get the Winetrick version
- * \return The version of Winetricks
- */
-string Helper::GetWinetricksVersion()
-{
-  string version = "";
-  if (FileExists(WINETRICKS_EXECUTABLE)) {
-    string result = Exec((WINETRICKS_EXECUTABLE + " --version").c_str());
-    if (!result.empty())
-    {
-      if (result.length() >= 8) {
-        version = result.substr(0, 8); // Retrieve YYYYMMDD
-      }
-    }
-  }
-  return version;
 }
 
 /**
@@ -733,22 +779,6 @@ void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver a
 }
 
 /**
- * \brief Get the Winetricks binary location
- * \return the full path to Winetricks
- */
-string Helper::GetWinetricksLocation()
-{
-  string path = "";
-  if (FileExists(WINETRICKS_EXECUTABLE))
-  {
-    path = WINETRICKS_EXECUTABLE;
-  } else {
-    g_warning("Could not find winetricks executable!");
-  }
-  return path;
-}
-
-/**
  * \brief Get the Wine Mono GUID
  * \param[in] application_name - Application name to search for
  * \return GUID
@@ -848,6 +878,25 @@ bool Helper::WriteFile(const string& filename, const gchar* contents, const gsiz
 bool Helper::ReadFile(const string& filename, gchar* contents)
 {
   return g_file_get_contents(filename.c_str(), &contents, NULL, NULL);
+}
+
+/**
+ * \brief Get the Winetrick version
+ * \return The version of Winetricks
+ */
+string Helper::GetWinetricksVersion()
+{
+  string version = "";
+  if (FileExists(WINETRICKS_EXECUTABLE)) {
+    string result = Exec((WINETRICKS_EXECUTABLE + " --version").c_str());
+    if (!result.empty())
+    {
+      if (result.length() >= 8) {
+        version = result.substr(0, 8); // Retrieve YYYYMMDD
+      }
+    }
+  }
+  return version;
 }
 
 /**

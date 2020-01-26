@@ -26,6 +26,7 @@
 #include "menu.h"
 #include "bottle_item.h"
 #include "new_bottle_assistant.h"
+#include "busy_dialog.h"
 
 using std::string;
 using std::cout;
@@ -66,7 +67,9 @@ public:
   void ResetDetailedInfo();
   void ShowErrorMessage(const Glib::ustring& message);
   bool ShowConfirmDialog(const Glib::ustring& message);
-  
+  void ShowBusyDialog(const Glib::ustring& message);
+  void CloseBusyDialog();
+
   // Signal handlers
   virtual void on_new_bottle_button_clicked();
   virtual void on_new_bottle_created();
@@ -107,6 +110,9 @@ protected:
   Gtk::ToolButton reboot_button; /*!< Reboot toolbar button */
   Gtk::ToolButton update_button; /*!< Update toolbar button */
   Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
+
+  // Busy dialog
+  BusyDialog busyDialog;
 
 private:
   NewBottleAssistant newBottleAssistant;  /*!< New bottle wizard (behind: new button toolbar) */

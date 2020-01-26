@@ -79,6 +79,7 @@ public:
   void InstallDotNet(const Glib::ustring& version);
   void InstallCoreFonts();
 private:
+  Glib::Dispatcher finishedPackageInstall; /*!< Signal that Wine package install is completed */
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;
 
