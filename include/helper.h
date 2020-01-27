@@ -27,6 +27,7 @@
 #include <map>
 
 #include "bottle_types.h"
+#include "dll_override_types.h"
 
 using std::string;
 using std::cout;
@@ -72,6 +73,7 @@ public:
   static void DisableVirtualDesktop(const string prefix_path);
   static void SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver);
   static string GetWineGUID(const string prefix_path, const string application_name);
+  static bool GetDLLOverride(const string prefix_path, const string dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
 private:
   Helper();
   ~Helper();

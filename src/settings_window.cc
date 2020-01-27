@@ -20,6 +20,7 @@
  */
 #include "settings_window.h"
 #include "bottle_item.h"
+#include "helper.h"
 
 /**
  * \brief Constructor
@@ -97,7 +98,6 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   settings_grid.attach(third_toolbar,    0, 6, 1, 1);
   settings_grid.attach(fourth_row_label, 0, 7, 1, 1);
   settings_grid.attach(fourth_toolbar,   0, 8, 1, 1);
-
 
   // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
@@ -194,6 +194,8 @@ SettingsWindow::~SettingsWindow() {}
  * \brief Same as show() but will also update the Window title
  */
 void SettingsWindow::Show() {
+  this->UpdateInstalled();
+
   if (activeBottle != nullptr)
     set_title("Settings of machine - " + activeBottle->name());
   else
@@ -217,4 +219,67 @@ void SettingsWindow::SetActiveBottle(BottleItem* bottle)
 void SettingsWindow::ResetActiveBottle()
 {
   this->activeBottle = nullptr;
+}
+
+/**
+ * \brief Update GUI state depending on the packages installed
+ */
+void SettingsWindow::UpdateInstalled()
+{
+  if (IsD3DX9Installed()) {
+    Gtk::Image* reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
+    reinstall_d3dx9_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_d3dx9_button.set_label("Reinstall DirectX v9 (OpenGL)");
+    install_d3dx9_button.set_icon_widget(*reinstall_d3dx9_image);
+  } else {
+    Gtk::Image* install_d3dx9_image = Gtk::manage(new Gtk::Image());
+    install_d3dx9_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_d3dx9_button.set_label("Install DirectX v9 (OpenGL)");
+    install_d3dx9_button.set_icon_widget(*install_d3dx9_image);
+  }
+  
+  if (IsDXVKInstalled()) {
+    Gtk::Image* reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
+    reinstall_d3dx9_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dxvk_button.set_label("Reinstall DirectX v9/v10/v11 (Vulkan)");
+    install_dxvk_button.set_icon_widget(*reinstall_d3dx9_image);
+  } else {
+    Gtk::Image* install_d3dx9_image = Gtk::manage(new Gtk::Image());
+    install_d3dx9_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dxvk_button.set_label("Install DirectX v9/v10/v11 (Vulkan)");
+    install_dxvk_button.set_icon_widget(*install_d3dx9_image);
+  }
+
+  show_all_children();
+}
+
+
+/**
+ * \brief Check is D3DX9 (DirectX 9 OpenGL) is installed
+ * \return True if installed otherwise False
+ */
+bool SettingsWindow::IsD3DX9Installed()
+{
+  bool isInstalled = false;
+  if (this->activeBottle != nullptr) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    // Check if set to 'native' load order
+    isInstalled = Helper::GetDLLOverride(wine_prefix, "*d3dx9_43");
+  }
+  return isInstalled;
+}
+
+/**
+ * \brief Check is DXVK (Vulkan based DirectX 9/10/11) is installed
+ * \return True if installed otherwise False
+ */
+bool SettingsWindow::IsDXVKInstalled()
+{
+  bool isInstalled = false;
+  if (this->activeBottle != nullptr) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    // Check if set to 'native' load order
+    isInstalled = Helper::GetDLLOverride(wine_prefix, "*dxgi");
+  }
+  return isInstalled;
 }

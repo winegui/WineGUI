@@ -23,6 +23,8 @@
 #include "signal_dispatcher.h"
 #include "helper.h"
 #include "wine_defaults.h"
+#include "bottle_item.h"
+#include "dll_override_types.h"
 
 #include <chrono>
 #include <stdexcept>
@@ -44,9 +46,6 @@ BottleManager::BottleManager(MainWindow& mainWindow):
   // TODO: Make it configurable via settings
   std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui", "prefixes"};
   BOTTLE_LOCATION = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
-
-  // During install a busy dialog will pop-up, when the finished signal is triggered hide this dialog again
-  this->finishedPackageInstall.connect(sigc::mem_fun(mainWindow, &MainWindow::CloseBusyDialog));
 
   // TODO: Enable/disable tracing for the RunProgram commands (and make it configurable)
 }
@@ -235,14 +234,17 @@ void BottleManager::NewBottle(
     // TODO: Finally add name to WineGUI config file
   }
 
+  // TODO: All calls above are blocking calls, still sometimes the registery files are not yet updated on disk?
+  //
   // Before we send a finish signal, wait until the status is OK, with a time-out.
   // Especially needed when the user create a default Windows OS Wine bottle, with no additional settings
   int time_out_counter = 0;
-  while(!Helper::GetBottleStatus(wine_prefix) && time_out_counter < 15)
+  while(!Helper::GetBottleStatus(wine_prefix) && time_out_counter < 20)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     ++time_out_counter;
   }
+  
   caller->SignalBottleCreated();
 }
 
@@ -430,7 +432,7 @@ void BottleManager::OpenNotepad()
 }
 
 /**
- * \brief Install D3DX9 (DirectX 9)
+ * \brief Install D3DX9 (DirectX 9 OpenGL)
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of additional DirectX 9 DLLs, eg. 26 (for default use: "")
  */
@@ -445,7 +447,7 @@ void BottleManager::InstallD3DX9(Gtk::Window& parent, const Glib::ustring& versi
       package += "_" + version;
     }
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
+    Glib::ustring program = Helper::GetWinetricksLocation() + " -q " + package;
     // finishedPackageInstall signal is needed in order to close the busy dialog again
     std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 
@@ -469,7 +471,7 @@ void BottleManager::InstallDXVK(Gtk::Window& parent, const Glib::ustring& versio
       package += version;
     }
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
+    Glib::ustring program = Helper::GetWinetricksLocation() + " -q " + package;
     // finishedPackageInstall signal is needed in order to close the busy dialog again
     std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 
@@ -489,7 +491,7 @@ void BottleManager::InstallVisualCppPackage(Gtk::Window& parent, const Glib::ust
 
     Glib::ustring package = "vcrun" + version;
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " " + package;
+    Glib::ustring program = Helper::GetWinetricksLocation() + " -q " + package;
     // finishedPackageInstall signal is needed in order to close the busy dialog again
     std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 
@@ -514,7 +516,7 @@ void BottleManager::InstallDotNet(Gtk::Window& parent, const Glib::ustring& vers
 
       Glib::ustring package = "dotnet" + version;
       Glib::ustring wine_prefix = activeBottle->wine_location();
-      Glib::ustring installCommand = Helper::GetWinetricksLocation() + " " + package;
+      Glib::ustring installCommand = Helper::GetWinetricksLocation() + " -q " + package;
 
       if (!deinstallCommand.empty()) {
         // First deinstall Mono then install native .NET
@@ -542,7 +544,7 @@ void BottleManager::InstallCoreFonts(Gtk::Window& parent)
     mainWindow.ShowBusyDialog(parent, "Installing Core fonts.");
 
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " corefonts";
+    Glib::ustring program = Helper::GetWinetricksLocation() + " -q corefonts";
     // finishedPackageInstall signal is needed in order to close the busy dialog again
     std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 

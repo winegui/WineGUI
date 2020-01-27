@@ -251,7 +251,7 @@ void NewBottleAssistant::GetResult(
  */
 void NewBottleAssistant::BottleCreated()
 {  
-  // Reset defaults
+  // Reset defaults (including timer.disconnect())
   setDefaultValues();
 
   // Close Assistant

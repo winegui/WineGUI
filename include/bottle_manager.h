@@ -25,14 +25,16 @@
 #include <string>
 #include <thread>
 #include <mutex>
-#include <glibmm/main.h>
-#include "bottle_item.h"
+#include <gtkmm.h>
+
+#include "bottle_types.h"
 
 using std::string;
 
 // Forward declaration
 class MainWindow;
 class SignalDispatcher;
+class BottleItem;
 
 /**
  * \class BottleManager
@@ -43,6 +45,7 @@ class BottleManager
 public:
   // Signals
   sigc::signal<void> resetActiveBottle; /*!< Send signal: Clear the current active bottle */
+  Glib::Dispatcher finishedPackageInstall; /*!< Signal that Wine package install is completed */
 
   explicit BottleManager(MainWindow& mainWindow);
   virtual ~BottleManager();
@@ -74,12 +77,13 @@ public:
   void OpenRegistertyEditor();
   void OpenNotepad();
   void InstallD3DX9(Gtk::Window& parent, const Glib::ustring& version);
+  bool IsD3DX9Installed();
   void InstallDXVK(Gtk::Window& parent, const Glib::ustring& version);
+  bool IsDXVKInstalled();
   void InstallVisualCppPackage(Gtk::Window& parent, const Glib::ustring& version);
   void InstallDotNet(Gtk::Window& parent, const Glib::ustring& version);
   void InstallCoreFonts(Gtk::Window& parent);
 private:
-  Glib::Dispatcher finishedPackageInstall; /*!< Signal that Wine package install is completed */
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;
 

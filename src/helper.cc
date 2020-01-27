@@ -217,7 +217,7 @@ void Helper::RunProgramWithFinishCallback(string prefix_path,
 
 /**
  * \brief Retrieve the Wine executable (full path if applicable)
- * \return Wine location
+ * \return Wine binary location
  */
 string Helper::GetWineExecutableLocation()
 {
@@ -790,18 +790,34 @@ void Helper::SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver a
 }
 
 /**
- * \brief Get the Wine Mono GUID
+ * \brief Get a Wine GUID based on the application name (if installed)
  * \param[in] prefix_path - Bottle prefix
  * \param[in] application_name - Application name to search for
- * \return GUID
+ * \return GUID or empty string when not installed/found
  */
 string Helper::GetWineGUID(const string prefix_path, const string application_name)
 {
-  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1").c_str());
+  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::GetWineExecutableLocation() + " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1").c_str());
   if (!result.empty()) {
     result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
   }
   return result;
+}
+
+/**
+ * \brief Check DLL can be found in overrides and set to a specific load order
+ * \param[in] prefix_path - Bottle prefix
+ * \param[in] dll_name - DLL Name
+ * \param[in] load_order - (Optional) DLL load order enum value (Default 'native')
+ * \return True if specified load order matches the DLL overrides registery value
+ */
+bool Helper::GetDLLOverride(const string prefix_path, const string dll_name, DLLOverride::LoadOrder load_order)
+{
+  string filename = Glib::build_filename(prefix_path, USER_REG);
+  string keyName = "Software\\\\Wine\\\\DllOverrides";
+  string valueName = dll_name;
+  string value = Helper::GetRegValue(filename, keyName, valueName);
+  return DLLOverride::toString(load_order) == value;
 }
 
 /****************************************************************************

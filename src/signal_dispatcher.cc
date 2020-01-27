@@ -101,6 +101,10 @@ void SignalDispatcher::DispatchSignals()
   manager.resetActiveBottle.connect(sigc::mem_fun(editWindow, &EditWindow::ResetActiveBottle));
   manager.resetActiveBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::ResetActiveBottle));
   manager.resetActiveBottle.connect(sigc::mem_fun(*mainWindow, &MainWindow::ResetDetailedInfo));
+  // Package install finished (in settings window), close the busy dialog & refresh the settings window
+  manager.finishedPackageInstall.connect(sigc::mem_fun(*mainWindow, &MainWindow::CloseBusyDialog));
+  // TODO BUG: UpdateInstalled is called too soon, file on disks (registery) are not yet updated? This is the same problem during Bottle creation (windows version/virtual desktop)!
+  manager.finishedPackageInstall.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::UpdateInstalled));
 
   // Menu / Toolbar actions
   mainWindow->newBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));

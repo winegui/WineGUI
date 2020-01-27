@@ -53,6 +53,7 @@ public:
   void Show();
   void SetActiveBottle(BottleItem* bottle);
   void ResetActiveBottle();
+  void UpdateInstalled();
 protected:
   // Child widgets
   Gtk::Grid settings_grid; /*!< The overall settings GTK grid */
@@ -89,4 +90,7 @@ protected:
 
 private:
   BottleItem* activeBottle; /*!< Current active bottle */
+
+  bool IsD3DX9Installed();
+  bool IsDXVKInstalled();
 };
