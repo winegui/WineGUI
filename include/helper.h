@@ -50,6 +50,7 @@ public:
   static void RunProgram(string prefix_path, string program, bool enable_tracing, bool give_error);
   static void RunProgramUnderWine(string prefix_path, string program, bool enable_tracing, bool is_msi_file);
   static void RunProgramWithFinishCallback(string prefix_path, string program, bool enable_tracing, bool give_error, bool is_msi_file, Glib::Dispatcher* finishSignal);
+  static void WaitUntilWineserverIsTerminated(const string prefix_path);
   static string GetWineExecutableLocation();
   static string GetWinetricksLocation();
   static string GetWineVersion();

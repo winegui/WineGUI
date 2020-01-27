@@ -177,6 +177,7 @@ void Helper::RunProgramUnderWine(string prefix_path, string program, bool enable
 
 /**
  * \brief Run a Windows program under Wine  (run this method async)
+ * This method will really wait until the wineserver is down.
  * \param[in] prefix_path - The path to bottle wine
  * \param[in] program - Program/executable that will be executed
  * \param[in] enable_tracing - Enable debugging tracing to file
@@ -210,8 +211,23 @@ void Helper::RunProgramWithFinishCallback(string prefix_path,
     Exec(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
   }
 
+  // Blocking wait until wineserver is terminated (before we can look in the reg files for example)
+  Helper::WaitUntilWineserverIsTerminated(prefix_path);
+
+  // When the server is termined (or timed-out), finally fire the finish signal
   if (finishSignal != nullptr) {
     finishSignal->emit();
+  }
+}
+
+/**
+ * \brief Blocking wait (with timeout functionality) until wineserver is terminated.
+ */
+void Helper::WaitUntilWineserverIsTerminated(const string prefix_path)
+{
+  string exitCode = Exec(("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w; echo $?").c_str());
+  if (exitCode == "124") {
+    g_warning("Time-out of wineserver wait command triggered (wineserver is still running..)");
   }
 }
 
@@ -550,29 +566,26 @@ string Helper::GetLastWineUpdated(const string prefix_path)
 }
 
 /**
- * \brief Get Bottle Status (is Bottle ready or not)
+ * \brief Get Bottle Status, to validate some bear minimal Wine stuff
+ * Hint: use WaitUntilWineserverIsTerminated, if you want to wait until the Bottle is fully created
  * \param[in] prefix_path - Bottle prefix
- * TODO: Maybe do not make this call blocking but async, using a thread & dispatcher signal
  * \return True if everything is OK, otherwise false
  */
 bool Helper::GetBottleStatus(const string prefix_path)
 {
-  // First check if directory exists at all (otherwise any wine command will create a new bottle)
-  // And check if system.reg is present (important Wine file)
-  // And finally if we can read-out the Windows OS version
-  if (Helper::DirExists(prefix_path) &&
-     Helper::FileExists(Glib::build_filename(prefix_path, SYSTEM_REG))) {
-    try
-    {
+  // Check if some directories exists, and system registery file,
+  // and finally, if we can read-out the Windows OS version without errors
+  if (Helper::DirExists(prefix_path) && 
+      Helper::DirExists(Glib::build_filename(prefix_path, "dosdevices")) &&
+      Helper::FileExists(Glib::build_filename(prefix_path, SYSTEM_REG))) 
+  {
+    try {
       Helper::GetWindowsOSVersion(prefix_path);
       return true;
     } catch (const std::runtime_error& error){
       // Not good!
       return false;
     }
-    // TODO: Wine exec takes quite long, execute that in a seperate thread (don't block UI).
-    // TODO: test the explorer /desktop=root part of the command
-    //string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::GetWineExecutableLocation() + " explorer /desktop=root cmd /Q /C ver").c_str());
   } else {
     return false;
   }
@@ -586,7 +599,7 @@ bool Helper::GetBottleStatus(const string prefix_path)
 string Helper::GetCLetterDrive(const string prefix_path)
 {
   // Determ C location
-  string c_drive_location = Glib::build_filename(prefix_path, "/dosdevices/c:/");
+  string c_drive_location = Glib::build_filename(prefix_path, "dosdevices", "c:");
   if (Helper::DirExists(prefix_path) &&
      Helper::DirExists(c_drive_location)) {
        return c_drive_location;

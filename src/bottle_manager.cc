@@ -234,17 +234,10 @@ void BottleManager::NewBottle(
     // TODO: Finally add name to WineGUI config file
   }
 
-  // TODO: All calls above are blocking calls, still sometimes the registery files are not yet updated on disk?
-  //
-  // Before we send a finish signal, wait until the status is OK, with a time-out.
-  // Especially needed when the user create a default Windows OS Wine bottle, with no additional settings
-  int time_out_counter = 0;
-  while(!Helper::GetBottleStatus(wine_prefix) && time_out_counter < 20)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    ++time_out_counter;
-  }
-  
+  // Wait until wineserver terminates
+  Helper::WaitUntilWineserverIsTerminated(wine_prefix);
+
+  // Trigger finish signal!
   caller->SignalBottleCreated();
 }
 
