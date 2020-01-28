@@ -75,6 +75,7 @@ public:
   static void SetAudioDriver(const string prefix_path, BottleTypes::AudioDriver audio_driver);
   static string GetWineGUID(const string prefix_path, const string application_name);
   static bool GetDLLOverride(const string prefix_path, const string dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
+  static string GetUninstaller(const string prefix_path, const string uninstallerKey);
 private:
   Helper();
   ~Helper();

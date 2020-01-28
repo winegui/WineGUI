@@ -73,10 +73,12 @@ protected:
   Gtk::ToolButton install_d3dx9_button; /*!< d3dx9 install button */
   Gtk::ToolButton install_dxvk_button; /*!< DXVK install button */
 
-  // Buttons Second row  
+  // Buttons Second row
+  Gtk::ToolButton install_liberation_fonts_button; /*!< Liberation fonts install button */
   Gtk::ToolButton install_core_fonts_button; /*!< Core fonts install button */
   Gtk::ToolButton install_visual_cpp_button; /*!< MS Visual C++ Redistributable Package install button */
-  Gtk::ToolButton install_dotnet_button; /*!< .NET v4.0 install button */
+  Gtk::ToolButton install_dotnet4_button; /*!< .NET v4.0 install button */
+  Gtk::ToolButton install_dotnet452_button; /*!< .NET v4.5.2 install button */
   
   // Buttons Third row (supporting tools)
   Gtk::ToolButton wine_uninstall_button; /*!< Wine Uninstaller button */
@@ -93,4 +95,6 @@ private:
 
   bool IsD3DX9Installed();
   bool IsDXVKInstalled();
+  bool isDotnet4Installed();
+  bool isDotnet452Installed();
 };

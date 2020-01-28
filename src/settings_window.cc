@@ -30,9 +30,11 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
 :
   install_d3dx9_button("Install DirectX v9 (OpenGL)"),
   install_dxvk_button("Install DirectX v9/v10/v11 (Vulkan)"),
+  install_liberation_fonts_button("Install Liberation (open-source fonts)"),
   install_core_fonts_button("Install Core Fonts"),
   install_visual_cpp_button("Install Visual C++ 2013"),
-  install_dotnet_button("Install .NET v4.5.2"),
+  install_dotnet4_button("Install .NET v4"),
+  install_dotnet452_button("Install .NET v4.5.2"),
   wine_uninstall_button("Uninstaller"),
   open_notepad_button("Notepad"),
   wine_task_manager_button("Task manager"),
@@ -117,26 +119,40 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   first_toolbar.insert(install_dxvk_button, 1);
   
   // Second row, additional packages
+  Gtk::Image* liberation_image = Gtk::manage(new Gtk::Image());
+  liberation_image->set_from_icon_name("font-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  install_liberation_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(corefonts, *this));
+  install_liberation_fonts_button.set_tooltip_text("Installs Liberation open-source Fonts, replaces Core fonts");
+  install_liberation_fonts_button.set_icon_widget(*liberation_image);
+  second_toolbar.insert(install_liberation_fonts_button, 0);
+
   Gtk::Image* corefonts_image = Gtk::manage(new Gtk::Image());
   corefonts_image->set_from_icon_name("font-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_core_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(corefonts, *this));
-  install_core_fonts_button.set_tooltip_text("Installs MS Core Fonts");
+  install_core_fonts_button.set_tooltip_text("Installs Microsoft Core Fonts");
   install_core_fonts_button.set_icon_widget(*corefonts_image);
-  second_toolbar.insert(install_core_fonts_button, 0);
+  second_toolbar.insert(install_core_fonts_button, 1);
 
   Gtk::Image* visual_cpp_image = Gtk::manage(new Gtk::Image());
   visual_cpp_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_visual_cpp_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2013"));
   install_visual_cpp_button.set_tooltip_text("Installs Visual C++ 2013 package");
   install_visual_cpp_button.set_icon_widget(*visual_cpp_image);
-  second_toolbar.insert(install_visual_cpp_button, 1);
+  second_toolbar.insert(install_visual_cpp_button, 2);
 
-  Gtk::Image* dotnet_image = Gtk::manage(new Gtk::Image());
-  dotnet_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_dotnet_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
-  install_dotnet_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
-  install_dotnet_button.set_icon_widget(*dotnet_image);
-  second_toolbar.insert(install_dotnet_button, 2);
+  Gtk::Image* dotnet4_image = Gtk::manage(new Gtk::Image());
+  dotnet4_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  install_dotnet4_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "40"));
+  install_dotnet4_button.set_tooltip_text("Installs .NET 4.0");
+  install_dotnet4_button.set_icon_widget(*dotnet4_image);
+  second_toolbar.insert(install_dotnet4_button, 4);
+
+    Gtk::Image* dotnet452_image = Gtk::manage(new Gtk::Image());
+  dotnet452_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  install_dotnet452_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
+  install_dotnet452_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
+  install_dotnet452_button.set_icon_widget(*dotnet452_image);
+  second_toolbar.insert(install_dotnet452_button, 5);
 
   // Third row buttons, supporting tools
   Gtk::Image* uninstaller_image = Gtk::manage(new Gtk::Image());
@@ -250,6 +266,30 @@ void SettingsWindow::UpdateInstalled()
     install_dxvk_button.set_icon_widget(*install_d3dx9_image);
   }
 
+  if (isDotnet4Installed()) {
+    Gtk::Image* reinstall_dotnet4_image = Gtk::manage(new Gtk::Image());
+    reinstall_dotnet4_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_button.set_label("Reinstall .NET v4");
+    install_dotnet4_button.set_icon_widget(*reinstall_dotnet4_image);
+  } else {
+    Gtk::Image* install_dotnet4_image = Gtk::manage(new Gtk::Image());
+    install_dotnet4_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_button.set_label("Install .NET v4");
+    install_dotnet4_button.set_icon_widget(*install_dotnet4_image);
+  }
+
+  if (isDotnet452Installed()) {
+    Gtk::Image* reinstall_dotnet452_image = Gtk::manage(new Gtk::Image());
+    reinstall_dotnet452_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet452_button.set_label("Reinstall .NET v4.5.2");
+    install_dotnet452_button.set_icon_widget(*reinstall_dotnet452_image);
+  } else {
+    Gtk::Image* install_dotnet452_image = Gtk::manage(new Gtk::Image());
+    install_dotnet452_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet452_button.set_label("Install .NET v4.5.2");
+    install_dotnet452_button.set_icon_widget(*install_dotnet452_image);
+  }
+
   show_all_children();
 }
 
@@ -283,3 +323,50 @@ bool SettingsWindow::IsDXVKInstalled()
   }
   return isInstalled;
 }
+
+/**
+ * \brief Check is Dotnet v4.0 is installed
+ * \return True if installed otherwise False
+ */
+bool SettingsWindow::isDotnet4Installed()
+{
+  bool isInstalled = false;
+  if (this->activeBottle != nullptr) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    // Check if set to 'native' load order
+    bool isDllOverride = Helper::GetDLLOverride(wine_prefix, "*mscoree");
+
+    if (isDllOverride) {
+      // Next, check if package can be found to be uninstalled      
+      string name = Helper::GetUninstaller(wine_prefix, "Microsoft .NET Framework 4 Extended");
+      isInstalled = (name == "Microsoft .NET Framework 4 Extended");
+    } else {
+      isInstalled = false;
+    }
+  }
+  return isInstalled;
+}
+
+/**
+ * \brief Check is Dotnet v4.5.2 is installed
+ * \return True if installed otherwise False
+ */
+bool SettingsWindow::isDotnet452Installed()
+{
+  bool isInstalled = false;
+  if (this->activeBottle != nullptr) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    // Check if set to 'native' load order
+    bool isDllOverride = Helper::GetDLLOverride(wine_prefix, "*mscoree");
+
+    if (isDllOverride) {
+      // Next, check if package can be found to be uninstalled      
+      string name = Helper::GetUninstaller(wine_prefix, "{92FB6C44-E685-45AD-9B20-CADF4CABA132}");
+      isInstalled = (name == "Microsoft .NET Framework 4.5.2");
+    } else {
+      isInstalled = false;
+    }
+  }
+  return isInstalled;
+}
+

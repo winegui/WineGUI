@@ -502,15 +502,16 @@ void BottleManager::InstallDotNet(Gtk::Window& parent, const Glib::ustring& vers
   if (isBottleNotNull()) {
     if (mainWindow.ShowConfirmDialog("Important note: Wine Mono & Gecko support is often sufficient enough.\n\nWine Mono will be *uninstalled* before native .NET will be installed.\n\nAre you sure you want to continue?")) {
       // Before we execute the install, show busy dialog
-      mainWindow.ShowBusyDialog(parent, "Installing Native .NET redistributable packages. This may take a while.\n");
+      mainWindow.ShowBusyDialog(parent, "Installing Native .NET redistributable packages (v" + version + ").\nThis may take quite some time...\n");
 
-      Glib::ustring program = "";
       Glib::ustring deinstallCommand = this->GetDeinstallMonoCommand();
 
       Glib::ustring package = "dotnet" + version;
       Glib::ustring wine_prefix = activeBottle->wine_location();
-      Glib::ustring installCommand = Helper::GetWinetricksLocation() + " -q " + package;
+      // I can't use -q with .NET installs
+      Glib::ustring installCommand = Helper::GetWinetricksLocation() + " " + package;
 
+      Glib::ustring program = "";
       if (!deinstallCommand.empty()) {
         // First deinstall Mono then install native .NET
         program = deinstallCommand + "; " + installCommand;
@@ -534,10 +535,28 @@ void BottleManager::InstallCoreFonts(Gtk::Window& parent)
 {
   if (isBottleNotNull()) {
     // Before we execute the install, show busy dialog
-    mainWindow.ShowBusyDialog(parent, "Installing Core fonts.");
+    mainWindow.ShowBusyDialog(parent, "Installing MS Core fonts.");
 
     Glib::ustring wine_prefix = activeBottle->wine_location();
     Glib::ustring program = Helper::GetWinetricksLocation() + " -q corefonts";
+    // finishedPackageInstall signal is needed in order to close the busy dialog again
+    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Install liberation fonts, open-source (which is often enough)
+ * \param[in] parent Parent GTK window were the request is coming from
+ */
+void BottleManager::InstallLiberation(Gtk::Window& parent)
+{
+  if (isBottleNotNull()) {
+    // Before we execute the install, show busy dialog
+    mainWindow.ShowBusyDialog(parent, "Installing Liberation open-source fonts.");
+
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring program = Helper::GetWinetricksLocation() + " -q liberation";
     // finishedPackageInstall signal is needed in order to close the busy dialog again
     std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, false, true, false, &finishedPackageInstall);
     t.detach(); 

@@ -48,9 +48,9 @@ static const string USER_REG = "user.reg";
 static const string USERDEF_REG = "userdef.reg";
 
 // Reg keys
-static const string keyName9x = "Software\\\\Microsoft\\\\Windows\\\\CurrentVersion";
-static const string keyNameNT = "Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion";
-static const string keyType   = "System\\\\CurrentControlSet\\\\Control\\\\ProductOptions";
+static const string keyName9x = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion]";
+static const string keyNameNT = "[Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion]";
+static const string keyType   = "[System\\\\CurrentControlSet\\\\Control\\\\ProductOptions]";
 
 // Reg names
 static const string nameNTVersion   = "CurrentVersion";
@@ -486,7 +486,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string prefix_path)
 BottleTypes::AudioDriver Helper::GetAudioDriver(const string prefix_path)
 {
   string filename = Glib::build_filename(prefix_path, USER_REG);
-  string keyName = "Software\\\\Wine\\\\Drivers";
+  string keyName = "[Software\\\\Wine\\\\Drivers]";
   string valueName = "Audio";
   string value = Helper::GetRegValue(filename, keyName, valueName);
   if (!value.empty()) {
@@ -525,7 +525,7 @@ string Helper::GetVirtualDesktop(const string prefix_path)
   // (see above, "Default" is the default value). eg. "Default"="1920x1080"
 
   string filename = Glib::build_filename(prefix_path, USER_REG);
-  string keyName = "Software\\\\Wine\\\\Explorer\\\\Desktops";
+  string keyName = "[Software\\\\Wine\\\\Explorer\\\\Desktops]";
   string valueName = "Default";
   // TODO: first check of the Desktop value name in Software\\Wine\\Explorer
   string value = Helper::GetRegValue(filename, keyName, valueName);
@@ -827,10 +827,23 @@ string Helper::GetWineGUID(const string prefix_path, const string application_na
 bool Helper::GetDLLOverride(const string prefix_path, const string dll_name, DLLOverride::LoadOrder load_order)
 {
   string filename = Glib::build_filename(prefix_path, USER_REG);
-  string keyName = "Software\\\\Wine\\\\DllOverrides";
+  string keyName = "[Software\\\\Wine\\\\DllOverrides]";
   string valueName = dll_name;
   string value = Helper::GetRegValue(filename, keyName, valueName);
   return DLLOverride::toString(load_order) == value;
+}
+
+/**
+ * \brief Retrieve the uninstaller from GUID (if available)
+ * \param[in] prefix_path - Bottle prefix
+ * \param[in] uninstallerKey - GUID or application name of the uninstaller (can also be found by running: wine uninstaller --list)
+ * \return True Uninstaller display name or empty string if not found
+ */
+string Helper::GetUninstaller(const string prefix_path, const string uninstallerKey)
+{
+  string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
+  string keyName = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\" + uninstallerKey;
+  return Helper::GetRegValue(filename, keyName, "DisplayName");
 }
 
 /****************************************************************************
@@ -943,14 +956,12 @@ string Helper::GetWinetricksVersion()
 /**
  * \brief Get a value from the registery from disk
  * \param[in] filename  File of registery
- * \param[in] keyName   Full path of the subkey (eg. Software\\\\Wine\\\\Explorer)
+ * \param[in] keyName   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \param[in] valueName Specifies the registery value name (eg. Desktop)
  * \return Data of value name
  */
 string Helper::GetRegValue(const string& filename, const string& keyName, const string& valueName)
 {
-  // We add '[' & ']' around the key name
-  string keyPattern = '[' + keyName + ']';
   // We add double quotes around plus equal sign to the value name
   string valuePattern = '"' + valueName + "\"=";
   char* match_pch = NULL;
@@ -967,13 +978,13 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
       // It returns the pointer to the first occurrence until the null character (end of line)
       if (!match) {
         // Search first for the applicable subkey
-        if ((strstr(buffer, keyPattern.c_str())) != NULL) {
+        if ((strstr(buffer, keyName.c_str())) != NULL) {
           match = true;
           // Continue to search for the key now
         }
       }
       else
-      {
+      {        
         // As long as there is no empty line (meaning end of the subkey section),
         // continue to search for the key
         if (strlen(buffer) == 0) {
@@ -991,6 +1002,7 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
         }
       }
     }
+
     fclose(f);
     return CharPointerValueToString(match_pch);
   }

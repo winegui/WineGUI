@@ -83,6 +83,7 @@ public:
   void InstallVisualCppPackage(Gtk::Window& parent, const Glib::ustring& version);
   void InstallDotNet(Gtk::Window& parent, const Glib::ustring& version);
   void InstallCoreFonts(Gtk::Window& parent);
+  void InstallLiberation(Gtk::Window& parent);
 private:
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;
