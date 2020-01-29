@@ -384,7 +384,7 @@ bool SettingsWindow::isVisualCppInstalled()
 
       // Try the 64-bit package (fallback)
       if (!isInstalled) {
-        string name = Helper::GetUninstaller(wine_prefix, "{ef6b00ec-13e1-4c25-9064-b2f383cb8412}");
+        name = Helper::GetUninstaller(wine_prefix, "{ef6b00ec-13e1-4c25-9064-b2f383cb8412}");
         isInstalled = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
       }
     } else {
