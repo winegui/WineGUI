@@ -837,7 +837,7 @@ bool Helper::GetDLLOverride(const string prefix_path, const string dll_name, DLL
  * \brief Retrieve the uninstaller from GUID (if available)
  * \param[in] prefix_path - Bottle prefix
  * \param[in] uninstallerKey - GUID or application name of the uninstaller (can also be found by running: wine uninstaller --list)
- * \return True Uninstaller display name or empty string if not found
+ * \return Uninstaller display name or empty string if not found
  */
 string Helper::GetUninstaller(const string prefix_path, const string uninstallerKey)
 {
@@ -845,6 +845,29 @@ string Helper::GetUninstaller(const string prefix_path, const string uninstaller
   string keyName = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\" + uninstallerKey;
   return Helper::GetRegValue(filename, keyName, "DisplayName");
 }
+
+/**
+ * \brief Retrieve a font filename from the system registery
+ * \param[in] prefix_path - Bottle prefix
+ * \param[in] bit - Bottle bit (32 or 64) enum
+ * \param[in] fontName - Font name
+ * \return Font filename (or empty string if not found)
+ */
+string Helper::GetFontFilename(const string prefix_path, BottleTypes::Bit bit, const string fontName)
+{
+  string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
+  string keyName = "";
+  switch (bit) {
+    case BottleTypes::Bit::win32:
+      keyName = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Fonts]";
+      break;
+    case BottleTypes::Bit::win64:
+      keyName = "[Software\\\\Wow6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Fonts]";
+      break;      
+  }
+  return Helper::GetRegValue(filename, keyName, fontName);
+}
+
 
 /****************************************************************************
  *  Private methods                                                         *
@@ -974,6 +997,7 @@ string Helper::GetRegValue(const string& filename, const string& keyName, const 
       throw std::runtime_error("File could not be opened");
     }
     bool match = false;
+    // TODO: Change to fstream, since the buffer has a limit (therefor the strstr as well), causing issues with longer strings
     while (fgets(buffer, sizeof(buffer), f)) {
       // It returns the pointer to the first occurrence until the null character (end of line)
       if (!match) {

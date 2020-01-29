@@ -28,13 +28,6 @@
  */
 SettingsWindow::SettingsWindow(Gtk::Window& parent)
 :
-  install_d3dx9_button("Install DirectX v9 (OpenGL)"),
-  install_dxvk_button("Install DirectX v9/v10/v11 (Vulkan)"),
-  install_liberation_fonts_button("Install Liberation (open-source fonts)"),
-  install_core_fonts_button("Install Core Fonts"),
-  install_visual_cpp_button("Install Visual C++ 2013"),
-  install_dotnet4_button("Install .NET v4"),
-  install_dotnet452_button("Install .NET v4.5.2"),
   wine_uninstall_button("Uninstaller"),
   open_notepad_button("Notepad"),
   wine_task_manager_button("Task manager"),
@@ -104,54 +97,33 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
   // First row buttons, 1-button installs
-  Gtk::Image* d3dx9_image = Gtk::manage(new Gtk::Image());
-  d3dx9_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_d3dx9_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(directx9, *this, ""));
   install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL");
-  install_d3dx9_button.set_icon_widget(*d3dx9_image);
   first_toolbar.insert(install_d3dx9_button, 0);
 
-  Gtk::Image* vulkan_image = Gtk::manage(new Gtk::Image());
-  vulkan_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_dxvk_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(vulkan, *this, "latest"));
   install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9/10/11 games, by using Vulkan");
-  install_dxvk_button.set_icon_widget(*vulkan_image);
   first_toolbar.insert(install_dxvk_button, 1);
   
   // Second row, additional packages
-  Gtk::Image* liberation_image = Gtk::manage(new Gtk::Image());
-  liberation_image->set_from_icon_name("font-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  install_liberation_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(corefonts, *this));
+  install_liberation_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(liberation_fonts, *this));
   install_liberation_fonts_button.set_tooltip_text("Installs Liberation open-source Fonts, replaces Core fonts");
-  install_liberation_fonts_button.set_icon_widget(*liberation_image);
   second_toolbar.insert(install_liberation_fonts_button, 0);
 
-  Gtk::Image* corefonts_image = Gtk::manage(new Gtk::Image());
-  corefonts_image->set_from_icon_name("font-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_core_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(corefonts, *this));
   install_core_fonts_button.set_tooltip_text("Installs Microsoft Core Fonts");
-  install_core_fonts_button.set_icon_widget(*corefonts_image);
   second_toolbar.insert(install_core_fonts_button, 1);
 
-  Gtk::Image* visual_cpp_image = Gtk::manage(new Gtk::Image());
-  visual_cpp_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_visual_cpp_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2013"));
   install_visual_cpp_button.set_tooltip_text("Installs Visual C++ 2013 package");
-  install_visual_cpp_button.set_icon_widget(*visual_cpp_image);
   second_toolbar.insert(install_visual_cpp_button, 2);
 
-  Gtk::Image* dotnet4_image = Gtk::manage(new Gtk::Image());
-  dotnet4_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_dotnet4_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "40"));
   install_dotnet4_button.set_tooltip_text("Installs .NET 4.0");
-  install_dotnet4_button.set_icon_widget(*dotnet4_image);
   second_toolbar.insert(install_dotnet4_button, 4);
 
-    Gtk::Image* dotnet452_image = Gtk::manage(new Gtk::Image());
-  dotnet452_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   install_dotnet452_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
   install_dotnet452_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
-  install_dotnet452_button.set_icon_widget(*dotnet452_image);
   second_toolbar.insert(install_dotnet452_button, 5);
 
   // Third row buttons, supporting tools
@@ -266,6 +238,42 @@ void SettingsWindow::UpdateInstalled()
     install_dxvk_button.set_icon_widget(*install_d3dx9_image);
   }
 
+  if (IsLiberationInstalled()) {
+    Gtk::Image* reinstall_liberation_image = Gtk::manage(new Gtk::Image());
+    reinstall_liberation_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_liberation_fonts_button.set_label("Reinstall Liberation fonts");
+    install_liberation_fonts_button.set_icon_widget(*reinstall_liberation_image);
+  } else {
+    Gtk::Image* install_liberation_image = Gtk::manage(new Gtk::Image());
+    install_liberation_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_liberation_fonts_button.set_label("Install Liberation open-source fonts");
+    install_liberation_fonts_button.set_icon_widget(*install_liberation_image);
+  }
+
+  if (IsCoreFontsInstalled()) {
+    Gtk::Image* reinstall_core_fonts_image = Gtk::manage(new Gtk::Image());
+    reinstall_core_fonts_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_core_fonts_button.set_label("Reinstall Core Fonts");
+    install_core_fonts_button.set_icon_widget(*reinstall_core_fonts_image);
+  } else {
+    Gtk::Image* install_core_fonts_image = Gtk::manage(new Gtk::Image());
+    install_core_fonts_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_core_fonts_button.set_label("Install Core Fonts");
+    install_core_fonts_button.set_icon_widget(*install_core_fonts_image);
+  }
+
+  if (isVisualCppInstalled()) {
+    Gtk::Image* reinstall_visual_cpp_image = Gtk::manage(new Gtk::Image());
+    reinstall_visual_cpp_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_visual_cpp_button.set_label("Reinstall Visual C++ 2013");
+    install_visual_cpp_button.set_icon_widget(*reinstall_visual_cpp_image);
+  } else {
+    Gtk::Image* install_visual_cpp_image = Gtk::manage(new Gtk::Image());
+    install_visual_cpp_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_visual_cpp_button.set_label("Install Visual C++ 2013");
+    install_visual_cpp_button.set_icon_widget(*install_visual_cpp_image);
+  }
+
   if (isDotnet4Installed()) {
     Gtk::Image* reinstall_dotnet4_image = Gtk::manage(new Gtk::Image());
     reinstall_dotnet4_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -325,7 +333,69 @@ bool SettingsWindow::IsDXVKInstalled()
 }
 
 /**
- * \brief Check is Dotnet v4.0 is installed
+ * \brief Check if Liberation fonts are installed 
+ * As fallback: Wine is looking for the liberation font on the local unix system (in the /usr/share/fonts/.. directory)
+ * \return True if installed otherwise False
+ */
+bool SettingsWindow::IsLiberationInstalled()
+{
+  bool isInstalled = false;
+  if (this->activeBottle != nullptr) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    BottleTypes::Bit bit = activeBottle->bit();
+    string fontFilename = Helper::GetFontFilename(wine_prefix, bit, "Liberation Mono (TrueType)");
+    isInstalled = (fontFilename == "liberationmono-regular.ttf");
+  }
+  return isInstalled;
+}
+
+/**
+ * \brief Check if MS Core fonts are installed 
+ * \return True if installed otherwise False
+ */
+bool SettingsWindow::IsCoreFontsInstalled()
+{
+  bool isInstalled = false;
+  if (this->activeBottle != nullptr) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    BottleTypes::Bit bit = activeBottle->bit();
+    string fontFilename = Helper::GetFontFilename(wine_prefix, bit, "Comic Sans MS (TrueType)");
+    isInstalled = (fontFilename == "comic.ttf");
+  }
+  return isInstalled;
+}
+
+/**
+ * \brief Check if MS Visual C++ installed
+ * \return True if installed otherwise False
+ */
+bool SettingsWindow::isVisualCppInstalled()
+{
+  bool isInstalled = false;
+  if (this->activeBottle != nullptr) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    // Check if set to 'native, builtin' load order
+    bool isDllOverride = Helper::GetDLLOverride(wine_prefix, "*msvcp120", DLLOverride::LoadOrder::NativeBuiltin);
+    if (isDllOverride) {
+      // Next, check if package can be found to be uninstalled
+      string name = Helper::GetUninstaller(wine_prefix, "{61087a79-ac85-455c-934d-1fa22cc64f36}");
+      // String starts with
+      isInstalled = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
+
+      // Try the 64-bit package (fallback)
+      if (!isInstalled) {
+        string name = Helper::GetUninstaller(wine_prefix, "{ef6b00ec-13e1-4c25-9064-b2f383cb8412}");
+        isInstalled = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
+      }
+    } else {
+      isInstalled = false;
+    }
+  }
+  return isInstalled;
+}
+
+/**
+ * \brief Check if MS .NET v4.0 is installed
  * \return True if installed otherwise False
  */
 bool SettingsWindow::isDotnet4Installed()
@@ -335,9 +405,8 @@ bool SettingsWindow::isDotnet4Installed()
     Glib::ustring wine_prefix = activeBottle->wine_location();
     // Check if set to 'native' load order
     bool isDllOverride = Helper::GetDLLOverride(wine_prefix, "*mscoree");
-
     if (isDllOverride) {
-      // Next, check if package can be found to be uninstalled      
+      // Next, check if package can be found to be uninstalled
       string name = Helper::GetUninstaller(wine_prefix, "Microsoft .NET Framework 4 Extended");
       isInstalled = (name == "Microsoft .NET Framework 4 Extended");
     } else {
@@ -348,7 +417,7 @@ bool SettingsWindow::isDotnet4Installed()
 }
 
 /**
- * \brief Check is Dotnet v4.5.2 is installed
+ * \brief Check ife MS .NET v4.5.2 is installed
  * \return True if installed otherwise False
  */
 bool SettingsWindow::isDotnet452Installed()
@@ -358,7 +427,6 @@ bool SettingsWindow::isDotnet452Installed()
     Glib::ustring wine_prefix = activeBottle->wine_location();
     // Check if set to 'native' load order
     bool isDllOverride = Helper::GetDLLOverride(wine_prefix, "*mscoree");
-
     if (isDllOverride) {
       // Next, check if package can be found to be uninstalled      
       string name = Helper::GetUninstaller(wine_prefix, "{92FB6C44-E685-45AD-9B20-CADF4CABA132}");
@@ -369,4 +437,3 @@ bool SettingsWindow::isDotnet452Installed()
   }
   return isInstalled;
 }
-

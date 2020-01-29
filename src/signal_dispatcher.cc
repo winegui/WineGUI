@@ -133,6 +133,7 @@ void SignalDispatcher::DispatchSignals()
   settingsWindow.vulkan.connect(sigc::mem_fun(manager, &BottleManager::InstallDXVK));
 
   // Settings additional package buttons
+  settingsWindow.liberation_fonts.connect(sigc::mem_fun(manager, &BottleManager::InstallLiberation));
   settingsWindow.corefonts.connect(sigc::mem_fun(manager, &BottleManager::InstallCoreFonts));
   settingsWindow.dotnet.connect(sigc::mem_fun(manager, &BottleManager::InstallDotNet));
   settingsWindow.visual_cpp_package.connect(sigc::mem_fun(manager, &BottleManager::InstallVisualCppPackage));

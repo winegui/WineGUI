@@ -76,6 +76,7 @@ public:
   static string GetWineGUID(const string prefix_path, const string application_name);
   static bool GetDLLOverride(const string prefix_path, const string dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
   static string GetUninstaller(const string prefix_path, const string uninstallerKey);
+  static string GetFontFilename(const string prefix_path, BottleTypes::Bit bit, const string fontName);
 private:
   Helper();
   ~Helper();
