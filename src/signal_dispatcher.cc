@@ -141,10 +141,14 @@ void SignalDispatcher::DispatchSignals()
   // Settings additional tool buttons
   settingsWindow.uninstaller.connect(sigc::mem_fun(manager, &BottleManager::OpenUninstaller));
   settingsWindow.notepad.connect(sigc::mem_fun(manager, &BottleManager::OpenNotepad));
+  settingsWindow.wordpad.connect(sigc::mem_fun(manager, &BottleManager::OpenWordpad));
+  settingsWindow.iexplore.connect(sigc::mem_fun(manager, &BottleManager::OpenIexplore));
   settingsWindow.task_manager.connect(sigc::mem_fun(manager, &BottleManager::OpenTaskManager));
   settingsWindow.regedit.connect(sigc::mem_fun(manager, &BottleManager::OpenRegistertyEditor));
 
   // Settings fallback tool buttons
+  settingsWindow.explorer.connect(sigc::mem_fun(manager, &BottleManager::OpenExplorer));
+  settingsWindow.console.connect(sigc::mem_fun(manager, &BottleManager::OpenConsole));
   settingsWindow.winetricks.connect(sigc::mem_fun(manager, &BottleManager::OpenWinetricks));
   settingsWindow.winecfg.connect(sigc::mem_fun(manager, &BottleManager::OpenWinecfg));
 }

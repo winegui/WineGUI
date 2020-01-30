@@ -352,7 +352,31 @@ void BottleManager::KillProcesses()
 }
 
 /**
- * \brief Open Winecfg tool (expected to be installed)
+ * \brief Open Explorer browser
+ */
+void BottleManager::OpenExplorer()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();    
+    std::thread t(&Helper::RunProgram, wine_prefix, "wine explorer", false, true);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Open (Wine) Windows Console
+ */
+void BottleManager::OpenConsole()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();    
+    std::thread t(&Helper::RunProgram, wine_prefix, "wineconsole", false, true);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Open Winecfg tool
  */
 void BottleManager::OpenWinecfg()
 {
@@ -420,6 +444,30 @@ void BottleManager::OpenNotepad()
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
     std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "notepad", false, false);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Open Wordpad
+ */
+void BottleManager::OpenWordpad()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wordpad", false, false);
+    t.detach(); 
+  }
+}
+
+/**
+ * \brief Open (Wine) Internet Explorer
+ */
+void BottleManager::OpenIexplore()
+{
+  if (isBottleNotNull()) {
+    Glib::ustring wine_prefix = activeBottle->wine_location();
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "iexplore", false, false);
     t.detach(); 
   }
 }

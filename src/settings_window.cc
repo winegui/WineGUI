@@ -30,8 +30,12 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
 :
   wine_uninstall_button("Uninstaller"),
   open_notepad_button("Notepad"),
+  open_wordpad_button("Open Wordpad"),
+  open_iexplore_button("Open IE"),
   wine_task_manager_button("Task manager"),
   wine_regedit_button("Windows Registery Editor"),
+  explorer_button("Explorer"),
+  wine_console_button("Console"),
   wine_config_button("WineCfg"),
   winetricks_button("Winetricks"),
   activeBottle(nullptr)
@@ -141,34 +145,64 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   open_notepad_button.set_icon_widget(*notepad_image);
   third_toolbar.insert(open_notepad_button, 1);
 
+  Gtk::Image* wordpad_image = Gtk::manage(new Gtk::Image());
+  wordpad_image->set_from_icon_name("accessories-text-editor", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  open_wordpad_button.signal_clicked().connect(wordpad);
+  open_wordpad_button.set_tooltip_text("Open Wordpad");
+  open_wordpad_button.set_icon_widget(*wordpad_image);
+  third_toolbar.insert(open_wordpad_button, 2);
+
+  Gtk::Image* ie_explore = Gtk::manage(new Gtk::Image());
+  ie_explore->set_from_icon_name("emblem-web", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  open_iexplore_button.signal_clicked().connect(iexplore);
+  open_iexplore_button.set_tooltip_text("Open Internet Explorer");
+  open_iexplore_button.set_icon_widget(*ie_explore);
+  third_toolbar.insert(open_iexplore_button, 3);
+
   Gtk::Image* task_manager_image = Gtk::manage(new Gtk::Image());
   task_manager_image->set_from_icon_name("open-menu", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   wine_task_manager_button.signal_clicked().connect(task_manager);
   wine_task_manager_button.set_tooltip_text("Open Wine task manager");
   wine_task_manager_button.set_icon_widget(*task_manager_image);
-  third_toolbar.insert(wine_task_manager_button, 2);
+  third_toolbar.insert(wine_task_manager_button, 4);
 
   Gtk::Image* regedit_image = Gtk::manage(new Gtk::Image());
   regedit_image->set_from_icon_name("applications-system-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   wine_regedit_button.signal_clicked().connect(regedit);
   wine_regedit_button.set_tooltip_text("Open Windows Registry editor (For advanced users!)");
   wine_regedit_button.set_icon_widget(*regedit_image);
-  third_toolbar.insert(wine_regedit_button, 3);
+  third_toolbar.insert(wine_regedit_button, 5);
 
   // Fourth row buttons, fallback tools
+  Gtk::Image* explorer_image = Gtk::manage(new Gtk::Image());
+  explorer_image->set_from_icon_name("system-file-manager", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  explorer_button.signal_clicked().connect(explorer);
+  explorer_button.set_tooltip_text("Open Explorer");
+  explorer_button.set_icon_widget(*explorer_image);
+  fourth_toolbar.insert(explorer_button, 0);
+
+  Gtk::Image* wine_console_image = Gtk::manage(new Gtk::Image());
+  wine_console_image->set_from_icon_name("utilities-terminal", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  wine_console_button.signal_clicked().connect(console);
+  wine_console_button.set_tooltip_text("Open Windows cmd");
+  wine_console_button.set_icon_widget(*wine_console_image);
+  fourth_toolbar.insert(wine_console_button, 1);
+
   Gtk::Image* winecfg_image = Gtk::manage(new Gtk::Image());
   winecfg_image->set_from_icon_name("preferences-system", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   wine_config_button.signal_clicked().connect(winecfg);
   wine_config_button.set_tooltip_text("FALLBACK: Open winecfg GUI");
   wine_config_button.set_icon_widget(*winecfg_image);
-  fourth_toolbar.insert(wine_config_button, 0);
+  fourth_toolbar.insert(wine_config_button, 2);
 
   Gtk::Image* winetricks_image = Gtk::manage(new Gtk::Image());
   winetricks_image->set_from_icon_name("preferences-other-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   winetricks_button.signal_clicked().connect(winetricks);
   winetricks_button.set_tooltip_text("FALLBACK: Winetricks GUI");
   winetricks_button.set_icon_widget(*winetricks_image);
-  fourth_toolbar.insert(winetricks_button, 1);
+  fourth_toolbar.insert(winetricks_button, 3);
+
+
 
   show_all_children();
 }

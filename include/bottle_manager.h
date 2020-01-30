@@ -70,12 +70,16 @@ public:
   void Reboot();
   void Update();
   void KillProcesses();
+  void OpenExplorer();
+  void OpenConsole();
   void OpenWinecfg();
   void OpenWinetricks();
   void OpenUninstaller();
   void OpenTaskManager();
   void OpenRegistertyEditor();
   void OpenNotepad();
+  void OpenWordpad();
+  void OpenIexplore();
   void InstallD3DX9(Gtk::Window& parent, const Glib::ustring& version);
   bool IsD3DX9Installed();
   void InstallDXVK(Gtk::Window& parent, const Glib::ustring& version);

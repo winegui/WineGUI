@@ -43,8 +43,12 @@ public:
   sigc::signal<void, Gtk::Window&, Glib::ustring&> dotnet; /*!< Install .NET signal */
   sigc::signal<void> uninstaller; /*!< Open Wine Uninstaller signal */
   sigc::signal<void> notepad; /*!< Open Notepad editor signal */
+  sigc::signal<void> wordpad; /*!< Open Notepad editor signal */
+  sigc::signal<void> iexplore; /*!< Open Notepad editor signal */
   sigc::signal<void> task_manager; /*!< Open Wine Task Manager signal */
   sigc::signal<void> regedit; /*!< Open Wine Registry editor signal */
+  sigc::signal<void> explorer; /*!< Open Explorer signal */
+  sigc::signal<void> console; /*!< Open Wine Console signal */
   sigc::signal<void> winecfg; /*!< Open Winecfg GUI (fallback) signal */
   sigc::signal<void> winetricks; /*!< Open Winetricks GUI (fallback) signal */
 
@@ -84,10 +88,14 @@ protected:
   // Buttons Third row (supporting tools)
   Gtk::ToolButton wine_uninstall_button; /*!< Wine Uninstaller button */
   Gtk::ToolButton open_notepad_button; /*!< Notepad editor button */
+  Gtk::ToolButton open_wordpad_button; /*!< Wordpad editor button */
+  Gtk::ToolButton open_iexplore_button; /*!< Internet Explorer button */
   Gtk::ToolButton wine_task_manager_button; /*!< Wine Task manager button */
   Gtk::ToolButton wine_regedit_button; /*!< Wine Windows Registry editor button */
   
   // Buttons Fourth row (fallback tools)
+  Gtk::ToolButton explorer_button; /*!< Explorer button */
+  Gtk::ToolButton wine_console_button; /*!< Wine console button */
   Gtk::ToolButton wine_config_button; /*!< Winecfg button */
   Gtk::ToolButton winetricks_button; /*!< Winetricks button */
 
