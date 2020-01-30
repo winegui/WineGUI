@@ -102,16 +102,16 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
 
   // First row buttons, 1-button installs
   install_d3dx9_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(directx9, *this, ""));
-  install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL");
+  install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL API");
   first_toolbar.insert(install_d3dx9_button, 0);
 
   install_dxvk_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(vulkan, *this, "latest"));
-  install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9/10/11 games, by using Vulkan");
+  install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9/10/11 games, by using Vulkan API");
   first_toolbar.insert(install_dxvk_button, 1);
   
   // Second row, additional packages
   install_liberation_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(liberation_fonts, *this));
-  install_liberation_fonts_button.set_tooltip_text("Installs Liberation open-source Fonts, replaces Core fonts");
+  install_liberation_fonts_button.set_tooltip_text("Installs Liberation open-source Fonts, alternative for Core fonts");
   second_toolbar.insert(install_liberation_fonts_button, 0);
 
   install_core_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(corefonts, *this));
