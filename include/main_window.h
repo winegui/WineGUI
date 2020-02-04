@@ -76,6 +76,7 @@ public:
   virtual void on_new_bottle_created();
   virtual void on_run_button_clicked();
   virtual void on_hide_window();
+  virtual void on_give_feedback();
   virtual void on_exec_failure();
 
 protected:

@@ -37,55 +37,56 @@ Menu::Menu()
 
   // File submenu
   // Using text + image
-  auto preferences = CreateImageMenuItem("Preferences", "system-run");
-  preferences->signal_activate().connect(menu_preferences);
-  auto exit = CreateImageMenuItem("Exit", "application-exit");
-  exit->signal_activate().connect(menu_quit);
+  auto preferences_menuitem = CreateImageMenuItem("Preferences", "system-run");
+  preferences_menuitem->signal_activate().connect(preferences);
+  auto exit_menuitem = CreateImageMenuItem("Exit", "application-exit");
+  exit_menuitem->signal_activate().connect(quit);
   
   // View submenu
-  auto refresh = CreateImageMenuItem("Refresh List", "view-refresh");
-  refresh->signal_activate().connect(menu_refresh);
+  auto refresh_menuitem = CreateImageMenuItem("Refresh List", "view-refresh");
+  refresh_menuitem->signal_activate().connect(refresh_view);
 
   // Machine submenu
-  auto newitem = CreateImageMenuItem("New", "list-add");
-  newitem->signal_activate().connect(menu_new_machine);
-  auto run = CreateImageMenuItem("Run...", "media-playback-start");
-  run->signal_activate().connect(menu_run);
-  auto open_drive_c = CreateImageMenuItem("Open C: Drive", "drive-harddisk");
-  open_drive_c->signal_activate().connect(menu_open_drive_c);  
-  auto edit = CreateImageMenuItem("Edit", "document-edit");
-  edit->signal_activate().connect(menu_edit_machine);
-  auto settings = CreateImageMenuItem("Settings", "preferences-other");
-  settings->signal_activate().connect(menu_settings_machine);
-  auto remove = CreateImageMenuItem("Remove", "edit-delete");
-  remove->signal_activate().connect(menu_remove_machine);
+  auto newitem_menuitem = CreateImageMenuItem("New", "list-add");
+  newitem_menuitem->signal_activate().connect(new_machine);
+  auto run_menuitem = CreateImageMenuItem("Run...", "media-playback-start");
+  run_menuitem->signal_activate().connect(run);
+  auto open_drive_c_menuitem = CreateImageMenuItem("Open C: Drive", "drive-harddisk");
+  open_drive_c_menuitem->signal_activate().connect(open_drive_c);  
+  auto edit_menuitem = CreateImageMenuItem("Edit", "document-edit");
+  edit_menuitem->signal_activate().connect(edit_machine);
+  auto settings_menuitem = CreateImageMenuItem("Settings", "preferences-other");
+  settings_menuitem->signal_activate().connect(settings_machine);
+  auto remove_menuitem = CreateImageMenuItem("Remove", "edit-delete");
+  remove_menuitem->signal_activate().connect(remove_machine);
 
   // Help submenu
-  auto about = CreateImageMenuItem("About WineGUI...", "help-about");
-  about->signal_activate().connect(menu_show_about);
-  // Template for creating a seperate method if addition actions are required:
-  //    about->signal_activate().connect(sigc::mem_fun(*this, &Menu::on_help_about));
+  auto feedback_menuitem = CreateImageMenuItem("Give feedback", "help-faq");
+  feedback_menuitem->signal_activate().connect(give_feedback);
+  auto about_menuitem = CreateImageMenuItem("About WineGUI...", "help-about");
+  about_menuitem->signal_activate().connect(show_about);
   
   // Add items to sub-menu
   // File menu
-  file_submenu.append(*preferences);
+  file_submenu.append(*preferences_menuitem);
   file_submenu.append(separator1);
-  file_submenu.append(*exit);
+  file_submenu.append(*exit_menuitem);
 
   // View menu
-  view_submenu.append(*refresh);
+  view_submenu.append(*refresh_menuitem);
 
   // Machine menu  
-  machine_submenu.append(*newitem);
+  machine_submenu.append(*newitem_menuitem);
   machine_submenu.append(separator2);
-  machine_submenu.append(*run);
-  machine_submenu.append(*open_drive_c);  
-  machine_submenu.append(*edit);
-  machine_submenu.append(*settings);
-  machine_submenu.append(*remove);
+  machine_submenu.append(*run_menuitem);
+  machine_submenu.append(*open_drive_c_menuitem);  
+  machine_submenu.append(*edit_menuitem);
+  machine_submenu.append(*settings_menuitem);
+  machine_submenu.append(*remove_menuitem);
 
   // Help menu
-  help_submenu.append(*about);
+  help_submenu.append(*feedback_menuitem);
+  help_submenu.append(*about_menuitem);
   
   // Add menu items to menu bar
   append(file);

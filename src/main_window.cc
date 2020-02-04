@@ -312,6 +312,18 @@ void MainWindow::on_hide_window()
 {
   hide();
 }
+  
+/**
+ * \brief When the feedback button is pressed
+ */
+void MainWindow::on_give_feedback()
+{  
+  GError *error = NULL;    
+  if (!g_app_info_launch_default_for_uri("mailto://melroy@melroy.org", NULL, &error)) {
+    g_warning("Failed to open email link: %s", error->message);
+    this->ShowErrorMessage("Could not open e-mail program.");
+  }
+}
 
 /**
  * \brief Not implemented feature

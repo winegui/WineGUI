@@ -82,16 +82,17 @@ void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
 void SignalDispatcher::DispatchSignals()
 {
   // Menu buttons
-  menu.menu_preferences.connect(sigc::mem_fun(preferencesWindow, &PreferencesWindow::show));
-  menu.menu_quit.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
-  menu.menu_show_about.connect(sigc::mem_fun(about, &AboutDialog::show));
-  menu.menu_refresh.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
-  menu.menu_new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
-  menu.menu_run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
-  menu.menu_open_drive_c.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
-  menu.menu_edit_machine.connect(sigc::mem_fun(editWindow, &EditWindow::show));
-  menu.menu_settings_machine.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
-  menu.menu_remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
+  menu.preferences.connect(sigc::mem_fun(preferencesWindow, &PreferencesWindow::show));
+  menu.quit.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
+  menu.refresh_view.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
+  menu.new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
+  menu.run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
+  menu.open_drive_c.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
+  menu.edit_machine.connect(sigc::mem_fun(editWindow, &EditWindow::show));
+  menu.settings_machine.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
+  menu.remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
+  menu.give_feedback.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_give_feedback));
+  menu.show_about.connect(sigc::mem_fun(about, &AboutDialog::show));
 
   // Distribute the active bottle signal
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
