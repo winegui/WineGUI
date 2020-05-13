@@ -93,6 +93,7 @@ namespace BottleTypes {
     std::pair(Windows::Windows2003, Bit::win64),
     std::pair(Windows::WindowsVista, Bit::win32),
     std::pair(Windows::WindowsVista, Bit::win64),
+    std::pair(Windows::Windows2008, Bit::win32),
     std::pair(Windows::Windows2008, Bit::win64),
     std::pair(Windows::Windows7, Bit::win32),
     std::pair(Windows::Windows7, Bit::win64),
@@ -219,10 +220,12 @@ namespace BottleTypes {
         return "vista";
       case Windows::Windows2008:
         return "win2k8"; // Not yet implemented by Winetricks? Use 2008R2 atm (should be 'win2k8' eventually)
+        // TODO: Fix after PR is merged into master: https://github.com/Winetricks/winetricks/pull/1488
       case Windows::Windows7:
         return "win7";
       case Windows::Windows2008R2:
         return "win2k8"; // Bug in Winetricks, should be 'win2k8r2' to be unique with Windows 2000!
+        // TODO: Fix after PR is merged into master: https://github.com/Winetricks/winetricks/pull/1488
       case Windows::Windows8:
         return "win8";
       case Windows::Windows81:
@@ -242,7 +245,7 @@ namespace BottleTypes {
       case AudioDriver::alsa:
         return "Advanced Linux Sound Architecture (ALSA)";
       case AudioDriver::coreaudio:
-        return "Core Audio";
+        return "Mac Core Audio";
       case AudioDriver::oss:
         return "Open Sound System (OSS)";
       default:

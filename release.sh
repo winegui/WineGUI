@@ -16,5 +16,5 @@ if [[ "$output" == *"$name"* ]]; then
     echo "INFO: Release is already rolled-out to the downloads folder."
 else
     # Roll-out the new release
-    sshpass -e scp -o stricthostkeychecking=no ./build/WineGUI-v* melroy@server.melroy.org:/var/www/winegui.melroy.org/html/downloads
+    sshpass -e scp -o stricthostkeychecking=no ./build_prod/WineGUI-v* melroy@server.melroy.org:/var/www/winegui.melroy.org/html/downloads
 fi

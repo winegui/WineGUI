@@ -19,13 +19,13 @@ build:
     expire_in: 1 week
     paths:
     - doc/doxygen/
-    - build/WineGUI-*.deb
-    - build/WineGUI-*.rpm
-    - build/WineGUI-*.tar.gz
+    - build_prod/WineGUI-*.deb
+    - build_prod/WineGUI-*.rpm
+    - build_prod/WineGUI-*.tar.gz
   cache:
       key: "$CI_PIPELINE_ID"
       paths:
-        - build/bin
+        - build_prod/bin
       policy: push
 
 publish:
@@ -37,23 +37,23 @@ publish:
   except:
     - branches
   script:
-    - export APP_VERSION=`./build/bin/winegui --version`
+    - export APP_VERSION=`./build_prod/bin/winegui --version`
     - echo $APP_VERSION
     - ./release.sh
     - ./create_release_links.sh
   cache:
       key: "$CI_PIPELINE_ID"
       paths:
-        - build/bin
+        - build_prod/bin
       policy: pull
 
 #unit_test:
 #  stage: test
-#  script: ./build/bin/runTests
+#  script: ./build_prod/bin/runTests
 #  tags:
 #    - gtk
 #  cache:
 #      key: "$CI_PIPELINE_ID"
 #      policy: pull
 #      paths:
-#        - build/bin/
+#        - build_prod/bin/
