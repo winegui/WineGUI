@@ -219,13 +219,11 @@ namespace BottleTypes {
       case Windows::WindowsVista:
         return "vista";
       case Windows::Windows2008:
-        return "win2k8"; // Not yet implemented by Winetricks? Use 2008R2 atm (should be 'win2k8' eventually)
-        // TODO: Fix after PR is merged into master: https://github.com/Winetricks/winetricks/pull/1488
+        return "win2k8";
       case Windows::Windows7:
         return "win7";
       case Windows::Windows2008R2:
-        return "win2k8"; // Bug in Winetricks, should be 'win2k8r2' to be unique with Windows 2000!
-        // TODO: Fix after PR is merged into master: https://github.com/Winetricks/winetricks/pull/1488
+        return "win2k8r2";
       case Windows::Windows8:
         return "win8";
       case Windows::Windows81:
