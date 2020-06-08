@@ -27,15 +27,19 @@ endif ()
 
 if(${LINUX_DISTRO} MATCHES "openSUSE")
   # OpenSuse/Leap
-  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm3")
+  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm3, cabextract, unzip, p7zip, wget")
 else()
   # Redhat/CentOS/Fedora/etc.
-  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm30")
+  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm30, cabextract, unzip, p7zip, wget")
 endif()
+# Optional RPM packages
+set(CPACK_RPM_PACKAGE_SUGGESTS "vulkan, vulkan-loader")
 
 # Debian Jessie/Ubuntu Trusty/Mint Qiana (libgtkmm-3.0-1) or 
 # Debian Stretch, Buster or newer, Ubuntu Xenial, Artful, Bionic or newer, Linux Mint Sarah, Tessa, Tina or newer (libgtkmm-3.0-1v5)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-3.0-1 | libgtkmm-3.0-1v5")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-3.0-1 | libgtkmm-3.0-1v5, cabextract, unzip, p7zip, wget")
+# Optional deb packages
+set(CPACK_DEBIAN_PACKAGE_SUGGESTS "libvulkan1, libvulkan1:i386, mesa-vulkan-drivers, mesa-vulkan-drivers:i386")
 
 # include CPack model once all variables are set
 include(CPack)

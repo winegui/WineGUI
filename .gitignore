@@ -1,9 +1,10 @@
 # Doxygen
-doc/doxygen
+doc/doxygen/
 
 # Build stuff
-build
-build_debug
+build/
+build_debug/
+build_prod/
 
 # winetricks script
 winetricks
