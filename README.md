@@ -39,11 +39,11 @@ Optionally:
 * rpm
 * cppcheck
 
-**Hint:** You could execute `./deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
+**Hint:** You could execute `./scripts/deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
 
 ### Build
 
-Run: `./build.sh`
+Run: `./scripts/build.sh`
 
 Or execute: `mkdir -p build && cd build && cmake -GNinja .. && ninja`
 
@@ -69,7 +69,7 @@ Clean the build via: `ninja clean`
 
 ### Debug
 
-You can use the helper script: `./build_debug.sh`
+You can use the helper script: `./scripts/build_debug.sh`
 
 Start debugging in [GDB (GNU Debugger)](https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf):
 
@@ -80,7 +80,7 @@ gdb -ex=run bin/winegui
 
 ### Production
 
-For production build and DEB file package, you can run: `./build_prod.sh`
+For production build and DEB file package, you can run: `./scripts/build_prod.sh`
 
 Or use the `cmake -DCMAKE_BUILD_TYPE=Release`.
 
@@ -101,7 +101,7 @@ We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppgu
 For Contious Integration on the [Gitlab server](https://gitlab.melroy.org), we use our [Dockerfile](Dockerfile) as input for `danger89/gtk3-docker-cmake-ninja` image.
 This image is hosted on [Dockerhub](https://hub.docker.com/r/danger89/gtk3-docker-cmake-ninja), and managed by [danger89](https://hub.docker.com/u/danger89).
 
-A helper script can be used: `./upload_docker_image.sh` from within the `misc` directory, after successfully identified via `docker login --username=<username>`.
+A helper script can be used: `./scripts/build_and_upload_image.sh`, after successfully identified via `docker login --username=<username>`.
 
 ## Coding in the Cloud
 

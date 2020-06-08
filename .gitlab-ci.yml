@@ -11,7 +11,7 @@ static_code_analysis:
 
 build:
   stage: build
-  script: ./build_prod.sh
+  script: ./scripts/build_prod.sh
   artifacts:
     name: "Packages + Documentation"
     expire_in: 1 week
@@ -33,10 +33,9 @@ publish:
   except:
     - branches
   script:
-    - export APP_VERSION=`./build_prod/bin/winegui --version`
-    - echo $APP_VERSION
-    - ./release.sh
-    - ./create_release_links.sh
+    - export APP_VERSION=`./build_prod/bin/winegui --version`; $APP_VERSION
+    - ./scripts/upload_release.sh
+    - ./scripts/create_release_links.sh
   cache:
       key: "$CI_PIPELINE_ID"
       paths:
