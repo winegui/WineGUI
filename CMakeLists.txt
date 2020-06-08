@@ -1,15 +1,21 @@
-if (POLICY CMP0048)
-  cmake_policy(SET CMP0048 NEW)
-endif()
+cmake_minimum_required(VERSION 3.10)
+
 set(PROJECT_NAME WineGUI)
 set(PROJECT_TARGET winegui)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+# Get VERSION from most recent git tag
+include(git_version)
+
 # Don't forget to update the about_dialog.h VERSION as well
-project(${PROJECT_NAME} VERSION 1.6.0 DESCRIPTION "WineGUI is a user-friendly WINE graphical interface")
+project(${PROJECT_NAME}
+  VERSION ${GIT_TAG_VERSION}
+  DESCRIPTION "WineGUI is a user-friendly WINE graphical interface"
+  LANGUAGES CXX)
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message("PROJECT_VERSION = ${PROJECT_VERSION}")
-
-cmake_minimum_required(VERSION 2.8.0)
 
 # Cmake settings
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
@@ -35,7 +41,7 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
   add_definitions(-DPRODUCTION=1)
 
   # Include CPack packaging settings
-  include(packaging.cmake)
+  include(packaging)
 endif()
 
 ################################
@@ -83,13 +89,7 @@ add_custom_target( run
 # Doxygen  #
 ############
 if(doc)
-  find_package(Doxygen REQUIRED)
-  set(DOXYGEN_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/../doxygen.conf)
-  
-  # note the option ALL which allows to build the docs together with the application
-  add_custom_target( docs ALL
-    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_CONFIG}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating API documentation with Doxygen"
-    VERBATIM )
+  include(doxygen)
 endif()
+
+
