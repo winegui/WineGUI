@@ -1,3 +1,5 @@
+image: "danger89/cmake:2.0"
+
 stages:
   - test
   - build
@@ -5,14 +7,10 @@ stages:
 
 static_code_analysis:
   stage: test
-  tags:
-    - gtk
   script: cppcheck --enable=all --suppressions-list=suppressions.txt --error-exitcode=1 -I ./include/ ./src/
 
 build:
   stage: build
-  tags:
-    - gtk
   script: ./build_prod.sh
   artifacts:
     name: "Packages + Documentation"
@@ -30,8 +28,6 @@ build:
 
 publish:
   stage: publish
-  tags:
-    - gtk
   only:
     - tags
   except:
@@ -50,8 +46,6 @@ publish:
 #unit_test:
 #  stage: test
 #  script: ./build_prod/bin/runTests
-#  tags:
-#    - gtk
 #  cache:
 #      key: "$CI_PIPELINE_ID"
 #      policy: pull
