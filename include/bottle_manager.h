@@ -81,9 +81,7 @@ public:
   void OpenWordpad();
   void OpenIexplore();
   void InstallD3DX9(Gtk::Window& parent, const Glib::ustring& version);
-  bool IsD3DX9Installed();
   void InstallDXVK(Gtk::Window& parent, const Glib::ustring& version);
-  bool IsDXVKInstalled();
   void InstallVisualCppPackage(Gtk::Window& parent, const Glib::ustring& version);
   void InstallDotNet(Gtk::Window& parent, const Glib::ustring& version);
   void InstallCoreFonts(Gtk::Window& parent);
