@@ -868,6 +868,32 @@ string Helper::GetFontFilename(const string prefix_path, BottleTypes::Bit bit, c
   return Helper::GetRegValue(filename, keyName, fontName);
 }
 
+/**
+ * \brief Get path to an image resource located in a global data directory (like /usr/share)
+ * \param[in] filename - name of image
+ * \return Path to the requested image (or empty string if not found)
+ */
+string Helper::GetImageLocation(const string filename)
+{
+    for (string data_dir : Glib::get_system_data_dirs())
+    {
+        std::vector<std::string> path_builder{data_dir, "winegui", "images", filename};
+        string file_path = Glib::build_path(G_DIR_SEPARATOR_S, path_builder);
+        if (FileExists(file_path)) {
+            return file_path;
+        }
+    }
+
+    // try local path if the images are not installed
+    string file_path = Glib::build_filename("../images/", filename);
+    if (FileExists(file_path)) {
+        return file_path;
+    }
+    else
+    {
+        return "";
+    }
+}
 
 /****************************************************************************
  *  Private methods                                                         *

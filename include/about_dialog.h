@@ -27,12 +27,6 @@
 // Use major.minor.patch syntax, don't forget to update CMakeLists.txt file as well!
 static const std::string VERSION = "v1.6.0";
 
-#if defined(PRODUCTION)
-  #define IMAGE_LOCATION "/usr/share/winegui/images/" /*!< Image location */
-#else
-  #define IMAGE_LOCATION "../images/" /*!< Image location */
-#endif
-
 /**
  * \class AboutDialog
  * \brief The About dialog
