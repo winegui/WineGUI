@@ -25,6 +25,7 @@
 #include <iomanip>
 #include <cstdio>
 #include <memory>
+#include <iostream>
 #include <stdexcept>
 #include <cstring>
 #include <fcntl.h>
@@ -356,8 +357,6 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
 {  
   string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
   string version = "";
-  string version9x = "";
-
   if (!(version = Helper::GetRegValue(filename, keyNameNT, nameNTVersion)).empty())
   {
     string buildNumberNT = Helper::GetRegValue(filename, keyNameNT, nameNTBuild);
@@ -708,9 +707,10 @@ void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
         resolution = "640x480";
       }
 
-      string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
+      Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
       // Something returns non-zero... winetricks on the command line, does return zero ..
       /*
+      string result = Exec(..)
       if (!result.empty()) {
         result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
         if (result.compare("0") != 0) {
@@ -735,9 +735,11 @@ void Helper::DisableVirtualDesktop(const string prefix_path)
 {
   if (FileExists(WINETRICKS_EXECUTABLE))
   {
-    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off>/dev/null 2>&1; echo $?").c_str());
+    Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off>/dev/null 2>&1; echo $?").c_str());
     // Something returns non-zero... winetricks on the command line, does return zero ..
-    /*if (!result.empty()) {
+    /*
+    string result = Exec(...)
+    if (!result.empty()) {
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
       if (result.compare("0") != 0) {
         throw std::runtime_error("Could not Disable Virtual Desktop");
@@ -837,6 +839,37 @@ string Helper::GetFontFilename(const string prefix_path, BottleTypes::Bit bit, c
   return Helper::GetRegValue(filename, keyName, fontName);
 }
 
+/**
+ * \brief Get path to an image resource located in a global data directory (like /usr/share)
+ * \param[in] filename - name of image
+ * \return Path to the requested image (or empty string if not found)
+ */
+string Helper::GetImageLocation(const string filename)
+{
+    // Try absolute path first
+    for (string data_dir : Glib::get_system_data_dirs()) {
+        std::vector<std::string> path_builder{data_dir, "winegui", "images", filename};
+        string file_path = Glib::build_path(G_DIR_SEPARATOR_S, path_builder);
+        if (FileExists(file_path)) {
+            return file_path;
+        }
+    }
+
+    // Try local path if the images are not installed (yet)
+    // When working directory is in the build folder (relative path)
+    string file_path = Glib::build_filename("../images/", filename);
+    // When working directory is in the build/bin folder (relative path)
+    string file_path2 = Glib::build_filename("../../images/", filename);
+    if (FileExists(file_path)) {
+        return file_path;
+    }
+    else if(FileExists(file_path2)) {
+        return file_path2;
+    }
+    else {
+        return "";
+    }
+}
 
 /****************************************************************************
  *  Private methods                                                         *
@@ -886,7 +919,8 @@ void Helper::ExecTracing(const char* cmd, bool enableTracing) {
   }
   
   if (enableTracing) {
-    // TODO: Dump result to log file.
+    // TODO: Dump result to log file instead.
+    std::cout << "\n=== Tracing output started ===\n\n" << result << "\n\n=== Tracing ended ===\n" << std::endl;
   }
 }
 

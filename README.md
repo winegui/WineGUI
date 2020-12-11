@@ -1,4 +1,4 @@
-# Wine GUI
+# WineGUI
 
 Finally, a user-interface friendly [WINE](https://www.winehq.org/) (A compatibility layer capable of running Windows applications under Linux) Manager.
 
@@ -16,10 +16,16 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 
 ## Development
 
-Development has been done in Visual Studio Code editor, using the following extensions:
+Development has been done in VSCcodium, using the following extensions:
 
 * C/C++
+* CMake
 * CMake Tools
+* GitLab Workflow
+
+### Documentation
+
+See latest [WineGUI Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/master/file/doc/doxygen/index.html?job=build).
 
 ### Requirements
 
@@ -82,15 +88,28 @@ gdb -ex=run bin/winegui
 
 For production build and DEB file package, you can run: `./scripts/build_prod.sh`
 
-Or use the `cmake -DCMAKE_BUILD_TYPE=Release`.
+Or use:
+
+```sh
+cmake -DCMAKE_BUILD_TYPE=Release
+ninja
+```
+
+### Build Doxygen
+
+Or build with generated doxygen files locally:
+
+```sh
+cmake -GNinja -Ddoc=ON
+ninja
+```
 
 ### Releasing
 
 Before you can make a new release, align the version number in WineGUI with the version you want to release.
 Then create a new tagged version in Gitlab with the same version name.
 
-*Note:* Only the `master` branch will trigger the publish task.
-
+*Note:* Only a `release tag` on the `master` branch will trigger the publish task.
 
 ## Coding standard
 

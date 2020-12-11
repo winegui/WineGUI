@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "main_window.h"
-
+#include "helper.h"
 #include "signal_dispatcher.h"
 #include <locale>
 
@@ -43,7 +43,7 @@ MainWindow::MainWindow(Menu& menu)
   set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
   try {
-    set_icon_from_file(IMAGE_LOCATION "logo.png");
+    set_icon_from_file(Helper::GetImageLocation("logo.png"));
   }
   catch (Glib::FileError& e) {
     cout << "Catched " << e.what() << endl;
@@ -260,6 +260,7 @@ void MainWindow::on_run_button_clicked()
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
   dialog.add_filter(filter_any);
+  dialog.set_filename(c_drive_location.get_text().c_str());
 
   //Show the dialog and wait for a user response:
   int result = dialog.run();

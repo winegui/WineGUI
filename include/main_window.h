@@ -32,12 +32,6 @@ using std::string;
 using std::cout;
 using std::endl;
 
-#if defined(PRODUCTION)
-  #define IMAGE_LOCATION "/usr/share/winegui/images/" /*!< Image location */
-#else
-  #define IMAGE_LOCATION "../images/" /*!< Image location */
-#endif
-
 /**
  * \class MainWindow
  * \brief Main GTK+ Window class

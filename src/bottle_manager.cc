@@ -702,26 +702,18 @@ std::list<BottleItem> BottleManager::CreateWineBottles(string wineVersion, std::
 {
   std::list<BottleItem> bottles;
 
-  string name = "";
-  string virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
-  BottleTypes::Windows windows = BottleTypes::Windows::WindowsXP;
-  BottleTypes::Bit bit = BottleTypes::Bit::win32;
-  string cDriveLocation = "";
-  string lastTimeWineUpdated = "";
-  BottleTypes::AudioDriver audioDriver = BottleTypes::AudioDriver::pulseaudio;
-  
   // Retrieve detailed info for each wine bottle prefix
   for (const auto &[prefix, _]: bottleDirs ) {
     std::ignore = _;
     // Reset variables
-    name = "";
-    virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
+    string name = "";
+    string virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
     bool status = false;
-    windows = BottleTypes::Windows::WindowsXP;
-    bit = BottleTypes::Bit::win32;
-    cDriveLocation = "- Unknown -";
-    lastTimeWineUpdated = "- Unknown -";
-    audioDriver = BottleTypes::AudioDriver::pulseaudio;
+    BottleTypes::Windows windows = BottleTypes::Windows::WindowsXP;
+    BottleTypes::Bit bit = BottleTypes::Bit::win32;
+    string cDriveLocation = "- Unknown -";
+    string lastTimeWineUpdated = "- Unknown -";
+    BottleTypes::AudioDriver audioDriver = BottleTypes::AudioDriver::pulseaudio;
 
     try {
       name = Helper::GetName(prefix);
