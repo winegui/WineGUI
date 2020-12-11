@@ -92,8 +92,9 @@ void SignalDispatcher::DispatchSignals()
   menu.settings_machine.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
   menu.remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
   menu.give_feedback.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_give_feedback));
-  menu.show_about.connect(sigc::mem_fun(about, &AboutDialog::show));
-
+  menu.show_about.connect(sigc::mem_fun(about, &AboutDialog::run_dialog));
+  about.signal_response().connect(sigc::mem_fun(about, &AboutDialog::hide_dialog));
+  
   // Distribute the active bottle signal
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
   mainWindow->activeBottle.connect(sigc::mem_fun(editWindow, &EditWindow::SetActiveBottle));
