@@ -27,20 +27,31 @@ AboutDialog::AboutDialog(Gtk::Window& parent) {
   // Set logo
   logo.set(IMAGE_LOCATION "logo.png");
   // Set version
-  std::vector<Glib::ustring> authors;
-  authors.push_back("Melroy van den Berg <melroy@melroy.org>");
+  std::vector<Glib::ustring> devs;
+  devs.push_back("Melroy van den Berg <melroy@melroy.org>");
 
   set_transient_for(parent);
   set_program_name("WineGui");
-  set_title("About WineGUI");
+  set_comments("The most user-friendly WINE manager.");
   set_logo(logo.get_pixbuf());
-  set_authors(authors);
+  set_authors(devs);
+  set_artists(devs);
   set_version(VERSION);
   set_copyright("Copyright © 2019-2020 Melroy van den Berg");
   set_license_type(Gtk::LICENSE_AGPL_3_0);
 }
 
 AboutDialog::~AboutDialog() {}
+
+void AboutDialog::run_dialog()
+{
+    run();
+}
+
+void AboutDialog::hide_dialog(__attribute__((unused)) int response)
+{
+    hide();
+}
 
 /**
  * \brief Retrieve the app version
