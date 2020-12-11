@@ -109,7 +109,7 @@ ninja
 Before you can make a new release, align the version number in WineGUI with the version you want to release.
 Then create a new tagged version in Gitlab with the same version name.
 
-*Note:* Only the `release tag` will trigger the publish task.
+*Note:* Only a `release tag` on the `master` branch will trigger the publish task.
 
 ## Coding standard
 
