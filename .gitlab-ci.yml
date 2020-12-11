@@ -7,7 +7,9 @@ stages:
 
 static_code_analysis:
   stage: test
-  script: ./scripts/cpp_check.sh
+  script:
+    - ./scripts/cpp_check.sh
+  allow_failure: true
 
 build:
   stage: build
@@ -16,10 +18,10 @@ build:
     name: "Packages + Documentation"
     expire_in: 1 week
     paths:
-    - doc/doxygen/
-    - build_prod/WineGUI-*.deb
-    - build_prod/WineGUI-*.rpm
-    - build_prod/WineGUI-*.tar.gz
+      - doc/doxygen/
+      - build_prod/WineGUI-*.deb
+      - build_prod/WineGUI-*.rpm
+      - build_prod/WineGUI-*.tar.gz
   cache:
       key: "$CI_PIPELINE_ID"
       paths:
