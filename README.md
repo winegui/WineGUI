@@ -16,12 +16,16 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 
 ## Development
 
-Development has been done in Visual Studio Code editor, using the following extensions:
+Development has been done in VSCcodium, using the following extensions:
 
 * C/C++
+* CMake
 * CMake Tools
+* GitLab Workflow
 
-* [WineGUI Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/master/file/doc/doxygen/index.html?job=build).
+### Documentation
+
+See latest [WineGUI Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/master/file/doc/doxygen/index.html?job=build).
 
 ### Requirements
 
@@ -91,9 +95,7 @@ cmake -DCMAKE_BUILD_TYPE=Release
 ninja
 ```
 
-### Doxygen
-
-Open the latest [WineGUI Doxygen page](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/master/file/doc/doxygen/index.html?job=build).
+### Build Doxygen
 
 Or build with generated doxygen files locally:
 
