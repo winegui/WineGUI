@@ -877,8 +877,8 @@ string Helper::GetFontFilename(const string prefix_path, BottleTypes::Bit bit, c
  */
 string Helper::GetImageLocation(const string filename)
 {
-    for (string data_dir : Glib::get_system_data_dirs())
-    {
+    // Try absolute path first
+    for (string data_dir : Glib::get_system_data_dirs()) {
         std::vector<std::string> path_builder{data_dir, "winegui", "images", filename};
         string file_path = Glib::build_path(G_DIR_SEPARATOR_S, path_builder);
         if (FileExists(file_path)) {
@@ -886,13 +886,18 @@ string Helper::GetImageLocation(const string filename)
         }
     }
 
-    // try local path if the images are not installed
+    // Try local path if the images are not installed (yet)
+    // When working directory is in the build folder (relative path)
     string file_path = Glib::build_filename("../images/", filename);
+    // When working directory is in the build/bin folder (relative path)
+    string file_path2 = Glib::build_filename("../../images/", filename);
     if (FileExists(file_path)) {
         return file_path;
     }
-    else
-    {
+    else if(FileExists(file_path2)) {
+        return file_path2;
+    }
+    else {
         return "";
     }
 }

@@ -38,8 +38,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Production build
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-  add_definitions(-DPRODUCTION=1)
-
   # Include CPack packaging settings
   include(packaging)
 endif()

@@ -21,6 +21,8 @@ Development has been done in Visual Studio Code editor, using the following exte
 * C/C++
 * CMake Tools
 
+* [WineGUI Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/master/file/doc/doxygen/index.html?job=build).
+
 ### Requirements
 
 Dependencies should be met before build:
@@ -82,15 +84,30 @@ gdb -ex=run bin/winegui
 
 For production build and DEB file package, you can run: `./scripts/build_prod.sh`
 
-Or use the `cmake -DCMAKE_BUILD_TYPE=Release`.
+Or use:
+
+```sh
+cmake -DCMAKE_BUILD_TYPE=Release
+ninja
+```
+
+### Doxygen
+
+Open the latest [WineGUI Doxygen page](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/master/file/doc/doxygen/index.html?job=build).
+
+Or build with generated doxygen files locally:
+
+```sh
+cmake -GNinja -Ddoc=ON
+ninja
+```
 
 ### Releasing
 
 Before you can make a new release, align the version number in WineGUI with the version you want to release.
 Then create a new tagged version in Gitlab with the same version name.
 
-*Note:* Only the `master` branch will trigger the publish task.
-
+*Note:* Only the `release tag` will trigger the publish task.
 
 ## Coding standard
 
