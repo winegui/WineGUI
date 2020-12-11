@@ -20,6 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "bottle_item.h"
+#include "helper.h"
 
 /**
  * \brief Default contructor
@@ -115,7 +116,7 @@ void BottleItem::CreateUI()
   bool status = this->status();
 
   // Set left side of the GUI
-  image.set(IMAGE_LOCATION "windows/" + filename);
+  image.set(Helper::GetImageLocation("windows/" + filename));
   image.set_margin_top(8);
   image.set_margin_end(8);
   image.set_margin_bottom(8);
@@ -126,10 +127,10 @@ void BottleItem::CreateUI()
   
   Glib::ustring status_text = "Ready";
   if (status) {
-    status_icon.set(IMAGE_LOCATION "ready.png");
+    status_icon.set(Helper::GetImageLocation("ready.png"));
   } else {
     status_text = "Not Ready";
-    status_icon.set(IMAGE_LOCATION "not_ready.png");
+    status_icon.set(Helper::GetImageLocation("not_ready.png"));
   }
   status_icon.set_size_request(2, -1);
   status_icon.set_halign(Gtk::Align::ALIGN_START);

@@ -19,13 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "about_dialog.h"
+#include "helper.h"
 
 /**
  * \brief Contructor
  */
 AboutDialog::AboutDialog(Gtk::Window& parent) {
   // Set logo
-  logo.set(IMAGE_LOCATION "logo.png");
+  logo.set(Helper::GetImageLocation("logo.png"));
   // Set version
   std::vector<Glib::ustring> devs;
   devs.push_back("Melroy van den Berg <melroy@melroy.org>");
