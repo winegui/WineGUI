@@ -152,10 +152,12 @@ void Helper::RunProgram(string prefix_path, string program, bool enable_tracing,
   }
   if (execTracing) {
     // Execute the command and show the user a message when exit code is non-zero
-    ExecTracing(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str(), enable_tracing);
+  // Be-sure to execute the program also between brackets (in case of spaces)
+    ExecTracing(("WINEPREFIX=\"" + prefix_path + "\" \"" + program + "\"").c_str(), enable_tracing);
   } else {
     // No tracing and no error message when exit code is non-zero
-    Exec(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
+  // Be-sure to execute the program also between brackets (in case of spaces)
+    Exec(("WINEPREFIX=\"" + prefix_path + "\" \"" + program + "\"").c_str());
   }
 }
 
@@ -173,7 +175,8 @@ void Helper::RunProgramUnderWine(string prefix_path, string program, bool enable
     msi = " msiexec /i";
   }
   // Execute the command and show the user a message when exit code is non-zero
-  ExecTracing(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + Helper::GetWineExecutableLocation() + " " + program).c_str(), enable_tracing);
+  // Be-sure to execute the program also between brackets (in case of spaces)
+  ExecTracing(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + Helper::GetWineExecutableLocation() + " \"" + program + "\"").c_str(), enable_tracing);
 }
 
 /**
@@ -206,10 +209,12 @@ void Helper::RunProgramWithFinishCallback(string prefix_path,
       msi = " msiexec /i";
     }
     // Execute the command and show the user a message when exit code is non-zero
-    ExecTracing(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " " + program).c_str(), enable_tracing);
+    // Be-sure to execute the program also between brackets (in case of spaces)
+    ExecTracing(("WINEPREFIX=\"" + prefix_path + "\"" + msi + " \"" + program + "\"").c_str(), enable_tracing);
   } else {
     // No tracing and no error message when exit code is non-zero
-    Exec(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
+    // Be-sure to execute the program also between brackets (in case of spaces)
+    Exec(("WINEPREFIX=\"" + prefix_path + "\" \"" + program + "\"").c_str());
   }
 
   // Blocking wait until wineserver is terminated (before we can look in the reg files for example)
@@ -916,7 +921,8 @@ string Helper::Exec(const char* cmd) {
   std::array<char, 128> buffer;
   string result = "";
   
-  // Execute command using popen  
+  // Execute command using popen,
+  // And use the standard C pclose method during stream closure.
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), &pclose);
   if (!pipe) {
     throw std::runtime_error("popen() failed!");
@@ -940,8 +946,8 @@ void Helper::ExecTracing(const char* cmd, bool enableTracing) {
   string result = "";
 
   // Execute command using popen
-  // Use a custom delete method (CloseFile)
-  std::unique_ptr<FILE, decltype(&CloseFile)> pipe(popen(cmd, "r"), &CloseFile);
+  // Use a custom close file function during the pipe close (CloseExecStream method, see below)
+  std::unique_ptr<FILE, decltype(&CloseExecStream)> pipe(popen(cmd, "r"), &CloseExecStream);
   if (!pipe) {
     throw std::runtime_error("popen() failed!");
   }
@@ -955,7 +961,11 @@ void Helper::ExecTracing(const char* cmd, bool enableTracing) {
   }
 }
 
-int Helper::CloseFile(std::FILE* file) {
+/**
+ * Custom fclose method, which is executed during the stream closure of C popen command.
+ * Check on fclose return value, signal a failure/pop-up to the user, when exit-code is non-zero.
+ */
+int Helper::CloseExecStream(std::FILE* file) {
   if (file) {
     if (std::fclose(file) != 0) {
       // Dispatcher will run the connected slot in the main loop,

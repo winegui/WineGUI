@@ -86,7 +86,7 @@ private:
 
   static string Exec(const char* cmd);
   static void ExecTracing(const char* cmd, bool enableTracing);
-  static int CloseFile(std::FILE* file);
+  static int CloseExecStream(std::FILE* file);
   static bool WriteFile(const string& filename, const gchar* contents, const gsize length);
   static bool ReadFile(const string& filename, gchar* contents);
   static string GetWinetricksVersion();
