@@ -1,4 +1,4 @@
-# Wine GUI
+# WineGUI
 
 Finally, a user-interface friendly [WINE](https://www.winehq.org/) (A compatibility layer capable of running Windows applications under Linux) Manager.
 
