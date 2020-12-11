@@ -1,4 +1,4 @@
-image: "danger89/gtk3-docker-cmake-ninja"
+image: "danger89/gtk3-docker-cmake-ninja:1.0"
 
 stages:
   - test
@@ -7,7 +7,8 @@ stages:
 
 static_code_analysis:
   stage: test
-  script: cppcheck --enable=all --suppressions-list=suppressions.txt --error-exitcode=1 -I ./include/ ./src/
+  script:
+    - ./scripts/cpp_check.sh
 
 build:
   stage: build
@@ -16,10 +17,10 @@ build:
     name: "Packages + Documentation"
     expire_in: 1 week
     paths:
-    - doc/doxygen/
-    - build_prod/WineGUI-*.deb
-    - build_prod/WineGUI-*.rpm
-    - build_prod/WineGUI-*.tar.gz
+      - doc/doxygen/
+      - build_prod/WineGUI-*.deb
+      - build_prod/WineGUI-*.rpm
+      - build_prod/WineGUI-*.tar.gz
   cache:
       key: "$CI_PIPELINE_ID"
       paths:

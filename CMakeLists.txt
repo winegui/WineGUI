@@ -58,18 +58,40 @@ link_directories(
 )
 add_definitions(${GTKMM_CFLAGS_OTHER})
 
-add_library(menu_lib src/menu.cc)
-add_library(windows_lib src/main_window.cc src/preferences_window.cc src/edit_window.cc src/settings_window.cc src/busy_dialog.cc)
-add_library(bottle_manager_lib src/bottle_manager.cc)
-add_library(bottle_item src/bottle_item.cc)
-add_library(new_bottle_assis_lib src/new_bottle_assistant.cc)
-add_library(about_dialog_lib src/about_dialog.cc)
-add_library(helper_lib src/helper.cc)
-add_library(signal_dispatcher_lib src/signal_dispatcher.cc)
+set(HEADERS
+    include/menu.h
+    include/main_window.h
+    include/preferences_window.h
+    include/edit_window.h
+    include/settings_window.h
+    include/busy_dialog.h
+    include/bottle_manager.h
+    include/bottle_item.h
+    include/new_bottle_assistant.h
+    include/about_dialog.h
+    include/helper.h
+    include/signal_dispatcher.h
+)
 
-add_executable(${PROJECT_TARGET} src/main.cc)
+set(SOURCES
+    src/menu.cc
+    src/main_window.cc
+    src/preferences_window.cc
+    src/edit_window.cc
+    src/settings_window.cc
+    src/busy_dialog.cc
+    src/bottle_manager.cc
+    src/bottle_item.cc
+    src/new_bottle_assistant.cc
+    src/about_dialog.cc
+    src/helper.cc
+    src/signal_dispatcher.cc
+    ${HEADERS}
+)
 
-target_link_libraries(${PROJECT_TARGET} windows_lib menu_lib bottle_manager_lib bottle_item new_bottle_assis_lib about_dialog_lib helper_lib signal_dispatcher_lib Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+add_executable(${PROJECT_TARGET} src/main.cc ${SOURCES})
+
+target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
 install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
 install(FILES misc/winegui.desktop DESTINATION share/applications)

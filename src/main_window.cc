@@ -260,6 +260,7 @@ void MainWindow::on_run_button_clicked()
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
   dialog.add_filter(filter_any);
+  dialog.set_filename(c_drive_location.get_text().c_str());
 
   //Show the dialog and wait for a user response:
   int result = dialog.run();
