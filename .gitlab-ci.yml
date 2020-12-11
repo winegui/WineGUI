@@ -1,4 +1,4 @@
-image: "danger89/gtk3-docker-cmake-ninja"
+image: "danger89/gtk3-docker-cmake-ninja:1.0"
 
 stages:
   - test
@@ -9,7 +9,6 @@ static_code_analysis:
   stage: test
   script:
     - ./scripts/cpp_check.sh
-  allow_failure: true
 
 build:
   stage: build

@@ -25,6 +25,7 @@
 #include <iomanip>
 #include <cstdio>
 #include <memory>
+#include <iostream>
 #include <stdexcept>
 #include <cstring>
 #include <fcntl.h>
@@ -387,8 +388,6 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
 {  
   string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
   string version = "";
-  string version9x = "";
-
   if (!(version = Helper::GetRegValue(filename, keyNameNT, nameNTVersion)).empty())
   {
     string buildNumberNT = Helper::GetRegValue(filename, keyNameNT, nameNTBuild);
@@ -739,9 +738,10 @@ void Helper::SetVirtualDesktop(const string prefix_path, string resolution)
         resolution = "640x480";
       }
 
-      string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
+      Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
       // Something returns non-zero... winetricks on the command line, does return zero ..
       /*
+      string result = Exec(..)
       if (!result.empty()) {
         result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
         if (result.compare("0") != 0) {
@@ -766,9 +766,11 @@ void Helper::DisableVirtualDesktop(const string prefix_path)
 {
   if (FileExists(WINETRICKS_EXECUTABLE))
   {
-    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off>/dev/null 2>&1; echo $?").c_str());
+    Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off>/dev/null 2>&1; echo $?").c_str());
     // Something returns non-zero... winetricks on the command line, does return zero ..
-    /*if (!result.empty()) {
+    /*
+    string result = Exec(...)
+    if (!result.empty()) {
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
       if (result.compare("0") != 0) {
         throw std::runtime_error("Could not Disable Virtual Desktop");
@@ -917,7 +919,8 @@ void Helper::ExecTracing(const char* cmd, bool enableTracing) {
   }
   
   if (enableTracing) {
-    // TODO: Dump result to log file.
+    // TODO: Dump result to log file instead.
+    std::cout << "\n=== Tracing output started ===\n\n" << result << "\n\n=== Tracing ended ===\n" << std::endl;
   }
 }
 
