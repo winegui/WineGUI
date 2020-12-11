@@ -7,7 +7,7 @@ stages:
 
 static_code_analysis:
   stage: test
-  script: cppcheck --enable=all --suppressions-list=suppressions.txt --error-exitcode=1 -I ./include/ ./src/
+  script: ./scripts/cpp_check.sh
 
 build:
   stage: build
