@@ -296,7 +296,9 @@ void BottleManager::RunProgram(string filename, bool is_msi_file = false)
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = (is_msi_file ? "msiexec /i " : "start /unix ") + filename;
+    Glib::ustring program_prefix = is_msi_file ? "msiexec /i" : "start /unix";
+    // Be-sure to execute the filename also between brackets (in case of spaces)
+    Glib::ustring program = program_prefix + " \"" + filename + "\"";
     std::thread t(&Helper::RunProgramUnderWine, wine_prefix, program, true, false);
     t.detach(); 
   }

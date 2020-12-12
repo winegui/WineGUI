@@ -145,19 +145,17 @@ void Helper::RunProgram(string prefix_path, string program, bool give_error = tr
 {
   if (give_error) {
     // Execute the command and show the user a message when exit code is non-zero
-  // Be-sure to execute the program also between brackets (in case of spaces)
-    ExecTracing(("WINEPREFIX=\"" + prefix_path + "\" \"" + program + "\"").c_str(), enable_tracing);
+    ExecTracing(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str(), enable_tracing);
   } else {
     // No tracing and no error message when exit code is non-zero
-  // Be-sure to execute the program also between brackets (in case of spaces)
-    Exec(("WINEPREFIX=\"" + prefix_path + "\" \"" + program + "\"").c_str());
+    Exec(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
   }
 }
 
 /**
  * \brief Run a Windows program under Wine (run this method async)
  * \param[in] prefix_path - The path to bottle wine
- * \param[in] program - Program/executable that will be executed
+ * \param[in] program - Program/executable that will be executed (be sure your application executable is between brackets in case of spaces)
  * \param[in] give_error - Inform user when application exit with non-zero exit code
  * \param[in] enable_tracing - Enable debugging tracing to file (give_error should be true as well!)
  */
@@ -181,6 +179,7 @@ void Helper::RunProgramWithFinishCallback(string prefix_path,
                                           bool give_error = true,
                                           bool enable_tracing = false)
 {
+  // Be-sure to execute the program also between brackets (in case of spaces)
   RunProgram(prefix_path, program, give_error, enable_tracing);
 
   // Blocking wait until wineserver is terminated (before we can look in the reg files for example)
