@@ -361,7 +361,7 @@ void BottleManager::OpenExplorer()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();    
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "explorer", true, false);
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "explorer", false, false);
     t.detach(); 
   }
 }
@@ -373,7 +373,7 @@ void BottleManager::OpenConsole()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();    
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineconsole", true, false);
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineconsole", false, false);
     t.detach(); 
   }
 }
@@ -385,7 +385,7 @@ void BottleManager::OpenWinecfg()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();    
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "winecfg", true, false);
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "winecfg", false, false);
     t.detach(); 
   }
 }
@@ -434,7 +434,7 @@ void BottleManager::OpenRegistertyEditor()
 {
   if (isBottleNotNull()) {
     Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "regedit", true, false);
+    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "regedit", false, false);
     t.detach();
   }
 }
