@@ -47,9 +47,9 @@ public:
   static Helper& getInstance();
 
   static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
-  static void RunProgram(string prefix_path, string program, bool enable_tracing, bool give_error);
-  static void RunProgramUnderWine(string prefix_path, string program, bool enable_tracing, bool is_msi_file);
-  static void RunProgramWithFinishCallback(string prefix_path, string program, bool enable_tracing, bool give_error, bool is_msi_file, Glib::Dispatcher* finishSignal);
+  static void RunProgram(string prefix_path, string program, bool give_error, bool enable_tracing);
+  static void RunProgramUnderWine(string prefix_path, string program, bool give_error, bool enable_tracing);
+  static void RunProgramWithFinishCallback(string prefix_path, string program, Glib::Dispatcher* finishSignal, bool give_error, bool enable_tracing);
   static void WaitUntilWineserverIsTerminated(const string prefix_path);
   static string GetWineExecutableLocation();
   static string GetWinetricksLocation();
