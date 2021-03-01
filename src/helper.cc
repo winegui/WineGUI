@@ -31,10 +31,10 @@
 #include <fcntl.h>
 #include <array>
 #include <time.h>
-#include <glibmm.h>
 #include <giomm/file.h>
 #include <glibmm/timeval.h>
 #include <glibmm/fileutils.h>
+#include <glibmm/miscutils.h>
 
 std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui config/storage directory path */
 static string WINEGUI_DIR = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
