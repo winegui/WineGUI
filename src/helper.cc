@@ -858,9 +858,9 @@ string Helper::GetImageLocation(const string filename)
 
     // Try local path if the images are not installed (yet)
     // When working directory is in the build folder (relative path)
-    string file_path = Glib::build_filename("../images/", filename);
+    string file_path = Glib::build_filename("../images", filename);
     // When working directory is in the build/bin folder (relative path)
-    string file_path2 = Glib::build_filename("../../images/", filename);
+    string file_path2 = Glib::build_filename("../../images", filename);
     if (FileExists(file_path)) {
         return file_path;
     }
