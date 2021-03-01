@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2020 WineGUI
+ * Copyright (c) 2019-2021 WineGUI
  *
  * \file    bottle_manager.cc
  * \brief   The controller controls it all
@@ -37,17 +37,16 @@
  * \brief Constructor
  * \param mainWindow Address to the main Window
  */
-BottleManager::BottleManager(MainWindow& mainWindow):
-  m_Mutex(),
-  mainWindow(mainWindow),
-  activeBottle(nullptr),
-  m_error_message()
+BottleManager::BottleManager(MainWindow &mainWindow) : m_Mutex(),
+                                                       mainWindow(mainWindow),
+                                                       activeBottle(nullptr),
+                                                       m_error_message()
 {
-  // TODO: Make it configurable via settings
-  std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui", "prefixes"};
-  BOTTLE_LOCATION = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
+    // TODO: Make it configurable via settings
+    std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui", "prefixes"};
+    BOTTLE_LOCATION = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
 
-  // TODO: Enable/disable tracing for the RunProgram commands (and make it configurable)
+    // TODO: Enable/disable tracing for the RunProgram commands (and make it configurable)
 }
 
 /**
@@ -60,30 +59,38 @@ BottleManager::~BottleManager() {}
  */
 void BottleManager::Prepare()
 {
-  // Install winetricks if not yet present,
-  // Winetricks script is used by WineGUI.
-  if (!Helper::FileExists(Helper::GetWinetricksLocation())) {
-    try {
-      Helper::InstallOrUpdateWinetricks();
+    // Install winetricks if not yet present,
+    // Winetricks script is used by WineGUI.
+    if (!Helper::FileExists(Helper::GetWinetricksLocation()))
+    {
+        try
+        {
+            Helper::InstallOrUpdateWinetricks();
+        }
+        catch (const std::runtime_error &error)
+        {
+            mainWindow.ShowErrorMessage(error.what());
+        }
     }
-    catch(const std::runtime_error& error) {
-      mainWindow.ShowErrorMessage(error.what());
+    else
+    {
+        // Update existing script
+        try
+        {
+            Helper::SelfUpdateWinetricks();
+        }
+        catch (const std::invalid_argument &msg)
+        {
+            std::cout << "WARN: " << msg.what() << std::endl;
+        }
+        catch (const std::runtime_error &error)
+        {
+            mainWindow.ShowErrorMessage(error.what());
+        }
     }
-  } else {
-    // Update existing script
-    try {
-      Helper::SelfUpdateWinetricks();
-    }
-    catch (const std::invalid_argument& msg) {
-      std::cout << "WARN: " << msg.what() << std::endl;
-    }
-    catch (const std::runtime_error& error) {
-      mainWindow.ShowErrorMessage(error.what());
-    }
-  }
 
-  // Start the initial read from disk to fetch the bottles & update GUI
-  UpdateBottles();
+    // Start the initial read from disk to fetch the bottles & update GUI
+    UpdateBottles();
 }
 
 /**
@@ -91,55 +98,64 @@ void BottleManager::Prepare()
  */
 void BottleManager::UpdateBottles()
 {
-  // Clear bottles
-  if (!bottles.empty())
-    bottles.clear();
+    // Clear bottles
+    if (!bottles.empty())
+        bottles.clear();
 
-  // Get the bottle directories
-  std::map<string, unsigned long> bottleDirs;
-  try {
-    bottleDirs = GetBottlePaths();
-  }
-  catch (const std::runtime_error& error)
-  {
-    mainWindow.ShowErrorMessage(error.what());
-    return; // stop
-  }
-
-  if (bottleDirs.size() > 0) {
-    try {
-      // Create wine bottles from bottle directories and wine version
-      bottles = CreateWineBottles(GetWineVersion(), bottleDirs);
+    // Get the bottle directories
+    std::map<string, unsigned long> bottleDirs;
+    try
+    {
+        bottleDirs = GetBottlePaths();
     }
-    catch (const std::runtime_error& error) {
-      mainWindow.ShowErrorMessage(error.what());
-      return; // stop
-    } 
-  
-    if (!bottles.empty()) {
-      // Update main Window
-      mainWindow.SetWineBottles(bottles);
-
-      // Set first Bottle in the detailed info panel,
-      // begin() gives you an iterator
-      auto first = bottles.begin();
-      mainWindow.SetDetailedInfo(*first);
-      // Set active bottle at the first
-      this->activeBottle = &(*first);
-    } else {
-      mainWindow.ShowErrorMessage("Could not create an overview of Windows Machines. Empty list.");      
-
-      // Send reset signal to reset the active bottle to NULL
-      resetActiveBottle.emit();
-      // Reset locally
-      this->activeBottle = nullptr;
+    catch (const std::runtime_error &error)
+    {
+        mainWindow.ShowErrorMessage(error.what());
+        return; // stop
     }
-  } else {
-    // Send reset signal to reset the active bottle to NULL
-    resetActiveBottle.emit();
-    // Reset locally
-    this->activeBottle = nullptr;
-  }
+
+    if (bottleDirs.size() > 0)
+    {
+        try
+        {
+            // Create wine bottles from bottle directories and wine version
+            bottles = CreateWineBottles(GetWineVersion(), bottleDirs);
+        }
+        catch (const std::runtime_error &error)
+        {
+            mainWindow.ShowErrorMessage(error.what());
+            return; // stop
+        }
+
+        if (!bottles.empty())
+        {
+            // Update main Window
+            mainWindow.SetWineBottles(bottles);
+
+            // Set first Bottle in the detailed info panel,
+            // begin() gives you an iterator
+            auto first = bottles.begin();
+            mainWindow.SetDetailedInfo(*first);
+            // Set active bottle at the first
+            this->activeBottle = &(*first);
+        }
+        else
+        {
+            mainWindow.ShowErrorMessage("Could not create an overview of Windows Machines. Empty list.");
+
+            // Send reset signal to reset the active bottle to NULL
+            resetActiveBottle.emit();
+            // Reset locally
+            this->activeBottle = nullptr;
+        }
+    }
+    else
+    {
+        // Send reset signal to reset the active bottle to NULL
+        resetActiveBottle.emit();
+        // Reset locally
+        this->activeBottle = nullptr;
+    }
 }
 
 /**
@@ -153,7 +169,7 @@ void BottleManager::UpdateBottles()
  * \param[in] audio                       - Audio Driver type
  */
 void BottleManager::NewBottle(
-    SignalDispatcher* caller,
+    SignalDispatcher *caller,
     Glib::ustring name,
     Glib::ustring virtual_desktop_resolution,
     bool disable_gecko_mono,
@@ -161,84 +177,95 @@ void BottleManager::NewBottle(
     BottleTypes::Bit bit,
     BottleTypes::AudioDriver audio)
 {
-  // Calculate prefix
-  std::vector<std::string> dirs{BOTTLE_LOCATION, name};
-  auto wine_prefix = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
-  bool bottle_created = false;
-  try {
-    // First create a new Wine Bottle
-    Helper::CreateWineBottle(wine_prefix, bit, disable_gecko_mono);    
-    bottle_created = true;
-  }
-  catch (const std::runtime_error& error) {
+    // Calculate prefix
+    std::vector<std::string> dirs{BOTTLE_LOCATION, name};
+    auto wine_prefix = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
+    bool bottle_created = false;
+    try
     {
-      std::lock_guard<std::mutex> lock(m_Mutex);
-      m_error_message = ("Something went wrong during creation of a new Windows machine!\n" + 
-        Glib::ustring(error.what()));
+        // First create a new Wine Bottle
+        Helper::CreateWineBottle(wine_prefix, bit, disable_gecko_mono);
+        bottle_created = true;
     }
-    caller->SignalErrorMessage();
-    return; // Stop thread
-  }
-
-  // Continue with additional settings
-  if (bottle_created) {
-    // Only change Windows OS when NOT default
-    if (windows_version != WineDefaults::WINDOWS_OS) {
-      try {
-        Helper::SetWindowsVersion(wine_prefix, windows_version);
-      }
-      catch (const std::runtime_error& error) {
+    catch (const std::runtime_error &error)
+    {
         {
-          std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message = ("Something went wrong during setting another Windows version.\n" + 
-            Glib::ustring(error.what()));
+            std::lock_guard<std::mutex> lock(m_Mutex);
+            m_error_message = ("Something went wrong during creation of a new Windows machine!\n" +
+                               Glib::ustring(error.what()));
         }
         caller->SignalErrorMessage();
         return; // Stop thread
-      } 
     }
 
-    // Only if virtual desktop is not empty, enable it
-    if (!virtual_desktop_resolution.empty()) {
-      try {
-        Helper::SetVirtualDesktop(wine_prefix, virtual_desktop_resolution);
-      }
-      catch (const std::runtime_error& error)
-      {
+    // Continue with additional settings
+    if (bottle_created)
+    {
+        // Only change Windows OS when NOT default
+        if (windows_version != WineDefaults::WINDOWS_OS)
         {
-          std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message = ("Something went wrong during enabling virtual desktop mode.\n" + 
-            Glib::ustring(error.what()));
+            try
+            {
+                Helper::SetWindowsVersion(wine_prefix, windows_version);
+            }
+            catch (const std::runtime_error &error)
+            {
+                {
+                    std::lock_guard<std::mutex> lock(m_Mutex);
+                    m_error_message = ("Something went wrong during setting another Windows version.\n" +
+                                       Glib::ustring(error.what()));
+                }
+                caller->SignalErrorMessage();
+                return; // Stop thread
+            }
         }
-        caller->SignalErrorMessage();
-        return; // Stop thread
-      } 
-    }
 
-    // Only if Audio driver is not default, change it
-    if (audio != WineDefaults::AUDIO_DRIVER) {
-      try {
-        Helper::SetAudioDriver(wine_prefix, audio);
-      }
-      catch (const std::runtime_error& error) {
+        // Only if virtual desktop is not empty, enable it
+        if (!virtual_desktop_resolution.empty())
         {
-          std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message = ("Something went wrong during setting another audio driver.\n" + 
-            Glib::ustring(error.what()));
+            try
+            {
+                Helper::SetVirtualDesktop(wine_prefix, virtual_desktop_resolution);
+            }
+            catch (const std::runtime_error &error)
+            {
+                {
+                    std::lock_guard<std::mutex> lock(m_Mutex);
+                    m_error_message = ("Something went wrong during enabling virtual desktop mode.\n" +
+                                       Glib::ustring(error.what()));
+                }
+                caller->SignalErrorMessage();
+                return; // Stop thread
+            }
         }
-        caller->SignalErrorMessage();
-        return; // Stop thread
-      } 
+
+        // Only if Audio driver is not default, change it
+        if (audio != WineDefaults::AUDIO_DRIVER)
+        {
+            try
+            {
+                Helper::SetAudioDriver(wine_prefix, audio);
+            }
+            catch (const std::runtime_error &error)
+            {
+                {
+                    std::lock_guard<std::mutex> lock(m_Mutex);
+                    m_error_message = ("Something went wrong during setting another audio driver.\n" +
+                                       Glib::ustring(error.what()));
+                }
+                caller->SignalErrorMessage();
+                return; // Stop thread
+            }
+        }
+
+        // TODO: Finally add name to WineGUI config file
     }
 
-    // TODO: Finally add name to WineGUI config file
-  }
+    // Wait until wineserver terminates
+    Helper::WaitUntilWineserverIsTerminated(wine_prefix);
 
-  // Wait until wineserver terminates
-  Helper::WaitUntilWineserverIsTerminated(wine_prefix);
-
-  // Trigger finish signal!
-  caller->SignalBottleCreated();
+    // Trigger finish signal!
+    caller->SignalBottleCreated();
 }
 
 /**
@@ -246,45 +273,55 @@ void BottleManager::NewBottle(
  */
 void BottleManager::DeleteBottle()
 {
-  if (activeBottle != nullptr) {
-    try {
-      Glib::ustring prefix_path = activeBottle->wine_location();
-      string windows = BottleTypes::toString(activeBottle->windows());
-      // Are you sure?'
-      if (mainWindow.ShowConfirmDialog("Are you sure you want to *permanently* remove machine named '" +
-       Helper::GetName(prefix_path) + "' running " + windows + "?\n\nNote: This action cannot be undone!")) {
-        Helper::RemoveWineBottle(prefix_path);
-        this->UpdateBottles();
-      } else {
-        // Nothing, canceled
-      }
-    } catch (const std::runtime_error& error) {
-      mainWindow.ShowErrorMessage(error.what());
-    } 
-  } else {
-    mainWindow.ShowErrorMessage("No Windows Machine to remove, empty/no selection.");
-  }
+    if (activeBottle != nullptr)
+    {
+        try
+        {
+            Glib::ustring prefix_path = activeBottle->wine_location();
+            string windows = BottleTypes::toString(activeBottle->windows());
+            // Are you sure?'
+            if (mainWindow.ShowConfirmDialog("Are you sure you want to *permanently* remove machine named '" +
+                                             Helper::GetName(prefix_path) + "' running " + windows + "?\n\nNote: This action cannot be undone!"))
+            {
+                Helper::RemoveWineBottle(prefix_path);
+                this->UpdateBottles();
+            }
+            else
+            {
+                // Nothing, canceled
+            }
+        }
+        catch (const std::runtime_error &error)
+        {
+            mainWindow.ShowErrorMessage(error.what());
+        }
+    }
+    else
+    {
+        mainWindow.ShowErrorMessage("No Windows Machine to remove, empty/no selection.");
+    }
 }
 
 /**
  * \brief Signal handler when the active bottle changes, update active bottle
  * \param[in] bottle - New bottle
  */
-void BottleManager::SetActiveBottle(BottleItem* bottle)
+void BottleManager::SetActiveBottle(BottleItem *bottle)
 {
-  if (bottle != nullptr) {
-    this->activeBottle = bottle;
-  }
+    if (bottle != nullptr)
+    {
+        this->activeBottle = bottle;
+    }
 }
 
 /**
  * \brief Get error message (stored from manager thread)
  * \return Return the error message
  */
-const Glib::ustring& BottleManager::GetErrorMessage()
+const Glib::ustring &BottleManager::GetErrorMessage()
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
-  return m_error_message; 
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_error_message;
 }
 
 /**
@@ -294,14 +331,15 @@ const Glib::ustring& BottleManager::GetErrorMessage()
  */
 void BottleManager::RunProgram(string filename, bool is_msi_file = false)
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program_prefix = is_msi_file ? "msiexec /i" : "start /unix";
-    // Be-sure to execute the filename also between brackets (in case of spaces)
-    Glib::ustring program = program_prefix + " \"" + filename + "\"";
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, program, true, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        Glib::ustring program_prefix = is_msi_file ? "msiexec /i" : "start /unix";
+        // Be-sure to execute the filename also between brackets (in case of spaces)
+        Glib::ustring program = program_prefix + " \"" + filename + "\"";
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, program, true, false);
+        t.detach();
+    }
 }
 
 /**
@@ -309,13 +347,15 @@ void BottleManager::RunProgram(string filename, bool is_msi_file = false)
  */
 void BottleManager::OpenDriveC()
 {
-  if (isBottleNotNull()) {
-    GError *error = NULL;    
-    if (!g_app_info_launch_default_for_uri(("file://" + activeBottle->wine_c_drive()).c_str(), NULL, &error)) {
-      g_warning("Failed to open uri: %s", error->message);
-      mainWindow.ShowErrorMessage("Could not open the C:/ drive.");
+    if (isBottleNotNull())
+    {
+        GError *error = NULL;
+        if (!g_app_info_launch_default_for_uri(("file://" + activeBottle->wine_c_drive()).c_str(), NULL, &error))
+        {
+            g_warning("Failed to open uri: %s", error->message);
+            mainWindow.ShowErrorMessage("Could not open the C:/ drive.");
+        }
     }
-  }
 }
 
 /**
@@ -323,11 +363,12 @@ void BottleManager::OpenDriveC()
  */
 void BottleManager::Reboot()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineboot -r", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineboot -r", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -335,11 +376,12 @@ void BottleManager::Reboot()
  */
 void BottleManager::Update()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineboot -u", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineboot -u", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -347,11 +389,12 @@ void BottleManager::Update()
  */
 void BottleManager::KillProcesses()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineboot -k", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineboot -k", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -359,11 +402,12 @@ void BottleManager::KillProcesses()
  */
 void BottleManager::OpenExplorer()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();    
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "explorer", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "explorer", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -371,11 +415,12 @@ void BottleManager::OpenExplorer()
  */
 void BottleManager::OpenConsole()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();    
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineconsole", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wineconsole", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -383,11 +428,12 @@ void BottleManager::OpenConsole()
  */
 void BottleManager::OpenWinecfg()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();    
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "winecfg", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "winecfg", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -395,12 +441,13 @@ void BottleManager::OpenWinecfg()
  */
 void BottleManager::OpenWinetricks()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " --gui";
-    std::thread t(&Helper::RunProgram, wine_prefix, program, true, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        Glib::ustring program = Helper::GetWinetricksLocation() + " --gui";
+        std::thread t(&Helper::RunProgram, wine_prefix, program, true, false);
+        t.detach();
+    }
 }
 
 /**
@@ -408,11 +455,12 @@ void BottleManager::OpenWinetricks()
  */
 void BottleManager::OpenUninstaller()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "uninstaller", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "uninstaller", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -420,11 +468,12 @@ void BottleManager::OpenUninstaller()
  */
 void BottleManager::OpenTaskManager()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "taskmgr", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "taskmgr", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -432,11 +481,12 @@ void BottleManager::OpenTaskManager()
  */
 void BottleManager::OpenRegistertyEditor()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "regedit", false, false);
-    t.detach();
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "regedit", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -444,11 +494,12 @@ void BottleManager::OpenRegistertyEditor()
  */
 void BottleManager::OpenNotepad()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "notepad", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "notepad", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -456,11 +507,12 @@ void BottleManager::OpenNotepad()
  */
 void BottleManager::OpenWordpad()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wordpad", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "wordpad", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -468,11 +520,12 @@ void BottleManager::OpenWordpad()
  */
 void BottleManager::OpenIexplore()
 {
-  if (isBottleNotNull()) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "iexplore", false, false);
-    t.detach(); 
-  }
+    if (isBottleNotNull())
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        std::thread t(&Helper::RunProgramUnderWine, wine_prefix, "iexplore", false, false);
+        t.detach();
+    }
 }
 
 /**
@@ -480,22 +533,24 @@ void BottleManager::OpenIexplore()
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of additional DirectX 9 DLLs, eg. 26 (for default use: "")
  */
-void BottleManager::InstallD3DX9(Gtk::Window& parent, const Glib::ustring& version)
+void BottleManager::InstallD3DX9(Gtk::Window &parent, const Glib::ustring &version)
 {
-  if (isBottleNotNull()) {
-    // Before we execute the install, show busy dialog
-    mainWindow.ShowBusyDialog(parent, "Installing D3DX9 (OpenGL implementation of DirectX 9).");
+    if (isBottleNotNull())
+    {
+        // Before we execute the install, show busy dialog
+        mainWindow.ShowBusyDialog(parent, "Installing D3DX9 (OpenGL implementation of DirectX 9).");
 
-    Glib::ustring package = "d3dx9";
-    if (version != "") {
-      package += "_" + version;
+        Glib::ustring package = "d3dx9";
+        if (version != "")
+        {
+            package += "_" + version;
+        }
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        Glib::ustring program = Helper::GetWinetricksLocation() + " -q " + package;
+        // finishedPackageInstall signal is needed in order to close the busy dialog again
+        std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
+        t.detach();
     }
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " -q " + package;
-    // finishedPackageInstall signal is needed in order to close the busy dialog again
-    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
-    t.detach(); 
-  }
 }
 
 /**
@@ -504,22 +559,24 @@ void BottleManager::InstallD3DX9(Gtk::Window& parent, const Glib::ustring& versi
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of DXVK, eg. 151 (for default use: "latest")
  */
-void BottleManager::InstallDXVK(Gtk::Window& parent, const Glib::ustring& version)
+void BottleManager::InstallDXVK(Gtk::Window &parent, const Glib::ustring &version)
 {
-  if (isBottleNotNull()) {
-    // Before we execute the install, show busy dialog
-    mainWindow.ShowBusyDialog(parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
+    if (isBottleNotNull())
+    {
+        // Before we execute the install, show busy dialog
+        mainWindow.ShowBusyDialog(parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
 
-    Glib::ustring package = "dxvk";
-    if (version != "latest") {
-      package += version;
+        Glib::ustring package = "dxvk";
+        if (version != "latest")
+        {
+            package += version;
+        }
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        Glib::ustring program = Helper::GetWinetricksLocation() + " -q " + package;
+        // finishedPackageInstall signal is needed in order to close the busy dialog again
+        std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
+        t.detach();
     }
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " -q " + package;
-    // finishedPackageInstall signal is needed in order to close the busy dialog again
-    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
-    t.detach(); 
-  }
 }
 
 /**
@@ -527,19 +584,20 @@ void BottleManager::InstallDXVK(Gtk::Window& parent, const Glib::ustring& versio
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of Visual C++, eg. 2010, 2013, 2015 (no default)
  */
-void BottleManager::InstallVisualCppPackage(Gtk::Window& parent, const Glib::ustring& version)
+void BottleManager::InstallVisualCppPackage(Gtk::Window &parent, const Glib::ustring &version)
 {
-  if (isBottleNotNull()) {
-    // Before we execute the install, show busy dialog
-    mainWindow.ShowBusyDialog(parent, "Installing Visual C++ package.");
+    if (isBottleNotNull())
+    {
+        // Before we execute the install, show busy dialog
+        mainWindow.ShowBusyDialog(parent, "Installing Visual C++ package.");
 
-    Glib::ustring package = "vcrun" + version;
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " -q " + package;
-    // finishedPackageInstall signal is needed in order to close the busy dialog again
-    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
-    t.detach(); 
-  }
+        Glib::ustring package = "vcrun" + version;
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        Glib::ustring program = Helper::GetWinetricksLocation() + " -q " + package;
+        // finishedPackageInstall signal is needed in order to close the busy dialog again
+        std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
+        t.detach();
+    }
 }
 
 /**
@@ -548,70 +606,79 @@ void BottleManager::InstallVisualCppPackage(Gtk::Window& parent, const Glib::ust
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of .NET, eg. '35' for 3.5, '471' for 4.7.1 or '35sp1' for 3.5 SP1 (no default)
  */
-void BottleManager::InstallDotNet(Gtk::Window& parent, const Glib::ustring& version)
+void BottleManager::InstallDotNet(Gtk::Window &parent, const Glib::ustring &version)
 {
-  if (isBottleNotNull()) {
-    if (mainWindow.ShowConfirmDialog("Important note: Wine Mono & Gecko support is often sufficient enough.\n\nWine Mono will be *uninstalled* before native .NET will be installed.\n\nAre you sure you want to continue?")) {
-      // Before we execute the install, show busy dialog
-      mainWindow.ShowBusyDialog(parent, "Installing Native .NET redistributable packages (v" + version + ").\nThis may take quite some time...\n");
+    if (isBottleNotNull())
+    {
+        if (mainWindow.ShowConfirmDialog("Important note: Wine Mono & Gecko support is often sufficient enough.\n\nWine Mono will be *uninstalled* before native .NET will be installed.\n\nAre you sure you want to continue?"))
+        {
+            // Before we execute the install, show busy dialog
+            mainWindow.ShowBusyDialog(parent, "Installing Native .NET redistributable packages (v" + version + ").\nThis may take quite some time...\n");
 
-      Glib::ustring deinstallCommand = this->GetDeinstallMonoCommand();
+            Glib::ustring deinstallCommand = this->GetDeinstallMonoCommand();
 
-      Glib::ustring package = "dotnet" + version;
-      Glib::ustring wine_prefix = activeBottle->wine_location();
-      // I can't use -q with .NET installs
-      Glib::ustring installCommand = Helper::GetWinetricksLocation() + " " + package;
+            Glib::ustring package = "dotnet" + version;
+            Glib::ustring wine_prefix = activeBottle->wine_location();
+            // I can't use -q with .NET installs
+            Glib::ustring installCommand = Helper::GetWinetricksLocation() + " " + package;
 
-      Glib::ustring program = "";
-      if (!deinstallCommand.empty()) {
-        // First deinstall Mono then install native .NET
-        program = deinstallCommand + "; " + installCommand;
-      } else {
-        program = installCommand;
-      }
-      // finishedPackageInstall signal is needed in order to close the busy dialog again
-      std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
-      t.detach(); 
-    } else {
-      // Nothing, canceled
+            Glib::ustring program = "";
+            if (!deinstallCommand.empty())
+            {
+                // First deinstall Mono then install native .NET
+                program = deinstallCommand + "; " + installCommand;
+            }
+            else
+            {
+                program = installCommand;
+            }
+            // finishedPackageInstall signal is needed in order to close the busy dialog again
+            std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
+            t.detach();
+        }
+        else
+        {
+            // Nothing, canceled
+        }
     }
-  }
 }
 
 /**
  * \brief Install core fonts (which is often enough)
  * \param[in] parent Parent GTK window were the request is coming from
  */
-void BottleManager::InstallCoreFonts(Gtk::Window& parent)
+void BottleManager::InstallCoreFonts(Gtk::Window &parent)
 {
-  if (isBottleNotNull()) {
-    // Before we execute the install, show busy dialog
-    mainWindow.ShowBusyDialog(parent, "Installing MS Core fonts.");
+    if (isBottleNotNull())
+    {
+        // Before we execute the install, show busy dialog
+        mainWindow.ShowBusyDialog(parent, "Installing MS Core fonts.");
 
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " -q corefonts";
-    // finishedPackageInstall signal is needed in order to close the busy dialog again
-    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
-    t.detach(); 
-  }
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        Glib::ustring program = Helper::GetWinetricksLocation() + " -q corefonts";
+        // finishedPackageInstall signal is needed in order to close the busy dialog again
+        std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
+        t.detach();
+    }
 }
 
 /**
  * \brief Install liberation fonts, open-source (which is often enough)
  * \param[in] parent Parent GTK window were the request is coming from
  */
-void BottleManager::InstallLiberation(Gtk::Window& parent)
+void BottleManager::InstallLiberation(Gtk::Window &parent)
 {
-  if (isBottleNotNull()) {
-    // Before we execute the install, show busy dialog
-    mainWindow.ShowBusyDialog(parent, "Installing Liberation open-source fonts.");
+    if (isBottleNotNull())
+    {
+        // Before we execute the install, show busy dialog
+        mainWindow.ShowBusyDialog(parent, "Installing Liberation open-source fonts.");
 
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    Glib::ustring program = Helper::GetWinetricksLocation() + " -q liberation";
-    // finishedPackageInstall signal is needed in order to close the busy dialog again
-    std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
-    t.detach(); 
-  }
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        Glib::ustring program = Helper::GetWinetricksLocation() + " -q liberation";
+        // finishedPackageInstall signal is needed in order to close the busy dialog again
+        std::thread t(&Helper::RunProgramWithFinishCallback, wine_prefix, program, &finishedPackageInstall, true, false);
+        t.detach();
+    }
 }
 
 /*************************************************************
@@ -620,11 +687,12 @@ void BottleManager::InstallLiberation(Gtk::Window& parent)
 
 bool BottleManager::isBottleNotNull()
 {
-  bool isNull = (activeBottle == nullptr);
-  if (isNull) {
-    mainWindow.ShowErrorMessage("No Windows Machine selected/empty. First create a new machine!\n\nAborted.");
-  }
-  return !isNull;
+    bool isNull = (activeBottle == nullptr);
+    if (isNull)
+    {
+        mainWindow.ShowErrorMessage("No Windows Machine selected/empty. First create a new machine!\n\nAborted.");
+    }
+    return !isNull;
 }
 
 /**
@@ -634,25 +702,28 @@ bool BottleManager::isBottleNotNull()
  */
 Glib::ustring BottleManager::GetDeinstallMonoCommand()
 {
-  string command = "";
-  if (activeBottle != nullptr) {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    string GUID = Helper::GetWineGUID(wine_prefix, "Wine Mono Runtime");
+    string command = "";
+    if (activeBottle != nullptr)
+    {
+        Glib::ustring wine_prefix = activeBottle->wine_location();
+        string GUID = Helper::GetWineGUID(wine_prefix, "Wine Mono Runtime");
 
-    if (!GUID.empty()) {
-      Glib::ustring uninstaller = "";
-      switch (activeBottle->bit()) {
-        case BottleTypes::Bit::win32:
-          uninstaller = "wine uninstaller --remove";
-          break;
-        case BottleTypes::Bit::win64:
-          uninstaller = "wine64 uninstaller --remove";
-          break;
-      }
-      command = uninstaller + " '{" + GUID + "}'";
+        if (!GUID.empty())
+        {
+            Glib::ustring uninstaller = "";
+            switch (activeBottle->bit())
+            {
+            case BottleTypes::Bit::win32:
+                uninstaller = "wine uninstaller --remove";
+                break;
+            case BottleTypes::Bit::win64:
+                uninstaller = "wine64 uninstaller --remove";
+                break;
+            }
+            command = uninstaller + " '{" + GUID + "}'";
+        }
     }
-  }
-  return command;
+    return command;
 }
 
 /**
@@ -661,15 +732,17 @@ Glib::ustring BottleManager::GetDeinstallMonoCommand()
  */
 string BottleManager::GetWineVersion()
 {
-  // Read wine version (is always the same for all bottles atm)
-  string wineVersion = "";
-  try {
-    wineVersion = Helper::GetWineVersion();
-  }
-  catch (const std::runtime_error& error) {
-    mainWindow.ShowErrorMessage(error.what());
-  }
-  return wineVersion;
+    // Read wine version (is always the same for all bottles atm)
+    string wineVersion = "";
+    try
+    {
+        wineVersion = Helper::GetWineVersion();
+    }
+    catch (const std::runtime_error &error)
+    {
+        mainWindow.ShowErrorMessage(error.what());
+    }
+    return wineVersion;
 }
 
 /**
@@ -678,21 +751,25 @@ string BottleManager::GetWineVersion()
  */
 std::map<string, unsigned long> BottleManager::GetBottlePaths()
 {
-  if (!Helper::DirExists(BOTTLE_LOCATION)) {
-    // Create directory if not exist yet
-    if (!Helper::CreateDir(BOTTLE_LOCATION)) {
-      throw std::runtime_error("Failed to create the Wine bottles directory: " + BOTTLE_LOCATION);
+    if (!Helper::DirExists(BOTTLE_LOCATION))
+    {
+        // Create directory if not exist yet
+        if (!Helper::CreateDir(BOTTLE_LOCATION))
+        {
+            throw std::runtime_error("Failed to create the Wine bottles directory: " + BOTTLE_LOCATION);
+        }
     }
-  }
-  if (Helper::DirExists(BOTTLE_LOCATION)) {
-    // Continue
-    return Helper::GetBottlesPaths(BOTTLE_LOCATION);
-  }
-  else {
-    throw std::runtime_error("Configuration directory still not found (probably no permissions):\n" + BOTTLE_LOCATION);
-  }
-  // Otherwise empty
-  return std::map<string, unsigned long>();
+    if (Helper::DirExists(BOTTLE_LOCATION))
+    {
+        // Continue
+        return Helper::GetBottlesPaths(BOTTLE_LOCATION);
+    }
+    else
+    {
+        throw std::runtime_error("Configuration directory still not found (probably no permissions):\n" + BOTTLE_LOCATION);
+    }
+    // Otherwise empty
+    return std::map<string, unsigned long>();
 }
 
 /**
@@ -702,47 +779,50 @@ std::map<string, unsigned long> BottleManager::GetBottlePaths()
  */
 std::list<BottleItem> BottleManager::CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs)
 {
-  std::list<BottleItem> bottles;
+    std::list<BottleItem> bottles;
 
-  // Retrieve detailed info for each wine bottle prefix
-  for (const auto &[prefix, _]: bottleDirs ) {
-    std::ignore = _;
-    // Reset variables
-    string name = "";
-    string virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
-    bool status = false;
-    BottleTypes::Windows windows = BottleTypes::Windows::WindowsXP;
-    BottleTypes::Bit bit = BottleTypes::Bit::win32;
-    string cDriveLocation = "- Unknown -";
-    string lastTimeWineUpdated = "- Unknown -";
-    BottleTypes::AudioDriver audioDriver = BottleTypes::AudioDriver::pulseaudio;
+    // Retrieve detailed info for each wine bottle prefix
+    for (const auto &[prefix, _] : bottleDirs)
+    {
+        std::ignore = _;
+        // Reset variables
+        string name = "";
+        string virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
+        bool status = false;
+        BottleTypes::Windows windows = BottleTypes::Windows::WindowsXP;
+        BottleTypes::Bit bit = BottleTypes::Bit::win32;
+        string cDriveLocation = "- Unknown -";
+        string lastTimeWineUpdated = "- Unknown -";
+        BottleTypes::AudioDriver audioDriver = BottleTypes::AudioDriver::pulseaudio;
 
-    try {
-      name = Helper::GetName(prefix);
-      virtualDesktop = Helper::GetVirtualDesktop(prefix);
-      status = Helper::GetBottleStatus(prefix);
-      windows = Helper::GetWindowsOSVersion(prefix);
-      bit = Helper::GetSystemBit(prefix);
-      cDriveLocation = Helper::GetCLetterDrive(prefix);
-      lastTimeWineUpdated = Helper::GetLastWineUpdated(prefix);
-      audioDriver = Helper::GetAudioDriver(prefix);
+        try
+        {
+            name = Helper::GetName(prefix);
+            virtualDesktop = Helper::GetVirtualDesktop(prefix);
+            status = Helper::GetBottleStatus(prefix);
+            windows = Helper::GetWindowsOSVersion(prefix);
+            bit = Helper::GetSystemBit(prefix);
+            cDriveLocation = Helper::GetCLetterDrive(prefix);
+            lastTimeWineUpdated = Helper::GetLastWineUpdated(prefix);
+            audioDriver = Helper::GetAudioDriver(prefix);
+        }
+        catch (const std::runtime_error &error)
+        {
+            mainWindow.ShowErrorMessage(error.what());
+        }
+
+        BottleItem *bottle = new BottleItem(
+            name,
+            status,
+            windows,
+            bit,
+            wineVersion,
+            prefix,
+            cDriveLocation,
+            lastTimeWineUpdated,
+            audioDriver,
+            virtualDesktop);
+        bottles.push_back(*bottle);
     }
-    catch (const std::runtime_error& error) {
-      mainWindow.ShowErrorMessage(error.what());
-    }
-
-    BottleItem* bottle = new BottleItem(
-      name,
-      status,
-      windows,
-      bit,
-      wineVersion,
-      prefix,
-      cDriveLocation,
-      lastTimeWineUpdated,
-      audioDriver,
-      virtualDesktop);
-    bottles.push_back(*bottle);
-  }
-  return bottles;
+    return bottles;
 }

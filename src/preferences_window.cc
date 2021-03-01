@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2021 WineGUI
  *
  * \file    preferences_window.cc
  * \brief   Application preferences GTK+ window class
@@ -24,22 +24,21 @@
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
+PreferencesWindow::PreferencesWindow(Gtk::Window &parent)
 {
-  set_transient_for(parent);
-  set_title("Application Preferences");
-  set_default_size(650, 400);
-  set_modal(true);
+    set_transient_for(parent);
+    set_title("Application Preferences");
+    set_default_size(650, 400);
+    set_modal(true);
 
-  text.set_text("Not implemented yet. Sorry :\\");
-  vbox.pack_start(text);
-  add(vbox);
-  
-  show_all_children();
+    text.set_text("Not implemented yet. Sorry :\\");
+    vbox.pack_start(text);
+    add(vbox);
+
+    show_all_children();
 }
 
 /**
  * \brief Destructor
  */
 PreferencesWindow::~PreferencesWindow() {}
-

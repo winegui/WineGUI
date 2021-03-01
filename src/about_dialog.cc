@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2021 WineGUI
  *
  * \file    about_dialog.cc
  * \brief   The About dialog
@@ -24,22 +24,23 @@
 /**
  * \brief Contructor
  */
-AboutDialog::AboutDialog(Gtk::Window& parent) {
-  // Set logo
-  logo.set(Helper::GetImageLocation("logo.png"));
-  // Set version
-  std::vector<Glib::ustring> devs;
-  devs.push_back("Melroy van den Berg <melroy@melroy.org>");
+AboutDialog::AboutDialog(Gtk::Window &parent)
+{
+    // Set logo
+    logo.set(Helper::GetImageLocation("logo.png"));
+    // Set version
+    std::vector<Glib::ustring> devs;
+    devs.push_back("Melroy van den Berg <melroy@melroy.org>");
 
-  set_transient_for(parent);
-  set_program_name("WineGui");
-  set_comments("The most user-friendly WINE manager.");
-  set_logo(logo.get_pixbuf());
-  set_authors(devs);
-  set_artists(devs);
-  set_version(VERSION);
-  set_copyright("Copyright © 2019-2020 Melroy van den Berg");
-  set_license_type(Gtk::LICENSE_AGPL_3_0);
+    set_transient_for(parent);
+    set_program_name("WineGui");
+    set_comments("The most user-friendly WINE manager.");
+    set_logo(logo.get_pixbuf());
+    set_authors(devs);
+    set_artists(devs);
+    set_version(VERSION);
+    set_copyright("Copyright © 2019-2020 Melroy van den Berg");
+    set_license_type(Gtk::LICENSE_AGPL_3_0);
 }
 
 AboutDialog::~AboutDialog() {}
@@ -58,6 +59,7 @@ void AboutDialog::hide_dialog(__attribute__((unused)) int response)
  * \brief Retrieve the app version
  * \return Version number
  */
-std::string AboutDialog::GetVersion() {
-  return VERSION;
+std::string AboutDialog::GetVersion()
+{
+    return VERSION;
 }
