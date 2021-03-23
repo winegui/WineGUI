@@ -247,11 +247,19 @@ string Helper::GetWineVersion()
         std::vector<string> results = Split(result, '-');
         if (results.size() >= 2)
         {
-            string version = results.at(1);
-            ;
-            // Remove new lines
-            version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
-            return version;
+            string result2 = results.at(1);
+            std::vector<string> results2 = Split(result2, ' ');
+            if (results2.size() >= 1)
+            {
+                string version = results2.at(0); // just only get the version number (eg. 6.0)
+                // Remove new lines
+                version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
+                return version;
+            }
+            else
+            {
+                throw std::runtime_error("Could not determ wine version?\nSomething went wrong.");
+            }
         }
         else
         {
@@ -449,7 +457,6 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
             }
         }
         // TODO: Fall-back to just the Windows version, even if the build number doesn't match
-        
     }
     else
     {
