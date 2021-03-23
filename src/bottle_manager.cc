@@ -774,7 +774,7 @@ std::map<string, unsigned long> BottleManager::GetBottlePaths()
 
 /**
  * \brief Create wine bottle classes and add them to the private bottles variable
- * \param[in] wineVersion The current wine version used
+ * \param[in] wineVersion The current wine version used (currently the same version for all bottles)
  * \param[in] bottleDirs  The list of bottle directories
  */
 std::list<BottleItem> BottleManager::CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs)

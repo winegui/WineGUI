@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2021 WineGUI
  *
  * \file    main_window.h
  * \brief   Main GTK+ window class

@@ -74,7 +74,7 @@ static const struct
     const string productType;
 } win_versions[] =
     {
-        {BottleTypes::Windows::Windows10, "10.0", "17134", "WinNT"},
+        {BottleTypes::Windows::Windows10, "10.0", "10240", "WinNT"},
         {BottleTypes::Windows::Windows81, "6.3", "9600", "WinNT"},
         {BottleTypes::Windows::Windows8, "6.2", "9200", "WinNT"},
         {BottleTypes::Windows::Windows2008R2, "6.1", "7601", "ServerNT"},
@@ -247,11 +247,19 @@ string Helper::GetWineVersion()
         std::vector<string> results = Split(result, '-');
         if (results.size() >= 2)
         {
-            string version = results.at(1);
-            ;
-            // Remove new lines
-            version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
-            return version;
+            string result2 = results.at(1);
+            std::vector<string> results2 = Split(result2, ' ');
+            if (results2.size() >= 1)
+            {
+                string version = results2.at(0); // just only get the version number (eg. 6.0)
+                // Remove new lines
+                version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
+                return version;
+            }
+            else
+            {
+                throw std::runtime_error("Could not determ wine version?\nSomething went wrong.");
+            }
         }
         else
         {
@@ -381,12 +389,32 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
     {
         string buildNumberNT = Helper::GetRegValue(filename, keyNameNT, nameNTBuild);
         string typeNT = Helper::GetRegValue(filename, keyType, nameProductType);
-        // Find Windows version
+        // Find the correct Windows version, comparing the version, build number as well as NT type (if present)
         for (unsigned int i = 0; i < BottleTypes::WINDOWS_ENUM_SIZE; i++)
         {
             // Check if version + build number matches
             if (((win_versions[i].versionNumber).compare(version) == 0) &&
                 ((win_versions[i].buildNumber).compare(buildNumberNT) == 0))
+            {
+                if (!typeNT.empty())
+                {
+                    if ((win_versions[i].productType).compare(typeNT) == 0)
+                    {
+                        return win_versions[i].windows;
+                    }
+                }
+                else
+                {
+                    return win_versions[i].windows;
+                }
+            }
+        }
+
+        // Fall-back - return the Windows version; even if the build NT number doesn't exactly match
+        for (unsigned int i = 0; i < BottleTypes::WINDOWS_ENUM_SIZE; i++)
+        {
+            // Check if version + build number matches
+            if ((win_versions[i].versionNumber).compare(version) == 0)
             {
                 if (!typeNT.empty())
                 {
@@ -428,6 +456,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string prefix_path)
                 return win_versions[i].windows;
             }
         }
+        // TODO: Fall-back to just the Windows version, even if the build number doesn't match
     }
     else
     {
