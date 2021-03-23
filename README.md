@@ -121,20 +121,3 @@ For continuous integration we use our [Dockerfile](misc/Dockerfile) to create a 
 This image (`danger89/gtk3-docker-cmake-ninja`) is hosted on [Dockerhub](https://hub.docker.com/r/danger89/gtk3-docker-cmake-ninja).
 
 A helper script can be used: `./scripts/build_and_upload_image.sh`, after successfully identified via `docker login --username=<username>`.
-
-## Coding in the Cloud
-
-### Cloud IDE
-
-You may use our [Cloud IDE](https://ide.melroy.org) for developing remotely.
-
-### How-to develop on a remote server
-
-Execute the following command to copy the binary from the Cloud IDE (Coder) to your local machine & execute WineGUI:
-
-```sh
-scp melroy@server.melroy.org:/media/data/coder_projects/project/winegui/build/bin/winegui ~ && ~/winegui
-```
-
-*Note #1:* Copy your local ~/.ssh/id_ed25519.pub and add it to the remote machine file: `/home/melroy/.ssh/authorized_keys`
-*Note #2:* Requires the `libgtkmm-3.0-1v5` library to be installed on the local machine.
