@@ -9,7 +9,7 @@ if [ -z ${APP_VERSION} ]; then
 fi
 
 # Check if the version already exists
-output=$(sshpass -e ssh -o StrictHostKeyChecking=no melroy@server.melroy.org 'cd /var/www/winegui.melroy.org/html/downloads; ls')
+output=$(sshpass -e ssh -o StrictHostKeyChecking=no melroy@gitlab.melroy.org 'cd /var/www/winegui.melroy.org/html/downloads; ls')
 
 name="WineGUI-${APP_VERSION}"
 if [[ "$output" == *"$name"* ]]; then
