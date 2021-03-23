@@ -135,7 +135,7 @@ void MainWindow::SetDetailedInfo(BottleItem &bottle)
     Glib::ustring windows = BottleTypes::toString(bottle.windows());
     windows += " (" + BottleTypes::toString(bottle.bit()) + ')';
     window_version.set_text(windows);
-    wine_version.set_text("v" + bottle.wine_version());
+    wine_version.set_text(bottle.wine_version());
     wine_location.set_text(bottle.wine_location());
     c_drive_location.set_text(bottle.wine_c_drive());
     wine_last_changed.set_text(bottle.wine_last_changed());
