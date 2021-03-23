@@ -25,7 +25,7 @@ Development has been done in VSCcodium, using the following extensions:
 
 ### Documentation
 
-See latest [WineGUI Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/master/file/doc/doxygen/index.html?job=build).
+See latest [WineGUI Developer Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/master/file/doc/doxygen/index.html?job=build).
 
 ### Requirements
 
