@@ -46,11 +46,17 @@ AboutDialog::AboutDialog(Gtk::Window &parent)
 
 AboutDialog::~AboutDialog() {}
 
+/**
+ * \brief Open about dialog
+ */
 void AboutDialog::run_dialog()
 {
     run();
 }
 
+/**
+ * \brief Close the about dialog
+ */
 void AboutDialog::hide_dialog(__attribute__((unused)) int response)
 {
     hide();

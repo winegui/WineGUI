@@ -3,13 +3,14 @@ image: "danger89/gtk3-docker-cmake-ninja:1.0"
 stages:
   - test
   - build
-  - publish
+  - release
 
 static_code_analysis:
   stage: test
   script:
     - ./scripts/cpp_check.sh
 
+# Build WineGUI + Doxygen
 build:
   stage: build
   script: ./scripts/build_prod.sh
@@ -27,14 +28,13 @@ build:
         - build_prod/bin
       policy: push
 
-publish:
-  stage: publish
-  only:
-    - tags
-  except:
-    - branches
+# Upload the artifacts / release
+release:
+  stage: release
+  rules:
+    - if: $CI_COMMIT_TAG
   script:
-    - export APP_VERSION=`./build_prod/bin/winegui --version`; $APP_VERSION
+    - export APP_VERSION=${CI_COMMIT_TAG}
     - ./scripts/upload_release.sh
     - ./scripts/create_release_links.sh
   cache:
