@@ -42,6 +42,8 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
   include(packaging)
 endif()
 
+configure_file(src/project_config.h.in ${CMAKE_BINARY_DIR}/project_config.h)
+
 ################################
 # Normal Libraries & Executables
 ################################
@@ -88,6 +90,10 @@ set(SOURCES
 )
 
 add_executable(${PROJECT_TARGET} src/main.cc ${SOURCES})
+
+target_include_directories(${PROJECT_TARGET} PRIVATE
+    ${CMAKE_BINARY_DIR}
+)
 
 target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 

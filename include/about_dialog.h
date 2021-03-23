@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2021 WineGUI
  *
  * \file    about_dialog.h
  * \brief   About Dialog
@@ -23,9 +23,6 @@
 #include <gtkmm/aboutdialog.h>
 #include <gtkmm/image.h>
 #include <string>
-
-// Use major.minor.patch syntax, don't forget to update CMakeLists.txt file as well!
-static const std::string VERSION = "v1.6.0";
 
 /**
  * \class AboutDialog

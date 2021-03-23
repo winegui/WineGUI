@@ -20,6 +20,7 @@
  */
 #include "about_dialog.h"
 #include "helper.h"
+#include "project_config.h"
 
 /**
  * \brief Contructor
@@ -38,7 +39,7 @@ AboutDialog::AboutDialog(Gtk::Window &parent)
     set_logo(logo.get_pixbuf());
     set_authors(devs);
     set_artists(devs);
-    set_version(VERSION);
+    set_version(PROJECT_VER);
     set_copyright("Copyright © 2019-2021 Melroy van den Berg");
     set_license_type(Gtk::LICENSE_AGPL_3_0);
 }
@@ -61,5 +62,5 @@ void AboutDialog::hide_dialog(__attribute__((unused)) int response)
  */
 std::string AboutDialog::GetVersion()
 {
-    return VERSION;
+    return PROJECT_VER;
 }

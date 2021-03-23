@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
             {
                 // Retrieve version and print it
                 std::string version = AboutDialog::GetVersion();
-                std::cout << version << std::endl;
+                std::cout << "WineGUI " << version << std::endl;
                 return 0;
             }
         }
