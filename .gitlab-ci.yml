@@ -1,4 +1,4 @@
-image: "danger89/gtk3-docker-cmake-ninja:1.0"
+image: danger89/gtk3-docker-cmake-ninja:2.1
 
 stages:
   - test
