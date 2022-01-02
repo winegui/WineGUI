@@ -1,4 +1,4 @@
-image: danger89/gtk3-docker-cmake-ninja:2.2
+image: danger89/gtk3-docker-cmake-ninja:2.4
 
 stages:
   - test
@@ -9,6 +9,10 @@ static_code_analysis:
   stage: test
   script:
     - ./scripts/cpp_check.sh
+
+code_style_guidelines:
+  stage: test
+  script: ./scripts/check_format.sh
 
 # Build WineGUI + Doxygen
 build:
@@ -27,10 +31,6 @@ build:
       paths:
         - build_prod/bin
       policy: push
-
-code_style_guidelines:
-  stage: build
-  script: ./scripts/check_format.sh
 
 # Upload the artifacts / release
 release:
