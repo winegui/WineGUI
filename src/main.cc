@@ -18,12 +18,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "main_window.h"
-#include "preferences_window.h"
-#include "menu.h"
-#include "bottle_manager.h"
 #include "about_dialog.h"
+#include "bottle_manager.h"
 #include "edit_window.h"
+#include "main_window.h"
+#include "menu.h"
+#include "preferences_window.h"
 #include "settings_window.h"
 #include "signal_dispatcher.h"
 
@@ -31,13 +31,13 @@
 #include <iostream>
 
 // Prototype
-static MainWindow &setupApplication();
+static MainWindow& setupApplication();
 
 /**
  * \brief The beginning, start the main loop
  * \return Status code
  */
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     if (argc > 1)
     {
@@ -59,13 +59,13 @@ int main(int argc, char *argv[])
     {
         auto app = Gtk::Application::create("org.melroy.winegui");
         // Setup
-        MainWindow &mainWindow = setupApplication();
+        MainWindow& mainWindow = setupApplication();
         // Start main loop of GTK
         return app->run(mainWindow, argc, argv);
     }
 }
 
-static MainWindow &setupApplication()
+static MainWindow& setupApplication()
 {
     // Constructing the top level objects:
     static Menu menu;

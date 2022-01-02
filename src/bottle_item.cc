@@ -33,7 +33,7 @@ BottleItem::BottleItem()
 /**
  * \brief Copy contructor, used by GTK+
  */
-BottleItem::BottleItem(const BottleItem &bottleItem) : BottleItem()
+BottleItem::BottleItem(const BottleItem& bottleItem) : BottleItem()
 {
     if (this != &bottleItem)
     {
@@ -54,12 +54,11 @@ BottleItem::BottleItem(const BottleItem &bottleItem) : BottleItem()
 /**
  * \brief Contruct a new Wine Bottle Item with limited inputs
  */
-BottleItem::BottleItem(
-    Glib::ustring name,
-    Glib::ustring wine_version,
-    Glib::ustring wine_location,
-    Glib::ustring wine_c_drive,
-    Glib::ustring wine_last_changed)
+BottleItem::BottleItem(Glib::ustring name,
+                       Glib::ustring wine_version,
+                       Glib::ustring wine_location,
+                       Glib::ustring wine_c_drive,
+                       Glib::ustring wine_last_changed)
     : _name(name),
       _is_status_ok(true),
       _win(BottleTypes::Windows::WindowsXP),
@@ -74,19 +73,18 @@ BottleItem::BottleItem(
       };
 
 /**
-  * \brief Contruct a new Wine Bottle Item
-  */
-BottleItem::BottleItem(
-    Glib::ustring name,
-    bool status,
-    BottleTypes::Windows win,
-    BottleTypes::Bit bit,
-    Glib::ustring wine_version,
-    Glib::ustring wine_location,
-    Glib::ustring wine_c_drive,
-    Glib::ustring wine_last_changed,
-    BottleTypes::AudioDriver audio_driver,
-    Glib::ustring virtual_desktop)
+ * \brief Contruct a new Wine Bottle Item
+ */
+BottleItem::BottleItem(Glib::ustring name,
+                       bool status,
+                       BottleTypes::Windows win,
+                       BottleTypes::Bit bit,
+                       Glib::ustring wine_version,
+                       Glib::ustring wine_location,
+                       Glib::ustring wine_c_drive,
+                       Glib::ustring wine_last_changed,
+                       BottleTypes::AudioDriver audio_driver,
+                       Glib::ustring virtual_desktop)
     : _name(name),
       _is_status_ok(status),
       _win(win),
@@ -105,9 +103,8 @@ void BottleItem::CreateUI()
     // To lower case
     std::string windows = BottleItem::str_tolower(BottleTypes::toString(this->windows()));
     // Remove spaces
-    windows.erase(std::remove_if(
-                      std::begin(windows), std::end(windows),
-                      [l = std::locale{}](auto ch) { return std::isspace(ch, l); }),
+    windows.erase(std::remove_if(std::begin(windows), std::end(windows),
+                                 [l = std::locale{}](auto ch) { return std::isspace(ch, l); }),
                   end(windows));
     Glib::ustring bit = BottleTypes::toString(this->bit());
     Glib::ustring filename = windows + "_" + bit + ".png";
@@ -163,7 +160,6 @@ void BottleItem::CreateUI()
  */
 std::string BottleItem::str_tolower(std::string s)
 {
-    std::transform(s.begin(), s.end(), s.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
     return s;
 }

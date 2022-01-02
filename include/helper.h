@@ -22,16 +22,16 @@
 
 #include <gtkmm.h>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 #include "bottle_types.h"
 #include "dll_override_types.h"
 
-using std::string;
 using std::cout;
 using std::endl;
+using std::string;
 
 /**
  * \class Helper
@@ -40,61 +40,65 @@ using std::endl;
 class Helper
 {
 public:
-  // Signals
-  Glib::Dispatcher failureOnExec; /*!< Dispatch signal (thus in main thread) when exit code was non-zero */
-  
-  // Singleton
-  static Helper& getInstance();
+    // Signals
+    Glib::Dispatcher failureOnExec; /*!< Dispatch signal (thus in main thread) when exit code was non-zero */
 
-  static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
-  static void RunProgram(string prefix_path, string program, bool give_error, bool enable_tracing);
-  static void RunProgramUnderWine(string prefix_path, string program, bool give_error, bool enable_tracing);
-  static void RunProgramWithFinishCallback(string prefix_path, string program, Glib::Dispatcher* finishSignal, bool give_error, bool enable_tracing);
-  static void WaitUntilWineserverIsTerminated(const string &prefix_path);
-  static string GetWineExecutableLocation();
-  static string GetWinetricksLocation();
-  static string GetWineVersion();
-  static void CreateWineBottle(const string &prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
-  static void RemoveWineBottle(const string &prefix_path);
-  static string GetName(const string &prefix_path);
-  static BottleTypes::Windows GetWindowsOSVersion(const string &prefix_path);
-  static BottleTypes::Bit GetSystemBit(const string &prefix_path);
-  static BottleTypes::AudioDriver GetAudioDriver(const string &prefix_path);
-  static string GetVirtualDesktop(const string &prefix_path);
-  static string GetLastWineUpdated(const string &prefix_path);
-  static bool GetBottleStatus(const string &prefix_path);
-  static string GetCLetterDrive(const string &prefix_path);
-  static bool DirExists(const string &dir_path);
-  static bool CreateDir(const string &dir_path);
-  static bool FileExists(const string &filer_path);
-  static void InstallOrUpdateWinetricks();
-  static void SelfUpdateWinetricks();
-  static void SetWindowsVersion(const string &prefix_path, BottleTypes::Windows windows);
-  static void SetVirtualDesktop(const string &prefix_path, string resolution);
-  static void DisableVirtualDesktop(const string &prefix_path);
-  static void SetAudioDriver(const string &prefix_path, BottleTypes::AudioDriver audio_driver);
-  static string GetWineGUID(const string &prefix_path, const string &application_name);
-  static bool GetDLLOverride(const string &prefix_path, const string &dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
-  static string GetUninstaller(const string &prefix_path, const string &uninstallerKey);
-  static string GetFontFilename(const string &prefix_path, BottleTypes::Bit bit, const string &fontName);
-  static string GetImageLocation(const string &filename);
+    // Singleton
+    static Helper& getInstance();
+
+    static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
+    static void RunProgram(string prefix_path, string program, bool give_error, bool enable_tracing);
+    static void RunProgramUnderWine(string prefix_path, string program, bool give_error, bool enable_tracing);
+    static void RunProgramWithFinishCallback(
+        string prefix_path, string program, Glib::Dispatcher* finishSignal, bool give_error, bool enable_tracing);
+    static void WaitUntilWineserverIsTerminated(const string& prefix_path);
+    static string GetWineExecutableLocation();
+    static string GetWinetricksLocation();
+    static string GetWineVersion();
+    static void CreateWineBottle(const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
+    static void RemoveWineBottle(const string& prefix_path);
+    static string GetName(const string& prefix_path);
+    static BottleTypes::Windows GetWindowsOSVersion(const string& prefix_path);
+    static BottleTypes::Bit GetSystemBit(const string& prefix_path);
+    static BottleTypes::AudioDriver GetAudioDriver(const string& prefix_path);
+    static string GetVirtualDesktop(const string& prefix_path);
+    static string GetLastWineUpdated(const string& prefix_path);
+    static bool GetBottleStatus(const string& prefix_path);
+    static string GetCLetterDrive(const string& prefix_path);
+    static bool DirExists(const string& dir_path);
+    static bool CreateDir(const string& dir_path);
+    static bool FileExists(const string& filer_path);
+    static void InstallOrUpdateWinetricks();
+    static void SelfUpdateWinetricks();
+    static void SetWindowsVersion(const string& prefix_path, BottleTypes::Windows windows);
+    static void SetVirtualDesktop(const string& prefix_path, string resolution);
+    static void DisableVirtualDesktop(const string& prefix_path);
+    static void SetAudioDriver(const string& prefix_path, BottleTypes::AudioDriver audio_driver);
+    static string GetWineGUID(const string& prefix_path, const string& application_name);
+    static bool GetDLLOverride(const string& prefix_path,
+                               const string& dll_name,
+                               DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
+    static string GetUninstaller(const string& prefix_path, const string& uninstallerKey);
+    static string GetFontFilename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName);
+    static string GetImageLocation(const string& filename);
+
 private:
-  Helper();
-  ~Helper();
-  Helper(const Helper&)= delete;
-  Helper& operator=(const Helper&)= delete;
+    Helper();
+    ~Helper();
+    Helper(const Helper&) = delete;
+    Helper& operator=(const Helper&) = delete;
 
-  static string Exec(const char* cmd);
-  static void ExecTracing(const char* cmd, bool enableTracing);
-  static int CloseExecStream(std::FILE* file);
-  static bool WriteFile(const string& filename, const gchar* contents, const gsize length);
-  static bool ReadFile(const string& filename, gchar* contents);
-  static string GetWinetricksVersion();
-  static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
-  static string GetRegMetaData(const string& filename, const string& metaValueName);
-  static string getBottleDirFromPrefix(const string& prefix_path);
-  static string CharPointerValueToString(char* charp);
-  static std::vector<string> ReadFile(const string &file_path);
-  static unsigned long GetModifiedTime(const string &file_path);
-  static std::vector<string> Split(const string& s, char delimiter);
+    static string Exec(const char* cmd);
+    static void ExecTracing(const char* cmd, bool enableTracing);
+    static int CloseExecStream(std::FILE* file);
+    static bool WriteFile(const string& filename, const gchar* contents, const gsize length);
+    static bool ReadFile(const string& filename, gchar* contents);
+    static string GetWinetricksVersion();
+    static string GetRegValue(const string& filename, const string& keyName, const string& valueName);
+    static string GetRegMetaData(const string& filename, const string& metaValueName);
+    static string getBottleDirFromPrefix(const string& prefix_path);
+    static string CharPointerValueToString(char* charp);
+    static std::vector<string> ReadFile(const string& file_path);
+    static unsigned long GetModifiedTime(const string& file_path);
+    static std::vector<string> Split(const string& s, char delimiter);
 };

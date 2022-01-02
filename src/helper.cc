@@ -20,28 +20,29 @@
  */
 #include "helper.h"
 
-#include <fstream>
-#include <ctime>
-#include <iomanip>
-#include <cstdio>
-#include <memory>
-#include <iostream>
-#include <stdexcept>
-#include <cstring>
-#include <fcntl.h>
 #include <array>
-#include <time.h>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
+#include <fcntl.h>
+#include <fstream>
 #include <giomm/file.h>
-#include <glibmm/timeval.h>
 #include <glibmm/fileutils.h>
 #include <glibmm/miscutils.h>
+#include <glibmm/timeval.h>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <time.h>
 
 std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui config/storage directory path */
 static string WINEGUI_DIR = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
 
 // Wine & Winetricks exec
-static const string WINE_EXECUTABLE = "wine";                                                /*!< Currently expect to be installed globally */
-static const string WINETRICKS_EXECUTABLE = Glib::build_filename(WINEGUI_DIR, "winetricks"); /*!< winetricks shall be located within the .winegui folder */
+static const string WINE_EXECUTABLE = "wine"; /*!< Currently expect to be installed globally */
+static const string WINETRICKS_EXECUTABLE =
+    Glib::build_filename(WINEGUI_DIR, "winetricks"); /*!< winetricks shall be located within the .winegui folder */
 
 // Reg files
 static const string SYSTEM_REG = "system.reg";
@@ -72,27 +73,25 @@ static const struct
     const string versionNumber;
     const string buildNumber;
     const string productType;
-} win_versions[] =
-    {
-        {BottleTypes::Windows::Windows10, "10.0", "10240", "WinNT"},
-        {BottleTypes::Windows::Windows81, "6.3", "9600", "WinNT"},
-        {BottleTypes::Windows::Windows8, "6.2", "9200", "WinNT"},
-        {BottleTypes::Windows::Windows2008R2, "6.1", "7601", "ServerNT"},
-        {BottleTypes::Windows::Windows7, "6.1", "7601", "WinNT"},
-        {BottleTypes::Windows::Windows2008, "6.0", "6002", "ServerNT"},
-        {BottleTypes::Windows::WindowsVista, "6.0", "6002", "WinNT"},
-        {BottleTypes::Windows::Windows2003, "5.2", "3790", "ServerNT"},
-        {BottleTypes::Windows::WindowsXP, "5.2", "3790", "WinNT"}, // 64-bit
-        {BottleTypes::Windows::WindowsXP, "5.1", "2600", "WinNT"}, // 32-bit
-        {BottleTypes::Windows::Windows2000, "5.0", "2195", "WinNT"},
-        {BottleTypes::Windows::WindowsME, "4.90", "3000", ""},
-        {BottleTypes::Windows::Windows98, "4.10", "2222", ""},
-        {BottleTypes::Windows::Windows95, "4.0", "950", ""},
-        {BottleTypes::Windows::WindowsNT40, "4.0", "1381", "WinNT"},
-        {BottleTypes::Windows::WindowsNT351, "3.51", "1057", "WinNT"},
-        {BottleTypes::Windows::Windows31, "3.10", "0", ""},
-        {BottleTypes::Windows::Windows30, "3.0", "0", ""},
-        {BottleTypes::Windows::Windows20, "2.0", "0", ""}};
+} win_versions[] = {{BottleTypes::Windows::Windows10, "10.0", "10240", "WinNT"},
+                    {BottleTypes::Windows::Windows81, "6.3", "9600", "WinNT"},
+                    {BottleTypes::Windows::Windows8, "6.2", "9200", "WinNT"},
+                    {BottleTypes::Windows::Windows2008R2, "6.1", "7601", "ServerNT"},
+                    {BottleTypes::Windows::Windows7, "6.1", "7601", "WinNT"},
+                    {BottleTypes::Windows::Windows2008, "6.0", "6002", "ServerNT"},
+                    {BottleTypes::Windows::WindowsVista, "6.0", "6002", "WinNT"},
+                    {BottleTypes::Windows::Windows2003, "5.2", "3790", "ServerNT"},
+                    {BottleTypes::Windows::WindowsXP, "5.2", "3790", "WinNT"}, // 64-bit
+                    {BottleTypes::Windows::WindowsXP, "5.1", "2600", "WinNT"}, // 32-bit
+                    {BottleTypes::Windows::Windows2000, "5.0", "2195", "WinNT"},
+                    {BottleTypes::Windows::WindowsME, "4.90", "3000", ""},
+                    {BottleTypes::Windows::Windows98, "4.10", "2222", ""},
+                    {BottleTypes::Windows::Windows95, "4.0", "950", ""},
+                    {BottleTypes::Windows::WindowsNT40, "4.0", "1381", "WinNT"},
+                    {BottleTypes::Windows::WindowsNT351, "3.51", "1057", "WinNT"},
+                    {BottleTypes::Windows::Windows31, "3.10", "0", ""},
+                    {BottleTypes::Windows::Windows30, "3.0", "0", ""},
+                    {BottleTypes::Windows::Windows20, "2.0", "0", ""}};
 
 /// Meyers Singleton
 Helper::Helper() = default;
@@ -103,7 +102,7 @@ Helper::~Helper() = default;
  * \brief Get singleton instance
  * \return Helper reference (singleton)
  */
-Helper &Helper::getInstance()
+Helper& Helper::getInstance()
 {
     static Helper instance;
     return instance;
@@ -118,7 +117,7 @@ Helper &Helper::getInstance()
  * \param[in] dir_path Path to search in
  * \return map of path names (strings) and modification time (in ms) of found directories (*full paths*)
  */
-std::map<std::string, unsigned long> Helper::GetBottlesPaths(const string &dir_path) // , sort = DEFAULT, NAME, DATE>
+std::map<std::string, unsigned long> Helper::GetBottlesPaths(const string& dir_path) // , sort = DEFAULT, NAME, DATE>
 {
     std::map<std::string, unsigned long> r;
     Glib::Dir dir(dir_path);
@@ -159,11 +158,14 @@ void Helper::RunProgram(string prefix_path, string program, bool give_error = tr
 /**
  * \brief Run a Windows program under Wine (run this method async)
  * \param[in] prefix_path - The path to bottle wine
- * \param[in] program - Program/executable that will be executed (be sure your application executable is between brackets in case of spaces)
- * \param[in] give_error - Inform user when application exit with non-zero exit code
+ * \param[in] program - Program/executable that will be executed (be sure your application executable is between
+ * brackets in case of spaces) \param[in] give_error - Inform user when application exit with non-zero exit code
  * \param[in] enable_tracing - Enable debugging tracing to file (give_error should be true as well!)
  */
-void Helper::RunProgramUnderWine(string prefix_path, string program, bool give_error = true, bool enable_tracing = false)
+void Helper::RunProgramUnderWine(string prefix_path,
+                                 string program,
+                                 bool give_error = true,
+                                 bool enable_tracing = false)
 {
     RunProgram(prefix_path, Helper::GetWineExecutableLocation() + " " + program, give_error, enable_tracing);
 }
@@ -179,7 +181,7 @@ void Helper::RunProgramUnderWine(string prefix_path, string program, bool give_e
  */
 void Helper::RunProgramWithFinishCallback(string prefix_path,
                                           string program,
-                                          Glib::Dispatcher *finishSignal,
+                                          Glib::Dispatcher* finishSignal,
                                           bool give_error = true,
                                           bool enable_tracing = false)
 {
@@ -199,7 +201,7 @@ void Helper::RunProgramWithFinishCallback(string prefix_path,
 /**
  * \brief Blocking wait (with timeout functionality) until wineserver is terminated.
  */
-void Helper::WaitUntilWineserverIsTerminated(const string &prefix_path)
+void Helper::WaitUntilWineserverIsTerminated(const string& prefix_path)
 {
     string exitCode = Exec(("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w; echo $?").c_str());
     if (exitCode == "124")
@@ -212,10 +214,7 @@ void Helper::WaitUntilWineserverIsTerminated(const string &prefix_path)
  * \brief Retrieve the Wine executable (full path if applicable)
  * \return Wine binary location
  */
-string Helper::GetWineExecutableLocation()
-{
-    return WINE_EXECUTABLE;
-}
+string Helper::GetWineExecutableLocation() { return WINE_EXECUTABLE; }
 
 /**
  * \brief Get the Winetricks binary location
@@ -279,7 +278,7 @@ string Helper::GetWineVersion()
  * \param[in] bit - Create 32-bit Wine of 64-bit Wine bottle
  * \param[in] disable_gecko_mono - Do NOT install Mono & Gecko (by default should be false)
  */
-void Helper::CreateWineBottle(const string &prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
+void Helper::CreateWineBottle(const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
 {
     string wineArch = "";
     switch (bit)
@@ -303,8 +302,7 @@ void Helper::CreateWineBottle(const string &prefix_path, BottleTypes::Bit bit, c
         if (!(result.compare("0") == 0))
         {
             throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine machine: " +
-                                     GetName(prefix_path) +
-                                     "\n\nFull path location: " + prefix_path);
+                                     GetName(prefix_path) + "\n\nFull path location: " + prefix_path);
         }
     }
     else
@@ -318,7 +316,7 @@ void Helper::CreateWineBottle(const string &prefix_path, BottleTypes::Bit bit, c
  * \brief Remove existing Wine bottle using prefix
  * \param[in] prefix_path - The wine bottle path which will be removed
  */
-void Helper::RemoveWineBottle(const string &prefix_path)
+void Helper::RemoveWineBottle(const string& prefix_path)
 {
     if (Helper::DirExists(prefix_path))
     {
@@ -351,12 +349,13 @@ void Helper::RemoveWineBottle(const string &prefix_path)
  * \param[in] prefix_path - Bottle prefix
  * \return Bottle name
  */
-string Helper::GetName(const string &prefix_path)
+string Helper::GetName(const string& prefix_path)
 {
     try
     {
         std::vector<std::string> config = ReadFile(Glib::build_filename(prefix_path, WINEGUI_CONF));
-        for (std::vector<std::string>::iterator config_line = config.begin(); config_line != config.end(); ++config_line)
+        for (std::vector<std::string>::iterator config_line = config.begin(); config_line != config.end();
+             ++config_line)
         {
             auto delimiterPos = (*config_line).find("=");
             auto name = (*config_line).substr(0, delimiterPos);
@@ -367,7 +366,7 @@ string Helper::GetName(const string &prefix_path)
             }
         }
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         // Do nothing, continue
     }
@@ -381,7 +380,7 @@ string Helper::GetName(const string &prefix_path)
  * \param[in] prefix_path - Bottle prefix
  * \return Return the Windows OS version
  */
-BottleTypes::Windows Helper::GetWindowsOSVersion(const string &prefix_path)
+BottleTypes::Windows Helper::GetWindowsOSVersion(const string& prefix_path)
 {
     string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
     string version = "";
@@ -460,13 +459,11 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string &prefix_path)
     }
     else
     {
-        throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " +
-                                 GetName(prefix_path) +
+        throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + GetName(prefix_path) +
                                  "\n\nFull location: " + prefix_path);
     }
     // Function didn't return before (meaning no match found)
-    throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " +
-                             GetName(prefix_path) +
+    throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + GetName(prefix_path) +
                              "\n\nFull location: " + prefix_path);
 }
 
@@ -475,7 +472,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string &prefix_path)
  * \param[in] prefix_path - Bottle prefix
  * \return 32-bit or 64-bit
  */
-BottleTypes::Bit Helper::GetSystemBit(const string &prefix_path)
+BottleTypes::Bit Helper::GetSystemBit(const string& prefix_path)
 {
     string filename = Glib::build_filename(prefix_path, USER_REG);
 
@@ -493,15 +490,14 @@ BottleTypes::Bit Helper::GetSystemBit(const string &prefix_path)
         }
         else
         {
-            throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64, value: " + value + "), for Wine machine: " +
-                                     GetName(prefix_path) +
+            throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64, value: " + value +
+                                     "), for Wine machine: " + GetName(prefix_path) +
                                      "\n\nFull location: " + prefix_path);
         }
     }
     else
     {
-        throw std::runtime_error("Could not determ Windows system bit, for Wine machine: " +
-                                 GetName(prefix_path) +
+        throw std::runtime_error("Could not determ Windows system bit, for Wine machine: " + GetName(prefix_path) +
                                  "\n\nFull location: " + prefix_path);
     }
 }
@@ -511,7 +507,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string &prefix_path)
  * \param[in] prefix_path - Bottle prefix
  * \return Audio Driver (eg. alsa/coreaudio/oss/pulse)
  */
-BottleTypes::AudioDriver Helper::GetAudioDriver(const string &prefix_path)
+BottleTypes::AudioDriver Helper::GetAudioDriver(const string& prefix_path)
 {
     string filename = Glib::build_filename(prefix_path, USER_REG);
     string keyName = "[Software\\\\Wine\\\\Drivers]";
@@ -557,7 +553,7 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string &prefix_path)
  * \param[in] prefix_path - Bottle prefix
  * \return Return the virtual desktop resolution or 'disabled' when disabled fully.
  */
-string Helper::GetVirtualDesktop(const string &prefix_path)
+string Helper::GetVirtualDesktop(const string& prefix_path)
 {
     // TODO: Check if virtual desktop is enabled or disabled first! By looking if this value name is set:
     // If the user.reg key: "Software\\Wine\\Explorer" Value name: "Desktop" is NOT set, its disabled.
@@ -587,7 +583,7 @@ string Helper::GetVirtualDesktop(const string &prefix_path)
  * \param[in] prefix_path - Bottle prefix
  * \return Date/time of last update
  */
-string Helper::GetLastWineUpdated(const string &prefix_path)
+string Helper::GetLastWineUpdated(const string& prefix_path)
 {
     string filename = Glib::build_filename(prefix_path, UPDATE_TIMESTAMP);
     if (Helper::FileExists(filename))
@@ -604,15 +600,13 @@ string Helper::GetLastWineUpdated(const string &prefix_path)
         else
         {
             throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " +
-                                     GetName(prefix_path) +
-                                     "\n\nFull location: " + prefix_path);
+                                     GetName(prefix_path) + "\n\nFull location: " + prefix_path);
         }
     }
     else
     {
         throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " +
-                                 GetName(prefix_path) +
-                                 "\n\nFull location: " + prefix_path);
+                                 GetName(prefix_path) + "\n\nFull location: " + prefix_path);
     }
 }
 
@@ -622,12 +616,11 @@ string Helper::GetLastWineUpdated(const string &prefix_path)
  * \param[in] prefix_path - Bottle prefix
  * \return True if everything is OK, otherwise false
  */
-bool Helper::GetBottleStatus(const string &prefix_path)
+bool Helper::GetBottleStatus(const string& prefix_path)
 {
     // Check if some directories exists, and system registery file,
     // and finally, if we can read-out the Windows OS version without errors
-    if (Helper::DirExists(prefix_path) &&
-        Helper::DirExists(Glib::build_filename(prefix_path, "dosdevices")) &&
+    if (Helper::DirExists(prefix_path) && Helper::DirExists(Glib::build_filename(prefix_path, "dosdevices")) &&
         Helper::FileExists(Glib::build_filename(prefix_path, SYSTEM_REG)))
     {
         try
@@ -635,7 +628,7 @@ bool Helper::GetBottleStatus(const string &prefix_path)
             Helper::GetWindowsOSVersion(prefix_path);
             return true;
         }
-        catch (const std::runtime_error &error)
+        catch (const std::runtime_error& error)
         {
             // Not good!
             return false;
@@ -652,19 +645,17 @@ bool Helper::GetBottleStatus(const string &prefix_path)
  * \param[in] prefix_path - Bottle prefix
  * \return Location of C:\ location under unix
  */
-string Helper::GetCLetterDrive(const string &prefix_path)
+string Helper::GetCLetterDrive(const string& prefix_path)
 {
     // Determ C location
     string c_drive_location = Glib::build_filename(prefix_path, "dosdevices", "c:");
-    if (Helper::DirExists(prefix_path) &&
-        Helper::DirExists(c_drive_location))
+    if (Helper::DirExists(prefix_path) && Helper::DirExists(c_drive_location))
     {
         return c_drive_location;
     }
     else
     {
-        throw std::runtime_error("Could not determ C:\\ drive location, for Wine machine: " +
-                                 GetName(prefix_path) +
+        throw std::runtime_error("Could not determ C:\\ drive location, for Wine machine: " + GetName(prefix_path) +
                                  "\n\nFull location: " + prefix_path);
     }
 }
@@ -674,27 +665,21 @@ string Helper::GetCLetterDrive(const string &prefix_path)
  * \param[in] dir_path The directory to be checked for existence
  * \return true if exists, otherwise false
  */
-bool Helper::DirExists(const string &dir_path)
-{
-    return Glib::file_test(dir_path, Glib::FileTest::FILE_TEST_IS_DIR);
-}
+bool Helper::DirExists(const string& dir_path) { return Glib::file_test(dir_path, Glib::FileTest::FILE_TEST_IS_DIR); }
 
 /**
  * \brief Create directory (and intermediate parent directories if needed)
  * \param[in] dir_path The directory to be created
  * \return true if successfully created, otherwise false
  */
-bool Helper::CreateDir(const string &dir_path)
-{
-    return (g_mkdir_with_parents(dir_path.c_str(), 0775) == 0);
-}
+bool Helper::CreateDir(const string& dir_path) { return (g_mkdir_with_parents(dir_path.c_str(), 0775) == 0); }
 
 /**
  * \brief Check if *file* exists or not
  * \param[in] file_path The file to be checked for existence
  * \return true if exists, otherwise false
  */
-bool Helper::FileExists(const string &file_path)
+bool Helper::FileExists(const string& file_path)
 {
     return Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR);
 }
@@ -715,11 +700,16 @@ void Helper::InstallOrUpdateWinetricks()
         }
     }
 
-    Exec(("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x winetricks && mv winetricks " + WINETRICKS_EXECUTABLE).c_str());
+    Exec(
+        ("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks "
+         "&& chmod +x winetricks && mv winetricks " +
+         WINETRICKS_EXECUTABLE)
+            .c_str());
     // Winetricks script should exists now...
     if (!FileExists(WINETRICKS_EXECUTABLE))
     {
-        throw std::runtime_error("Winetrick helper script can not be found / installed. This could/will result into issues with WineGUI!");
+        throw std::runtime_error(
+            "Winetrick helper script can not be found / installed. This could/will result into issues with WineGUI!");
     }
 }
 
@@ -736,17 +726,20 @@ void Helper::SelfUpdateWinetricks()
             result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
             if (result.compare("0") != 0)
             {
-                throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::GetWinetricksVersion());
+                throw std::invalid_argument("Could not update Winetricks, keep using the v" +
+                                            Helper::GetWinetricksVersion());
             }
         }
         else
         {
-            throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::GetWinetricksVersion());
+            throw std::invalid_argument("Could not update Winetricks, keep using the v" +
+                                        Helper::GetWinetricksVersion());
         }
     }
     else
     {
-        throw std::runtime_error("Try to update the Winetricks script, while there is no winetricks installed/not found!");
+        throw std::runtime_error(
+            "Try to update the Winetricks script, while there is no winetricks installed/not found!");
     }
 }
 
@@ -755,12 +748,14 @@ void Helper::SelfUpdateWinetricks()
  * \param[in] prefix_path - Bottle prefix
  * \param[in] windows - Windows version (enum)
  */
-void Helper::SetWindowsVersion(const string &prefix_path, BottleTypes::Windows windows)
+void Helper::SetWindowsVersion(const string& prefix_path, BottleTypes::Windows windows)
 {
     if (FileExists(WINETRICKS_EXECUTABLE))
     {
         string win = BottleTypes::getWinetricksString(windows);
-        string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " " + win + ">/dev/null 2>&1; echo $?").c_str());
+        string result = Exec(
+            ("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " " + win + ">/dev/null 2>&1; echo $?")
+                .c_str());
         if (!result.empty())
         {
             result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
@@ -781,7 +776,7 @@ void Helper::SetWindowsVersion(const string &prefix_path, BottleTypes::Windows w
  * \param[in] prefix_path - Bottle prefix
  * \param[in] resolution - New screen resolution (eg. 1920x1080)
  */
-void Helper::SetVirtualDesktop(const string &prefix_path, string resolution)
+void Helper::SetVirtualDesktop(const string& prefix_path, string resolution)
 {
     if (FileExists(WINETRICKS_EXECUTABLE))
     {
@@ -794,7 +789,7 @@ void Helper::SetVirtualDesktop(const string &prefix_path, string resolution)
                 x = std::atoi(res.at(0).c_str());
                 y = std::atoi(res.at(1).c_str());
             }
-            catch (std::exception const &e)
+            catch (std::exception const& e)
             {
                 throw std::runtime_error("Could not set virtual desktop resolution (invalid input)");
             }
@@ -805,7 +800,9 @@ void Helper::SetVirtualDesktop(const string &prefix_path, string resolution)
                 resolution = "640x480";
             }
 
-            Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
+            Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution +
+                  ">/dev/null 2>&1; echo $?")
+                     .c_str());
             // Something returns non-zero... winetricks on the command line, does return zero ..
             /*
       string result = Exec(..)
@@ -829,11 +826,12 @@ void Helper::SetVirtualDesktop(const string &prefix_path, string resolution)
  * \brief Disable Virtual Desktop fully by using Winetricks
  * \param[in] prefix_path - Bottle prefix
  */
-void Helper::DisableVirtualDesktop(const string &prefix_path)
+void Helper::DisableVirtualDesktop(const string& prefix_path)
 {
     if (FileExists(WINETRICKS_EXECUTABLE))
     {
-        Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off>/dev/null 2>&1; echo $?").c_str());
+        Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=off>/dev/null 2>&1; echo $?")
+                 .c_str());
         // Something returns non-zero... winetricks on the command line, does return zero ..
         /*
     string result = Exec(...)
@@ -853,13 +851,15 @@ void Helper::DisableVirtualDesktop(const string &prefix_path)
  * \param[in] prefix_path - Bottle prefix
  * \param[in] audio_driver - Audio driver to be set
  */
-void Helper::SetAudioDriver(const string &prefix_path, BottleTypes::AudioDriver audio_driver)
+void Helper::SetAudioDriver(const string& prefix_path, BottleTypes::AudioDriver audio_driver)
 {
     if (FileExists(WINETRICKS_EXECUTABLE))
     {
         string audio = BottleTypes::getWinetricksString(audio_driver);
         //
-        string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " sound=" + audio + ">/dev/null 2>&1; echo $?").c_str());
+        string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " sound=" + audio +
+                              ">/dev/null 2>&1; echo $?")
+                                 .c_str());
         if (!result.empty())
         {
             result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
@@ -881,9 +881,12 @@ void Helper::SetAudioDriver(const string &prefix_path, BottleTypes::AudioDriver 
  * \param[in] application_name - Application name to search for
  * \return GUID or empty string when not installed/found
  */
-string Helper::GetWineGUID(const string &prefix_path, const string &application_name)
+string Helper::GetWineGUID(const string& prefix_path, const string& application_name)
 {
-    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::GetWineExecutableLocation() + " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1").c_str());
+    string result =
+        Exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::GetWineExecutableLocation() +
+              " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1")
+                 .c_str());
     if (!result.empty())
     {
         result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
@@ -898,7 +901,7 @@ string Helper::GetWineGUID(const string &prefix_path, const string &application_
  * \param[in] load_order - (Optional) DLL load order enum value (Default 'native')
  * \return True if specified load order matches the DLL overrides registery value
  */
-bool Helper::GetDLLOverride(const string &prefix_path, const string &dll_name, DLLOverride::LoadOrder load_order)
+bool Helper::GetDLLOverride(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order)
 {
     string filename = Glib::build_filename(prefix_path, USER_REG);
     string keyName = "[Software\\\\Wine\\\\DllOverrides]";
@@ -910,10 +913,10 @@ bool Helper::GetDLLOverride(const string &prefix_path, const string &dll_name, D
 /**
  * \brief Retrieve the uninstaller from GUID (if available)
  * \param[in] prefix_path - Bottle prefix
- * \param[in] uninstallerKey - GUID or application name of the uninstaller (can also be found by running: wine uninstaller --list)
- * \return Uninstaller display name or empty string if not found
+ * \param[in] uninstallerKey - GUID or application name of the uninstaller (can also be found by running: wine
+ * uninstaller --list) \return Uninstaller display name or empty string if not found
  */
-string Helper::GetUninstaller(const string &prefix_path, const string &uninstallerKey)
+string Helper::GetUninstaller(const string& prefix_path, const string& uninstallerKey)
 {
     string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
     string keyName = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\" + uninstallerKey;
@@ -927,7 +930,7 @@ string Helper::GetUninstaller(const string &prefix_path, const string &uninstall
  * \param[in] fontName - Font name
  * \return Font filename (or empty string if not found)
  */
-string Helper::GetFontFilename(const string &prefix_path, BottleTypes::Bit bit, const string &fontName)
+string Helper::GetFontFilename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName)
 {
     string filename = Glib::build_filename(prefix_path, SYSTEM_REG);
     string keyName = "";
@@ -948,7 +951,7 @@ string Helper::GetFontFilename(const string &prefix_path, BottleTypes::Bit bit, 
  * \param[in] filename - name of image
  * \return Path to the requested image (or empty string if not found)
  */
-string Helper::GetImageLocation(const string &filename)
+string Helper::GetImageLocation(const string& filename)
 {
     // Try absolute path first
     for (string data_dir : Glib::get_system_data_dirs())
@@ -989,7 +992,7 @@ string Helper::GetImageLocation(const string &filename)
  * \param[in] cmd The command to be executed
  * \return Terminal stdout
  */
-string Helper::Exec(const char *cmd)
+string Helper::Exec(const char* cmd)
 {
     // Max 128 characters
     std::array<char, 128> buffer;
@@ -1016,7 +1019,7 @@ string Helper::Exec(const char *cmd)
  * \param[in] enableTracing Enable debugging tracing to log file (default false)
  * \return Terminal stdout
  */
-void Helper::ExecTracing(const char *cmd, bool enableTracing)
+void Helper::ExecTracing(const char* cmd, bool enableTracing)
 {
     // Max 128 characters
     std::array<char, 128> buffer;
@@ -1037,9 +1040,7 @@ void Helper::ExecTracing(const char *cmd, bool enableTracing)
     if (enableTracing)
     {
         // TODO: Dump result to log file instead.
-        std::cout << "\n=== Tracing output started ===\n\n"
-                  << result << "\n\n=== Tracing ended ===\n"
-                  << std::endl;
+        std::cout << "\n=== Tracing output started ===\n\n" << result << "\n\n=== Tracing ended ===\n" << std::endl;
     }
 }
 
@@ -1047,7 +1048,7 @@ void Helper::ExecTracing(const char *cmd, bool enableTracing)
  * Custom fclose method, which is executed during the stream closure of C popen command.
  * Check on fclose return value, signal a failure/pop-up to the user, when exit-code is non-zero.
  */
-int Helper::CloseExecStream(std::FILE *file)
+int Helper::CloseExecStream(std::FILE* file)
 {
     if (file)
     {
@@ -1070,7 +1071,7 @@ int Helper::CloseExecStream(std::FILE *file)
  * \param[in] length - Length (-1 for nul-termined string)
  * \return True when successful otherwise False
  */
-bool Helper::WriteFile(const string &filename, const gchar *contents, const gsize length)
+bool Helper::WriteFile(const string& filename, const gchar* contents, const gsize length)
 {
     return g_file_set_contents(filename.c_str(), contents, length, NULL);
 }
@@ -1081,7 +1082,7 @@ bool Helper::WriteFile(const string &filename, const gchar *contents, const gsiz
  * \param[out] contents - File data
  * \return True when successful otherwise False
  */
-bool Helper::ReadFile(const string &filename, gchar *contents)
+bool Helper::ReadFile(const string& filename, gchar* contents)
 {
     return g_file_get_contents(filename.c_str(), &contents, NULL, NULL);
 }
@@ -1110,25 +1111,26 @@ string Helper::GetWinetricksVersion()
 /**
  * \brief Get a value from the registery from disk
  * \param[in] filename  File of registery
- * \param[in] keyName   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
- * \param[in] valueName Specifies the registery value name (eg. Desktop)
- * \return Data of value name
+ * \param[in] keyName   Full or part of the path of the key, always starting with '[' (eg.
+ * [Software\\\\Wine\\\\Explorer]) \param[in] valueName Specifies the registery value name (eg. Desktop) \return Data of
+ * value name
  */
-string Helper::GetRegValue(const string &filename, const string &keyName, const string &valueName)
+string Helper::GetRegValue(const string& filename, const string& keyName, const string& valueName)
 {
     // We add double quotes around plus equal sign to the value name
     string valuePattern = '"' + valueName + "\"=";
-    char *match_pch = NULL;
+    char* match_pch = NULL;
     if (Helper::FileExists(filename))
     {
-        FILE *f;
+        FILE* f;
         char buffer[100];
         if ((f = fopen(filename.c_str(), "r")) == NULL)
         {
             throw std::runtime_error("File could not be opened");
         }
         bool match = false;
-        // TODO: Change to fstream, since the buffer has a limit (therefor the strstr as well), causing issues with longer strings
+        // TODO: Change to fstream, since the buffer has a limit (therefor the strstr as well), causing issues with
+        // longer strings
         while (fgets(buffer, sizeof(buffer), f))
         {
             // It returns the pointer to the first occurrence until the null character (end of line)
@@ -1178,13 +1180,13 @@ string Helper::GetRegValue(const string &filename, const string &keyName, const 
  * \param[in] metaValueName Specifies the registery value name (eg. arch)
  * \return Data of value name
  */
-string Helper::GetRegMetaData(const string &filename, const string &metaValueName)
+string Helper::GetRegMetaData(const string& filename, const string& metaValueName)
 {
     string metaPattern = "#" + metaValueName + "=";
-    char *match_pch = NULL;
+    char* match_pch = NULL;
     if (Helper::FileExists(filename))
     {
-        FILE *f;
+        FILE* f;
         char buffer[100];
         if ((f = fopen(filename.c_str(), "r")) == NULL)
         {
@@ -1216,7 +1218,7 @@ string Helper::GetRegMetaData(const string &filename, const string &metaValueNam
  * \param[in] prefix_path   Full bottle prefix path
  * \return Bottle directory name
  */
-string Helper::getBottleDirFromPrefix(const string &prefix_path)
+string Helper::getBottleDirFromPrefix(const string& prefix_path)
 {
     string name = "- Unknown -";
     std::size_t last_index = prefix_path.find_last_of("/\\");
@@ -1240,7 +1242,7 @@ string Helper::getBottleDirFromPrefix(const string &prefix_path)
  * \param charp Character pointer registery raw data value
  * \return string with the data
  */
-string Helper::CharPointerValueToString(char *charp)
+string Helper::CharPointerValueToString(char* charp)
 {
     if (charp != NULL)
     {
@@ -1269,7 +1271,7 @@ string Helper::CharPointerValueToString(char *charp)
  * \param[in] file_path File location to be read
  * \return Data from file
  */
-std::vector<string> Helper::ReadFile(const string &file_path)
+std::vector<string> Helper::ReadFile(const string& file_path)
 {
     std::vector<string> output;
     std::ifstream myfile(file_path);
@@ -1294,7 +1296,7 @@ std::vector<string> Helper::ReadFile(const string &file_path)
  * \param[in] file_path File/Folder location
  * \return Last modifiction time in milliseconds (ms)
  */
-unsigned long Helper::GetModifiedTime(const string &file_path)
+unsigned long Helper::GetModifiedTime(const string& file_path)
 {
     auto time_info = Gio::File::create_for_path(file_path)->query_info("time");
     auto time = time_info->modification_time();
@@ -1307,7 +1309,7 @@ unsigned long Helper::GetModifiedTime(const string &file_path)
  * \param[in] delimiter Delimiter character
  * \return Array of strings
  */
-std::vector<string> Helper::Split(const string &s, char delimiter)
+std::vector<string> Helper::Split(const string& s, char delimiter)
 {
     std::vector<string> tokens;
     std::string token;

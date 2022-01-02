@@ -26,7 +26,7 @@
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-SettingsWindow::SettingsWindow(Gtk::Window &parent)
+SettingsWindow::SettingsWindow(Gtk::Window& parent)
     : wine_uninstall_button("Uninstaller"),
       open_notepad_button("Notepad"),
       open_wordpad_button("Open Wordpad"),
@@ -100,72 +100,74 @@ SettingsWindow::SettingsWindow(Gtk::Window &parent)
     // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
     // First row buttons, 1-button installs
-    install_d3dx9_button.signal_clicked().connect(sigc::bind<Gtk::Window &, Glib::ustring>(directx9, *this, ""));
+    install_d3dx9_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(directx9, *this, ""));
     install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL API");
     first_toolbar.insert(install_d3dx9_button, 0);
 
-    install_dxvk_button.signal_clicked().connect(sigc::bind<Gtk::Window &, Glib::ustring>(vulkan, *this, "latest"));
+    install_dxvk_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(vulkan, *this, "latest"));
     install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9/10/11 games, by using Vulkan API");
     first_toolbar.insert(install_dxvk_button, 1);
 
     // Second row, additional packages
-    install_liberation_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window &>(liberation_fonts, *this));
-    install_liberation_fonts_button.set_tooltip_text("Installs Liberation open-source Fonts, alternative for Core fonts");
+    install_liberation_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(liberation_fonts, *this));
+    install_liberation_fonts_button.set_tooltip_text(
+        "Installs Liberation open-source Fonts, alternative for Core fonts");
     second_toolbar.insert(install_liberation_fonts_button, 0);
 
-    install_core_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window &>(corefonts, *this));
+    install_core_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(corefonts, *this));
     install_core_fonts_button.set_tooltip_text("Installs Microsoft Core Fonts");
     second_toolbar.insert(install_core_fonts_button, 1);
 
-    install_visual_cpp_button.signal_clicked().connect(sigc::bind<Gtk::Window &, Glib::ustring>(visual_cpp_package, *this, "2013"));
+    install_visual_cpp_button.signal_clicked().connect(
+        sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2013"));
     install_visual_cpp_button.set_tooltip_text("Installs Visual C++ 2013 package");
     second_toolbar.insert(install_visual_cpp_button, 2);
 
-    install_dotnet4_button.signal_clicked().connect(sigc::bind<Gtk::Window &, Glib::ustring>(dotnet, *this, "40"));
+    install_dotnet4_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "40"));
     install_dotnet4_button.set_tooltip_text("Installs .NET 4.0");
     second_toolbar.insert(install_dotnet4_button, 4);
 
-    install_dotnet452_button.signal_clicked().connect(sigc::bind<Gtk::Window &, Glib::ustring>(dotnet, *this, "452"));
+    install_dotnet452_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
     install_dotnet452_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
     second_toolbar.insert(install_dotnet452_button, 5);
 
     // Third row buttons, supporting tools
-    Gtk::Image *uninstaller_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* uninstaller_image = Gtk::manage(new Gtk::Image());
     uninstaller_image->set_from_icon_name("applications-system-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     wine_uninstall_button.signal_clicked().connect(uninstaller);
     wine_uninstall_button.set_tooltip_text("Open Wine uninstaller");
     wine_uninstall_button.set_icon_widget(*uninstaller_image);
     third_toolbar.insert(wine_uninstall_button, 0);
 
-    Gtk::Image *notepad_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* notepad_image = Gtk::manage(new Gtk::Image());
     notepad_image->set_from_icon_name("accessories-text-editor", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     open_notepad_button.signal_clicked().connect(notepad);
     open_notepad_button.set_tooltip_text("Open Notepad Editor");
     open_notepad_button.set_icon_widget(*notepad_image);
     third_toolbar.insert(open_notepad_button, 1);
 
-    Gtk::Image *wordpad_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* wordpad_image = Gtk::manage(new Gtk::Image());
     wordpad_image->set_from_icon_name("accessories-text-editor", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     open_wordpad_button.signal_clicked().connect(wordpad);
     open_wordpad_button.set_tooltip_text("Open Wordpad");
     open_wordpad_button.set_icon_widget(*wordpad_image);
     third_toolbar.insert(open_wordpad_button, 2);
 
-    Gtk::Image *ie_explore = Gtk::manage(new Gtk::Image());
+    Gtk::Image* ie_explore = Gtk::manage(new Gtk::Image());
     ie_explore->set_from_icon_name("emblem-web", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     open_iexplore_button.signal_clicked().connect(iexplore);
     open_iexplore_button.set_tooltip_text("Open Internet Explorer");
     open_iexplore_button.set_icon_widget(*ie_explore);
     third_toolbar.insert(open_iexplore_button, 3);
 
-    Gtk::Image *task_manager_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* task_manager_image = Gtk::manage(new Gtk::Image());
     task_manager_image->set_from_icon_name("open-menu", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     wine_task_manager_button.signal_clicked().connect(task_manager);
     wine_task_manager_button.set_tooltip_text("Open Wine task manager");
     wine_task_manager_button.set_icon_widget(*task_manager_image);
     third_toolbar.insert(wine_task_manager_button, 4);
 
-    Gtk::Image *regedit_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* regedit_image = Gtk::manage(new Gtk::Image());
     regedit_image->set_from_icon_name("applications-system-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     wine_regedit_button.signal_clicked().connect(regedit);
     wine_regedit_button.set_tooltip_text("Open Windows Registry editor (For advanced users!)");
@@ -173,28 +175,28 @@ SettingsWindow::SettingsWindow(Gtk::Window &parent)
     third_toolbar.insert(wine_regedit_button, 5);
 
     // Fourth row buttons, fallback tools
-    Gtk::Image *explorer_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* explorer_image = Gtk::manage(new Gtk::Image());
     explorer_image->set_from_icon_name("system-file-manager", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     explorer_button.signal_clicked().connect(explorer);
     explorer_button.set_tooltip_text("Open Explorer");
     explorer_button.set_icon_widget(*explorer_image);
     fourth_toolbar.insert(explorer_button, 0);
 
-    Gtk::Image *wine_console_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* wine_console_image = Gtk::manage(new Gtk::Image());
     wine_console_image->set_from_icon_name("utilities-terminal", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     wine_console_button.signal_clicked().connect(console);
     wine_console_button.set_tooltip_text("Open Windows cmd");
     wine_console_button.set_icon_widget(*wine_console_image);
     fourth_toolbar.insert(wine_console_button, 1);
 
-    Gtk::Image *winecfg_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* winecfg_image = Gtk::manage(new Gtk::Image());
     winecfg_image->set_from_icon_name("preferences-system", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     wine_config_button.signal_clicked().connect(winecfg);
     wine_config_button.set_tooltip_text("FALLBACK: Open winecfg GUI");
     wine_config_button.set_icon_widget(*winecfg_image);
     fourth_toolbar.insert(wine_config_button, 2);
 
-    Gtk::Image *winetricks_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* winetricks_image = Gtk::manage(new Gtk::Image());
     winetricks_image->set_from_icon_name("preferences-other-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     winetricks_button.signal_clicked().connect(winetricks);
     winetricks_button.set_tooltip_text("FALLBACK: Winetricks GUI");
@@ -228,18 +230,12 @@ void SettingsWindow::Show()
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void SettingsWindow::SetActiveBottle(BottleItem *bottle)
-{
-    this->activeBottle = bottle;
-}
+void SettingsWindow::SetActiveBottle(BottleItem* bottle) { this->activeBottle = bottle; }
 
 /**
  * \brief Signal handler for resetting the active bottle to null
  */
-void SettingsWindow::ResetActiveBottle()
-{
-    this->activeBottle = nullptr;
-}
+void SettingsWindow::ResetActiveBottle() { this->activeBottle = nullptr; }
 
 /**
  * \brief Update GUI state depending on the packages installed
@@ -248,14 +244,14 @@ void SettingsWindow::UpdateInstalled()
 {
     if (IsD3DX9Installed())
     {
-        Gtk::Image *reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
+        Gtk::Image* reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
         reinstall_d3dx9_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_d3dx9_button.set_label("Reinstall DirectX v9 (OpenGL)");
         install_d3dx9_button.set_icon_widget(*reinstall_d3dx9_image);
     }
     else
     {
-        Gtk::Image *install_d3dx9_image = Gtk::manage(new Gtk::Image());
+        Gtk::Image* install_d3dx9_image = Gtk::manage(new Gtk::Image());
         install_d3dx9_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_d3dx9_button.set_label("Install DirectX v9 (OpenGL)");
         install_d3dx9_button.set_icon_widget(*install_d3dx9_image);
@@ -263,14 +259,14 @@ void SettingsWindow::UpdateInstalled()
 
     if (IsDXVKInstalled())
     {
-        Gtk::Image *reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
+        Gtk::Image* reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
         reinstall_d3dx9_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_dxvk_button.set_label("Reinstall DirectX v9/v10/v11 (Vulkan)");
         install_dxvk_button.set_icon_widget(*reinstall_d3dx9_image);
     }
     else
     {
-        Gtk::Image *install_d3dx9_image = Gtk::manage(new Gtk::Image());
+        Gtk::Image* install_d3dx9_image = Gtk::manage(new Gtk::Image());
         install_d3dx9_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_dxvk_button.set_label("Install DirectX v9/v10/v11 (Vulkan)");
         install_dxvk_button.set_icon_widget(*install_d3dx9_image);
@@ -278,75 +274,80 @@ void SettingsWindow::UpdateInstalled()
 
     if (IsLiberationInstalled())
     {
-        Gtk::Image *reinstall_liberation_image = Gtk::manage(new Gtk::Image());
+        Gtk::Image* reinstall_liberation_image = Gtk::manage(new Gtk::Image());
         reinstall_liberation_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_liberation_fonts_button.set_label("Reinstall Liberation fonts");
         install_liberation_fonts_button.set_icon_widget(*reinstall_liberation_image);
     }
     else
     {
-        Gtk::Image *install_liberation_image = Gtk::manage(new Gtk::Image());
-        install_liberation_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+        Gtk::Image* install_liberation_image = Gtk::manage(new Gtk::Image());
+        install_liberation_image->set_from_icon_name("system-software-install",
+                                                     Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_liberation_fonts_button.set_label("Install Liberation open-source fonts");
         install_liberation_fonts_button.set_icon_widget(*install_liberation_image);
     }
 
     if (IsCoreFontsInstalled())
     {
-        Gtk::Image *reinstall_core_fonts_image = Gtk::manage(new Gtk::Image());
+        Gtk::Image* reinstall_core_fonts_image = Gtk::manage(new Gtk::Image());
         reinstall_core_fonts_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_core_fonts_button.set_label("Reinstall Core Fonts");
         install_core_fonts_button.set_icon_widget(*reinstall_core_fonts_image);
     }
     else
     {
-        Gtk::Image *install_core_fonts_image = Gtk::manage(new Gtk::Image());
-        install_core_fonts_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+        Gtk::Image* install_core_fonts_image = Gtk::manage(new Gtk::Image());
+        install_core_fonts_image->set_from_icon_name("system-software-install",
+                                                     Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_core_fonts_button.set_label("Install Core Fonts");
         install_core_fonts_button.set_icon_widget(*install_core_fonts_image);
     }
 
     if (isVisualCppInstalled())
     {
-        Gtk::Image *reinstall_visual_cpp_image = Gtk::manage(new Gtk::Image());
+        Gtk::Image* reinstall_visual_cpp_image = Gtk::manage(new Gtk::Image());
         reinstall_visual_cpp_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_visual_cpp_button.set_label("Reinstall Visual C++ 2013");
         install_visual_cpp_button.set_icon_widget(*reinstall_visual_cpp_image);
     }
     else
     {
-        Gtk::Image *install_visual_cpp_image = Gtk::manage(new Gtk::Image());
-        install_visual_cpp_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+        Gtk::Image* install_visual_cpp_image = Gtk::manage(new Gtk::Image());
+        install_visual_cpp_image->set_from_icon_name("system-software-install",
+                                                     Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_visual_cpp_button.set_label("Install Visual C++ 2013");
         install_visual_cpp_button.set_icon_widget(*install_visual_cpp_image);
     }
 
     if (isDotnet4Installed())
     {
-        Gtk::Image *reinstall_dotnet4_image = Gtk::manage(new Gtk::Image());
+        Gtk::Image* reinstall_dotnet4_image = Gtk::manage(new Gtk::Image());
         reinstall_dotnet4_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_dotnet4_button.set_label("Reinstall .NET v4");
         install_dotnet4_button.set_icon_widget(*reinstall_dotnet4_image);
     }
     else
     {
-        Gtk::Image *install_dotnet4_image = Gtk::manage(new Gtk::Image());
-        install_dotnet4_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+        Gtk::Image* install_dotnet4_image = Gtk::manage(new Gtk::Image());
+        install_dotnet4_image->set_from_icon_name("system-software-install",
+                                                  Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_dotnet4_button.set_label("Install .NET v4");
         install_dotnet4_button.set_icon_widget(*install_dotnet4_image);
     }
 
     if (isDotnet452Installed())
     {
-        Gtk::Image *reinstall_dotnet452_image = Gtk::manage(new Gtk::Image());
+        Gtk::Image* reinstall_dotnet452_image = Gtk::manage(new Gtk::Image());
         reinstall_dotnet452_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_dotnet452_button.set_label("Reinstall .NET v4.5.2");
         install_dotnet452_button.set_icon_widget(*reinstall_dotnet452_image);
     }
     else
     {
-        Gtk::Image *install_dotnet452_image = Gtk::manage(new Gtk::Image());
-        install_dotnet452_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+        Gtk::Image* install_dotnet452_image = Gtk::manage(new Gtk::Image());
+        install_dotnet452_image->set_from_icon_name("system-software-install",
+                                                    Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
         install_dotnet452_button.set_label("Install .NET v4.5.2");
         install_dotnet452_button.set_icon_widget(*install_dotnet452_image);
     }
@@ -387,7 +388,7 @@ bool SettingsWindow::IsDXVKInstalled()
 }
 
 /**
- * \brief Check if Liberation fonts are installed 
+ * \brief Check if Liberation fonts are installed
  * As fallback: Wine is looking for the liberation font on the local unix system (in the /usr/share/fonts/.. directory)
  * \return True if installed otherwise False
  */
@@ -405,7 +406,7 @@ bool SettingsWindow::IsLiberationInstalled()
 }
 
 /**
- * \brief Check if MS Core fonts are installed 
+ * \brief Check if MS Core fonts are installed
  * \return True if installed otherwise False
  */
 bool SettingsWindow::IsCoreFontsInstalled()

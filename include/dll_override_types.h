@@ -25,33 +25,36 @@
 /**
  * \brief DLL override enum definition
  */
-namespace DLLOverride {
-  /**
-   * \enum LoadOrder
-   * \brief List load orders
-   */
-  enum class LoadOrder
-  {
-    Builtin = 0,
-    Native,
-    BuiltinNative,
-    NativeBuiltin,
-    Disabled,
-  };
+namespace DLLOverride
+{
+    /**
+     * \enum LoadOrder
+     * \brief List load orders
+     */
+    enum class LoadOrder
+    {
+        Builtin = 0,
+        Native,
+        BuiltinNative,
+        NativeBuiltin,
+        Disabled,
+    };
 
-  inline static std::string toString(LoadOrder order) {
-    switch(order) {
-      case LoadOrder::Builtin:
-        return "builtin";
-      case LoadOrder::Native:
-        return "native";
-      case LoadOrder::BuiltinNative:
-        return "builtin,native";
-      case LoadOrder::NativeBuiltin:
-        return "native,builtin";
-      case LoadOrder::Disabled:
+    inline static std::string toString(LoadOrder order)
+    {
+        switch (order)
+        {
+        case LoadOrder::Builtin:
+            return "builtin";
+        case LoadOrder::Native:
+            return "native";
+        case LoadOrder::BuiltinNative:
+            return "builtin,native";
+        case LoadOrder::NativeBuiltin:
+            return "native,builtin";
+        case LoadOrder::Disabled:
+            return "";
+        }
         return "";
     }
-    return "";
-  }
 };

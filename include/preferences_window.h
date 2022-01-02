@@ -4,7 +4,7 @@
  * \file    preferences_window.h
  * \brief   Application preferences GTK+ window class
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -29,13 +29,12 @@
 class PreferencesWindow : public Gtk::Window
 {
 public:
-  explicit PreferencesWindow(Gtk::Window& parent);
-  virtual ~PreferencesWindow();
+    explicit PreferencesWindow(Gtk::Window& parent);
+    virtual ~PreferencesWindow();
 
 protected:
-  // Child widgets
-  Gtk::Box vbox; /*!< The main vertical box */
-  Gtk::Label text; /*!< text... */
+    // Child widgets
+    Gtk::Box vbox;   /*!< The main vertical box */
+    Gtk::Label text; /*!< text... */
 private:
-
 };

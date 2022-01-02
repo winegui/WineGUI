@@ -4,7 +4,7 @@
  * \file    new_bottle_assistant.h
  * \brief   New Bottle Assistant (Wizard)
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,8 +20,8 @@
  */
 #pragma once
 
-#include <gtkmm.h>
 #include "bottle_types.h"
+#include <gtkmm.h>
 
 /**
  * \class NewBottleAssistant
@@ -30,61 +30,60 @@
 class NewBottleAssistant : public Gtk::Assistant
 {
 public:
-  // Signal
-  sigc::signal<void> newBottleFinished; /*!< Signal when New Bottle Assistant is finished */
+    // Signal
+    sigc::signal<void> newBottleFinished; /*!< Signal when New Bottle Assistant is finished */
 
-  NewBottleAssistant();
-  virtual ~NewBottleAssistant();
+    NewBottleAssistant();
+    virtual ~NewBottleAssistant();
 
-  void GetResult(
-    Glib::ustring& name,
-    Glib::ustring& virtual_desktop_resolution,
-    bool& disable_gecko_mono,
-    BottleTypes::Windows& windows_version,
-    BottleTypes::Bit& bit,
-    BottleTypes::AudioDriver& audio);
+    void GetResult(Glib::ustring& name,
+                   Glib::ustring& virtual_desktop_resolution,
+                   bool& disable_gecko_mono,
+                   BottleTypes::Windows& windows_version,
+                   BottleTypes::Bit& bit,
+                   BottleTypes::AudioDriver& audio);
 
-  void BottleCreated();
+    void BottleCreated();
 
 private:
-  // Signal handlers:
-  void on_assistant_apply();
-  void on_assistant_cancel();
-  void on_assistant_close();
-  void on_assistant_prepare(Gtk::Widget* widget);
-  void on_entry_changed();
-  void on_virtual_desktop_toggle();
-  bool apply_changes_gradually();
+    // Signal handlers:
+    void on_assistant_apply();
+    void on_assistant_cancel();
+    void on_assistant_close();
+    void on_assistant_prepare(Gtk::Widget* widget);
+    void on_entry_changed();
+    void on_virtual_desktop_toggle();
+    bool apply_changes_gradually();
 
-  // Member functions:
-  void setDefaultValues();
-  void createFirstPage();
-  void createSecondPage();
-  void createThirdPage();
+    // Member functions:
+    void setDefaultValues();
+    void createFirstPage();
+    void createSecondPage();
+    void createThirdPage();
 
-  sigc::connection timer; /*!< Timer connection */
+    sigc::connection timer; /*!< Timer connection */
 
-  // Child widgets:
-  Gtk::Box m_vbox;
-  Gtk::Box m_vbox2;
-  Gtk::Box m_vbox3;
-  Gtk::Box m_hbox_name;
-  Gtk::Box m_hbox_win;
-  Gtk::Box m_hbox_audio;
-  Gtk::Box m_hbox_virtual_desktop;
-  Gtk::Label intro_label;
-  Gtk::Label name_label;
-  Gtk::Label windows_version_label;
-  Gtk::Label additional_label;
-  Gtk::Label audiodriver_label;
-  Gtk::Label virtual_desktop_resolution_label;
-  Gtk::Label confirm_label;
-  Gtk::Label apply_label;
-  Gtk::ComboBoxText windows_version_combobox;
-  Gtk::ComboBoxText audiodriver_combobox;
-  Gtk::CheckButton virtual_desktop_check;
-  Gtk::CheckButton disable_gecko_mono_check;
-  Gtk::Entry name_entry;
-  Gtk::Entry virtual_desktop_resolution_entry;
-  Gtk::ProgressBar loading_bar;
+    // Child widgets:
+    Gtk::Box m_vbox;
+    Gtk::Box m_vbox2;
+    Gtk::Box m_vbox3;
+    Gtk::Box m_hbox_name;
+    Gtk::Box m_hbox_win;
+    Gtk::Box m_hbox_audio;
+    Gtk::Box m_hbox_virtual_desktop;
+    Gtk::Label intro_label;
+    Gtk::Label name_label;
+    Gtk::Label windows_version_label;
+    Gtk::Label additional_label;
+    Gtk::Label audiodriver_label;
+    Gtk::Label virtual_desktop_resolution_label;
+    Gtk::Label confirm_label;
+    Gtk::Label apply_label;
+    Gtk::ComboBoxText windows_version_combobox;
+    Gtk::ComboBoxText audiodriver_combobox;
+    Gtk::CheckButton virtual_desktop_check;
+    Gtk::CheckButton disable_gecko_mono_check;
+    Gtk::Entry name_entry;
+    Gtk::Entry virtual_desktop_resolution_entry;
+    Gtk::ProgressBar loading_bar;
 };

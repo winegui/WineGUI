@@ -55,14 +55,10 @@ NewBottleAssistant::NewBottleAssistant()
     // Initial set defaults
     setDefaultValues();
 
-    signal_apply().connect(sigc::mem_fun(*this,
-                                         &NewBottleAssistant::on_assistant_apply));
-    signal_cancel().connect(sigc::mem_fun(*this,
-                                          &NewBottleAssistant::on_assistant_cancel));
-    signal_close().connect(sigc::mem_fun(*this,
-                                         &NewBottleAssistant::on_assistant_close));
-    signal_prepare().connect(sigc::mem_fun(*this,
-                                           &NewBottleAssistant::on_assistant_prepare));
+    signal_apply().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_assistant_apply));
+    signal_cancel().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_assistant_cancel));
+    signal_close().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_assistant_close));
+    signal_prepare().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_assistant_prepare));
 
     show_all_children();
 
@@ -73,9 +69,7 @@ NewBottleAssistant::NewBottleAssistant()
 /**
  * \brief Destructor
  */
-NewBottleAssistant::~NewBottleAssistant()
-{
-}
+NewBottleAssistant::~NewBottleAssistant() {}
 
 /**
  * \brief Set default values of all input fields from the wizard,
@@ -105,8 +99,9 @@ void NewBottleAssistant::setDefaultValues()
 void NewBottleAssistant::createFirstPage()
 {
     // Intro page
-    intro_label.set_markup("<big><b>Create a New Machine</b></big>\n"
-                           "Please use a descriptive name for the Windows machine, and select which Windows version you want to use.");
+    intro_label.set_markup(
+        "<big><b>Create a New Machine</b></big>\n"
+        "Please use a descriptive name for the Windows machine, and select which Windows version you want to use.");
     intro_label.set_halign(Gtk::Align::ALIGN_START);
     intro_label.set_margin_bottom(25);
     m_vbox.pack_start(intro_label, false, false);
@@ -116,18 +111,20 @@ void NewBottleAssistant::createFirstPage()
     m_vbox.pack_start(m_hbox_name, false, false);
 
     // Fill-in Windows versions in combobox
-    for (std::vector<BottleTypes::WindowsAndBit>::iterator it = BottleTypes::SupportedWindowsVersions.begin(); it != BottleTypes::SupportedWindowsVersions.end(); ++it)
+    for (std::vector<BottleTypes::WindowsAndBit>::iterator it = BottleTypes::SupportedWindowsVersions.begin();
+         it != BottleTypes::SupportedWindowsVersions.end(); ++it)
     {
         auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
-        windows_version_combobox.insert(-1, std::to_string(index), BottleTypes::toString((*it).first) + " (" + BottleTypes::toString((*it).second) + ')');
+        windows_version_combobox.insert(-1, std::to_string(index),
+                                        BottleTypes::toString((*it).first) + " (" +
+                                            BottleTypes::toString((*it).second) + ')');
     }
 
     m_hbox_win.pack_start(windows_version_label, false, true);
     m_hbox_win.pack_start(windows_version_combobox);
     m_vbox.pack_start(m_hbox_win, false, false);
 
-    name_entry.signal_changed().connect(sigc::mem_fun(*this,
-                                                      &NewBottleAssistant::on_entry_changed));
+    name_entry.signal_changed().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_entry_changed));
 
     append_page(m_vbox);
     set_page_type(m_vbox, Gtk::ASSISTANT_PAGE_INTRO);
@@ -141,7 +138,8 @@ void NewBottleAssistant::createSecondPage()
 {
     // Additional page
     additional_label.set_markup("<big><b>Additional Settings</b></big>\n"
-                                "There you could adapt some additional Windows settings.\n\n<b>Note:</b> If do not know what these settings will do, *do not* change the settings (leave as default).");
+                                "There you could adapt some additional Windows settings.\n\n<b>Note:</b> If do not "
+                                "know what these settings will do, *do not* change the settings (leave as default).");
     additional_label.set_halign(Gtk::Align::ALIGN_START);
     additional_label.set_margin_bottom(25);
     m_vbox2.pack_start(additional_label, false, false);
@@ -157,8 +155,8 @@ void NewBottleAssistant::createSecondPage()
     m_vbox2.pack_start(m_hbox_audio, false, false);
 
     m_vbox2.pack_start(virtual_desktop_check, false, false);
-    virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this,
-                                                                 &NewBottleAssistant::on_virtual_desktop_toggle));
+    virtual_desktop_check.signal_toggled().connect(
+        sigc::mem_fun(*this, &NewBottleAssistant::on_virtual_desktop_toggle));
 
     m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_label, false, false);
     m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_entry, false, false);
@@ -191,7 +189,7 @@ void NewBottleAssistant::createThirdPage()
 }
 
 /**
- * \brief Retrieve the results (after the wizard is finished). 
+ * \brief Retrieve the results (after the wizard is finished).
  * And reset the values to default values again.
  * Idea: use one struct as in/out parameter
  * \param[inout] name                        Bottle Name
@@ -201,13 +199,12 @@ void NewBottleAssistant::createThirdPage()
  * \param[inout] bit                         Windows Bit (32/64-bit)
  * \param[inout] audio                       Audio Driver type
  */
-void NewBottleAssistant::GetResult(
-    Glib::ustring &name,
-    Glib::ustring &virtual_desktop_resolution,
-    bool &disable_gecko_mono,
-    BottleTypes::Windows &windows_version,
-    BottleTypes::Bit &bit,
-    BottleTypes::AudioDriver &audio)
+void NewBottleAssistant::GetResult(Glib::ustring& name,
+                                   Glib::ustring& virtual_desktop_resolution,
+                                   bool& disable_gecko_mono,
+                                   BottleTypes::Windows& windows_version,
+                                   BottleTypes::Bit& bit,
+                                   BottleTypes::AudioDriver& audio)
 {
     std::string::size_type sz;
     windows_version = BottleTypes::Windows::WindowsXP;
@@ -236,13 +233,13 @@ void NewBottleAssistant::GetResult(
         windows_version = currentWindowsBit.first;
         bit = currentWindowsBit.second;
     }
-    catch (const std::runtime_error &error)
+    catch (const std::runtime_error& error)
     {
     }
-    catch (std::invalid_argument &e)
+    catch (std::invalid_argument& e)
     {
     }
-    catch (std::out_of_range &e)
+    catch (std::out_of_range& e)
     {
     }
     // Ignore the catches
@@ -252,13 +249,13 @@ void NewBottleAssistant::GetResult(
         size_t audio_index = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
         audio = BottleTypes::AudioDriver(audio_index);
     }
-    catch (const std::runtime_error &error)
+    catch (const std::runtime_error& error)
     {
     }
-    catch (std::invalid_argument &e)
+    catch (std::invalid_argument& e)
     {
     }
-    catch (std::out_of_range &e)
+    catch (std::out_of_range& e)
     {
     }
     // Ignore the catches
@@ -297,13 +294,13 @@ void NewBottleAssistant::on_assistant_apply()
         auto audio = BottleTypes::AudioDriver(audio_index);
         is_non_default_audio_driver = WineDefaults::AUDIO_DRIVER != audio;
     }
-    catch (const std::runtime_error &error)
+    catch (const std::runtime_error& error)
     {
     }
-    catch (std::invalid_argument &e)
+    catch (std::invalid_argument& e)
     {
     }
-    catch (std::out_of_range &e)
+    catch (std::out_of_range& e)
     {
     }
     try
@@ -312,13 +309,13 @@ void NewBottleAssistant::on_assistant_apply()
         auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
         is_non_default_windows = WineDefaults::WINDOWS_OS != currentWindowsBit.first;
     }
-    catch (const std::runtime_error &error)
+    catch (const std::runtime_error& error)
     {
     }
-    catch (std::invalid_argument &e)
+    catch (std::invalid_argument& e)
     {
     }
-    catch (std::out_of_range &e)
+    catch (std::out_of_range& e)
     {
     }
 
@@ -337,33 +334,25 @@ void NewBottleAssistant::on_assistant_apply()
     }
 
     /* Start a timer to give the user feedback about the changes taking a few seconds to apply. */
-    timer = Glib::signal_timeout().connect(
-        sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually),
-        time_interval);
+    timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually),
+                                           time_interval);
 }
 
-void NewBottleAssistant::on_assistant_cancel()
-{
-    hide();
-}
+void NewBottleAssistant::on_assistant_cancel() { hide(); }
 
-void NewBottleAssistant::on_assistant_close()
-{
-    hide();
-}
+void NewBottleAssistant::on_assistant_close() { hide(); }
 
 /**
  * \brief Prepare handler for each page, is emitted before making the page visable.
  */
-void NewBottleAssistant::on_assistant_prepare(Gtk::Widget * /* widget*/)
+void NewBottleAssistant::on_assistant_prepare(Gtk::Widget* /* widget*/)
 {
-    set_title(Glib::ustring::compose("Gtk::Assistant example (Page %1 of %2)",
-                                     get_current_page() + 1, get_n_pages()));
+    set_title(Glib::ustring::compose("Gtk::Assistant example (Page %1 of %2)", get_current_page() + 1, get_n_pages()));
 
     /* The last page is the progress page.  The
-  * user clicked Apply to get here so we tell the assistant to commit,
-  * which means the changes up to this point are permanent and cannot
-  * be cancelled or revisited. */
+     * user clicked Apply to get here so we tell the assistant to commit,
+     * which means the changes up to this point are permanent and cannot
+     * be cancelled or revisited. */
     if (get_current_page() == LOADING_PAGE_INDEX)
         this->commit();
 }

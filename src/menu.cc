@@ -23,11 +23,7 @@
 /**
  * \brief Contructor
  */
-Menu::Menu()
-    : file("_File", true),
-      view("_View", true),
-      machine("_Machine", true),
-      help("_Help", true)
+Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", true), help("_Help", true)
 {
     // Add sub-menu's to menu items
     file.set_submenu(file_submenu);
@@ -98,31 +94,26 @@ Menu::Menu()
 /**
  * \brief Destructor
  */
-Menu::~Menu()
-{
-}
+Menu::~Menu() {}
 
 /**
  * \brief Return the machine sub menu only
  * \return GTK::Menu pointer of the machine menu
  */
-Gtk::Menu *Menu::GetMachineMenu()
-{
-    return &machine_submenu;
-}
+Gtk::Menu* Menu::GetMachineMenu() { return &machine_submenu; }
 
 /**
  * \brief Helper method for creating a menu with an image
  * \return GTKWidget menu item pointer
  */
-Gtk::MenuItem *Menu::CreateImageMenuItem(const Glib::ustring &label_text, const Glib::ustring &icon_name)
+Gtk::MenuItem* Menu::CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name)
 {
-    Gtk::MenuItem *item = Gtk::manage(new Gtk::MenuItem());
-    Gtk::Box *helper_box = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2));
-    Gtk::Image *icon = Gtk::manage(new Gtk::Image());
+    Gtk::MenuItem* item = Gtk::manage(new Gtk::MenuItem());
+    Gtk::Box* helper_box = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2));
+    Gtk::Image* icon = Gtk::manage(new Gtk::Image());
     icon->set_from_icon_name(icon_name, Gtk::IconSize(Gtk::ICON_SIZE_MENU));
     helper_box->add(*icon);
-    Gtk::Label *label = Gtk::manage(new Gtk::Label(label_text, 0.0, 0.0));
+    Gtk::Label* label = Gtk::manage(new Gtk::Label(label_text, 0.0, 0.0));
     helper_box->pack_end(*label, true, true, 0U);
     item->add(*helper_box);
     return item;

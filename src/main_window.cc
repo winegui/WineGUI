@@ -30,7 +30,7 @@
 /**
  * \brief Contructor
  */
-MainWindow::MainWindow(Menu &menu)
+MainWindow::MainWindow(Menu& menu)
     : vbox(Gtk::ORIENTATION_VERTICAL),
       paned(Gtk::ORIENTATION_HORIZONTAL),
       right_box(Gtk::Orientation::ORIENTATION_VERTICAL),
@@ -46,7 +46,7 @@ MainWindow::MainWindow(Menu &menu)
     {
         set_icon_from_file(Helper::GetImageLocation("logo.png"));
     }
-    catch (Glib::FileError &e)
+    catch (Glib::FileError& e)
     {
         cout << "Catched " << e.what() << endl;
     }
@@ -75,18 +75,15 @@ MainWindow::MainWindow(Menu &menu)
 
     // Right panel toolbar menu buttons
     // New button pressed signal
-    new_button.signal_clicked().connect(sigc::mem_fun(*this,
-                                                      &MainWindow::on_new_bottle_button_clicked));
+    new_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_button_clicked));
     // Apply button signal
-    newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this,
-                                                            &MainWindow::on_new_bottle_apply));
+    newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_apply));
     // Finished signal
     newBottleAssistant.newBottleFinished.connect(finishedNewBottle);
 
     edit_button.signal_clicked().connect(showEditWindow);
     settings_button.signal_clicked().connect(showSettingsWindow);
-    run_button.signal_clicked().connect(sigc::mem_fun(*this,
-                                                      &MainWindow::on_run_button_clicked));
+    run_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
     open_c_driver_button.signal_clicked().connect(openDriveC);
     reboot_button.signal_clicked().connect(rebootBottle);
     update_button.signal_clicked().connect(updateBottle);
@@ -105,16 +102,16 @@ MainWindow::~MainWindow() {}
  * \brief Set a list/vector of bottles to the left panel
  * \param[in] bottles - Wine Bottle item vector array
  */
-void MainWindow::SetWineBottles(std::list<BottleItem> &bottles)
+void MainWindow::SetWineBottles(std::list<BottleItem>& bottles)
 {
     // Clear whole listbox
-    std::vector<Gtk::Widget *> children = listbox.get_children();
-    for (Gtk::Widget *el : children)
+    std::vector<Gtk::Widget*> children = listbox.get_children();
+    for (Gtk::Widget* el : children)
     {
         listbox.remove(*el);
     }
 
-    for (BottleItem &bottle : bottles)
+    for (BottleItem& bottle : bottles)
     {
         listbox.add(bottle);
     }
@@ -125,7 +122,7 @@ void MainWindow::SetWineBottles(std::list<BottleItem> &bottles)
  * \brief set the detailed info panel on the right
  * \param[in] bottle - Wine Bottle item object
  */
-void MainWindow::SetDetailedInfo(BottleItem &bottle)
+void MainWindow::SetDetailedInfo(BottleItem& bottle)
 {
     if (!bottle.is_selected())
         this->listbox.select_row(bottle);
@@ -163,7 +160,7 @@ void MainWindow::ResetDetailedInfo()
  * User can only click 'OK'
  * \param[in] message - Show this error message
  */
-void MainWindow::ShowErrorMessage(const Glib::ustring &message)
+void MainWindow::ShowErrorMessage(const Glib::ustring& message)
 {
     // false = no markup
     Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
@@ -177,7 +174,7 @@ void MainWindow::ShowErrorMessage(const Glib::ustring &message)
  * \param[in] message - Show this message during confirmation
  * \return True if user pressed confirm (yes), otherwise False
  */
-bool MainWindow::ShowConfirmDialog(const Glib::ustring &message)
+bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
 {
     // false = no markup
     Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
@@ -196,7 +193,7 @@ bool MainWindow::ShowConfirmDialog(const Glib::ustring &message)
  * \brief Show busy indicator (like busy installing corefonts in Wine bottle)
  * \param[in] message Given the user more information what is going on
  */
-void MainWindow::ShowBusyDialog(const Glib::ustring &message)
+void MainWindow::ShowBusyDialog(const Glib::ustring& message)
 {
     busyDialog.SetMessage(message);
     busyDialog.show();
@@ -207,7 +204,7 @@ void MainWindow::ShowBusyDialog(const Glib::ustring &message)
  * \param[in] parent Parent GTK Window (set to be the GTK transient for)
  * \param[in] message Given the user more information what is going on
  */
-void MainWindow::ShowBusyDialog(Gtk::Window &parent, const Glib::ustring &message)
+void MainWindow::ShowBusyDialog(Gtk::Window& parent, const Glib::ustring& message)
 {
     busyDialog.SetMessage(message);
     busyDialog.set_transient_for(parent);
@@ -217,10 +214,7 @@ void MainWindow::ShowBusyDialog(Gtk::Window &parent, const Glib::ustring &messag
 /**
  * \brief Close the busy dialog again
  */
-void MainWindow::CloseBusyDialog()
-{
-    busyDialog.close();
-}
+void MainWindow::CloseBusyDialog() { busyDialog.close(); }
 
 /**
  * \brief Signal when the new button is clicked in the top toolbar/menu
@@ -235,21 +229,17 @@ void MainWindow::on_new_bottle_button_clicked()
  * \brief Handler when the bottle is created, notify the new bottle assistant.
  * Pass through the signal from the dispatcher to the 'new bottle assistant'.
  */
-void MainWindow::on_new_bottle_created()
-{
-    newBottleAssistant.BottleCreated();
-}
+void MainWindow::on_new_bottle_created() { newBottleAssistant.BottleCreated(); }
 
 /**
  * \brief Signal when the Run Program... button is clicked in top toolbar/menu
  */
 void MainWindow::on_run_button_clicked()
 {
-    Gtk::FileChooserDialog dialog("Please choose a file",
-                                  Gtk::FILE_CHOOSER_ACTION_OPEN);
+    Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FILE_CHOOSER_ACTION_OPEN);
     dialog.set_transient_for(*this);
 
-    //Add response buttons the the dialog:
+    // Add response buttons the the dialog:
     dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
     dialog.add_button("_Open", Gtk::RESPONSE_OK);
 
@@ -265,10 +255,10 @@ void MainWindow::on_run_button_clicked()
     dialog.add_filter(filter_any);
     dialog.set_filename(c_drive_location.get_text().c_str());
 
-    //Show the dialog and wait for a user response:
+    // Show the dialog and wait for a user response:
     int result = dialog.run();
 
-    //Handle the response:
+    // Handle the response:
     switch (result)
     {
     case (Gtk::RESPONSE_OK):
@@ -277,8 +267,7 @@ void MainWindow::on_run_button_clicked()
         // Just guess based on extenstion
         string ext = filename.substr(filename.find_last_of(".") + 1);
         // To lower case
-        std::transform(ext.begin(), ext.end(), ext.begin(),
-                       [](unsigned char c) { return std::tolower(c); });
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
         if (ext == "exe")
         {
             runProgram.emit(filename, false);
@@ -311,17 +300,14 @@ void MainWindow::on_run_button_clicked()
 /**
  * \brief Just hide the main window
  */
-void MainWindow::on_hide_window()
-{
-    hide();
-}
+void MainWindow::on_hide_window() { hide(); }
 
 /**
  * \brief When the feedback button is pressed
  */
 void MainWindow::on_give_feedback()
 {
-    GError *error = NULL;
+    GError* error = NULL;
     if (!g_app_info_launch_default_for_uri("mailto://melroy@melroy.org", NULL, &error))
     {
         g_warning("Failed to open email link: %s", error->message);
@@ -334,7 +320,8 @@ void MainWindow::on_give_feedback()
  */
 void MainWindow::on_exec_failure()
 {
-    Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+    Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false,
+                              Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
     dialog.set_title("An error has occurred during Wine application execution!");
     dialog.set_modal(false);
     dialog.run();
@@ -347,14 +334,14 @@ void MainWindow::on_exec_failure()
 /**
  * \brief Change detailed window on listbox row clicked event
  */
-void MainWindow::on_row_clicked(Gtk::ListBoxRow *row)
+void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 {
     if (row != nullptr)
     {
-        SetDetailedInfo(*dynamic_cast<BottleItem *>(row));
+        SetDetailedInfo(*dynamic_cast<BottleItem*>(row));
         // Signal activate Bottle with current BottleItem as parameter to the dispatcher
         // Which updates the connected modules accordingly.
-        activeBottle.emit(dynamic_cast<BottleItem *>(row));
+        activeBottle.emit(dynamic_cast<BottleItem*>(row));
     }
 }
 
@@ -405,28 +392,28 @@ void MainWindow::CreateRightPanel()
     toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
 
     // Buttons in toolbar
-    Gtk::Image *new_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
     new_image->set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     new_button.set_label("New");
     new_button.set_tooltip_text("Create a new machine!");
     new_button.set_icon_widget(*new_image);
     toolbar.insert(new_button, 0);
 
-    Gtk::Image *run_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
     run_image->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     run_button.set_label("Run Program...");
     run_button.set_tooltip_text("Run exe or msi in Wine Machine");
     run_button.set_icon_widget(*run_image);
     toolbar.insert(run_button, 1);
 
-    Gtk::Image *open_c_drive_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
     open_c_drive_image->set_from_icon_name("drive-harddisk", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     open_c_driver_button.set_label("Open C: Drive");
     open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
     open_c_driver_button.set_icon_widget(*open_c_drive_image);
     toolbar.insert(open_c_driver_button, 2);
 
-    Gtk::Image *edit_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
     edit_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     edit_button.set_label("Edit");
     edit_button.set_tooltip_text("Edit Wine Machine");
@@ -435,28 +422,28 @@ void MainWindow::CreateRightPanel()
 
     // Idea: Extra button for the configurations? And call settings just 'install packages'..?
 
-    Gtk::Image *manage_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
     manage_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     settings_button.set_label("Settings");
     settings_button.set_tooltip_text("Install additional packages");
     settings_button.set_icon_widget(*manage_image);
     toolbar.insert(settings_button, 4);
 
-    Gtk::Image *reboot_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
     reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     reboot_button.set_label("Reboot");
     reboot_button.set_tooltip_text("Simulate Machine Reboot");
     reboot_button.set_icon_widget(*reboot_image);
     toolbar.insert(reboot_button, 5);
 
-    Gtk::Image *update_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
     update_image->set_from_icon_name("system-software-update", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     update_button.set_label("Update Config");
     update_button.set_tooltip_text("Update the Wine Machine configuration");
     update_button.set_icon_widget(*update_image);
     toolbar.insert(update_button, 6);
 
-    Gtk::Image *kill_processes_image = Gtk::manage(new Gtk::Image());
+    Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
     kill_processes_image->set_from_icon_name("process-stop", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     kill_processes_button.set_label("Kill processes");
     kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
@@ -476,46 +463,46 @@ void MainWindow::CreateRightPanel()
     detail_grid.set_row_spacing(12);
 
     // General heading
-    Gtk::Image *general_icon = Gtk::manage(new Gtk::Image());
+    Gtk::Image* general_icon = Gtk::manage(new Gtk::Image());
     general_icon->set_from_icon_name("computer", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
-    Gtk::Label *general_label = Gtk::manage(new Gtk::Label());
+    Gtk::Label* general_label = Gtk::manage(new Gtk::Label());
     general_label->set_markup("<b>General</b>");
     detail_grid.attach(*general_icon, 0, 0, 1, 1);
     detail_grid.attach_next_to(*general_label, *general_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
 
     // Name
-    Gtk::Label *name_label = Gtk::manage(new Gtk::Label("Name:", 0.0, -1));
+    Gtk::Label* name_label = Gtk::manage(new Gtk::Label("Name:", 0.0, -1));
     name.set_xalign(0.0);
     detail_grid.attach(*name_label, 0, 1, 2, 1);
     detail_grid.attach_next_to(name, *name_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
     // Windows version + bit os
-    Gtk::Label *window_version_label = Gtk::manage(new Gtk::Label("Windows:", 0.0, -1));
+    Gtk::Label* window_version_label = Gtk::manage(new Gtk::Label("Windows:", 0.0, -1));
     window_version.set_xalign(0.0);
     // Label consumes 2 columns
     detail_grid.attach(*window_version_label, 0, 2, 2, 1);
     detail_grid.attach_next_to(window_version, *window_version_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
     // Wine version
-    Gtk::Label *wine_version_label = Gtk::manage(new Gtk::Label("Wine Version:", 0.0, -1));
+    Gtk::Label* wine_version_label = Gtk::manage(new Gtk::Label("Wine Version:", 0.0, -1));
     wine_version.set_xalign(0.0);
     detail_grid.attach(*wine_version_label, 0, 3, 2, 1);
     detail_grid.attach_next_to(wine_version, *wine_version_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
     // Wine location
-    Gtk::Label *wine_location_label = Gtk::manage(new Gtk::Label("Wine Location:", 0.0, -1));
+    Gtk::Label* wine_location_label = Gtk::manage(new Gtk::Label("Wine Location:", 0.0, -1));
     wine_location.set_xalign(0.0);
     detail_grid.attach(*wine_location_label, 0, 4, 2, 1);
     detail_grid.attach_next_to(wine_location, *wine_location_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
     // Wine C drive location
-    Gtk::Label *c_drive_location_label = Gtk::manage(new Gtk::Label("C:\\ Drive Location:", 0.0, -1));
+    Gtk::Label* c_drive_location_label = Gtk::manage(new Gtk::Label("C:\\ Drive Location:", 0.0, -1));
     c_drive_location.set_xalign(0.0);
     detail_grid.attach(*c_drive_location_label, 0, 5, 2, 1);
     detail_grid.attach_next_to(c_drive_location, *c_drive_location_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
     // Wine last changed
-    Gtk::Label *wine_last_changed_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", 0.0, -1));
+    Gtk::Label* wine_last_changed_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", 0.0, -1));
     wine_last_changed.set_xalign(0.0);
     detail_grid.attach(*wine_last_changed_label, 0, 6, 2, 1);
     detail_grid.attach_next_to(wine_last_changed, *wine_last_changed_label, Gtk::PositionType::POS_RIGHT, 1, 1);
@@ -523,15 +510,15 @@ void MainWindow::CreateRightPanel()
     detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 7, 3, 1);
 
     // Audio heading
-    Gtk::Image *audio_icon = Gtk::manage(new Gtk::Image());
+    Gtk::Image* audio_icon = Gtk::manage(new Gtk::Image());
     audio_icon->set_from_icon_name("audio-speakers", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
-    Gtk::Label *audio_label = Gtk::manage(new Gtk::Label());
+    Gtk::Label* audio_label = Gtk::manage(new Gtk::Label());
     audio_label->set_markup("<b>Audio</b>");
     detail_grid.attach(*audio_icon, 0, 8, 1, 1);
     detail_grid.attach_next_to(*audio_label, *audio_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
 
     // Audio driver
-    Gtk::Label *audio_driver_label = Gtk::manage(new Gtk::Label("Audio Driver:", 0.0, -1));
+    Gtk::Label* audio_driver_label = Gtk::manage(new Gtk::Label("Audio Driver:", 0.0, -1));
     audio_driver.set_xalign(0.0);
     detail_grid.attach(*audio_driver_label, 0, 9, 2, 1);
     detail_grid.attach_next_to(audio_driver, *audio_driver_label, Gtk::PositionType::POS_RIGHT, 1, 1);
@@ -539,15 +526,15 @@ void MainWindow::CreateRightPanel()
     detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 10, 3, 1);
 
     // Display heading
-    Gtk::Image *display_icon = Gtk::manage(new Gtk::Image());
+    Gtk::Image* display_icon = Gtk::manage(new Gtk::Image());
     display_icon->set_from_icon_name("video-display", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
-    Gtk::Label *display_label = Gtk::manage(new Gtk::Label());
+    Gtk::Label* display_label = Gtk::manage(new Gtk::Label());
     display_label->set_markup("<b>Display</b>");
     detail_grid.attach(*display_icon, 0, 11, 1, 1);
     detail_grid.attach_next_to(*display_label, *display_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
 
     // Virtual Desktop
-    Gtk::Label *virtual_desktop_label = Gtk::manage(new Gtk::Label("Virtual Desktop\n(Window Mode):", 0.0, -1));
+    Gtk::Label* virtual_desktop_label = Gtk::manage(new Gtk::Label("Virtual Desktop\n(Window Mode):", 0.0, -1));
     virtual_desktop.set_xalign(0.0);
     detail_grid.attach(*virtual_desktop_label, 0, 12, 2, 1);
     detail_grid.attach_next_to(virtual_desktop, *virtual_desktop_label, Gtk::PositionType::POS_RIGHT, 1, 1);
@@ -566,10 +553,10 @@ void MainWindow::CreateRightPanel()
  * \param[in] row
  * \param[in] before
  */
-void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow *m_row, Gtk::ListBoxRow *before)
+void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::ListBoxRow* before)
 {
-    GtkWidget *current;
-    GtkListBoxRow *row = m_row->gobj();
+    GtkWidget* current;
+    GtkListBoxRow* row = m_row->gobj();
     if (before == NULL)
     {
         gtk_list_box_row_set_header(row, NULL);

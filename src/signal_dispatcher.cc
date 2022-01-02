@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2021 WineGUI
  *
  * \file    signal_dispatcher.cc
- * \brief   Connect different signals and dispatch 
+ * \brief   Connect different signals and dispatch
  *          (eg. Menu button clicks and new bottle wizard signals) them to the proper calls within WineGUI
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
@@ -21,25 +21,24 @@
  */
 #include "signal_dispatcher.h"
 
-#include "main_window.h"
+#include "about_dialog.h"
 #include "bottle_manager.h"
+#include "edit_window.h"
+#include "helper.h"
+#include "main_window.h"
 #include "menu.h"
 #include "preferences_window.h"
-#include "about_dialog.h"
-#include "edit_window.h"
 #include "settings_window.h"
-#include "helper.h"
 
 /**
  * \brief Signal Dispatcher Constructor
  */
-SignalDispatcher::SignalDispatcher(
-    BottleManager &manager,
-    Menu &menu,
-    PreferencesWindow &preferencesWindow,
-    AboutDialog &about,
-    EditWindow &editWindow,
-    SettingsWindow &settingsWindow)
+SignalDispatcher::SignalDispatcher(BottleManager& manager,
+                                   Menu& menu,
+                                   PreferencesWindow& preferencesWindow,
+                                   AboutDialog& about,
+                                   EditWindow& editWindow,
+                                   SettingsWindow& settingsWindow)
     : mainWindow(nullptr),
       manager(manager),
       menu(menu),
@@ -66,7 +65,7 @@ SignalDispatcher::~SignalDispatcher()
 /**
  * \brief Set main window pointer to Signal Dispatcher
  */
-void SignalDispatcher::SetMainWindow(MainWindow *mainWindow)
+void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
 {
     if (this->mainWindow == nullptr)
     {
@@ -85,7 +84,9 @@ void SignalDispatcher::DispatchSignals()
 {
     // Menu buttons
     menu.preferences.connect(sigc::mem_fun(preferencesWindow, &PreferencesWindow::show));
-    menu.quit.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
+    menu.quit.connect(sigc::mem_fun(
+        *mainWindow,
+        &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
     menu.refresh_view.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
     menu.new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
     menu.run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
@@ -128,7 +129,7 @@ void SignalDispatcher::DispatchSignals()
     m_ErrorMessageDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message));
 
     // When the WineExec() results into a non-zero exit code the failureOnExec it triggered
-    Helper &helper = Helper::getInstance();
+    Helper& helper = Helper::getInstance();
     // Using Dispatcher instead of signal, will result in that the message box runs in the main thread.
     helper.failureOnExec.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_exec_failure));
 
@@ -158,14 +159,11 @@ void SignalDispatcher::DispatchSignals()
 }
 
 /**
- * \brief Signal finish is called from within thread, 
- *  which can trigger the dispatcher so it can run a method 
+ * \brief Signal finish is called from within thread,
+ *  which can trigger the dispatcher so it can run a method
  * (connected to the dispatcher signal) in the GUI thread
  */
-void SignalDispatcher::SignalBottleCreated()
-{
-    m_FinishDispatcher.emit();
-}
+void SignalDispatcher::SignalBottleCreated() { m_FinishDispatcher.emit(); }
 
 /**
  * \brief Helper method for Signal error message
@@ -194,12 +192,12 @@ void SignalDispatcher::CleanUpBottleManagerThread()
  * Dispatch events from Main Window *
  ************************************/
 
-bool SignalDispatcher::on_mouse_button_pressed(GdkEventButton *event)
+bool SignalDispatcher::on_mouse_button_pressed(GdkEventButton* event)
 {
     // Single click with right mouse button?
     if (event->type == GDK_BUTTON_PRESS && event->button == 3)
     {
-        Gtk::Menu *popup = menu.GetMachineMenu();
+        Gtk::Menu* popup = menu.GetMachineMenu();
         if (popup)
         {
             popup->popup(event->button, event->time);
@@ -214,21 +212,17 @@ bool SignalDispatcher::on_mouse_button_pressed(GdkEventButton *event)
 /**
  * \brief Update bottles in GUI (typically when the new wizard is finished)
  */
-void SignalDispatcher::on_update_bottles()
-{
-    manager.UpdateBottles();
-}
+void SignalDispatcher::on_update_bottles() { manager.UpdateBottles(); }
 
 /**
  * \brief New Bottle signal, starting NewBottle() within thread
  */
-void SignalDispatcher::on_new_bottle(
-    Glib::ustring &name,
-    Glib::ustring &virtual_desktop_resolution,
-    bool &disable_geck_mono,
-    BottleTypes::Windows windows_version,
-    BottleTypes::Bit bit,
-    BottleTypes::AudioDriver audio)
+void SignalDispatcher::on_new_bottle(Glib::ustring& name,
+                                     Glib::ustring& virtual_desktop_resolution,
+                                     bool& disable_geck_mono,
+                                     BottleTypes::Windows windows_version,
+                                     BottleTypes::Bit bit,
+                                     BottleTypes::AudioDriver audio)
 {
     if (m_threadBottleManager)
     {
@@ -239,10 +233,10 @@ void SignalDispatcher::on_new_bottle(
     else
     {
         // Start a new manager thread (executing NewBottle())
-        m_threadBottleManager = new std::thread(
-            [this, name, virtual_desktop_resolution, disable_geck_mono, windows_version, bit, audio] {
-                manager.NewBottle(this, name, virtual_desktop_resolution, disable_geck_mono, windows_version, bit, audio);
-            });
+        m_threadBottleManager = new std::thread([this, name, virtual_desktop_resolution, disable_geck_mono,
+                                                 windows_version, bit, audio] {
+            manager.NewBottle(this, name, virtual_desktop_resolution, disable_geck_mono, windows_version, bit, audio);
+        });
     }
 }
 
@@ -262,7 +256,7 @@ void SignalDispatcher::on_new_bottle_created()
 }
 
 /**
- * \brief Fetch the error message from the manager (in a thread-safe manner), 
+ * \brief Fetch the error message from the manager (in a thread-safe manner),
  * and report it to the main window (runs on the GUI thread).
  */
 void SignalDispatcher::on_error_message()

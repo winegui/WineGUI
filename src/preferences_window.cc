@@ -24,7 +24,7 @@
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-PreferencesWindow::PreferencesWindow(Gtk::Window &parent)
+PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
 {
     set_transient_for(parent);
     set_title("Application Preferences");

@@ -4,7 +4,7 @@
  * \file    busy_dialog.h
  * \brief   GTK+ Busy Dialog
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -31,21 +31,22 @@ using std::string;
 class BusyDialog : public Gtk::Dialog
 {
 public:
-  explicit BusyDialog(Gtk::Window& parent);
-  virtual ~BusyDialog();
+    explicit BusyDialog(Gtk::Window& parent);
+    virtual ~BusyDialog();
 
-  void show();
-  void close();
+    void show();
+    void close();
 
-  void SetMessage(const Glib::ustring& message);
+    void SetMessage(const Glib::ustring& message);
+
 protected:
-  Gtk::Label heading_label; /*!< Heading label */
-  Gtk::Label message_label; /*!< Message box label */
-  Gtk::ProgressBar loading_bar; /*!< Loading bar */
+    Gtk::Label heading_label;     /*!< Heading label */
+    Gtk::Label message_label;     /*!< Message box label */
+    Gtk::ProgressBar loading_bar; /*!< Loading bar */
 
 private:
-  sigc::connection timer; /*!< Timer connection */
-  Gtk::Window& defaultParent;
-  
-  virtual bool Pulsing();
+    sigc::connection timer; /*!< Timer connection */
+    Gtk::Window& defaultParent;
+
+    virtual bool Pulsing();
 };

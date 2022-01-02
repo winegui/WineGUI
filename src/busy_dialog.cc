@@ -24,9 +24,7 @@
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-BusyDialog::BusyDialog(Gtk::Window &parent)
-    : Gtk::Dialog("Applying Changes"),
-      defaultParent(parent)
+BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), defaultParent(parent)
 {
     set_transient_for(parent);
     set_default_size(400, 120);
@@ -38,7 +36,7 @@ BusyDialog::BusyDialog(Gtk::Window &parent)
     message_label.set_alignment(0.0);
     loading_bar.set_pulse_step(0.3);
 
-    Gtk::Box *box = get_vbox();
+    Gtk::Box* box = get_vbox();
     box->set_margin_top(10);
     box->set_margin_right(10);
     box->set_margin_bottom(10);
@@ -60,10 +58,7 @@ BusyDialog::~BusyDialog() {}
  * \brief Set busy message
  * \param[in] message - Message
  */
-void BusyDialog::SetMessage(const Glib::ustring &message)
-{
-    this->message_label.set_text(message + " Please wait...");
-}
+void BusyDialog::SetMessage(const Glib::ustring& message) { this->message_label.set_text(message + " Please wait..."); }
 
 /**
  * \brief Show the busy dialog (override the show(), calls parent show())
@@ -76,9 +71,7 @@ void BusyDialog::show()
     }
 
     int time_interval = 200;
-    timer = Glib::signal_timeout().connect(
-        sigc::mem_fun(*this, &BusyDialog::Pulsing),
-        time_interval);
+    timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BusyDialog::Pulsing), time_interval);
     Gtk::Dialog::show();
 }
 
