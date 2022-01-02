@@ -31,14 +31,14 @@
 class AboutDialog : public Gtk::AboutDialog
 {
 public:
-    explicit AboutDialog(Gtk::Window& parent);
-    virtual ~AboutDialog();
+  explicit AboutDialog(Gtk::Window& parent);
+  virtual ~AboutDialog();
 
-    void run_dialog();
-    void hide_dialog(int response);
+  void run_dialog();
+  void hide_dialog(int response);
 
-    static std::string GetVersion();
+  static std::string GetVersion();
 
 protected:
-    Gtk::Image logo; /*!< The logo of the app for the about window */
+  Gtk::Image logo; /*!< The logo of the app for the about window */
 };
