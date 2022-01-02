@@ -20,9 +20,9 @@
  */
 #pragma once
 
+#include "bottle_types.h"
 #include <gtkmm.h>
 #include <string>
-#include "bottle_types.h"
 
 /**
  * \class BottleItem
@@ -37,13 +37,15 @@ public:
   BottleItem(const BottleItem& bottleItem);
 
   /// Copy-&-swap equal overloader method
-  BottleItem& operator=(BottleItem tempBottleItem) {
+  BottleItem& operator=(BottleItem tempBottleItem)
+  {
     this->swap(*this, tempBottleItem);
     return *this;
   }
-  
+
   /// swap helper method
-  void swap(BottleItem& a, BottleItem& b) {
+  void swap(BottleItem& a, BottleItem& b)
+  {
     using std::swap;
     swap(a._name, b._name);
     swap(a._is_status_ok, b._is_status_ok);
@@ -56,79 +58,139 @@ public:
     swap(a._virtual_desktop, b._virtual_desktop);
   }
 
-  BottleItem(Glib::ustring name, 
-    Glib::ustring wine_version,
-    Glib::ustring wine_location,
-    Glib::ustring wine_c_drive,
-    Glib::ustring wine_last_changed);
+  BottleItem(Glib::ustring name,
+             Glib::ustring wine_version,
+             Glib::ustring wine_location,
+             Glib::ustring wine_c_drive,
+             Glib::ustring wine_last_changed);
 
   BottleItem(Glib::ustring name,
-    bool status,
-    BottleTypes::Windows win,
-    BottleTypes::Bit bit,
-    Glib::ustring wine_version,
-    Glib::ustring wine_location,
-    Glib::ustring wine_c_drive,
-    Glib::ustring wine_last_changed,
-    BottleTypes::AudioDriver audio_driver,
-    Glib::ustring virtual_desktop);
+             bool status,
+             BottleTypes::Windows win,
+             BottleTypes::Bit bit,
+             Glib::ustring wine_version,
+             Glib::ustring wine_location,
+             Glib::ustring wine_c_drive,
+             Glib::ustring wine_last_changed,
+             BottleTypes::AudioDriver audio_driver,
+             Glib::ustring virtual_desktop);
 
   /**
    * \brief Destruct
    */
-  ~BottleItem() {};
+  ~BottleItem(){};
 
   /*
    *  Getters & setters
    */
   /// set name
-  void name(const Glib::ustring name) { _name = name; };
+  void name(const Glib::ustring name)
+  {
+    _name = name;
+  };
   /// get name
-  const Glib::ustring& name() const { return _name; };
+  const Glib::ustring& name() const
+  {
+    return _name;
+  };
   /// set status
-  void status(const bool status) { _is_status_ok = status; };
+  void status(const bool status)
+  {
+    _is_status_ok = status;
+  };
   /// get status
-  bool status() const { return _is_status_ok; };
-  /// set windows 
-  void windows(const BottleTypes::Windows win) { _win = win; };
-  /// get windows 
-  BottleTypes::Windows windows() const { return _win; };
+  bool status() const
+  {
+    return _is_status_ok;
+  };
+  /// set windows
+  void windows(const BottleTypes::Windows win)
+  {
+    _win = win;
+  };
+  /// get windows
+  BottleTypes::Windows windows() const
+  {
+    return _win;
+  };
   /// set bit
-  void bit(const BottleTypes::Bit bit) { _bit = bit; };
+  void bit(const BottleTypes::Bit bit)
+  {
+    _bit = bit;
+  };
   /// get bit
-  BottleTypes::Bit bit() const { return _bit; };
+  BottleTypes::Bit bit() const
+  {
+    return _bit;
+  };
   /// set Wine version
-  void wine_version(const Glib::ustring wine_version) { _wine_version = wine_version; };
+  void wine_version(const Glib::ustring wine_version)
+  {
+    _wine_version = wine_version;
+  };
   /// set Wine version
-  const Glib::ustring& wine_version() const { return _wine_version; };
+  const Glib::ustring& wine_version() const
+  {
+    return _wine_version;
+  };
   /// set Wine location
-  void wine_location(const Glib::ustring wine_location) { _wine_location = wine_location; };
+  void wine_location(const Glib::ustring wine_location)
+  {
+    _wine_location = wine_location;
+  };
   /// get Wine location
-  const Glib::ustring& wine_location() const { return _wine_location; };
+  const Glib::ustring& wine_location() const
+  {
+    return _wine_location;
+  };
   /// set Wine c:\ drive location
-  void wine_c_drive(const Glib::ustring wine_c_drive) { _wine_c_drive = wine_c_drive; };
+  void wine_c_drive(const Glib::ustring wine_c_drive)
+  {
+    _wine_c_drive = wine_c_drive;
+  };
   /// get Wine c:\ drive location
-  const Glib::ustring& wine_c_drive() const { return _wine_c_drive; };
+  const Glib::ustring& wine_c_drive() const
+  {
+    return _wine_c_drive;
+  };
   // TODO: Changed to datetime iso Glib::ustring
   /// set Wine last changed date
-  void wine_last_changed(const Glib::ustring wine_last_changed) { _wine_last_changed = wine_last_changed; };
+  void wine_last_changed(const Glib::ustring wine_last_changed)
+  {
+    _wine_last_changed = wine_last_changed;
+  };
   /// get Wine last changed date
-  const Glib::ustring& wine_last_changed() const { return _wine_last_changed; };
+  const Glib::ustring& wine_last_changed() const
+  {
+    return _wine_last_changed;
+  };
   /// set Wine audio driver
-  void audio_driver(const BottleTypes::AudioDriver audio_driver) { _audio_driver = audio_driver; };
+  void audio_driver(const BottleTypes::AudioDriver audio_driver)
+  {
+    _audio_driver = audio_driver;
+  };
   /// get Wine audio driver
-  BottleTypes::AudioDriver audio_driver() const { return _audio_driver; };
+  BottleTypes::AudioDriver audio_driver() const
+  {
+    return _audio_driver;
+  };
   /// set Wine emulate virtual desktop
-  void virtual_desktop(const Glib::ustring virtual_desktop) { _virtual_desktop = virtual_desktop; };
+  void virtual_desktop(const Glib::ustring virtual_desktop)
+  {
+    _virtual_desktop = virtual_desktop;
+  };
   /// get Wine emulate virtual desktop
-  const Glib::ustring& virtual_desktop() const { return _virtual_desktop; };
+  const Glib::ustring& virtual_desktop() const
+  {
+    return _virtual_desktop;
+  };
 
 protected:
   // Widgets
-  Gtk::Grid grid; /*!< The main grid for the listbox item */
-  Gtk::Image image; /*!< Windows logo of the Wine bottle */
-  Gtk::Label name_label; /*!< Name of the Wine Bottle */
-  Gtk::Image status_icon; /*!< Status icon of the Wine Bottle */
+  Gtk::Grid grid;          /*!< The main grid for the listbox item */
+  Gtk::Image image;        /*!< Windows logo of the Wine bottle */
+  Gtk::Label name_label;   /*!< Name of the Wine Bottle */
+  Gtk::Image status_icon;  /*!< Status icon of the Wine Bottle */
   Gtk::Label status_label; /*!< Status of the Wine Bottle */
 
 private:

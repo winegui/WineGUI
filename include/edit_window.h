@@ -4,7 +4,7 @@
  * \file    edit_window.h
  * \brief   Edit GTK+ window class
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -40,15 +40,16 @@ public:
   void Show();
   void SetActiveBottle(BottleItem* bottle);
   void ResetActiveBottle();
+
 protected:
   // Child widgets
   Gtk::Grid settings_grid;
-  
+
   Gtk::Label label;
 
-  Gtk::ToolButton save_button; /*!< save button */
+  Gtk::ToolButton save_button;   /*!< save button */
   Gtk::ToolButton delete_button; /*!< delete button */
-  
+
   // Buttons second row
   Gtk::ToolButton wine_config_button; /*!< Winecfg button */
 

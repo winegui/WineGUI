@@ -24,21 +24,23 @@
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-PreferencesWindow::PreferencesWindow(Gtk::Window &parent)
+PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
 {
-    set_transient_for(parent);
-    set_title("Application Preferences");
-    set_default_size(650, 400);
-    set_modal(true);
+  set_transient_for(parent);
+  set_title("Application Preferences");
+  set_default_size(650, 400);
+  set_modal(true);
 
-    text.set_text("Not implemented yet. Sorry :\\");
-    vbox.pack_start(text);
-    add(vbox);
+  text.set_text("Not implemented yet. Sorry :\\");
+  vbox.pack_start(text);
+  add(vbox);
 
-    show_all_children();
+  show_all_children();
 }
 
 /**
  * \brief Destructor
  */
-PreferencesWindow::~PreferencesWindow() {}
+PreferencesWindow::~PreferencesWindow()
+{
+}

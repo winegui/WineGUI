@@ -1,4 +1,4 @@
- /**
+/**
  * Copyright (c) 2019 WineGUI
  *
  * \file    wine_defaults.h
@@ -25,7 +25,8 @@
 /**
  * \brief Wine defaults definitions
  */
-namespace WineDefaults {
+namespace WineDefaults
+{
   //// Default Windows OS Version of Wine
   static const BottleTypes::Windows WINDOWS_OS = BottleTypes::Windows::Windows7;
 

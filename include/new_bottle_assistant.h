@@ -4,7 +4,7 @@
  * \file    new_bottle_assistant.h
  * \brief   New Bottle Assistant (Wizard)
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,8 +20,8 @@
  */
 #pragma once
 
-#include <gtkmm.h>
 #include "bottle_types.h"
+#include <gtkmm.h>
 
 /**
  * \class NewBottleAssistant
@@ -36,13 +36,12 @@ public:
   NewBottleAssistant();
   virtual ~NewBottleAssistant();
 
-  void GetResult(
-    Glib::ustring& name,
-    Glib::ustring& virtual_desktop_resolution,
-    bool& disable_gecko_mono,
-    BottleTypes::Windows& windows_version,
-    BottleTypes::Bit& bit,
-    BottleTypes::AudioDriver& audio);
+  void GetResult(Glib::ustring& name,
+                 Glib::ustring& virtual_desktop_resolution,
+                 bool& disable_gecko_mono,
+                 BottleTypes::Windows& windows_version,
+                 BottleTypes::Bit& bit,
+                 BottleTypes::AudioDriver& audio);
 
   void BottleCreated();
 

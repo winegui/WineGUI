@@ -25,7 +25,8 @@
 /**
  * \brief DLL override enum definition
  */
-namespace DLLOverride {
+namespace DLLOverride
+{
   /**
    * \enum LoadOrder
    * \brief List load orders
@@ -39,18 +40,20 @@ namespace DLLOverride {
     Disabled,
   };
 
-  inline static std::string toString(LoadOrder order) {
-    switch(order) {
-      case LoadOrder::Builtin:
-        return "builtin";
-      case LoadOrder::Native:
-        return "native";
-      case LoadOrder::BuiltinNative:
-        return "builtin,native";
-      case LoadOrder::NativeBuiltin:
-        return "native,builtin";
-      case LoadOrder::Disabled:
-        return "";
+  inline static std::string toString(LoadOrder order)
+  {
+    switch (order)
+    {
+    case LoadOrder::Builtin:
+      return "builtin";
+    case LoadOrder::Native:
+      return "native";
+    case LoadOrder::BuiltinNative:
+      return "builtin,native";
+    case LoadOrder::NativeBuiltin:
+      return "native,builtin";
+    case LoadOrder::Disabled:
+      return "";
     }
     return "";
   }

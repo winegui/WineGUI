@@ -25,44 +25,46 @@
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-EditWindow::EditWindow(Gtk::Window &parent)
+EditWindow::EditWindow(Gtk::Window& parent)
     : save_button("Save"),
       delete_button("Delete Machine"),
       wine_config_button("WineCfg"),
       activeBottle(nullptr)
 {
-    set_transient_for(parent);
-    set_default_size(750, 540);
-    set_modal(true);
+  set_transient_for(parent);
+  set_default_size(750, 540);
+  set_modal(true);
 
-    show_all_children();
+  show_all_children();
 }
 
 /**
  * \brief Destructor
  */
-EditWindow::~EditWindow() {}
+EditWindow::~EditWindow()
+{
+}
 
 /**
  * \brief Same as show() but will also update the Window title
  */
 void EditWindow::Show()
 {
-    if (activeBottle != nullptr)
-        set_title("Edit Machine - " + activeBottle->name());
-    else
-        set_title("Edit Machine (Unknown machine)");
-    // Call parent show
-    Gtk::Widget::show();
+  if (activeBottle != nullptr)
+    set_title("Edit Machine - " + activeBottle->name());
+  else
+    set_title("Edit Machine (Unknown machine)");
+  // Call parent show
+  Gtk::Widget::show();
 }
 
 /**
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void EditWindow::SetActiveBottle(BottleItem *bottle)
+void EditWindow::SetActiveBottle(BottleItem* bottle)
 {
-    this->activeBottle = bottle;
+  this->activeBottle = bottle;
 }
 
 /**
@@ -70,5 +72,5 @@ void EditWindow::SetActiveBottle(BottleItem *bottle)
  */
 void EditWindow::ResetActiveBottle()
 {
-    this->activeBottle = nullptr;
+  this->activeBottle = nullptr;
 }
