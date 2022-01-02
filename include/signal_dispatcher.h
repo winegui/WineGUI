@@ -4,7 +4,7 @@
  * \file    signal_dispatcher.h
  * \brief   Handles different (Gtkmm) signals and dispatch or connect them to other methods within the App
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,9 +20,9 @@
  */
 #pragma once
 
+#include "bottle_types.h"
 #include <gtkmm.h>
 #include <thread>
-#include "bottle_types.h"
 
 // Forward declaration
 class MainWindow;
@@ -43,25 +43,26 @@ class SignalDispatcher : public Gtk::Window
 
 public:
   // Signals
-  sigc::signal<void> signal_show_edit_window; /*!< show Edit window signal */
+  sigc::signal<void> signal_show_edit_window;     /*!< show Edit window signal */
   sigc::signal<void> signal_show_settings_window; /*!< show Settings window signal */
 
-  SignalDispatcher(BottleManager& manager, 
-  Menu& menu,
-  PreferencesWindow& preferencesWindow,
-  AboutDialog& about,
-  EditWindow& editWindow,
-  SettingsWindow& settingsWindow);
+  SignalDispatcher(BottleManager& manager,
+                   Menu& menu,
+                   PreferencesWindow& preferencesWindow,
+                   AboutDialog& about,
+                   EditWindow& editWindow,
+                   SettingsWindow& settingsWindow);
   virtual ~SignalDispatcher();
   void SetMainWindow(MainWindow* mainWindow);
-  void DispatchSignals();  
+  void DispatchSignals();
 
   // SignalBottleCreated() is called from the thread bottle manager,
-  // it's executed in the that thread. And can trigger the dispatcher (=thread safe), which gets executed in the GUI thread.
+  // it's executed in the that thread. And can trigger the dispatcher (=thread safe), which gets executed in the GUI
+  // thread.
   void SignalBottleCreated();
   void SignalErrorMessage();
-protected:
 
+protected:
 private:
   void CleanUpBottleManagerThread();
 
@@ -69,11 +70,11 @@ private:
   virtual bool on_mouse_button_pressed(GdkEventButton* event);
   virtual void on_update_bottles();
   virtual void on_new_bottle(Glib::ustring& name,
-    Glib::ustring& virtual_desktop_resolution,
-    bool& disable_geck_mono,
-    BottleTypes::Windows windows_version,
-    BottleTypes::Bit bit,
-    BottleTypes::AudioDriver audio);
+                             Glib::ustring& virtual_desktop_resolution,
+                             bool& disable_geck_mono,
+                             BottleTypes::Windows windows_version,
+                             BottleTypes::Bit bit,
+                             BottleTypes::AudioDriver audio);
   virtual void on_new_bottle_created();
   virtual void on_error_message();
 

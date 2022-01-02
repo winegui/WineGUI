@@ -26,7 +26,8 @@
 /**
  * \brief Bottle type enum definitions
  */
-namespace BottleTypes {
+namespace BottleTypes
+{
   //// Emulate Virtual Desktop disabled string
   static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
 
@@ -71,40 +72,27 @@ namespace BottleTypes {
     win64
   };
 
-  typedef std::pair<Windows, Bit> WindowsAndBit; /*!< Windows + Bit pair, used within the list of supported Windows versions */
-  
+  typedef std::pair<Windows, Bit>
+      WindowsAndBit; /*!< Windows + Bit pair, used within the list of supported Windows versions */
+
   /**
    * \brief Supported list of Windows version with their bit support
    */
-  inline std::vector<WindowsAndBit> SupportedWindowsVersions =
-  {
-    std::pair(Windows::Windows20, Bit::win32),
-    std::pair(Windows::Windows30, Bit::win32),
-    std::pair(Windows::Windows31, Bit::win32),
-    std::pair(Windows::WindowsNT351, Bit::win32),
-    std::pair(Windows::WindowsNT40, Bit::win32),
-    std::pair(Windows::Windows95, Bit::win32),
-    std::pair(Windows::Windows98, Bit::win32),
-    std::pair(Windows::WindowsME, Bit::win32),
-    std::pair(Windows::Windows2000, Bit::win32),
-    std::pair(Windows::WindowsXP, Bit::win32),
-    std::pair(Windows::WindowsXP, Bit::win64),
-    std::pair(Windows::Windows2003, Bit::win32),
-    std::pair(Windows::Windows2003, Bit::win64),
-    std::pair(Windows::WindowsVista, Bit::win32),
-    std::pair(Windows::WindowsVista, Bit::win64),
-    std::pair(Windows::Windows2008, Bit::win32),
-    std::pair(Windows::Windows2008, Bit::win64),
-    std::pair(Windows::Windows7, Bit::win32),
-    std::pair(Windows::Windows7, Bit::win64),
-    std::pair(Windows::Windows2008R2, Bit::win32),
-    std::pair(Windows::Windows2008R2, Bit::win64),
-    std::pair(Windows::Windows8, Bit::win32),
-    std::pair(Windows::Windows8, Bit::win64),
-    std::pair(Windows::Windows81, Bit::win32),
-    std::pair(Windows::Windows81, Bit::win64),
-    std::pair(Windows::Windows10, Bit::win32),
-    std::pair(Windows::Windows10, Bit::win64),
+  inline std::vector<WindowsAndBit> SupportedWindowsVersions = {
+      std::pair(Windows::Windows20, Bit::win32),     std::pair(Windows::Windows30, Bit::win32),
+      std::pair(Windows::Windows31, Bit::win32),     std::pair(Windows::WindowsNT351, Bit::win32),
+      std::pair(Windows::WindowsNT40, Bit::win32),   std::pair(Windows::Windows95, Bit::win32),
+      std::pair(Windows::Windows98, Bit::win32),     std::pair(Windows::WindowsME, Bit::win32),
+      std::pair(Windows::Windows2000, Bit::win32),   std::pair(Windows::WindowsXP, Bit::win32),
+      std::pair(Windows::WindowsXP, Bit::win64),     std::pair(Windows::Windows2003, Bit::win32),
+      std::pair(Windows::Windows2003, Bit::win64),   std::pair(Windows::WindowsVista, Bit::win32),
+      std::pair(Windows::WindowsVista, Bit::win64),  std::pair(Windows::Windows2008, Bit::win32),
+      std::pair(Windows::Windows2008, Bit::win64),   std::pair(Windows::Windows7, Bit::win32),
+      std::pair(Windows::Windows7, Bit::win64),      std::pair(Windows::Windows2008R2, Bit::win32),
+      std::pair(Windows::Windows2008R2, Bit::win64), std::pair(Windows::Windows8, Bit::win32),
+      std::pair(Windows::Windows8, Bit::win64),      std::pair(Windows::Windows81, Bit::win32),
+      std::pair(Windows::Windows81, Bit::win64),     std::pair(Windows::Windows10, Bit::win32),
+      std::pair(Windows::Windows10, Bit::win64),
   };
 
   //// Default Windows version (Windows XP 32-bit) as WineGUI Bottle
@@ -114,7 +102,7 @@ namespace BottleTypes {
    * \enum AudioDriver
    * \brief Wine supported audio drivers
    */
-  enum class AudioDriver 
+  enum class AudioDriver
   {
     pulseaudio = 0,
     alsa,
@@ -122,7 +110,7 @@ namespace BottleTypes {
     oss,
     disabled
   };
-  
+
   //// Enum AudioDriver Start iterator
   static const int AudioDriverStart = (int)AudioDriver::pulseaudio;
   //// Enum AudioDriver End iterator
@@ -132,140 +120,150 @@ namespace BottleTypes {
   static const int DefaultAudioDriverIndex = (int)AudioDriver::pulseaudio;
 
   // Bit enum to string
-  inline static std::string toString(Bit bit) {
-    switch(bit) {
-      case Bit::win32:
-        return "32-bit";
-      case Bit::win64:
-        return "64-bit";
-      default:
-        return "- Unkown OS bit -";
+  inline static std::string toString(Bit bit)
+  {
+    switch (bit)
+    {
+    case Bit::win32:
+      return "32-bit";
+    case Bit::win64:
+      return "64-bit";
+    default:
+      return "- Unkown OS bit -";
     }
   }
 
   // Windows enum to string
   // TODO: Move the helper.cc windows list to bottle_types,
   // in order to have a single point of definition of Windows names
-  inline static std::string toString(Windows win) {
-    switch(win) {
-      case Windows::Windows20:
-        return "Windows 2.0";
-      case Windows::Windows30:
-        return "Windows 3.0";
-      case Windows::Windows31:
-        return "Windows 3.1";
-      case Windows::WindowsNT351:
-        return "Windows NT 3.51";
-      case Windows::WindowsNT40:
-        return "Windows NT 4.0";
-      case Windows::Windows95:
-        return "Windows 95";
-      case Windows::Windows98:
-        return "Windows 98";
-      case Windows::WindowsME:
-        return "Windows ME";
-      case Windows::Windows2000:
-        return "Windows 2000";
-      case Windows::WindowsXP:
-        return "Windows XP";
-      case Windows::Windows2003:
-        return "Windows 2003";
-      case Windows::WindowsVista:
-        return "Windows Vista";
-      case Windows::Windows2008:
-        return "Windows 2008";
-      case Windows::Windows7:
-        return "Windows 7";
-      case Windows::Windows2008R2:
-        return "Windows 2008 R2";
-      case Windows::Windows8:
-        return "Windows 8";
-      case Windows::Windows81:
-        return "Windows 8.1";
-      case Windows::Windows10:
-        return "Windows 10";
-      default:
-        return "- Unknown Windows OS -";
+  inline static std::string toString(Windows win)
+  {
+    switch (win)
+    {
+    case Windows::Windows20:
+      return "Windows 2.0";
+    case Windows::Windows30:
+      return "Windows 3.0";
+    case Windows::Windows31:
+      return "Windows 3.1";
+    case Windows::WindowsNT351:
+      return "Windows NT 3.51";
+    case Windows::WindowsNT40:
+      return "Windows NT 4.0";
+    case Windows::Windows95:
+      return "Windows 95";
+    case Windows::Windows98:
+      return "Windows 98";
+    case Windows::WindowsME:
+      return "Windows ME";
+    case Windows::Windows2000:
+      return "Windows 2000";
+    case Windows::WindowsXP:
+      return "Windows XP";
+    case Windows::Windows2003:
+      return "Windows 2003";
+    case Windows::WindowsVista:
+      return "Windows Vista";
+    case Windows::Windows2008:
+      return "Windows 2008";
+    case Windows::Windows7:
+      return "Windows 7";
+    case Windows::Windows2008R2:
+      return "Windows 2008 R2";
+    case Windows::Windows8:
+      return "Windows 8";
+    case Windows::Windows81:
+      return "Windows 8.1";
+    case Windows::Windows10:
+      return "Windows 10";
+    default:
+      return "- Unknown Windows OS -";
     }
   }
 
   /**
    * Get Winetricks Windows OS version string
    */
-  inline static std::string getWinetricksString(Windows win) {
-    switch(win) {
-      case Windows::Windows20:
-        return "win20"; // Not yet implemented by Winetrick?
-      case Windows::Windows30:
-        return "win30"; // Not yet implemented by Winetrick?
-      case Windows::Windows31:
-        return "win31";
-      case Windows::WindowsNT351:
-        return "nt351"; // Not yet implemented by Winetricks?
-      case Windows::WindowsNT40:
-        return "nt40";
-      case Windows::Windows95:
-        return "win95";
-      case Windows::Windows98:
-        return "win98";
-      case Windows::WindowsME:
-        return "winme";
-      case Windows::Windows2000:
-        return "win2k";
-      case Windows::WindowsXP:
-        return "winxp";
-      case Windows::Windows2003:
-        return "win2k3";
-      case Windows::WindowsVista:
-        return "vista";
-      case Windows::Windows2008:
-        return "win2k8";
-      case Windows::Windows7:
-        return "win7";
-      case Windows::Windows2008R2:
-        return "win2k8r2";
-      case Windows::Windows8:
-        return "win8";
-      case Windows::Windows81:
-        return "win81";
-      case Windows::Windows10:
-        return "win10";
-      default:
-        return "winxp";
+  inline static std::string getWinetricksString(Windows win)
+  {
+    switch (win)
+    {
+    case Windows::Windows20:
+      return "win20"; // Not yet implemented by Winetrick?
+    case Windows::Windows30:
+      return "win30"; // Not yet implemented by Winetrick?
+    case Windows::Windows31:
+      return "win31";
+    case Windows::WindowsNT351:
+      return "nt351"; // Not yet implemented by Winetricks?
+    case Windows::WindowsNT40:
+      return "nt40";
+    case Windows::Windows95:
+      return "win95";
+    case Windows::Windows98:
+      return "win98";
+    case Windows::WindowsME:
+      return "winme";
+    case Windows::Windows2000:
+      return "win2k";
+    case Windows::WindowsXP:
+      return "winxp";
+    case Windows::Windows2003:
+      return "win2k3";
+    case Windows::WindowsVista:
+      return "vista";
+    case Windows::Windows2008:
+      return "win2k8";
+    case Windows::Windows7:
+      return "win7";
+    case Windows::Windows2008R2:
+      return "win2k8r2";
+    case Windows::Windows8:
+      return "win8";
+    case Windows::Windows81:
+      return "win81";
+    case Windows::Windows10:
+      return "win10";
+    default:
+      return "winxp";
     }
   }
 
   // AudioDriver enum to string
-  inline static std::string toString(AudioDriver audio) {
-    switch(audio) {
-      case AudioDriver::pulseaudio:
-        return "PulseAudio";
-      case AudioDriver::alsa:
-        return "Advanced Linux Sound Architecture (ALSA)";
-      case AudioDriver::coreaudio:
-        return "Mac Core Audio";
-      case AudioDriver::oss:
-        return "Open Sound System (OSS)";
-      default:
-        return "Disabled";
+  inline static std::string toString(AudioDriver audio)
+  {
+    switch (audio)
+    {
+    case AudioDriver::pulseaudio:
+      return "PulseAudio";
+    case AudioDriver::alsa:
+      return "Advanced Linux Sound Architecture (ALSA)";
+    case AudioDriver::coreaudio:
+      return "Mac Core Audio";
+    case AudioDriver::oss:
+      return "Open Sound System (OSS)";
+    default:
+      return "Disabled";
     }
   }
 
   /**
    * \brief Get Winetricks Audio driver string
    */
-  inline static std::string getWinetricksString(AudioDriver audio) {
-    switch(audio) {
-      case AudioDriver::pulseaudio:
-        return "pulse";
-      case AudioDriver::alsa:
-        return "alsa";
-      case AudioDriver::coreaudio:
-        return "coreaudio";
-      case AudioDriver::oss:
-        return "oss";
-      default:
-        return "disabled";
+  inline static std::string getWinetricksString(AudioDriver audio)
+  {
+    switch (audio)
+    {
+    case AudioDriver::pulseaudio:
+      return "pulse";
+    case AudioDriver::alsa:
+      return "alsa";
+    case AudioDriver::coreaudio:
+      return "coreaudio";
+    case AudioDriver::oss:
+      return "oss";
+    default:
+      return "disabled";
     }
   }
 };

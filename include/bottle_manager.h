@@ -4,7 +4,7 @@
  * \file    bottle_manager.h
  * \brief   Bottle manager controller
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,12 +20,12 @@
  */
 #pragma once
 
+#include <gtkmm.h>
 #include <list>
 #include <map>
+#include <mutex>
 #include <string>
 #include <thread>
-#include <mutex>
-#include <gtkmm.h>
 
 #include "bottle_types.h"
 
@@ -44,7 +44,7 @@ class BottleManager
 {
 public:
   // Signals
-  sigc::signal<void> resetActiveBottle; /*!< Send signal: Clear the current active bottle */
+  sigc::signal<void> resetActiveBottle;    /*!< Send signal: Clear the current active bottle */
   Glib::Dispatcher finishedPackageInstall; /*!< Signal that Wine package install is completed */
 
   explicit BottleManager(MainWindow& mainWindow);
@@ -52,14 +52,13 @@ public:
 
   void Prepare();
   void UpdateBottles();
-  void NewBottle(
-    SignalDispatcher* caller,
-    Glib::ustring name,
-    Glib::ustring virtual_desktop_resolution,
-    bool disable_gecko_mono,
-    BottleTypes::Windows windows_version,
-    BottleTypes::Bit bit,
-    BottleTypes::AudioDriver audio);
+  void NewBottle(SignalDispatcher* caller,
+                 Glib::ustring name,
+                 Glib::ustring virtual_desktop_resolution,
+                 bool disable_gecko_mono,
+                 BottleTypes::Windows windows_version,
+                 BottleTypes::Bit bit,
+                 BottleTypes::AudioDriver audio);
   void DeleteBottle();
   void SetActiveBottle(BottleItem* bottle);
   const Glib::ustring& GetErrorMessage();
@@ -86,6 +85,7 @@ public:
   void InstallDotNet(Gtk::Window& parent, const Glib::ustring& version);
   void InstallCoreFonts(Gtk::Window& parent);
   void InstallLiberation(Gtk::Window& parent);
+
 private:
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;

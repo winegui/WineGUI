@@ -1,0 +1,21 @@
+{
+  BasedOnStyle: LLVM,
+  UseTab: Never,
+  IndentWidth: 2,
+  TabWidth: 2,
+  AccessModifierOffset: -2,
+  DerivePointerAlignment: false,
+  PointerAlignment: Left,
+  Cpp11BracedListStyle: true,
+  ConstructorInitializerAllOnOneLineOrOnePerLine: true,
+  AllowAllConstructorInitializersOnNextLine: false,
+  # In the future use: PackConstructorInitializers: Never, (iso the two options above)
+  ColumnLimit: 120,
+  BreakBeforeBraces: Allman,
+  FixNamespaceComments: false,
+  AllowShortIfStatementsOnASingleLine: Never,
+  IndentCaseLabels: false,
+  NamespaceIndentation: All,
+  BinPackParameters: false,
+  AllowShortFunctionsOnASingleLine: None,
+}
