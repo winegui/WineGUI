@@ -34,25 +34,25 @@ class BottleItem;
 class EditWindow : public Gtk::Window
 {
 public:
-    explicit EditWindow(Gtk::Window& parent);
-    virtual ~EditWindow();
+  explicit EditWindow(Gtk::Window& parent);
+  virtual ~EditWindow();
 
-    void Show();
-    void SetActiveBottle(BottleItem* bottle);
-    void ResetActiveBottle();
+  void Show();
+  void SetActiveBottle(BottleItem* bottle);
+  void ResetActiveBottle();
 
 protected:
-    // Child widgets
-    Gtk::Grid settings_grid;
+  // Child widgets
+  Gtk::Grid settings_grid;
 
-    Gtk::Label label;
+  Gtk::Label label;
 
-    Gtk::ToolButton save_button;   /*!< save button */
-    Gtk::ToolButton delete_button; /*!< delete button */
+  Gtk::ToolButton save_button;   /*!< save button */
+  Gtk::ToolButton delete_button; /*!< delete button */
 
-    // Buttons second row
-    Gtk::ToolButton wine_config_button; /*!< Winecfg button */
+  // Buttons second row
+  Gtk::ToolButton wine_config_button; /*!< Winecfg button */
 
 private:
-    BottleItem* activeBottle; /*!< Current active bottle */
+  BottleItem* activeBottle; /*!< Current active bottle */
 };

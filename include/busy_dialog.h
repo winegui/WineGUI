@@ -31,22 +31,22 @@ using std::string;
 class BusyDialog : public Gtk::Dialog
 {
 public:
-    explicit BusyDialog(Gtk::Window& parent);
-    virtual ~BusyDialog();
+  explicit BusyDialog(Gtk::Window& parent);
+  virtual ~BusyDialog();
 
-    void show();
-    void close();
+  void show();
+  void close();
 
-    void SetMessage(const Glib::ustring& message);
+  void SetMessage(const Glib::ustring& message);
 
 protected:
-    Gtk::Label heading_label;     /*!< Heading label */
-    Gtk::Label message_label;     /*!< Message box label */
-    Gtk::ProgressBar loading_bar; /*!< Loading bar */
+  Gtk::Label heading_label;     /*!< Heading label */
+  Gtk::Label message_label;     /*!< Message box label */
+  Gtk::ProgressBar loading_bar; /*!< Loading bar */
 
 private:
-    sigc::connection timer; /*!< Timer connection */
-    Gtk::Window& defaultParent;
+  sigc::connection timer; /*!< Timer connection */
+  Gtk::Window& defaultParent;
 
-    virtual bool Pulsing();
+  virtual bool Pulsing();
 };

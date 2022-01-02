@@ -26,27 +26,27 @@
  */
 BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), defaultParent(parent)
 {
-    set_transient_for(parent);
-    set_default_size(400, 120);
-    set_modal(true);
-    set_deletable(false);
+  set_transient_for(parent);
+  set_default_size(400, 120);
+  set_modal(true);
+  set_deletable(false);
 
-    heading_label.set_markup("<big><b>Installing software</b></big>");
-    heading_label.set_alignment(0.0);
-    message_label.set_alignment(0.0);
-    loading_bar.set_pulse_step(0.3);
+  heading_label.set_markup("<big><b>Installing software</b></big>");
+  heading_label.set_alignment(0.0);
+  message_label.set_alignment(0.0);
+  loading_bar.set_pulse_step(0.3);
 
-    Gtk::Box* box = get_vbox();
-    box->set_margin_top(10);
-    box->set_margin_right(10);
-    box->set_margin_bottom(10);
-    box->set_margin_left(10);
+  Gtk::Box* box = get_vbox();
+  box->set_margin_top(10);
+  box->set_margin_right(10);
+  box->set_margin_bottom(10);
+  box->set_margin_left(10);
 
-    box->pack_start(heading_label, false, false);
-    box->pack_start(message_label, true, false);
-    box->pack_start(loading_bar, true, false);
+  box->pack_start(heading_label, false, false);
+  box->pack_start(message_label, true, false);
+  box->pack_start(loading_bar, true, false);
 
-    show_all_children();
+  show_all_children();
 }
 
 /**
@@ -65,14 +65,14 @@ void BusyDialog::SetMessage(const Glib::ustring& message) { this->message_label.
  */
 void BusyDialog::show()
 {
-    if (!timer.empty() && timer.connected())
-    {
-        timer.disconnect();
-    }
+  if (!timer.empty() && timer.connected())
+  {
+    timer.disconnect();
+  }
 
-    int time_interval = 200;
-    timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BusyDialog::Pulsing), time_interval);
-    Gtk::Dialog::show();
+  int time_interval = 200;
+  timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BusyDialog::Pulsing), time_interval);
+  Gtk::Dialog::show();
 }
 
 /**
@@ -80,15 +80,15 @@ void BusyDialog::show()
  */
 void BusyDialog::close()
 {
-    // Reset default parent
-    set_transient_for(defaultParent);
+  // Reset default parent
+  set_transient_for(defaultParent);
 
-    // Stop pulsing timer
-    if (!timer.empty() && timer.connected())
-    {
-        timer.disconnect();
-    }
-    Gtk::Dialog::close();
+  // Stop pulsing timer
+  if (!timer.empty() && timer.connected())
+  {
+    timer.disconnect();
+  }
+  Gtk::Dialog::close();
 }
 
 /**
@@ -96,6 +96,6 @@ void BusyDialog::close()
  */
 bool BusyDialog::Pulsing()
 {
-    loading_bar.pulse();
-    return true;
+  loading_bar.pulse();
+  return true;
 }

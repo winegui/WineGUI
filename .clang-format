@@ -1,8 +1,9 @@
 {
   BasedOnStyle: LLVM,
   UseTab: Never,
-  IndentWidth: 4,
-  TabWidth: 4,
+  IndentWidth: 2,
+  TabWidth: 2,
+  AccessModifierOffset: -2,
   DerivePointerAlignment: false,
   PointerAlignment: Left,
   Cpp11BracedListStyle: true,
@@ -11,10 +12,10 @@
   # In the future use: PackConstructorInitializers: Never, (iso the two options above)
   ColumnLimit: 120,
   BreakBeforeBraces: Allman,
-  AccessModifierOffset: -4,
   FixNamespaceComments: false,
   AllowShortIfStatementsOnASingleLine: Never,
   IndentCaseLabels: false,
   NamespaceIndentation: All,
   BinPackParameters: false,
 }
+

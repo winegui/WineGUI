@@ -29,12 +29,12 @@
 class PreferencesWindow : public Gtk::Window
 {
 public:
-    explicit PreferencesWindow(Gtk::Window& parent);
-    virtual ~PreferencesWindow();
+  explicit PreferencesWindow(Gtk::Window& parent);
+  virtual ~PreferencesWindow();
 
 protected:
-    // Child widgets
-    Gtk::Box vbox;   /*!< The main vertical box */
-    Gtk::Label text; /*!< text... */
+  // Child widgets
+  Gtk::Box vbox;   /*!< The main vertical box */
+  Gtk::Label text; /*!< text... */
 private:
 };

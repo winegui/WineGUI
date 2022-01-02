@@ -39,56 +39,56 @@ class SettingsWindow;
  */
 class SignalDispatcher : public Gtk::Window
 {
-    friend class MainWindow;
+  friend class MainWindow;
 
 public:
-    // Signals
-    sigc::signal<void> signal_show_edit_window;     /*!< show Edit window signal */
-    sigc::signal<void> signal_show_settings_window; /*!< show Settings window signal */
+  // Signals
+  sigc::signal<void> signal_show_edit_window;     /*!< show Edit window signal */
+  sigc::signal<void> signal_show_settings_window; /*!< show Settings window signal */
 
-    SignalDispatcher(BottleManager& manager,
-                     Menu& menu,
-                     PreferencesWindow& preferencesWindow,
-                     AboutDialog& about,
-                     EditWindow& editWindow,
-                     SettingsWindow& settingsWindow);
-    virtual ~SignalDispatcher();
-    void SetMainWindow(MainWindow* mainWindow);
-    void DispatchSignals();
+  SignalDispatcher(BottleManager& manager,
+                   Menu& menu,
+                   PreferencesWindow& preferencesWindow,
+                   AboutDialog& about,
+                   EditWindow& editWindow,
+                   SettingsWindow& settingsWindow);
+  virtual ~SignalDispatcher();
+  void SetMainWindow(MainWindow* mainWindow);
+  void DispatchSignals();
 
-    // SignalBottleCreated() is called from the thread bottle manager,
-    // it's executed in the that thread. And can trigger the dispatcher (=thread safe), which gets executed in the GUI
-    // thread.
-    void SignalBottleCreated();
-    void SignalErrorMessage();
+  // SignalBottleCreated() is called from the thread bottle manager,
+  // it's executed in the that thread. And can trigger the dispatcher (=thread safe), which gets executed in the GUI
+  // thread.
+  void SignalBottleCreated();
+  void SignalErrorMessage();
 
 protected:
 private:
-    void CleanUpBottleManagerThread();
+  void CleanUpBottleManagerThread();
 
-    // slots
-    virtual bool on_mouse_button_pressed(GdkEventButton* event);
-    virtual void on_update_bottles();
-    virtual void on_new_bottle(Glib::ustring& name,
-                               Glib::ustring& virtual_desktop_resolution,
-                               bool& disable_geck_mono,
-                               BottleTypes::Windows windows_version,
-                               BottleTypes::Bit bit,
-                               BottleTypes::AudioDriver audio);
-    virtual void on_new_bottle_created();
-    virtual void on_error_message();
+  // slots
+  virtual bool on_mouse_button_pressed(GdkEventButton* event);
+  virtual void on_update_bottles();
+  virtual void on_new_bottle(Glib::ustring& name,
+                             Glib::ustring& virtual_desktop_resolution,
+                             bool& disable_geck_mono,
+                             BottleTypes::Windows windows_version,
+                             BottleTypes::Bit bit,
+                             BottleTypes::AudioDriver audio);
+  virtual void on_new_bottle_created();
+  virtual void on_error_message();
 
-    MainWindow* mainWindow;
-    BottleManager& manager;
-    Menu& menu;
-    PreferencesWindow& preferencesWindow;
-    AboutDialog& about;
-    EditWindow& editWindow;
-    SettingsWindow& settingsWindow;
+  MainWindow* mainWindow;
+  BottleManager& manager;
+  Menu& menu;
+  PreferencesWindow& preferencesWindow;
+  AboutDialog& about;
+  EditWindow& editWindow;
+  SettingsWindow& settingsWindow;
 
-    // Dispatcher for handling signals from the thread towards a GUI thread
-    Glib::Dispatcher m_FinishDispatcher;
-    Glib::Dispatcher m_ErrorMessageDispatcher;
-    // Thread for Bottle Manager (so it doesn't block the GUI thread)
-    std::thread* m_threadBottleManager;
+  // Dispatcher for handling signals from the thread towards a GUI thread
+  Glib::Dispatcher m_FinishDispatcher;
+  Glib::Dispatcher m_ErrorMessageDispatcher;
+  // Thread for Bottle Manager (so it doesn't block the GUI thread)
+  std::thread* m_threadBottleManager;
 };

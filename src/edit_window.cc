@@ -31,11 +31,11 @@ EditWindow::EditWindow(Gtk::Window& parent)
       wine_config_button("WineCfg"),
       activeBottle(nullptr)
 {
-    set_transient_for(parent);
-    set_default_size(750, 540);
-    set_modal(true);
+  set_transient_for(parent);
+  set_default_size(750, 540);
+  set_modal(true);
 
-    show_all_children();
+  show_all_children();
 }
 
 /**
@@ -48,12 +48,12 @@ EditWindow::~EditWindow() {}
  */
 void EditWindow::Show()
 {
-    if (activeBottle != nullptr)
-        set_title("Edit Machine - " + activeBottle->name());
-    else
-        set_title("Edit Machine (Unknown machine)");
-    // Call parent show
-    Gtk::Widget::show();
+  if (activeBottle != nullptr)
+    set_title("Edit Machine - " + activeBottle->name());
+  else
+    set_title("Edit Machine (Unknown machine)");
+  // Call parent show
+  Gtk::Widget::show();
 }
 
 /**
