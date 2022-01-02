@@ -208,7 +208,9 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
 /**
  * \brief Destructor
  */
-SettingsWindow::~SettingsWindow() {}
+SettingsWindow::~SettingsWindow()
+{
+}
 
 /**
  * \brief Same as show() but will also update the Window title
@@ -229,12 +231,18 @@ void SettingsWindow::Show()
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void SettingsWindow::SetActiveBottle(BottleItem* bottle) { this->activeBottle = bottle; }
+void SettingsWindow::SetActiveBottle(BottleItem* bottle)
+{
+  this->activeBottle = bottle;
+}
 
 /**
  * \brief Signal handler for resetting the active bottle to null
  */
-void SettingsWindow::ResetActiveBottle() { this->activeBottle = nullptr; }
+void SettingsWindow::ResetActiveBottle()
+{
+  this->activeBottle = nullptr;
+}
 
 /**
  * \brief Update GUI state depending on the packages installed

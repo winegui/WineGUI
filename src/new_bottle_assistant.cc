@@ -69,7 +69,9 @@ NewBottleAssistant::NewBottleAssistant()
 /**
  * \brief Destructor
  */
-NewBottleAssistant::~NewBottleAssistant() {}
+NewBottleAssistant::~NewBottleAssistant()
+{
+}
 
 /**
  * \brief Set default values of all input fields from the wizard,
@@ -337,9 +339,15 @@ void NewBottleAssistant::on_assistant_apply()
       Glib::signal_timeout().connect(sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually), time_interval);
 }
 
-void NewBottleAssistant::on_assistant_cancel() { hide(); }
+void NewBottleAssistant::on_assistant_cancel()
+{
+  hide();
+}
 
-void NewBottleAssistant::on_assistant_close() { hide(); }
+void NewBottleAssistant::on_assistant_close()
+{
+  hide();
+}
 
 /**
  * \brief Prepare handler for each page, is emitted before making the page visable.

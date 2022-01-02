@@ -41,7 +41,9 @@ EditWindow::EditWindow(Gtk::Window& parent)
 /**
  * \brief Destructor
  */
-EditWindow::~EditWindow() {}
+EditWindow::~EditWindow()
+{
+}
 
 /**
  * \brief Same as show() but will also update the Window title
@@ -60,9 +62,15 @@ void EditWindow::Show()
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void EditWindow::SetActiveBottle(BottleItem* bottle) { this->activeBottle = bottle; }
+void EditWindow::SetActiveBottle(BottleItem* bottle)
+{
+  this->activeBottle = bottle;
+}
 
 /**
  * \brief Signal handler for resetting the active bottle to null
  */
-void EditWindow::ResetActiveBottle() { this->activeBottle = nullptr; }
+void EditWindow::ResetActiveBottle()
+{
+  this->activeBottle = nullptr;
+}

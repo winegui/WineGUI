@@ -41,4 +41,6 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
 /**
  * \brief Destructor
  */
-PreferencesWindow::~PreferencesWindow() {}
+PreferencesWindow::~PreferencesWindow()
+{
+}

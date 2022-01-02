@@ -214,7 +214,10 @@ void Helper::WaitUntilWineserverIsTerminated(const string& prefix_path)
  * \brief Retrieve the Wine executable (full path if applicable)
  * \return Wine binary location
  */
-string Helper::GetWineExecutableLocation() { return WINE_EXECUTABLE; }
+string Helper::GetWineExecutableLocation()
+{
+  return WINE_EXECUTABLE;
+}
 
 /**
  * \brief Get the Winetricks binary location
@@ -663,14 +666,20 @@ string Helper::GetCLetterDrive(const string& prefix_path)
  * \param[in] dir_path The directory to be checked for existence
  * \return true if exists, otherwise false
  */
-bool Helper::DirExists(const string& dir_path) { return Glib::file_test(dir_path, Glib::FileTest::FILE_TEST_IS_DIR); }
+bool Helper::DirExists(const string& dir_path)
+{
+  return Glib::file_test(dir_path, Glib::FileTest::FILE_TEST_IS_DIR);
+}
 
 /**
  * \brief Create directory (and intermediate parent directories if needed)
  * \param[in] dir_path The directory to be created
  * \return true if successfully created, otherwise false
  */
-bool Helper::CreateDir(const string& dir_path) { return (g_mkdir_with_parents(dir_path.c_str(), 0775) == 0); }
+bool Helper::CreateDir(const string& dir_path)
+{
+  return (g_mkdir_with_parents(dir_path.c_str(), 0775) == 0);
+}
 
 /**
  * \brief Check if *file* exists or not

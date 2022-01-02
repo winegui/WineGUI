@@ -163,7 +163,10 @@ void SignalDispatcher::DispatchSignals()
  *  which can trigger the dispatcher so it can run a method
  * (connected to the dispatcher signal) in the GUI thread
  */
-void SignalDispatcher::SignalBottleCreated() { m_FinishDispatcher.emit(); }
+void SignalDispatcher::SignalBottleCreated()
+{
+  m_FinishDispatcher.emit();
+}
 
 /**
  * \brief Helper method for Signal error message
@@ -212,7 +215,10 @@ bool SignalDispatcher::on_mouse_button_pressed(GdkEventButton* event)
 /**
  * \brief Update bottles in GUI (typically when the new wizard is finished)
  */
-void SignalDispatcher::on_update_bottles() { manager.UpdateBottles(); }
+void SignalDispatcher::on_update_bottles()
+{
+  manager.UpdateBottles();
+}
 
 /**
  * \brief New Bottle signal, starting NewBottle() within thread

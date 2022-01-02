@@ -44,20 +44,31 @@ AboutDialog::AboutDialog(Gtk::Window& parent)
   set_license_type(Gtk::LICENSE_AGPL_3_0);
 }
 
-AboutDialog::~AboutDialog() {}
+AboutDialog::~AboutDialog()
+{
+}
 
 /**
  * \brief Open about dialog
  */
-void AboutDialog::run_dialog() { run(); }
+void AboutDialog::run_dialog()
+{
+  run();
+}
 
 /**
  * \brief Close the about dialog
  */
-void AboutDialog::hide_dialog(__attribute__((unused)) int response) { hide(); }
+void AboutDialog::hide_dialog(__attribute__((unused)) int response)
+{
+  hide();
+}
 
 /**
  * \brief Retrieve the app version
  * \return Version number
  */
-std::string AboutDialog::GetVersion() { return PROJECT_VER; }
+std::string AboutDialog::GetVersion()
+{
+  return PROJECT_VER;
+}

@@ -52,13 +52,18 @@ BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), d
 /**
  * \brief Destructor
  */
-BusyDialog::~BusyDialog() {}
+BusyDialog::~BusyDialog()
+{
+}
 
 /**
  * \brief Set busy message
  * \param[in] message - Message
  */
-void BusyDialog::SetMessage(const Glib::ustring& message) { this->message_label.set_text(message + " Please wait..."); }
+void BusyDialog::SetMessage(const Glib::ustring& message)
+{
+  this->message_label.set_text(message + " Please wait...");
+}
 
 /**
  * \brief Show the busy dialog (override the show(), calls parent show())

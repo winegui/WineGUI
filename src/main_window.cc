@@ -96,7 +96,9 @@ MainWindow::MainWindow(Menu& menu)
 /**
  * \brief Destructor
  */
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow()
+{
+}
 
 /**
  * \brief Set a list/vector of bottles to the left panel
@@ -214,7 +216,10 @@ void MainWindow::ShowBusyDialog(Gtk::Window& parent, const Glib::ustring& messag
 /**
  * \brief Close the busy dialog again
  */
-void MainWindow::CloseBusyDialog() { busyDialog.close(); }
+void MainWindow::CloseBusyDialog()
+{
+  busyDialog.close();
+}
 
 /**
  * \brief Signal when the new button is clicked in the top toolbar/menu
@@ -229,7 +234,10 @@ void MainWindow::on_new_bottle_button_clicked()
  * \brief Handler when the bottle is created, notify the new bottle assistant.
  * Pass through the signal from the dispatcher to the 'new bottle assistant'.
  */
-void MainWindow::on_new_bottle_created() { newBottleAssistant.BottleCreated(); }
+void MainWindow::on_new_bottle_created()
+{
+  newBottleAssistant.BottleCreated();
+}
 
 /**
  * \brief Signal when the Run Program... button is clicked in top toolbar/menu
@@ -300,7 +308,10 @@ void MainWindow::on_run_button_clicked()
 /**
  * \brief Just hide the main window
  */
-void MainWindow::on_hide_window() { hide(); }
+void MainWindow::on_hide_window()
+{
+  hide();
+}
 
 /**
  * \brief When the feedback button is pressed

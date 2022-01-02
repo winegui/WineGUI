@@ -17,5 +17,5 @@
   IndentCaseLabels: false,
   NamespaceIndentation: All,
   BinPackParameters: false,
+  AllowShortFunctionsOnASingleLine: None,
 }
-
