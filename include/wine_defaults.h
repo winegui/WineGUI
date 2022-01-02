@@ -1,4 +1,4 @@
- /**
+/**
  * Copyright (c) 2019 WineGUI
  *
  * \file    wine_defaults.h
@@ -25,10 +25,11 @@
 /**
  * \brief Wine defaults definitions
  */
-namespace WineDefaults {
-  //// Default Windows OS Version of Wine
-  static const BottleTypes::Windows WINDOWS_OS = BottleTypes::Windows::Windows7;
+namespace WineDefaults
+{
+    //// Default Windows OS Version of Wine
+    static const BottleTypes::Windows WINDOWS_OS = BottleTypes::Windows::Windows7;
 
-  //// Default AudioDriver of Wine
-  static const BottleTypes::AudioDriver AUDIO_DRIVER = BottleTypes::AudioDriver::pulseaudio;
+    //// Default AudioDriver of Wine
+    static const BottleTypes::AudioDriver AUDIO_DRIVER = BottleTypes::AudioDriver::pulseaudio;
 };

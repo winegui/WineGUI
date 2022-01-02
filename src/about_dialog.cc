@@ -25,7 +25,7 @@
 /**
  * \brief Contructor
  */
-AboutDialog::AboutDialog(Gtk::Window &parent)
+AboutDialog::AboutDialog(Gtk::Window& parent)
 {
     // Set logo
     logo.set(Helper::GetImageLocation("logo.png"));
@@ -49,24 +49,15 @@ AboutDialog::~AboutDialog() {}
 /**
  * \brief Open about dialog
  */
-void AboutDialog::run_dialog()
-{
-    run();
-}
+void AboutDialog::run_dialog() { run(); }
 
 /**
  * \brief Close the about dialog
  */
-void AboutDialog::hide_dialog(__attribute__((unused)) int response)
-{
-    hide();
-}
+void AboutDialog::hide_dialog(__attribute__((unused)) int response) { hide(); }
 
 /**
  * \brief Retrieve the app version
  * \return Version number
  */
-std::string AboutDialog::GetVersion()
-{
-    return PROJECT_VER;
-}
+std::string AboutDialog::GetVersion() { return PROJECT_VER; }

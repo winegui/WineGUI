@@ -28,6 +28,10 @@ build:
         - build_prod/bin
       policy: push
 
+code_style_guidelines:
+  stage: build
+  script: ./scripts/check_format.sh
+
 # Upload the artifacts / release
 release:
   stage: release
