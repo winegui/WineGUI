@@ -28,10 +28,10 @@ if(NOT CYGWIN)
 endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-FIND_PACKAGE(Threads REQUIRED)
+find_package(Threads REQUIRED)
 
 # Use the package PkgConfig to detect (any version) of GTK+ headers/library files
-FIND_PACKAGE(PkgConfig REQUIRED)
+find_package(PkgConfig REQUIRED)
 PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -43,20 +43,6 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 endif()
 
 configure_file(src/project_config.h.in ${CMAKE_BINARY_DIR}/project_config.h)
-
-################################
-# Normal Libraries & Executables
-################################
-
-# Add GTK libs and local include
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include
-  ${GTKMM_INCLUDE_DIRS}
-)
-link_directories(
-  ${GTKMM_LIBRARY_DIRS}
-)
-add_definitions(${GTKMM_CFLAGS_OTHER})
 
 set(HEADERS
     include/menu.h
@@ -90,12 +76,11 @@ set(SOURCES
 )
 
 add_executable(${PROJECT_TARGET} src/main.cc ${SOURCES})
-
-target_include_directories(${PROJECT_TARGET} PRIVATE
-    ${CMAKE_BINARY_DIR}
-)
-
 target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+
+target_include_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
+target_link_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_LIBRARY_DIRS})
+target_compile_options(${PROJECT_TARGET} PRIVATE ${GTKMM_CFLAGS_OTHER})
 
 install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
 install(FILES misc/winegui.desktop DESTINATION share/applications)
