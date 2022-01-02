@@ -94,13 +94,18 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
 /**
  * \brief Destructor
  */
-Menu::~Menu() {}
+Menu::~Menu()
+{
+}
 
 /**
  * \brief Return the machine sub menu only
  * \return GTK::Menu pointer of the machine menu
  */
-Gtk::Menu* Menu::GetMachineMenu() { return &machine_submenu; }
+Gtk::Menu* Menu::GetMachineMenu()
+{
+  return &machine_submenu;
+}
 
 /**
  * \brief Helper method for creating a menu with an image

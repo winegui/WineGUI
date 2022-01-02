@@ -53,7 +53,9 @@ BottleManager::BottleManager(MainWindow& mainWindow)
 /**
  * \brief Destructor
  */
-BottleManager::~BottleManager() {}
+BottleManager::~BottleManager()
+{
+}
 
 /**
  * \brief Prepare method, called during initial start-up of the app
