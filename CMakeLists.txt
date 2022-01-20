@@ -5,6 +5,8 @@ set(PROJECT_TARGET winegui)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+option(doc "Build Documentation" OFF)
+
 # Get VERSION from most recent git tag
 include(git_version)
 
