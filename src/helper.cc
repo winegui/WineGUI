@@ -294,24 +294,26 @@ void Helper::CreateWineBottle(const string& prefix_path, BottleTypes::Bit bit, c
     break;
   }
   string wineDLLOverrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
-
-  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\"" + wineArch + wineDLLOverrides + " " +
-                        Helper::GetWineExecutableLocation() + " wineboot>/dev/null 2>&1; echo $?")
-                           .c_str());
+  string command = "WINEPREFIX=\"" + prefix_path + "\"" + wineArch + wineDLLOverrides + " " +
+                   Helper::GetWineExecutableLocation() + " wineboot";
+  string commandErrorToNullWithExitcode = command + ">/dev/null 2>&1; echo $?";
+  string result = Exec(commandErrorToNullWithExitcode.c_str());
   if (!result.empty())
   {
     // Remove new lines
     result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
     if (!(result.compare("0") == 0))
     {
-      throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine machine: " +
-                               GetName(prefix_path) + "\n\nFull path location: " + prefix_path);
+      throw std::runtime_error(
+          "Something went wrong when creating a new Windows machine. Wine prefix: " + GetName(prefix_path) +
+          "\n\nCommand executed: " + command + "\nFull path location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine machine:: " +
-                             GetName(prefix_path) + "\n\nFull location: " + prefix_path);
+    throw std::runtime_error(
+        "Something went wrong when creating a new Windows machine. Wine prefix: " + GetName(prefix_path) +
+        "\n\nCommand executed: " + command + "\nFull location: " + prefix_path);
   }
 }
 
