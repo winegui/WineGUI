@@ -40,7 +40,8 @@ std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui co
 static string WINEGUI_DIR = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
 
 // Wine & Winetricks exec
-static const string WINE_EXECUTABLE = "wine"; /*!< Currently expect to be installed globally */
+static const string WINE_EXECUTABLE = "wine";      /*!< Currently expect to be installed globally */
+static const string WINE_EXECUTABLE_64 = "wine64"; /*!< Currently expect to be installed globally */
 static const string WINETRICKS_EXECUTABLE =
     Glib::build_filename(WINEGUI_DIR, "winetricks"); /*!< winetricks shall be located within the .winegui folder */
 
@@ -157,17 +158,16 @@ void Helper::RunProgram(string prefix_path, string program, bool give_error = tr
 
 /**
  * \brief Run a Windows program under Wine (run this method async)
- * \param[in] prefix_path - The path to bottle wine
- * \param[in] program - Program/executable that will be executed (be sure your application executable is between
+ * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
+ * \param[in] prefix_path The path to bottle wine
+ * \param[in] program Program/executable that will be executed (be sure your application executable is between
  * brackets in case of spaces) \param[in] give_error - Inform user when application exit with non-zero exit code
- * \param[in] enable_tracing - Enable debugging tracing to file (give_error should be true as well!)
+ * \param[in] enable_tracing Enable debugging tracing to file (give_error should be true as well!)
  */
-void Helper::RunProgramUnderWine(string prefix_path,
-                                 string program,
-                                 bool give_error = true,
-                                 bool enable_tracing = false)
+void Helper::RunProgramUnderWine(
+    bool wine_64_bit, string prefix_path, string program, bool give_error = true, bool enable_tracing = false)
 {
-  RunProgram(prefix_path, Helper::GetWineExecutableLocation() + " " + program, give_error, enable_tracing);
+  RunProgram(prefix_path, Helper::GetWineExecutableLocation(wine_64_bit) + " " + program, give_error, enable_tracing);
 }
 
 /**
@@ -211,12 +211,61 @@ void Helper::WaitUntilWineserverIsTerminated(const string& prefix_path)
 }
 
 /**
+ * \brief Determine which type of wine executable to use
+ * \return -1 on failure, 0 on 32-bit, 1 on 64-bit wine executable
+ */
+int Helper::DetermineWineExecutable()
+{
+  int returnStatus = -2;
+  // Try wine 32-bit
+  string result32 =
+      Exec(("command -v " + Helper::GetWineExecutableLocation(false) + " >/dev/null 2>&1; echo $?").c_str());
+  if (!result32.empty())
+  {
+    // Remove new lines
+    result32.erase(std::remove(result32.begin(), result32.end(), '\n'), result32.end());
+    if (result32.compare("0") == 0)
+    {
+      returnStatus = 0;
+    }
+  }
+  // Try wine 64-bit
+  if (returnStatus == -2)
+  {
+    string result64 =
+        Exec(("command -v " + Helper::GetWineExecutableLocation(true) + " >/dev/null 2>&1; echo $?").c_str());
+    if (!result64.empty())
+    {
+      // Remove new lines
+      result64.erase(std::remove(result64.begin(), result64.end(), '\n'), result64.end());
+      if (result64.compare("0") == 0)
+      {
+        returnStatus = 1;
+      }
+    }
+  }
+  if (returnStatus == -2)
+  {
+    returnStatus = -1;
+  }
+  return returnStatus;
+}
+
+/**
  * \brief Retrieve the Wine executable (full path if applicable)
+ * \param bit64 Use Wine 64 bit or 32 bit binary
  * \return Wine binary location
  */
-string Helper::GetWineExecutableLocation()
+string Helper::GetWineExecutableLocation(bool bit64)
 {
-  return WINE_EXECUTABLE;
+  if (bit64)
+  {
+    return WINE_EXECUTABLE_64;
+  }
+  else
+  {
+    return WINE_EXECUTABLE;
+  }
 }
 
 /**
@@ -239,11 +288,12 @@ string Helper::GetWinetricksLocation()
 
 /**
  * \brief Get Wine version from CLI
+ * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
  * \return Return the wine version
  */
-string Helper::GetWineVersion()
+string Helper::GetWineVersion(bool wine_64_bit)
 {
-  string result = Exec((Helper::GetWineExecutableLocation() + " --version").c_str());
+  string result = Exec((Helper::GetWineExecutableLocation(wine_64_bit) + " --version").c_str());
   if (!result.empty())
   {
     std::vector<string> results = Split(result, '-');
@@ -277,11 +327,15 @@ string Helper::GetWineVersion()
 /**
  * \brief Create new Wine bottle from prefix
  * \throw Throw an error when something went wrong during the creation of the bottle
- * \param[in] prefix_path - The path to create a Wine bottle from
- * \param[in] bit - Create 32-bit Wine of 64-bit Wine bottle
- * \param[in] disable_gecko_mono - Do NOT install Mono & Gecko (by default should be false)
+ * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
+ * \param[in] prefix_path The path to create a Wine bottle from
+ * \param[in] bit Create 32-bit Wine of 64-bit Wine bottle
+ * \param[in] disable_gecko_mono Do NOT install Mono & Gecko (by default should be false)
  */
-void Helper::CreateWineBottle(const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
+void Helper::CreateWineBottle(bool wine_64_bit,
+                              const string& prefix_path,
+                              BottleTypes::Bit bit,
+                              const bool disable_gecko_mono)
 {
   string wineArch = "";
   switch (bit)
@@ -295,7 +349,7 @@ void Helper::CreateWineBottle(const string& prefix_path, BottleTypes::Bit bit, c
   }
   string wineDLLOverrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
   string command = "WINEPREFIX=\"" + prefix_path + "\"" + wineArch + wineDLLOverrides + " " +
-                   Helper::GetWineExecutableLocation() + " wineboot";
+                   Helper::GetWineExecutableLocation(wine_64_bit) + " wineboot";
   string commandErrorToNullWithExitcode = command + ">/dev/null 2>&1; echo $?";
   string result = Exec(commandErrorToNullWithExitcode.c_str());
   if (!result.empty())
@@ -381,7 +435,7 @@ string Helper::GetName(const string& prefix_path)
 
 /**
  * \brief Get current Windows OS version
- * \param[in] prefix_path - Bottle prefix
+ * \param[in] prefix_path Bottle prefix
  * \return Return the Windows OS version
  */
 BottleTypes::Windows Helper::GetWindowsOSVersion(const string& prefix_path)
@@ -473,7 +527,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string& prefix_path)
 
 /**
  * \brief Get system processor bit (32/64). *Throw runtime_error* when not found.
- * \param[in] prefix_path - Bottle prefix
+ * \param[in] prefix_path Bottle prefix
  * \return 32-bit or 64-bit
  */
 BottleTypes::Bit Helper::GetSystemBit(const string& prefix_path)
@@ -507,7 +561,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string& prefix_path)
 
 /**
  * \brief Get Audio driver
- * \param[in] prefix_path - Bottle prefix
+ * \param[in] prefix_path Bottle prefix
  * \return Audio Driver (eg. alsa/coreaudio/oss/pulse)
  */
 BottleTypes::AudioDriver Helper::GetAudioDriver(const string& prefix_path)
@@ -553,7 +607,7 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string& prefix_path)
 
 /**
  * \brief Get emulation resolution
- * \param[in] prefix_path - Bottle prefix
+ * \param[in] prefix_path Bottle prefix
  * \return Return the virtual desktop resolution or 'disabled' when disabled fully.
  */
 string Helper::GetVirtualDesktop(const string& prefix_path)
@@ -583,7 +637,7 @@ string Helper::GetVirtualDesktop(const string& prefix_path)
 
 /**
  * \brief Get the date/time of the last time the Wine Inf file was updated
- * \param[in] prefix_path - Bottle prefix
+ * \param[in] prefix_path Bottle prefix
  * \return Date/time of last update
  */
 string Helper::GetLastWineUpdated(const string& prefix_path)
@@ -616,7 +670,7 @@ string Helper::GetLastWineUpdated(const string& prefix_path)
 /**
  * \brief Get Bottle Status, to validate some bear minimal Wine stuff
  * Hint: use WaitUntilWineserverIsTerminated, if you want to wait until the Bottle is fully created
- * \param[in] prefix_path - Bottle prefix
+ * \param[in] prefix_path Bottle prefix
  * \return True if everything is OK, otherwise false
  */
 bool Helper::GetBottleStatus(const string& prefix_path)
@@ -645,7 +699,7 @@ bool Helper::GetBottleStatus(const string& prefix_path)
 
 /**
  * \brief Get C:\ Drive location
- * \param[in] prefix_path - Bottle prefix
+ * \param[in] prefix_path Bottle prefix
  * \return Location of C:\ location under unix
  */
 string Helper::GetCLetterDrive(const string& prefix_path)
@@ -881,13 +935,14 @@ void Helper::SetAudioDriver(const string& prefix_path, BottleTypes::AudioDriver 
 
 /**
  * \brief Get a Wine GUID based on the application name (if installed)
- * \param[in] prefix_path - Bottle prefix
- * \param[in] application_name - Application name to search for
+ * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] application_name Application name to search for
  * \return GUID or empty string when not installed/found
  */
-string Helper::GetWineGUID(const string& prefix_path, const string& application_name)
+string Helper::GetWineGUID(bool wine_64_bit, const string& prefix_path, const string& application_name)
 {
-  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::GetWineExecutableLocation() +
+  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::GetWineExecutableLocation(wine_64_bit) +
                         " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1")
                            .c_str());
   if (!result.empty())
@@ -899,9 +954,9 @@ string Helper::GetWineGUID(const string& prefix_path, const string& application_
 
 /**
  * \brief Check DLL can be found in overrides and set to a specific load order
- * \param[in] prefix_path - Bottle prefix
- * \param[in] dll_name - DLL Name
- * \param[in] load_order - (Optional) DLL load order enum value (Default 'native')
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] dll_name DLL Name
+ * \param[in] load_order (Optional) DLL load order enum value (Default 'native')
  * \return True if specified load order matches the DLL overrides registery value
  */
 bool Helper::GetDLLOverride(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order)
@@ -915,9 +970,10 @@ bool Helper::GetDLLOverride(const string& prefix_path, const string& dll_name, D
 
 /**
  * \brief Retrieve the uninstaller from GUID (if available)
- * \param[in] prefix_path - Bottle prefix
- * \param[in] uninstallerKey - GUID or application name of the uninstaller (can also be found by running: wine
- * uninstaller --list) \return Uninstaller display name or empty string if not found
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] uninstallerKey GUID or application name of the uninstaller (can also be found by running: wine
+ * uninstaller --list)
+ * \return Uninstaller display name or empty string if not found
  */
 string Helper::GetUninstaller(const string& prefix_path, const string& uninstallerKey)
 {
@@ -928,9 +984,9 @@ string Helper::GetUninstaller(const string& prefix_path, const string& uninstall
 
 /**
  * \brief Retrieve a font filename from the system registery
- * \param[in] prefix_path - Bottle prefix
- * \param[in] bit - Bottle bit (32 or 64) enum
- * \param[in] fontName - Font name
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] bit Bottle bit (32 or 64) enum
+ * \param[in] fontName Font name
  * \return Font filename (or empty string if not found)
  */
 string Helper::GetFontFilename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName)
@@ -951,7 +1007,7 @@ string Helper::GetFontFilename(const string& prefix_path, BottleTypes::Bit bit, 
 
 /**
  * \brief Get path to an image resource located in a global data directory (like /usr/share)
- * \param[in] filename - name of image
+ * \param[in] filename Name of image
  * \return Path to the requested image (or empty string if not found)
  */
 string Helper::GetImageLocation(const string& filename)

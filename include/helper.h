@@ -48,14 +48,17 @@ public:
 
   static std::map<string, unsigned long> GetBottlesPaths(const string& dir_path);
   static void RunProgram(string prefix_path, string program, bool give_error, bool enable_tracing);
-  static void RunProgramUnderWine(string prefix_path, string program, bool give_error, bool enable_tracing);
+  static void
+  RunProgramUnderWine(bool wine_64_bit, string prefix_path, string program, bool give_error, bool enable_tracing);
   static void RunProgramWithFinishCallback(
       string prefix_path, string program, Glib::Dispatcher* finishSignal, bool give_error, bool enable_tracing);
   static void WaitUntilWineserverIsTerminated(const string& prefix_path);
-  static string GetWineExecutableLocation();
+  static int DetermineWineExecutable();
+  static string GetWineExecutableLocation(bool bit64);
   static string GetWinetricksLocation();
-  static string GetWineVersion();
-  static void CreateWineBottle(const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
+  static string GetWineVersion(bool wine_64_bit);
+  static void
+  CreateWineBottle(bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
   static void RemoveWineBottle(const string& prefix_path);
   static string GetName(const string& prefix_path);
   static BottleTypes::Windows GetWindowsOSVersion(const string& prefix_path);
@@ -74,7 +77,7 @@ public:
   static void SetVirtualDesktop(const string& prefix_path, string resolution);
   static void DisableVirtualDesktop(const string& prefix_path);
   static void SetAudioDriver(const string& prefix_path, BottleTypes::AudioDriver audio_driver);
-  static string GetWineGUID(const string& prefix_path, const string& application_name);
+  static string GetWineGUID(bool wine_64_bit, const string& prefix_path, const string& application_name);
   static bool GetDLLOverride(const string& prefix_path,
                              const string& dll_name,
                              DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);

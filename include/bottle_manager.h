@@ -90,10 +90,11 @@ private:
   // Synchronizes access to data members
   mutable std::mutex m_Mutex;
 
-  string BOTTLE_LOCATION;
   MainWindow& mainWindow;
+  string bottle_location;
   std::list<BottleItem> bottles;
-  BottleItem* activeBottle;
+  BottleItem* active_bottle;
+  bool is_wine64_bit;
 
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
   Glib::ustring m_error_message;
