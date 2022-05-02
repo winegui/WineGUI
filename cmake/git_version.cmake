@@ -5,15 +5,15 @@ if(GIT_FOUND)
         "${CMAKE_SOURCE_DIR}/.git/index")
 
     execute_process(
-        COMMAND "${GIT_EXECUTABLE}" describe --always HEAD
+        COMMAND "${GIT_EXECUTABLE}" describe --tags --abbrev=0 --always
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         RESULT_VARIABLE res
         OUTPUT_VARIABLE GIT_HEAD_TAG
         ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    # For debug reasons use:
-    #    message("GIT_HEAD_TAG = ${GIT_HEAD_TAG}")
+    # Show git tag found
+    # message(STATUS "GIT_HEAD_TAG = ${GIT_HEAD_TAG}")
 
     if("${GIT_HEAD_TAG}" MATCHES "^v([0-9]+)\\.([0-9]+)\\.([0-9]+).*$")
         string(REGEX REPLACE "^v([0-9]+)\\.([0-9]+)\\.([0-9]+).*$"
@@ -29,5 +29,5 @@ if(GIT_FOUND)
 
     set(GIT_TAG_VERSION "${GIT_TAG_VERSION_MAJOR}.${GIT_TAG_VERSION_MINOR}.${GIT_TAG_VERSION_PATCH}")
 else(GIT_FOUND)
-    message("GIT needs to be installed to generate GIT versioning.")
+    message(STATUS "GIT needs to be installed to generate GIT versioning.")
 endif(GIT_FOUND)
