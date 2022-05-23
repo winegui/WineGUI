@@ -40,7 +40,7 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
       activeBottle(nullptr)
 {
   set_transient_for(parent);
-  set_default_size(850, 540);
+  set_default_size(900, 540);
   set_modal(true);
 
   add(settings_grid);
@@ -75,27 +75,38 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   fourth_toolbar.set_hexpand(true);
   fourth_toolbar.set_vexpand(true);
 
+  Pango::FontDescription fd_label;
+  fd_label.set_size(12 * PANGO_SCALE);
+  fd_label.set_weight(Pango::WEIGHT_BOLD);
+  auto font_label = Pango::Attribute::create_attr_font_desc(fd_label);
+  Pango::AttrList attr_list_label;
+  attr_list_label.insert(font_label);
+
   first_row_label.set_text("Gaming packages");
-  first_row_label.set_xalign(0);
+  first_row_label.set_attributes(attr_list_label);
+  first_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
   hint_label.set_markup("<b>Hint:</b> Hover the mouse over the buttons for more info...");
   hint_label.set_margin_top(8);
   hint_label.set_margin_bottom(4);
   second_row_label.set_text("Additional packages");
-  second_row_label.set_xalign(0);
+  second_row_label.set_attributes(attr_list_label);
+  second_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
   third_row_label.set_text("Supporting Tools");
-  third_row_label.set_xalign(0);
+  third_row_label.set_attributes(attr_list_label);
+  third_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
   fourth_row_label.set_text("Fallback Tools");
-  fourth_row_label.set_xalign(0);
+  fourth_row_label.set_attributes(attr_list_label);
+  fourth_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
 
-  settings_grid.attach(first_row_label, 0, 0, 1, 1);
-  settings_grid.attach(first_toolbar, 0, 1, 1, 1);
-  settings_grid.attach(hint_label, 0, 2, 1, 1);
-  settings_grid.attach(second_row_label, 0, 3, 1, 1);
-  settings_grid.attach(second_toolbar, 0, 4, 1, 1);
-  settings_grid.attach(third_row_label, 0, 5, 1, 1);
-  settings_grid.attach(third_toolbar, 0, 6, 1, 1);
-  settings_grid.attach(fourth_row_label, 0, 7, 1, 1);
-  settings_grid.attach(fourth_toolbar, 0, 8, 1, 1);
+  settings_grid.attach(first_row_label, 0, 0);
+  settings_grid.attach(first_toolbar, 0, 1);
+  settings_grid.attach(hint_label, 0, 2);
+  settings_grid.attach(second_row_label, 0, 3);
+  settings_grid.attach(second_toolbar, 0, 4);
+  settings_grid.attach(third_row_label, 0, 5);
+  settings_grid.attach(third_toolbar, 0, 6);
+  settings_grid.attach(fourth_row_label, 0, 7);
+  settings_grid.attach(fourth_toolbar, 0, 8);
 
   // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
