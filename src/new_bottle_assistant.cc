@@ -139,9 +139,10 @@ void NewBottleAssistant::createFirstPage()
 void NewBottleAssistant::createSecondPage()
 {
   // Additional page
-  additional_label.set_markup("<big><b>Additional Settings</b></big>\n"
-                              "There you could adapt some additional Windows settings.\n\n<b>Note:</b> If do not "
-                              "know what these settings will do, *do not* change the settings (leave as default).");
+  additional_label.set_markup(
+      "<big><b>Additional Settings</b></big>\n"
+      "There you could adapt some additional Windows settings.\n\n<b>Note:</b> If you do not "
+      "know what these settings will do, <b><i>do NOT</i></b> change the settings (keep the default values).");
   additional_label.set_halign(Gtk::Align::ALIGN_START);
   additional_label.set_margin_bottom(25);
   m_vbox2.pack_start(additional_label, false, false);
