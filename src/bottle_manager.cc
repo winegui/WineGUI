@@ -305,6 +305,8 @@ void BottleManager::DeleteBottle()
                                        Helper::GetName(prefix_path) + "' running " + windows +
                                        "?\n\nNote: This action cannot be undone!"))
       {
+        // Signal that bottle is removed
+        bottleRemoved.emit();
         Helper::RemoveWineBottle(prefix_path);
         this->UpdateBottles();
       }

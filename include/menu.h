@@ -29,6 +29,7 @@
 class Menu : public Gtk::MenuBar
 {
 public:
+  // Signals
   sigc::signal<void> preferences;      /*!< preferences button clicked signal */
   sigc::signal<void> quit;             /*!< quite button clicked signal */
   sigc::signal<void> refresh_view;     /*!< refresh button clicked signal */

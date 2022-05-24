@@ -98,14 +98,16 @@ void SignalDispatcher::DispatchSignals()
   menu.show_about.connect(sigc::mem_fun(about, &AboutDialog::run_dialog));
   about.signal_response().connect(sigc::mem_fun(about, &AboutDialog::hide_dialog));
 
-  // Distribute the active bottle signal
+  // Distribute the active bottle signal from Main Window
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
   mainWindow->activeBottle.connect(sigc::mem_fun(editWindow, &EditWindow::SetActiveBottle));
   mainWindow->activeBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::SetActiveBottle));
-  // Distribute the reset bottle signal
+  // Distribute the reset bottle signal from the manager
   manager.resetActiveBottle.connect(sigc::mem_fun(editWindow, &EditWindow::ResetActiveBottle));
   manager.resetActiveBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::ResetActiveBottle));
   manager.resetActiveBottle.connect(sigc::mem_fun(*mainWindow, &MainWindow::ResetDetailedInfo));
+  // Removed bottle signal from the manager
+  manager.bottleRemoved.connect(sigc::mem_fun(editWindow, &EditWindow::BottleRemoved));
   // Package install finished (in settings window), close the busy dialog & refresh the settings window
   manager.finishedPackageInstall.connect(sigc::mem_fun(*mainWindow, &MainWindow::CloseBusyDialog));
   manager.finishedPackageInstall.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::UpdateInstalled));
@@ -120,6 +122,9 @@ void SignalDispatcher::DispatchSignals()
   mainWindow->rebootBottle.connect(sigc::mem_fun(manager, &BottleManager::Reboot));
   mainWindow->updateBottle.connect(sigc::mem_fun(manager, &BottleManager::Update));
   mainWindow->killRunningProcesses.connect(sigc::mem_fun(manager, &BottleManager::KillProcesses));
+
+  // Edit Window
+  editWindow.remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
 
   // Right click menu in listbox
   mainWindow->rightClickMenu.connect(sigc::mem_fun(this, &SignalDispatcher::on_mouse_button_pressed));

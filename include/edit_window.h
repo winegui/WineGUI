@@ -34,12 +34,16 @@ class BottleItem;
 class EditWindow : public Gtk::Window
 {
 public:
+  // Signals
+  sigc::signal<void> remove_machine;   /*!< remove button clicked signal */
+
   explicit EditWindow(Gtk::Window& parent);
   virtual ~EditWindow();
 
   void Show();
   void SetActiveBottle(BottleItem* bottle);
   void ResetActiveBottle();
+  void BottleRemoved();
 
 protected:
   // Child widgets
