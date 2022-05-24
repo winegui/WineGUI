@@ -20,6 +20,7 @@
  */
 #pragma once
 
+#include "bottle_types.h"
 #include <gtkmm.h>
 
 using std::string;
@@ -35,14 +36,15 @@ class EditWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void,
+  /*sigc::signal<void,
                Glib::ustring&,
                Glib::ustring&,
                bool&,
                BottleTypes::Windows,
                BottleTypes::Bit,
                BottleTypes::AudioDriver>
-      update_machine;
+      update_machine;*/
+  sigc::signal<void> update_machine; /*!< save button clicked signal */
   sigc::signal<void> remove_machine; /*!< remove button clicked signal */
 
   explicit EditWindow(Gtk::Window& parent);
