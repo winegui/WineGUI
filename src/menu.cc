@@ -47,12 +47,12 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
   newitem_menuitem->signal_activate().connect(new_machine);
   auto run_menuitem = CreateImageMenuItem("Run...", "media-playback-start");
   run_menuitem->signal_activate().connect(run);
-  auto open_drive_c_menuitem = CreateImageMenuItem("Open C: Drive", "drive-harddisk");
-  open_drive_c_menuitem->signal_activate().connect(open_drive_c);
   auto edit_menuitem = CreateImageMenuItem("Edit", "document-edit");
   edit_menuitem->signal_activate().connect(edit_machine);
   auto settings_menuitem = CreateImageMenuItem("Settings", "preferences-other");
   settings_menuitem->signal_activate().connect(settings_machine);
+  auto open_drive_c_menuitem = CreateImageMenuItem("Open C: Drive", "drive-harddisk");
+  open_drive_c_menuitem->signal_activate().connect(open_drive_c);
   auto remove_menuitem = CreateImageMenuItem("Remove", "edit-delete");
   remove_menuitem->signal_activate().connect(remove_machine);
 
@@ -75,9 +75,9 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
   machine_submenu.append(*newitem_menuitem);
   machine_submenu.append(separator2);
   machine_submenu.append(*run_menuitem);
-  machine_submenu.append(*open_drive_c_menuitem);
   machine_submenu.append(*edit_menuitem);
   machine_submenu.append(*settings_menuitem);
+  machine_submenu.append(*open_drive_c_menuitem);
   machine_submenu.append(*remove_menuitem);
 
   // Help menu
