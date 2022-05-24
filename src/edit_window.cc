@@ -42,7 +42,7 @@ EditWindow::EditWindow(Gtk::Window& parent)
       activeBottle(nullptr)
 {
   set_transient_for(parent);
-  set_default_size(550, 250);
+  set_default_size(550, 300);
   set_modal(true);
 
   edit_grid.set_margin_top(5);

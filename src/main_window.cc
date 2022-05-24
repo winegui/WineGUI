@@ -162,11 +162,12 @@ void MainWindow::ResetDetailedInfo()
  * \brief Show an error message with the provided text.
  * User can only click 'OK'
  * \param[in] message - Show this error message
+ * \param[in] markup Support markup in message text (default: false)
  */
-void MainWindow::ShowErrorMessage(const Glib::ustring& message)
+void MainWindow::ShowErrorMessage(const Glib::ustring& message, bool markup)
 {
   // false = no markup
-  Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
   dialog.set_title("An error has occurred!");
   dialog.set_modal(true);
   dialog.run();
@@ -175,12 +176,13 @@ void MainWindow::ShowErrorMessage(const Glib::ustring& message)
 /**
  * \brief Confirm dialog (Yes/No message)
  * \param[in] message - Show this message during confirmation
+ * \param[in] markup Support markup in message text (default: false)
  * \return True if user pressed confirm (yes), otherwise False
  */
-bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
+bool MainWindow::ShowConfirmDialog(const Glib::ustring& message, bool markup)
 {
   // false = no markup
-  Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
   dialog.set_title("Are you sure?");
   dialog.set_modal(true);
   int result = dialog.run();
