@@ -290,6 +290,14 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
 }
 
 /**
+ * \brief Update existing bottle
+ */
+void UpdateBottle()
+{
+  // TODO: Implement update bottle
+}
+
+/**
  * \brief Remove the current active Wine bottle
  */
 void BottleManager::DeleteBottle()
