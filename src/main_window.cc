@@ -39,7 +39,7 @@ MainWindow::MainWindow(Menu& menu)
 {
   // Set some Window properties
   set_title("WineGUI - WINE Manager");
-  set_default_size(1000, 600);
+  set_default_size(1060, 600);
   set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
   try
@@ -320,10 +320,10 @@ void MainWindow::on_hide_window()
 void MainWindow::on_give_feedback()
 {
   GError* error = NULL;
-  if (!g_app_info_launch_default_for_uri("mailto://melroy@melroy.org", NULL, &error))
+  if (!g_app_info_launch_default_for_uri("https://gitlab.melroy.org/melroy/winegui/-/issues", NULL, &error))
   {
-    g_warning("Failed to open email link: %s", error->message);
-    this->ShowErrorMessage("Could not open e-mail program.");
+    g_warning("Failed to open URL: %s", error->message);
+    this->ShowErrorMessage("Could not open browser.");
   }
 }
 
