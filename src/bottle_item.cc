@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    bottle_item.cc
  * \brief   Wine Bottle Item
@@ -69,7 +69,7 @@ BottleItem::BottleItem(Glib::ustring name,
       _wine_c_drive(wine_c_drive),
       _wine_last_changed(wine_last_changed),
       _audio_driver(BottleTypes::AudioDriver::pulseaudio),
-      _virtual_desktop("disabled"){
+      _virtual_desktop(""){
           // Gui will be created during the copy contructor called by Gtk
       };
 
