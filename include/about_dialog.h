@@ -34,8 +34,8 @@ public:
   explicit AboutDialog(Gtk::Window& parent);
   virtual ~AboutDialog();
 
-  void run_dialog();
-  void hide_dialog(int response);
+  void RunDialog();
+  void HideDialog(int response);
 
   static std::string GetVersion();
 

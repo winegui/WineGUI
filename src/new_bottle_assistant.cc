@@ -195,17 +195,17 @@ void NewBottleAssistant::createThirdPage()
  * And reset the values to default values again.
  * Idea: use one struct as in/out parameter
  * \param[inout] name                        Bottle Name
- * \param[inout] virtual_desktop_resolution  Virtual desktop resolution (empty if disabled)
- * \param[inout] disable_gecko_mono          Enable/Disable Gecko/Mono during install
  * \param[inout] windows_version             Windows OS version
  * \param[inout] bit                         Windows Bit (32/64-bit)
+ * \param[inout] virtual_desktop_resolution  Virtual desktop resolution (empty if disabled)
+ * \param[inout] disable_gecko_mono          Enable/Disable Gecko/Mono during install
  * \param[inout] audio                       Audio Driver type
  */
 void NewBottleAssistant::GetResult(Glib::ustring& name,
-                                   Glib::ustring& virtual_desktop_resolution,
-                                   bool& disable_gecko_mono,
                                    BottleTypes::Windows& windows_version,
                                    BottleTypes::Bit& bit,
+                                   Glib::ustring& virtual_desktop_resolution,
+                                   bool& disable_gecko_mono,
                                    BottleTypes::AudioDriver& audio)
 {
   std::string::size_type sz;
@@ -214,19 +214,6 @@ void NewBottleAssistant::GetResult(Glib::ustring& name,
   audio = BottleTypes::AudioDriver::pulseaudio;
 
   name = name_entry.get_text();
-
-  bool isDesktopEnabled = virtual_desktop_check.get_active();
-  if (isDesktopEnabled)
-  {
-    virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
-  }
-  else
-  {
-    // Just empty
-    virtual_desktop_resolution = "";
-  }
-
-  disable_gecko_mono = disable_gecko_mono_check.get_active();
 
   try
   {
@@ -245,6 +232,19 @@ void NewBottleAssistant::GetResult(Glib::ustring& name,
   {
   }
   // Ignore the catches
+
+  bool isDesktopEnabled = virtual_desktop_check.get_active();
+  if (isDesktopEnabled)
+  {
+    virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
+  }
+  else
+  {
+    // Just empty
+    virtual_desktop_resolution = "";
+  }
+
+  disable_gecko_mono = disable_gecko_mono_check.get_active();
 
   try
   {

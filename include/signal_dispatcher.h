@@ -56,11 +56,13 @@ public:
   void SetMainWindow(MainWindow* mainWindow);
   void DispatchSignals();
 
-  // SignalBottleCreated() is called from the thread bottle manager,
+  // SignalBottleCreated() and SignalBottleUpdated() are called from the thread bottle manager,
   // it's executed in the that thread. And can trigger the dispatcher (=thread safe), which gets executed in the GUI
   // thread.
   void SignalBottleCreated();
-  void SignalErrorMessage();
+  void SignalBottleUpdated();
+  void SignalErrorMessageCreated();
+  void SignalErrorMessageUpdated();
 
 protected:
 private:
@@ -68,16 +70,21 @@ private:
 
   // slots
   virtual bool on_mouse_button_pressed(GdkEventButton* event);
-  virtual void on_update_bottles();
   virtual void on_new_bottle(Glib::ustring& name,
-                             Glib::ustring& virtual_desktop_resolution,
-                             bool& disable_geck_mono,
                              BottleTypes::Windows windows_version,
                              BottleTypes::Bit bit,
+                             Glib::ustring& virtual_desktop_resolution,
+                             bool& disable_geck_mono,
                              BottleTypes::AudioDriver audio);
-  virtual void on_update_bottle();
+  virtual void on_update_bottle(Glib::ustring& name,
+                                BottleTypes::Windows windows_version,
+                                BottleTypes::Bit bit,
+                                Glib::ustring& virtual_desktop_resolution,
+                                BottleTypes::AudioDriver audio);
   virtual void on_new_bottle_created();
-  virtual void on_error_message();
+  virtual void on_bottle_updated();
+  virtual void on_error_message_created();
+  virtual void on_error_message_updated();
 
   MainWindow* mainWindow;
   BottleManager& manager;
@@ -88,8 +95,10 @@ private:
   SettingsWindow& settingsWindow;
 
   // Dispatcher for handling signals from the thread towards a GUI thread
-  Glib::Dispatcher m_FinishDispatcher;
-  Glib::Dispatcher m_ErrorMessageDispatcher;
+  Glib::Dispatcher m_bottleCreatedDispatcher;
+  Glib::Dispatcher m_bottleUpdatedDispatcher;
+  Glib::Dispatcher m_errorMessageCreatedDispatcher;
+  Glib::Dispatcher m_errorMessageUpdatedDispatcher;
   // Thread for Bottle Manager (so it doesn't block the GUI thread)
   std::thread* m_threadBottleManager;
 };
