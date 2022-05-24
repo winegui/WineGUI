@@ -20,7 +20,6 @@
  */
 #include "edit_window.h"
 #include "bottle_item.h"
-#include <iostream>
 
 /**
  * \brief Constructor
@@ -146,6 +145,10 @@ void EditWindow::Show()
     {
       virtual_desktop_resolution_entry.set_text(activeBottle->virtual_desktop());
       virtual_desktop_check.set_active(true);
+    }
+    else
+    {
+      virtual_desktop_check.set_active(false);
     }
     show_all_children();
   }

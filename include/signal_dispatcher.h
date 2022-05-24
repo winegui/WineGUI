@@ -61,8 +61,8 @@ public:
   // thread.
   void SignalBottleCreated();
   void SignalBottleUpdated();
-  void SignalErrorMessageCreated();
-  void SignalErrorMessageUpdated();
+  void SignalErrorMessageDuringCreate();
+  void SignalErrorMessageDuringUpdate();
 
 protected:
 private:
