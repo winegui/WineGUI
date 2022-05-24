@@ -134,8 +134,9 @@ void EditWindow::Show()
     }
     windows_version_combobox.set_active_text(BottleTypes::toString(activeBottle->windows()) + " (" +
                                              BottleTypes::toString(activeBottle->bit()) + ")");
-    audiodriver_combobox.set_active_id(std::to_string((int) activeBottle->audio_driver()));
-    if (!activeBottle->virtual_desktop().empty()) {
+    audiodriver_combobox.set_active_id(std::to_string((int)activeBottle->audio_driver()));
+    if (!activeBottle->virtual_desktop().empty())
+    {
       virtual_desktop_resolution_entry.set_text(activeBottle->virtual_desktop());
       virtual_desktop_check.set_active(true);
     }
@@ -180,7 +181,7 @@ void EditWindow::ShowVirtualDesktopResolution()
  */
 void EditWindow::HideVirtualDesktopResolution()
 {
-  edit_grid.remove_row(4);  
+  edit_grid.remove_row(4);
 }
 
 /**
@@ -189,9 +190,12 @@ void EditWindow::HideVirtualDesktopResolution()
  */
 void EditWindow::on_virtual_desktop_toggle()
 {
-  if (virtual_desktop_check.get_active()) {
+  if (virtual_desktop_check.get_active())
+  {
     ShowVirtualDesktopResolution();
-  } else {
+  }
+  else
+  {
     HideVirtualDesktopResolution();
   }
   show_all_children();
