@@ -302,8 +302,8 @@ void BottleManager::DeleteBottle()
       string windows = BottleTypes::toString(active_bottle->windows());
       // Are you sure?'
       Glib::ustring confirmMessage = "Are you sure you want to <b>PERMANENTLY</b> remove machine named '" +
-                                       Glib::Markup::escape_text(Helper::GetName(prefix_path)) + "' running " + windows +
-                                       "?\n\n<i>Note:</i> This action cannot be undone!";
+                                     Glib::Markup::escape_text(Helper::GetName(prefix_path)) + "' running " + windows +
+                                     "?\n\n<i>Note:</i> This action cannot be undone!";
       if (mainWindow.ShowConfirmDialog(confirmMessage, true))
       {
         // Signal that bottle is removed
@@ -637,7 +637,8 @@ void BottleManager::InstallDotNet(Gtk::Window& parent, const Glib::ustring& vers
   {
     if (mainWindow.ShowConfirmDialog(
             "<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
-            "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?", true))
+            "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
+            true))
     {
       // Before we execute the install, show busy dialog
       mainWindow.ShowBusyDialog(parent, "Installing Native .NET redistributable packages (v" + version +
