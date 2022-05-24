@@ -124,6 +124,7 @@ void SignalDispatcher::DispatchSignals()
   mainWindow->killRunningProcesses.connect(sigc::mem_fun(manager, &BottleManager::KillProcesses));
 
   // Edit Window
+  editWindow.update_machine.connect(sigc::mem_fun(this, &SignalDispatcher::on_update_bottle));
   editWindow.remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
 
   // Right click menu in listbox
@@ -249,6 +250,15 @@ void SignalDispatcher::on_new_bottle(Glib::ustring& name,
           manager.NewBottle(this, name, virtual_desktop_resolution, disable_geck_mono, windows_version, bit, audio);
         });
   }
+}
+
+/**
+ * \brief Update existing bottle signal, starting UpdateBottle() within thread
+ */
+void SignalDispatcher::on_update_bottle()
+{
+  // TODO: See above, but than with updatebottle
+  // manager.UpdateBottle();
 }
 
 /******************************************

@@ -60,6 +60,7 @@ public:
                  BottleTypes::Windows windows_version,
                  BottleTypes::Bit bit,
                  BottleTypes::AudioDriver audio);
+  void UpdateBottle();
   void DeleteBottle();
   void SetActiveBottle(BottleItem* bottle);
   const Glib::ustring& GetErrorMessage();

@@ -75,6 +75,7 @@ private:
                              BottleTypes::Windows windows_version,
                              BottleTypes::Bit bit,
                              BottleTypes::AudioDriver audio);
+  virtual void on_update_bottle();
   virtual void on_new_bottle_created();
   virtual void on_error_message();
 
