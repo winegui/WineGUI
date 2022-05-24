@@ -40,27 +40,27 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
 
   // View submenu
   auto refresh_menuitem = CreateImageMenuItem("Refresh List", "view-refresh");
-  refresh_menuitem->signal_activate().connect(refresh_view);
+  refresh_menuitem->signal_activate().connect(refreshView);
 
   // Machine submenu
   auto newitem_menuitem = CreateImageMenuItem("New", "list-add");
-  newitem_menuitem->signal_activate().connect(new_machine);
+  newitem_menuitem->signal_activate().connect(newBottle);
   auto run_menuitem = CreateImageMenuItem("Run...", "media-playback-start");
   run_menuitem->signal_activate().connect(run);
   auto edit_menuitem = CreateImageMenuItem("Edit", "document-edit");
-  edit_menuitem->signal_activate().connect(edit_machine);
+  edit_menuitem->signal_activate().connect(editBottle);
   auto settings_menuitem = CreateImageMenuItem("Settings", "preferences-other");
-  settings_menuitem->signal_activate().connect(settings_machine);
-  auto open_drive_c_menuitem = CreateImageMenuItem("Open C: Drive", "drive-harddisk");
-  open_drive_c_menuitem->signal_activate().connect(open_drive_c);
+  settings_menuitem->signal_activate().connect(settingsBottle);
   auto remove_menuitem = CreateImageMenuItem("Remove", "edit-delete");
-  remove_menuitem->signal_activate().connect(remove_machine);
+  remove_menuitem->signal_activate().connect(removeMachine);
+  auto open_drive_c_menuitem = CreateImageMenuItem("Open C: Drive", "drive-harddisk");
+  open_drive_c_menuitem->signal_activate().connect(openDriveC);
 
   // Help submenu
   auto feedback_menuitem = CreateImageMenuItem("Give feedback", "help-faq");
-  feedback_menuitem->signal_activate().connect(give_feedback);
+  feedback_menuitem->signal_activate().connect(giveFeedback);
   auto about_menuitem = CreateImageMenuItem("About WineGUI...", "help-about");
-  about_menuitem->signal_activate().connect(show_about);
+  about_menuitem->signal_activate().connect(showAbout);
 
   // Add items to sub-menu
   // File menu
@@ -77,8 +77,9 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
   machine_submenu.append(*run_menuitem);
   machine_submenu.append(*edit_menuitem);
   machine_submenu.append(*settings_menuitem);
-  machine_submenu.append(*open_drive_c_menuitem);
   machine_submenu.append(*remove_menuitem);
+  machine_submenu.append(separator3);
+  machine_submenu.append(*open_drive_c_menuitem);
 
   // Help menu
   help_submenu.append(*feedback_menuitem);

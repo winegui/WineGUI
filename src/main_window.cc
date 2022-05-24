@@ -78,7 +78,7 @@ MainWindow::MainWindow(Menu& menu)
   new_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_button_clicked));
   // Apply button signal
   newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_apply));
-  // Finished signal
+  // Connect the new bottle assistant signal to the mainWindow signal
   newBottleAssistant.newBottleFinished.connect(finishedNewBottle);
 
   edit_button.signal_clicked().connect(showEditWindow);
@@ -366,17 +366,17 @@ void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 void MainWindow::on_new_bottle_apply()
 {
   Glib::ustring name;
-  Glib::ustring virtual_desktop_resolution;
-  bool disable_gecko_mono;
   BottleTypes::Windows windows_version;
   BottleTypes::Bit bit;
+  Glib::ustring virtual_desktop_resolution;
+  bool disable_gecko_mono;
   BottleTypes::AudioDriver audio;
 
   // Retrieve assistant results
-  newBottleAssistant.GetResult(name, virtual_desktop_resolution, disable_gecko_mono, windows_version, bit, audio);
+  newBottleAssistant.GetResult(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
 
   // Emit new bottle signal (see dispatcher)
-  newBottle.emit(name, virtual_desktop_resolution, disable_gecko_mono, windows_version, bit, audio);
+  newBottle.emit(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
 }
 
 /**

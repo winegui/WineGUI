@@ -37,10 +37,10 @@ public:
   virtual ~NewBottleAssistant();
 
   void GetResult(Glib::ustring& name,
-                 Glib::ustring& virtual_desktop_resolution,
-                 bool& disable_gecko_mono,
                  BottleTypes::Windows& windows_version,
                  BottleTypes::Bit& bit,
+                 Glib::ustring& virtual_desktop_resolution,
+                 bool& disable_gecko_mono,
                  BottleTypes::AudioDriver& audio);
 
   void BottleCreated();

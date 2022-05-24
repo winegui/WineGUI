@@ -172,18 +172,18 @@ void BottleManager::UpdateBottles()
  * \brief Create a new Wine Bottle (runs in thread!)
  * \param[in] caller                      - Signal Dispatcher pointer, in order to signal back events
  * \param[in] name                        - Bottle Name
- * \param[in] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)
- * \param[in] disable_gecko_mono          - Disable Gecko/Mono install
  * \param[in] windows_version             - Windows OS version
  * \param[in] bit                         - Windows Bit (32/64-bit)
+ * \param[in] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)
+ * \param[in] disable_gecko_mono          - Disable Gecko/Mono install
  * \param[in] audio                       - Audio Driver type
  */
 void BottleManager::NewBottle(SignalDispatcher* caller,
                               Glib::ustring name,
-                              Glib::ustring virtual_desktop_resolution,
-                              bool disable_gecko_mono,
                               BottleTypes::Windows windows_version,
                               BottleTypes::Bit bit,
+                              Glib::ustring virtual_desktop_resolution,
+                              bool disable_gecko_mono,
                               BottleTypes::AudioDriver audio)
 {
   // First check if wine is installed
@@ -194,7 +194,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
       std::lock_guard<std::mutex> lock(m_Mutex);
       m_error_message = "Could not find wine binary. Please first install wine on your machine.";
     }
-    caller->SignalErrorMessage();
+    caller->SignalErrorMessageCreated();
     return; // Stop thread
   }
 
@@ -215,7 +215,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
       m_error_message =
           ("Something went wrong during creation of a new Windows machine!\n" + Glib::ustring(error.what()));
     }
-    caller->SignalErrorMessage();
+    caller->SignalErrorMessageCreated();
     return; // Stop thread
   }
 
@@ -236,7 +236,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
           m_error_message =
               ("Something went wrong during setting another Windows version.\n" + Glib::ustring(error.what()));
         }
-        caller->SignalErrorMessage();
+        caller->SignalErrorMessageCreated();
         return; // Stop thread
       }
     }
@@ -255,7 +255,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
           m_error_message =
               ("Something went wrong during enabling virtual desktop mode.\n" + Glib::ustring(error.what()));
         }
-        caller->SignalErrorMessage();
+        caller->SignalErrorMessageCreated();
         return; // Stop thread
       }
     }
@@ -274,7 +274,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
           m_error_message =
               ("Something went wrong during setting another audio driver.\n" + Glib::ustring(error.what()));
         }
-        caller->SignalErrorMessage();
+        caller->SignalErrorMessageCreated();
         return; // Stop thread
       }
     }
@@ -290,11 +290,25 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
 }
 
 /**
- * \brief Update existing bottle
+ * \brief Update existing Wine bottle (runs in thread)
+ * \param[in] caller                      - Signal Dispatcher pointer, in order to signal back events
+ * \param[in] name                        - Bottle Name
+ * \param[in] windows_version             - Windows OS version
+ * \param[in] bit                         - Windows Bit (32/64-bit)
+ * \param[in] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)ze
+ * \param[in] audio                       - Audio Driver type
  */
-void UpdateBottle()
+void BottleManager::UpdateBottle(SignalDispatcher* caller,
+                                 Glib::ustring name,
+                                 BottleTypes::Windows windows_version,
+                                 BottleTypes::Bit bit,
+                                 Glib::ustring virtual_desktop_resolution,
+                                 BottleTypes::AudioDriver audio)
 {
   // TODO: Implement update bottle
+
+  // Trigger finish signal!
+  caller->SignalBottleUpdated();
 }
 
 /**

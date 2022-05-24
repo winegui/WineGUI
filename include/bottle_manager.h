@@ -55,12 +55,17 @@ public:
   void UpdateBottles();
   void NewBottle(SignalDispatcher* caller,
                  Glib::ustring name,
-                 Glib::ustring virtual_desktop_resolution,
-                 bool disable_gecko_mono,
                  BottleTypes::Windows windows_version,
                  BottleTypes::Bit bit,
+                 Glib::ustring virtual_desktop_resolution,
+                 bool disable_gecko_mono,
                  BottleTypes::AudioDriver audio);
-  void UpdateBottle();
+  void UpdateBottle(SignalDispatcher* caller,
+                    Glib::ustring name,
+                    BottleTypes::Windows windows_version,
+                    BottleTypes::Bit bit,
+                    Glib::ustring virtual_desktop_resolution,
+                    BottleTypes::AudioDriver audio);
   void DeleteBottle();
   void SetActiveBottle(BottleItem* bottle);
   const Glib::ustring& GetErrorMessage();

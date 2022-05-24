@@ -46,10 +46,10 @@ public:
   sigc::signal<void> showSettingsWindow;        /*!< show Settings window signal */
   sigc::signal<void,
                Glib::ustring&,
-               Glib::ustring&,
-               bool&,
                BottleTypes::Windows,
                BottleTypes::Bit,
+               Glib::ustring&,
+               bool&,
                BottleTypes::AudioDriver>
       newBottle;                               /*!< Create new Wine Bottle Signal */
   sigc::signal<void, string, bool> runProgram; /*!< Run an EXE or MSI application in Wine with provided filename */

@@ -96,7 +96,7 @@ EditWindow::EditWindow(Gtk::Window& parent)
   add(vbox);
 
   // Signals
-  delete_button.signal_clicked().connect(remove_machine);
+  delete_button.signal_clicked().connect(removeBottle);
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &EditWindow::on_virtual_desktop_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &EditWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &EditWindow::on_save_button_clicked));
@@ -275,4 +275,6 @@ void EditWindow::on_save_button_clicked()
   {
   }
   // Ignore the catches
+
+  updateBottle.emit(name, windows_version, bit, virtual_desktop_resolution, audio);
 }
