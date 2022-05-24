@@ -45,6 +45,7 @@ class BottleManager
 public:
   // Signals
   sigc::signal<void> resetActiveBottle;    /*!< Send signal: Clear the current active bottle */
+  sigc::signal<void> bottleRemoved;         /*!< Send signal: When the bottle is confirmed to be removed */
   Glib::Dispatcher finishedPackageInstall; /*!< Signal that Wine package install is completed */
 
   explicit BottleManager(MainWindow& mainWindow);

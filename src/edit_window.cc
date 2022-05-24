@@ -20,6 +20,7 @@
  */
 #include "edit_window.h"
 #include "bottle_item.h"
+#include <iostream>
 
 /**
  * \brief Constructor
@@ -41,7 +42,7 @@ EditWindow::EditWindow(Gtk::Window& parent)
       activeBottle(nullptr)
 {
   set_transient_for(parent);
-  set_default_size(550, 350);
+  set_default_size(550, 250);
   set_modal(true);
 
   edit_grid.set_margin_top(5);
@@ -62,7 +63,6 @@ EditWindow::EditWindow(Gtk::Window& parent)
   header_edit_label.set_margin_bottom(5);
 
   name_label.set_halign(Gtk::Align::ALIGN_END);
-  name_entry.set_size_request(500, -1);
   windows_version_label.set_halign(Gtk::Align::ALIGN_END);
 
   // Fill-in Audio drivers in combobox
@@ -73,6 +73,10 @@ EditWindow::EditWindow(Gtk::Window& parent)
   virtual_desktop_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("960x540");
 
+  name_entry.set_hexpand(true);
+  windows_version_combobox.set_hexpand(true);
+  audiodriver_combobox.set_hexpand(true);
+
   edit_grid.attach(name_label, 0, 0);
   edit_grid.attach(name_entry, 1, 0);
   edit_grid.attach(windows_version_label, 0, 1);
@@ -81,15 +85,18 @@ EditWindow::EditWindow(Gtk::Window& parent)
   edit_grid.attach(audiodriver_combobox, 1, 2);
   edit_grid.attach(virtual_desktop_check, 0, 3, 2);
 
+  hbox_buttons.pack_start(delete_button, false, false, 4);
   hbox_buttons.pack_end(save_button, false, false, 4);
   hbox_buttons.pack_end(cancel_button, false, false, 4);
 
+  // vbox.pack_start(vbox_delete, true, true, 4);
   vbox.pack_start(header_edit_label, false, false, 4);
   vbox.pack_start(edit_grid, true, true, 4);
   vbox.pack_start(hbox_buttons, false, false, 4);
   add(vbox);
 
   // Signals
+  delete_button.signal_clicked().connect(remove_machine);
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &EditWindow::on_virtual_desktop_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &EditWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &EditWindow::on_save_button_clicked));
@@ -167,6 +174,15 @@ void EditWindow::ResetActiveBottle()
   this->activeBottle = nullptr;
 }
 
+/** 
+ * \brief Triggered when bottle is actually confirmed to be removed
+ */
+void EditWindow::BottleRemoved()
+{
+  // Close the edit window
+  hide();
+}
+
 /**
  * \brief Show (add) the additional virtual desktop label + input field
  */
@@ -214,4 +230,51 @@ void EditWindow::on_cancel_button_clicked()
  */
 void EditWindow::on_save_button_clicked()
 {
+  std::string::size_type sz;
+  BottleTypes::Windows windows_version = BottleTypes::Windows::WindowsXP; // Fallback
+  BottleTypes::Bit bit = BottleTypes::Bit::win32; // Fallback
+  BottleTypes::AudioDriver audio = BottleTypes::AudioDriver::pulseaudio; // Fallback
+  Glib::ustring virtual_desktop_resolution = ""; // Default empty string
+  Glib::ustring name = name_entry.get_text();
+  bool isDesktopEnabled = virtual_desktop_check.get_active();
+  if (isDesktopEnabled)
+  {
+    virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
+  }
+
+  try
+  {
+    size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
+    const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
+    windows_version = currentWindowsBit.first;
+    bit = currentWindowsBit.second;
+  }
+  catch (const std::runtime_error& error)
+  {
+  }
+  catch (std::invalid_argument& e)
+  {
+  }
+  catch (std::out_of_range& e)
+  {
+  }
+  // Ignore the catches
+
+  try
+  {
+    size_t audio_index = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
+    audio = BottleTypes::AudioDriver(audio_index);
+  }
+  catch (const std::runtime_error& error)
+  {
+  }
+  catch (std::invalid_argument& e)
+  {
+  }
+  catch (std::out_of_range& e)
+  {
+  }
+  // Ignore the catches
+
+
 }

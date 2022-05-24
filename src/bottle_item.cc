@@ -120,7 +120,7 @@ void BottleItem::CreateUI()
   image.set_margin_start(8);
 
   name_label.set_xalign(0.0);
-  name_label.set_markup("<span size=\"medium\"><b>" + name + "</b></span>");
+  name_label.set_markup("<span size=\"medium\"><b>" + Glib::Markup::escape_text(name) + "</b></span>");
 
   Glib::ustring status_text = "Ready";
   if (status)
