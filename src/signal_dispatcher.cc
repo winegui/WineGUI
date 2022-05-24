@@ -190,7 +190,7 @@ void SignalDispatcher::SignalBottleUpdated()
  * \brief Signal error message during bottle creation,
  * called from the thread.
  */
-void SignalDispatcher::SignalErrorMessageCreated()
+void SignalDispatcher::SignalErrorMessageDuringCreate()
 {
   // Show error message
   m_errorMessageCreatedDispatcher.emit();
@@ -200,7 +200,7 @@ void SignalDispatcher::SignalErrorMessageCreated()
  * \brief Signal error message during bottle update,
  *  called from the thread.
  */
-void SignalDispatcher::SignalErrorMessageUpdated()
+void SignalDispatcher::SignalErrorMessageDuringUpdate()
 {
   // Show error message
   m_errorMessageUpdatedDispatcher.emit();

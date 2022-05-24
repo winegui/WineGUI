@@ -321,10 +321,8 @@ void MainWindow::on_hide_window()
  */
 void MainWindow::on_give_feedback()
 {
-  GError* error = NULL;
-  if (!g_app_info_launch_default_for_uri("https://gitlab.melroy.org/melroy/winegui/-/issues", NULL, &error))
+  if (!Gio::AppInfo::launch_default_for_uri("https://gitlab.melroy.org/melroy/winegui/-/issues"))
   {
-    g_warning("Failed to open URL: %s", error->message);
     this->ShowErrorMessage("Could not open browser.");
   }
 }

@@ -194,7 +194,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
       std::lock_guard<std::mutex> lock(m_Mutex);
       m_error_message = "Could not find wine binary. Please first install wine on your machine.";
     }
-    caller->SignalErrorMessageCreated();
+    caller->SignalErrorMessageDuringCreate();
     return; // Stop thread
   }
 
@@ -215,7 +215,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
       m_error_message =
           ("Something went wrong during creation of a new Windows machine!\n" + Glib::ustring(error.what()));
     }
-    caller->SignalErrorMessageCreated();
+    caller->SignalErrorMessageDuringCreate();
     return; // Stop thread
   }
 
@@ -236,7 +236,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
           m_error_message =
               ("Something went wrong during setting another Windows version.\n" + Glib::ustring(error.what()));
         }
-        caller->SignalErrorMessageCreated();
+        caller->SignalErrorMessageDuringCreate();
         return; // Stop thread
       }
     }
@@ -255,7 +255,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
           m_error_message =
               ("Something went wrong during enabling virtual desktop mode.\n" + Glib::ustring(error.what()));
         }
-        caller->SignalErrorMessageCreated();
+        caller->SignalErrorMessageDuringCreate();
         return; // Stop thread
       }
     }
@@ -274,18 +274,16 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
           m_error_message =
               ("Something went wrong during setting another audio driver.\n" + Glib::ustring(error.what()));
         }
-        caller->SignalErrorMessageCreated();
+        caller->SignalErrorMessageDuringCreate();
         return; // Stop thread
       }
     }
-
-    // TODO: Finally add name to WineGUI config file
   }
 
   // Wait until wineserver terminates
   Helper::WaitUntilWineserverIsTerminated(wine_prefix);
 
-  // Trigger finish signal!
+  // Trigger done signal
   caller->SignalBottleCreated();
 }
 
@@ -305,9 +303,39 @@ void BottleManager::UpdateBottle(SignalDispatcher* caller,
                                  Glib::ustring virtual_desktop_resolution,
                                  BottleTypes::AudioDriver audio)
 {
-  // TODO: Implement update bottle
-
-  // Trigger finish signal!
+  if (active_bottle != nullptr)
+  {
+    // TODO: Implement update bottle
+    if (active_bottle->name() != name)
+    {
+      std::cout << "NAME CHANGED" << std::endl;
+    }
+    if (active_bottle->windows() != windows_version)
+    {
+      std::cout << "Windows version CHANGED" << std::endl;
+    }
+    if (active_bottle->bit() != bit)
+    {
+      std::cout << "Bit CHANGED" << std::endl;
+    }
+    if (active_bottle->virtual_desktop() != virtual_desktop_resolution)
+    {
+      std::cout << "VD res CHANGED" << std::endl;
+    }
+    if (active_bottle->audio_driver() != audio)
+    {
+      std::cout << "DRIVER CHANGED" << std::endl;
+    }
+  }
+  else
+  {
+    {
+      std::lock_guard<std::mutex> lock(m_Mutex);
+      m_error_message = "No current Windows Machine was set?";
+    }
+    caller->SignalErrorMessageDuringUpdate();
+  }
+  // Trigger done signal
   caller->SignalBottleUpdated();
 }
 
@@ -396,10 +424,8 @@ void BottleManager::OpenDriveC()
 {
   if (isBottleNotNull())
   {
-    GError* error = NULL;
-    if (!g_app_info_launch_default_for_uri(("file://" + active_bottle->wine_c_drive()).c_str(), NULL, &error))
+    if (!Gio::AppInfo::launch_default_for_uri(Glib::filename_to_uri(active_bottle->wine_c_drive())))
     {
-      g_warning("Failed to open uri: %s", error->message);
       mainWindow.ShowErrorMessage("Could not open the C:/ drive.");
     }
   }

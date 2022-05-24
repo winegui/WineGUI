@@ -206,7 +206,7 @@ void Helper::WaitUntilWineserverIsTerminated(const string& prefix_path)
   string exitCode = Exec(("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w; echo $?").c_str());
   if (exitCode == "124")
   {
-    g_warning("Time-out of wineserver wait command triggered (wineserver is still running..)");
+    std::cout << "Time-out of wineserver wait command triggered (wineserver is still running..)" << std::endl;
   }
 }
 
@@ -281,7 +281,7 @@ string Helper::GetWinetricksLocation()
   }
   else
   {
-    g_warning("Could not find winetricks executable!");
+    std::cout << "Could not find winetricks executable!" << std::endl;
   }
   return path;
 }
