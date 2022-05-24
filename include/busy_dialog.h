@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    busy_dialog.h
  * \brief   GTK+ Busy Dialog

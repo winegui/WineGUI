@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    signal_dispatcher.h
  * \brief   Handles different (Gtkmm) signals and dispatch or connect them to other methods within the App

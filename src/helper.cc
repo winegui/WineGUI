@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    helper.cc
  * \brief   Provide some helper methods for Bottle Manager and CLI interaction
@@ -608,7 +608,7 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string& prefix_path)
 /**
  * \brief Get emulation resolution
  * \param[in] prefix_path Bottle prefix
- * \return Return the virtual desktop resolution or 'disabled' when disabled fully.
+ * \return Return the virtual desktop resolution or empty string when disabled fully.
  */
 string Helper::GetVirtualDesktop(const string& prefix_path)
 {
@@ -631,7 +631,8 @@ string Helper::GetVirtualDesktop(const string& prefix_path)
   }
   else
   {
-    return BottleTypes::VIRTUAL_DESKTOP_DISABLED;
+    // return empty string
+    return "";
   }
 }
 

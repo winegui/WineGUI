@@ -812,7 +812,7 @@ std::list<BottleItem> BottleManager::CreateWineBottles(string wineVersion, std::
     std::ignore = _;
     // Reset variables
     string name = "";
-    string virtualDesktop = BottleTypes::VIRTUAL_DESKTOP_DISABLED;
+    string virtualDesktop = "";
     bool status = false;
     BottleTypes::Windows windows = BottleTypes::Windows::WindowsXP;
     BottleTypes::Bit bit = BottleTypes::Bit::win32;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    main_window.cc
  * \brief   Main GTK+ Window class
@@ -139,7 +139,8 @@ void MainWindow::SetDetailedInfo(BottleItem& bottle)
   c_drive_location.set_text(bottle.wine_c_drive());
   wine_last_changed.set_text(bottle.wine_last_changed());
   audio_driver.set_text(BottleTypes::toString(bottle.audio_driver()));
-  virtual_desktop.set_text(bottle.virtual_desktop());
+  Glib::ustring virtualDesktop = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
+  virtual_desktop.set_text(virtualDesktop);
 }
 
 /**
