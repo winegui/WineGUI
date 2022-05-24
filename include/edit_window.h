@@ -40,6 +40,7 @@ public:
   void Show();
   void SetActiveBottle(BottleItem* bottle);
   void ResetActiveBottle();
+
 protected:
   // Child widgets
   Gtk::Box vbox;
