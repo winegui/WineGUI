@@ -174,7 +174,7 @@ void EditWindow::ResetActiveBottle()
   this->activeBottle = nullptr;
 }
 
-/** 
+/**
  * \brief Triggered when bottle is actually confirmed to be removed
  */
 void EditWindow::BottleRemoved()
@@ -232,9 +232,9 @@ void EditWindow::on_save_button_clicked()
 {
   std::string::size_type sz;
   BottleTypes::Windows windows_version = BottleTypes::Windows::WindowsXP; // Fallback
-  BottleTypes::Bit bit = BottleTypes::Bit::win32; // Fallback
-  BottleTypes::AudioDriver audio = BottleTypes::AudioDriver::pulseaudio; // Fallback
-  Glib::ustring virtual_desktop_resolution = ""; // Default empty string
+  BottleTypes::Bit bit = BottleTypes::Bit::win32;                         // Fallback
+  BottleTypes::AudioDriver audio = BottleTypes::AudioDriver::pulseaudio;  // Fallback
+  Glib::ustring virtual_desktop_resolution = "";                          // Default empty string
   Glib::ustring name = name_entry.get_text();
   bool isDesktopEnabled = virtual_desktop_check.get_active();
   if (isDesktopEnabled)
@@ -275,6 +275,4 @@ void EditWindow::on_save_button_clicked()
   {
   }
   // Ignore the catches
-
-
 }

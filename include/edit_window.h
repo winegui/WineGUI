@@ -35,7 +35,7 @@ class EditWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void> remove_machine;   /*!< remove button clicked signal */
+  sigc::signal<void> remove_machine; /*!< remove button clicked signal */
 
   explicit EditWindow(Gtk::Window& parent);
   virtual ~EditWindow();
