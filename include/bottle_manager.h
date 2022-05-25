@@ -63,7 +63,6 @@ public:
   void UpdateBottle(SignalDispatcher* caller,
                     Glib::ustring name,
                     BottleTypes::Windows windows_version,
-                    BottleTypes::Bit bit,
                     Glib::ustring virtual_desktop_resolution,
                     BottleTypes::AudioDriver audio);
   void DeleteBottle();

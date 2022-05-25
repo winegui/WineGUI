@@ -37,7 +37,7 @@ public:
   void show();
   void close();
 
-  void SetMessage(const Glib::ustring& message);
+  void SetMessage(const Glib::ustring& headingText, const Glib::ustring& message);
 
 protected:
   Gtk::Label heading_label;     /*!< Heading label */

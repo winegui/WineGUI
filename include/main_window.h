@@ -68,8 +68,8 @@ public:
   void ResetDetailedInfo();
   void ShowErrorMessage(const Glib::ustring& message, bool markup = false);
   bool ShowConfirmDialog(const Glib::ustring& message, bool markup = false);
-  void ShowBusyDialog(const Glib::ustring& message);
-  void ShowBusyDialog(Gtk::Window& parent, const Glib::ustring& message);
+  void ShowBusyInstallDialog(const Glib::ustring& message);
+  void ShowBusyInstallDialog(Gtk::Window& parent, const Glib::ustring& message);
   void CloseBusyDialog();
 
   // Signal handlers
