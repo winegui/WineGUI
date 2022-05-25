@@ -325,7 +325,8 @@ void BottleManager::UpdateBottle(SignalDispatcher* caller,
 
     if (active_bottle->virtual_desktop() != virtual_desktop_resolution)
     {
-      if (!virtual_desktop_resolution.empty()) {
+      if (!virtual_desktop_resolution.empty())
+      {
         try
         {
           Helper::SetVirtualDesktop(prefix_path, virtual_desktop_resolution);
@@ -340,7 +341,9 @@ void BottleManager::UpdateBottle(SignalDispatcher* caller,
           caller->SignalErrorMessageDuringUpdate();
           return; // Stop thread prematurely
         }
-      } else {
+      }
+      else
+      {
         try
         {
           Helper::DisableVirtualDesktop(prefix_path);
@@ -389,8 +392,8 @@ void BottleManager::UpdateBottle(SignalDispatcher* caller,
       {
         {
           std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message =
-              ("Something went wrong during during changing the name (= renaming the folder).\n" + Glib::ustring(error.what()));
+          m_error_message = ("Something went wrong during during changing the name (= renaming the folder).\n" +
+                             Glib::ustring(error.what()));
         }
         caller->SignalErrorMessageDuringUpdate();
         return; // Stop thread prematurely
@@ -711,7 +714,8 @@ void BottleManager::InstallDXVK(Gtk::Window& parent, const Glib::ustring& versio
   if (isBottleNotNull())
   {
     // Before we execute the install, show busy dialog
-    mainWindow.ShowBusyInstallDialog(parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
+    mainWindow.ShowBusyInstallDialog(parent,
+                                     "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
 
     Glib::ustring package = "dxvk";
     if (version != "latest")
@@ -764,7 +768,7 @@ void BottleManager::InstallDotNet(Gtk::Window& parent, const Glib::ustring& vers
     {
       // Before we execute the install, show busy dialog
       mainWindow.ShowBusyInstallDialog(parent, "Installing Native .NET redistributable packages (v" + version +
-                                            ").\nThis may take quite some time...\n");
+                                                   ").\nThis may take quite some time...\n");
 
       Glib::ustring deinstallCommand = this->GetDeinstallMonoCommand();
 

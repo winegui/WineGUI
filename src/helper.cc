@@ -419,20 +419,23 @@ void Helper::RenameWineBottleFolder(const string& current_prefix_path, const str
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
       if (!(result.compare("0") == 0))
       {
-        throw std::runtime_error("Something went wrong when renaming the Windows Machine. Wine machine: " +
-                                 GetName(current_prefix_path) + "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+        throw std::runtime_error(
+            "Something went wrong when renaming the Windows Machine. Wine machine: " + GetName(current_prefix_path) +
+            "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
       }
     }
     else
     {
-      throw std::runtime_error("Could not rename Windows Machine, no result. Current Wine machine: " + GetName(current_prefix_path) +
-                               "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+      throw std::runtime_error(
+          "Could not rename Windows Machine, no result. Current Wine machine: " + GetName(current_prefix_path) +
+          "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Could not rename Windows Machine, prefix is not a directory. Wine machine: " +
-                             GetName(current_prefix_path) + "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+    throw std::runtime_error(
+        "Could not rename Windows Machine, prefix is not a directory. Wine machine: " + GetName(current_prefix_path) +
+        "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
   }
 }
 
