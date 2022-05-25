@@ -150,7 +150,7 @@ void MainWindow::reset_detailed_info()
 {
   name.set_text("-");
   window_version.set_text("");
-  wine_version.set_text("v?");
+  wine_version.set_text("");
   wine_location.set_text("");
   c_drive_location.set_text("");
   wine_last_changed.set_text("");
