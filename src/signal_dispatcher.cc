@@ -84,9 +84,8 @@ void SignalDispatcher::DispatchSignals()
 {
   // Menu buttons
   menu.preferences.connect(sigc::mem_fun(preferencesWindow, &PreferencesWindow::show));
-  menu.quit.connect(sigc::mem_fun(
-      *mainWindow,
-      &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
+  menu.quit.connect(
+      sigc::mem_fun(*mainWindow, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
   menu.refreshView.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
   menu.newBottle.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
   menu.run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
@@ -260,10 +259,9 @@ void SignalDispatcher::on_new_bottle(Glib::ustring& name,
   else
   {
     // Start a new manager thread (executing NewBottle())
-    m_threadBottleManager =
-        new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio] {
-          manager.NewBottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio);
-        });
+    m_threadBottleManager = new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio] {
+      manager.NewBottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio);
+    });
   }
 }
 

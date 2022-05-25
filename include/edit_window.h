@@ -37,8 +37,7 @@ class EditWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver>
-      updateBottle;                /*!< save button clicked signal */
+  sigc::signal<void, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver> updateBottle; /*!< save button clicked signal */
   sigc::signal<void> removeBottle; /*!< remove button clicked signal */
 
   explicit EditWindow(Gtk::Window& parent);

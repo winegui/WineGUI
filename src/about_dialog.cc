@@ -25,7 +25,7 @@
 /**
  * \brief Contructor
  */
-AboutDialog::AboutDialog(Gtk::Window& parent)
+AboutDialog::AboutDialog(Gtk::Window& parent) : m_visitProjectLinkButton("https://gitlab.melroy.org/melroy/winegui", "Visit the GitLab Project")
 {
   // Set logo
   logo.set(Helper::GetImageLocation("logo.png"));
@@ -42,6 +42,10 @@ AboutDialog::AboutDialog(Gtk::Window& parent)
   set_version(PROJECT_VER);
   set_copyright("Copyright © 2019-2022 Melroy van den Berg");
   set_license_type(Gtk::LICENSE_AGPL_3_0);
+
+  Gtk::Box* vbox = get_vbox();
+  vbox->pack_end(m_visitProjectLinkButton, Gtk::PackOptions::PACK_SHRINK);
+  m_visitProjectLinkButton.show();
 }
 
 AboutDialog::~AboutDialog()

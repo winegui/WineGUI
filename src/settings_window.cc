@@ -128,8 +128,7 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   install_core_fonts_button.set_tooltip_text("Installs Microsoft Core Fonts");
   second_toolbar.insert(install_core_fonts_button, 1);
 
-  install_visual_cpp_button.signal_clicked().connect(
-      sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2013"));
+  install_visual_cpp_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2013"));
   install_visual_cpp_button.set_tooltip_text("Installs Visual C++ 2013 package");
   second_toolbar.insert(install_visual_cpp_button, 2);
 
@@ -300,8 +299,7 @@ void SettingsWindow::UpdateInstalled()
   else
   {
     Gtk::Image* install_liberation_image = Gtk::manage(new Gtk::Image());
-    install_liberation_image->set_from_icon_name("system-software-install",
-                                                 Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_liberation_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     install_liberation_fonts_button.set_label("Install Liberation open-source fonts");
     install_liberation_fonts_button.set_icon_widget(*install_liberation_image);
   }
@@ -316,8 +314,7 @@ void SettingsWindow::UpdateInstalled()
   else
   {
     Gtk::Image* install_core_fonts_image = Gtk::manage(new Gtk::Image());
-    install_core_fonts_image->set_from_icon_name("system-software-install",
-                                                 Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_core_fonts_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     install_core_fonts_button.set_label("Install Core Fonts");
     install_core_fonts_button.set_icon_widget(*install_core_fonts_image);
   }
@@ -332,8 +329,7 @@ void SettingsWindow::UpdateInstalled()
   else
   {
     Gtk::Image* install_visual_cpp_image = Gtk::manage(new Gtk::Image());
-    install_visual_cpp_image->set_from_icon_name("system-software-install",
-                                                 Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_visual_cpp_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     install_visual_cpp_button.set_label("Install Visual C++ 2013");
     install_visual_cpp_button.set_icon_widget(*install_visual_cpp_image);
   }

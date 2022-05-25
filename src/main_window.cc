@@ -332,8 +332,7 @@ void MainWindow::on_give_feedback()
  */
 void MainWindow::on_exec_failure()
 {
-  Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false,
-                            Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+  Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
   dialog.set_title("An error has occurred during Wine application execution!");
   dialog.set_modal(false);
   dialog.run();

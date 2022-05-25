@@ -10,7 +10,7 @@
   ConstructorInitializerAllOnOneLineOrOnePerLine: true,
   AllowAllConstructorInitializersOnNextLine: false,
   # In the future use: PackConstructorInitializers: Never, (iso the two options above)
-  ColumnLimit: 120,
+  ColumnLimit: 150,
   BreakBeforeBraces: Allman,
   FixNamespaceComments: false,
   AllowShortIfStatementsOnASingleLine: Never,

@@ -22,6 +22,7 @@
 
 #include <gtkmm/aboutdialog.h>
 #include <gtkmm/image.h>
+#include <gtkmm/linkbutton.h>
 #include <string>
 
 /**
@@ -41,4 +42,6 @@ public:
 
 protected:
   Gtk::Image logo; /*!< The logo of the app for the about window */
+
+  Gtk::LinkButton m_visitProjectLinkButton;
 };

@@ -164,8 +164,7 @@ void Helper::RunProgram(string prefix_path, string program, bool give_error = tr
  * brackets in case of spaces) \param[in] give_error - Inform user when application exit with non-zero exit code
  * \param[in] enable_tracing Enable debugging tracing to file (give_error should be true as well!)
  */
-void Helper::RunProgramUnderWine(
-    bool wine_64_bit, string prefix_path, string program, bool give_error = true, bool enable_tracing = false)
+void Helper::RunProgramUnderWine(bool wine_64_bit, string prefix_path, string program, bool give_error = true, bool enable_tracing = false)
 {
   RunProgram(prefix_path, Helper::GetWineExecutableLocation(wine_64_bit) + " " + program, give_error, enable_tracing);
 }
@@ -179,11 +178,8 @@ void Helper::RunProgramUnderWine(
  * \param[in] give_error - Inform user when application exit with non-zero exit code
  * \param[in] enable_tracing - Enable debugging tracing to file (give_error should be true as well!)
  */
-void Helper::RunProgramWithFinishCallback(string prefix_path,
-                                          string program,
-                                          Glib::Dispatcher* finishSignal,
-                                          bool give_error = true,
-                                          bool enable_tracing = false)
+void Helper::RunProgramWithFinishCallback(
+    string prefix_path, string program, Glib::Dispatcher* finishSignal, bool give_error = true, bool enable_tracing = false)
 {
   // Be-sure to execute the program also between brackets (in case of spaces)
   RunProgram(prefix_path, program, give_error, enable_tracing);
@@ -218,8 +214,7 @@ int Helper::DetermineWineExecutable()
 {
   int returnStatus = -2;
   // Try wine 32-bit
-  string result32 =
-      Exec(("command -v " + Helper::GetWineExecutableLocation(false) + " >/dev/null 2>&1; echo $?").c_str());
+  string result32 = Exec(("command -v " + Helper::GetWineExecutableLocation(false) + " >/dev/null 2>&1; echo $?").c_str());
   if (!result32.empty())
   {
     // Remove new lines
@@ -232,8 +227,7 @@ int Helper::DetermineWineExecutable()
   // Try wine 64-bit
   if (returnStatus == -2)
   {
-    string result64 =
-        Exec(("command -v " + Helper::GetWineExecutableLocation(true) + " >/dev/null 2>&1; echo $?").c_str());
+    string result64 = Exec(("command -v " + Helper::GetWineExecutableLocation(true) + " >/dev/null 2>&1; echo $?").c_str());
     if (!result64.empty())
     {
       // Remove new lines
@@ -332,10 +326,7 @@ string Helper::GetWineVersion(bool wine_64_bit)
  * \param[in] bit Create 32-bit Wine of 64-bit Wine bottle
  * \param[in] disable_gecko_mono Do NOT install Mono & Gecko (by default should be false)
  */
-void Helper::CreateWineBottle(bool wine_64_bit,
-                              const string& prefix_path,
-                              BottleTypes::Bit bit,
-                              const bool disable_gecko_mono)
+void Helper::CreateWineBottle(bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
 {
   string wineArch = "";
   switch (bit)
@@ -348,8 +339,8 @@ void Helper::CreateWineBottle(bool wine_64_bit,
     break;
   }
   string wineDLLOverrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
-  string command = "WINEPREFIX=\"" + prefix_path + "\"" + wineArch + wineDLLOverrides + " " +
-                   Helper::GetWineExecutableLocation(wine_64_bit) + " wineboot";
+  string command =
+      "WINEPREFIX=\"" + prefix_path + "\"" + wineArch + wineDLLOverrides + " " + Helper::GetWineExecutableLocation(wine_64_bit) + " wineboot";
   string commandErrorToNullWithExitcode = command + ">/dev/null 2>&1; echo $?";
   string result = Exec(commandErrorToNullWithExitcode.c_str());
   if (!result.empty())
@@ -358,16 +349,14 @@ void Helper::CreateWineBottle(bool wine_64_bit,
     result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
     if (!(result.compare("0") == 0))
     {
-      throw std::runtime_error(
-          "Something went wrong when creating a new Windows machine. Wine prefix: " + GetName(prefix_path) +
-          "\n\nCommand executed: " + command + "\nFull path location: " + prefix_path);
+      throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + GetName(prefix_path) +
+                               "\n\nCommand executed: " + command + "\nFull path location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error(
-        "Something went wrong when creating a new Windows machine. Wine prefix: " + GetName(prefix_path) +
-        "\n\nCommand executed: " + command + "\nFull location: " + prefix_path);
+    throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + GetName(prefix_path) +
+                             "\n\nCommand executed: " + command + "\nFull location: " + prefix_path);
   }
 }
 
@@ -386,8 +375,8 @@ void Helper::RemoveWineBottle(const string& prefix_path)
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
       if (!(result.compare("0") == 0))
       {
-        throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " +
-                                 GetName(prefix_path) + "\n\nFull path location: " + prefix_path);
+        throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + GetName(prefix_path) +
+                                 "\n\nFull path location: " + prefix_path);
       }
     }
     else
@@ -398,8 +387,8 @@ void Helper::RemoveWineBottle(const string& prefix_path)
   }
   else
   {
-    throw std::runtime_error("Could not remove Windows Machine, prefix is not a directory. Wine machine: " +
-                             GetName(prefix_path) + "\n\nFull path location: " + prefix_path);
+    throw std::runtime_error("Could not remove Windows Machine, prefix is not a directory. Wine machine: " + GetName(prefix_path) +
+                             "\n\nFull path location: " + prefix_path);
   }
 }
 
@@ -419,23 +408,20 @@ void Helper::RenameWineBottleFolder(const string& current_prefix_path, const str
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
       if (!(result.compare("0") == 0))
       {
-        throw std::runtime_error(
-            "Something went wrong when renaming the Windows Machine. Wine machine: " + GetName(current_prefix_path) +
-            "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+        throw std::runtime_error("Something went wrong when renaming the Windows Machine. Wine machine: " + GetName(current_prefix_path) +
+                                 "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
       }
     }
     else
     {
-      throw std::runtime_error(
-          "Could not rename Windows Machine, no result. Current Wine machine: " + GetName(current_prefix_path) +
-          "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+      throw std::runtime_error("Could not rename Windows Machine, no result. Current Wine machine: " + GetName(current_prefix_path) +
+                               "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error(
-        "Could not rename Windows Machine, prefix is not a directory. Wine machine: " + GetName(current_prefix_path) +
-        "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+    throw std::runtime_error("Could not rename Windows Machine, prefix is not a directory. Wine machine: " + GetName(current_prefix_path) +
+                             "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
   }
 }
 
@@ -486,8 +472,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string& prefix_path)
     for (unsigned int i = 0; i < BottleTypes::WINDOWS_ENUM_SIZE; i++)
     {
       // Check if version + build number matches
-      if (((win_versions[i].versionNumber).compare(version) == 0) &&
-          ((win_versions[i].buildNumber).compare(buildNumberNT) == 0))
+      if (((win_versions[i].versionNumber).compare(version) == 0) && ((win_versions[i].buildNumber).compare(buildNumberNT) == 0))
       {
         if (!typeNT.empty())
         {
@@ -543,8 +528,7 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string& prefix_path)
     for (unsigned int i = 0; i < BottleTypes::WINDOWS_ENUM_SIZE; i++)
     {
       // Check if version + build number matches
-      if (((win_versions[i].versionNumber).compare(currentVersion) == 0) &&
-          ((win_versions[i].buildNumber).compare(currentBuildNumber) == 0))
+      if (((win_versions[i].versionNumber).compare(currentVersion) == 0) && ((win_versions[i].buildNumber).compare(currentBuildNumber) == 0))
       {
         return win_versions[i].windows;
       }
@@ -553,12 +537,10 @@ BottleTypes::Windows Helper::GetWindowsOSVersion(const string& prefix_path)
   }
   else
   {
-    throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + GetName(prefix_path) +
-                             "\n\nFull location: " + prefix_path);
+    throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + GetName(prefix_path) + "\n\nFull location: " + prefix_path);
   }
   // Function didn't return before (meaning no match found)
-  throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + GetName(prefix_path) +
-                           "\n\nFull location: " + prefix_path);
+  throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + GetName(prefix_path) + "\n\nFull location: " + prefix_path);
 }
 
 /**
@@ -590,8 +572,7 @@ BottleTypes::Bit Helper::GetSystemBit(const string& prefix_path)
   }
   else
   {
-    throw std::runtime_error("Could not determ Windows system bit, for Wine machine: " + GetName(prefix_path) +
-                             "\n\nFull location: " + prefix_path);
+    throw std::runtime_error("Could not determ Windows system bit, for Wine machine: " + GetName(prefix_path) + "\n\nFull location: " + prefix_path);
   }
 }
 
@@ -693,14 +674,14 @@ string Helper::GetLastWineUpdated(const string& prefix_path)
     }
     else
     {
-      throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " +
-                               GetName(prefix_path) + "\n\nFull location: " + prefix_path);
+      throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + GetName(prefix_path) +
+                               "\n\nFull location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " +
-                             GetName(prefix_path) + "\n\nFull location: " + prefix_path);
+    throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + GetName(prefix_path) +
+                             "\n\nFull location: " + prefix_path);
   }
 }
 
@@ -749,8 +730,7 @@ string Helper::GetCLetterDrive(const string& prefix_path)
   }
   else
   {
-    throw std::runtime_error("Could not determ C:\\ drive location, for Wine machine: " + GetName(prefix_path) +
-                             "\n\nFull location: " + prefix_path);
+    throw std::runtime_error("Could not determ C:\\ drive location, for Wine machine: " + GetName(prefix_path) + "\n\nFull location: " + prefix_path);
   }
 }
 
@@ -807,8 +787,7 @@ void Helper::InstallOrUpdateWinetricks()
   // Winetricks script should exists now...
   if (!FileExists(WINETRICKS_EXECUTABLE))
   {
-    throw std::runtime_error(
-        "Winetrick helper script can not be found / installed. This could/will result into issues with WineGUI!");
+    throw std::runtime_error("Winetrick helper script can not be found / installed. This could/will result into issues with WineGUI!");
   }
 }
 
@@ -849,9 +828,7 @@ void Helper::SetWindowsVersion(const string& prefix_path, BottleTypes::Windows w
   if (FileExists(WINETRICKS_EXECUTABLE))
   {
     string win = BottleTypes::getWinetricksString(windows);
-    string result =
-        Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " " + win + ">/dev/null 2>&1; echo $?")
-                 .c_str());
+    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " " + win + ">/dev/null 2>&1; echo $?").c_str());
     if (!result.empty())
     {
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
@@ -896,9 +873,7 @@ void Helper::SetVirtualDesktop(const string& prefix_path, string resolution)
         resolution = "640x480";
       }
 
-      Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution +
-            ">/dev/null 2>&1; echo $?")
-               .c_str());
+      Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
       // Something returns non-zero... winetricks on the command line, does return zero ..
       /*
 string result = Exec(..)
@@ -952,9 +927,7 @@ void Helper::SetAudioDriver(const string& prefix_path, BottleTypes::AudioDriver 
   {
     string audio = BottleTypes::getWinetricksString(audio_driver);
     //
-    string result = Exec(
-        ("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " sound=" + audio + ">/dev/null 2>&1; echo $?")
-            .c_str());
+    string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + WINETRICKS_EXECUTABLE + " sound=" + audio + ">/dev/null 2>&1; echo $?").c_str());
     if (!result.empty())
     {
       result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
@@ -979,8 +952,8 @@ void Helper::SetAudioDriver(const string& prefix_path, BottleTypes::AudioDriver 
  */
 string Helper::GetWineGUID(bool wine_64_bit, const string& prefix_path, const string& application_name)
 {
-  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::GetWineExecutableLocation(wine_64_bit) +
-                        " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1")
+  string result = Exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::GetWineExecutableLocation(wine_64_bit) + " uninstaller --list | grep \"" +
+                        application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1")
                            .c_str());
   if (!result.empty())
   {

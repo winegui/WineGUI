@@ -212,8 +212,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
   {
     {
       std::lock_guard<std::mutex> lock(m_Mutex);
-      m_error_message =
-          ("Something went wrong during creation of a new Windows machine!\n" + Glib::ustring(error.what()));
+      m_error_message = ("Something went wrong during creation of a new Windows machine!\n" + Glib::ustring(error.what()));
     }
     caller->SignalErrorMessageDuringCreate();
     return; // Stop thread prematurely
@@ -233,8 +232,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
       {
         {
           std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message =
-              ("Something went wrong during setting another Windows version.\n" + Glib::ustring(error.what()));
+          m_error_message = ("Something went wrong during setting another Windows version.\n" + Glib::ustring(error.what()));
         }
         caller->SignalErrorMessageDuringCreate();
         return; // Stop thread prematurely
@@ -252,8 +250,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
       {
         {
           std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message =
-              ("Something went wrong during enabling virtual desktop mode.\n" + Glib::ustring(error.what()));
+          m_error_message = ("Something went wrong during enabling virtual desktop mode.\n" + Glib::ustring(error.what()));
         }
         caller->SignalErrorMessageDuringCreate();
         return; // Stop thread prematurely
@@ -271,8 +268,7 @@ void BottleManager::NewBottle(SignalDispatcher* caller,
       {
         {
           std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message =
-              ("Something went wrong during setting another audio driver.\n" + Glib::ustring(error.what()));
+          m_error_message = ("Something went wrong during setting another audio driver.\n" + Glib::ustring(error.what()));
         }
         caller->SignalErrorMessageDuringCreate();
         return; // Stop thread prematurely
@@ -315,8 +311,7 @@ void BottleManager::UpdateBottle(SignalDispatcher* caller,
       {
         {
           std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message =
-              ("Something went wrong during setting another Windows version.\n" + Glib::ustring(error.what()));
+          m_error_message = ("Something went wrong during setting another Windows version.\n" + Glib::ustring(error.what()));
         }
         caller->SignalErrorMessageDuringUpdate();
         return; // Stop thread prematurely
@@ -335,8 +330,7 @@ void BottleManager::UpdateBottle(SignalDispatcher* caller,
         {
           {
             std::lock_guard<std::mutex> lock(m_Mutex);
-            m_error_message =
-                ("Something went wrong during enabling virtual desktop mode.\n" + Glib::ustring(error.what()));
+            m_error_message = ("Something went wrong during enabling virtual desktop mode.\n" + Glib::ustring(error.what()));
           }
           caller->SignalErrorMessageDuringUpdate();
           return; // Stop thread prematurely
@@ -352,8 +346,7 @@ void BottleManager::UpdateBottle(SignalDispatcher* caller,
         {
           {
             std::lock_guard<std::mutex> lock(m_Mutex);
-            m_error_message =
-                ("Something went wrong during disabling virtual desktop mode.\n" + Glib::ustring(error.what()));
+            m_error_message = ("Something went wrong during disabling virtual desktop mode.\n" + Glib::ustring(error.what()));
           }
           caller->SignalErrorMessageDuringUpdate();
           return; // Stop thread prematurely
@@ -370,15 +363,18 @@ void BottleManager::UpdateBottle(SignalDispatcher* caller,
       {
         {
           std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message =
-              ("Something went wrong during setting another audio driver.\n" + Glib::ustring(error.what()));
+          m_error_message = ("Something went wrong during setting another audio driver.\n" + Glib::ustring(error.what()));
         }
         caller->SignalErrorMessageDuringUpdate();
         return; // Stop thread prematurely
       }
     }
 
+    // Wait until wineserver terminates
+    Helper::WaitUntilWineserverIsTerminated(prefix_path);
+
     // LAST but not least, rename Wine bottle (=renaming folder)
+    // Do this after the wait on wineserver, since otherwise renaming may break the Wine installation during update
     if (active_bottle->name() != name)
     {
       // Build new prefix
@@ -392,16 +388,12 @@ void BottleManager::UpdateBottle(SignalDispatcher* caller,
       {
         {
           std::lock_guard<std::mutex> lock(m_Mutex);
-          m_error_message = ("Something went wrong during during changing the name (= renaming the folder).\n" +
-                             Glib::ustring(error.what()));
+          m_error_message = ("Something went wrong during during changing the name (= renaming the folder).\n" + Glib::ustring(error.what()));
         }
         caller->SignalErrorMessageDuringUpdate();
         return; // Stop thread prematurely
       }
     }
-
-    // Wait until wineserver terminates
-    Helper::WaitUntilWineserverIsTerminated(prefix_path);
   }
   else
   {
@@ -714,8 +706,7 @@ void BottleManager::InstallDXVK(Gtk::Window& parent, const Glib::ustring& versio
   if (isBottleNotNull())
   {
     // Before we execute the install, show busy dialog
-    mainWindow.ShowBusyInstallDialog(parent,
-                                     "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
+    mainWindow.ShowBusyInstallDialog(parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
 
     Glib::ustring package = "dxvk";
     if (version != "latest")
@@ -761,14 +752,13 @@ void BottleManager::InstallDotNet(Gtk::Window& parent, const Glib::ustring& vers
 {
   if (isBottleNotNull())
   {
-    if (mainWindow.ShowConfirmDialog(
-            "<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
-            "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
-            true))
+    if (mainWindow.ShowConfirmDialog("<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
+                                     "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
+                                     true))
     {
       // Before we execute the install, show busy dialog
-      mainWindow.ShowBusyInstallDialog(parent, "Installing Native .NET redistributable packages (v" + version +
-                                                   ").\nThis may take quite some time...\n");
+      mainWindow.ShowBusyInstallDialog(parent,
+                                       "Installing Native .NET redistributable packages (v" + version + ").\nThis may take quite some time...\n");
 
       Glib::ustring deinstallCommand = this->GetDeinstallMonoCommand();
 
@@ -966,8 +956,8 @@ std::list<BottleItem> BottleManager::CreateWineBottles(string wineVersion, std::
       mainWindow.ShowErrorMessage(error.what());
     }
 
-    BottleItem* bottle = new BottleItem(name, status, windows, bit, wineVersion, prefix, cDriveLocation,
-                                        lastTimeWineUpdated, audioDriver, virtualDesktop);
+    BottleItem* bottle =
+        new BottleItem(name, status, windows, bit, wineVersion, prefix, cDriveLocation, lastTimeWineUpdated, audioDriver, virtualDesktop);
     bottles.push_back(*bottle);
   }
   return bottles;

@@ -55,11 +55,8 @@ BottleItem::BottleItem(const BottleItem& bottleItem) : BottleItem()
 /**
  * \brief Contruct a new Wine Bottle Item with limited inputs
  */
-BottleItem::BottleItem(Glib::ustring name,
-                       Glib::ustring wine_version,
-                       Glib::ustring wine_location,
-                       Glib::ustring wine_c_drive,
-                       Glib::ustring wine_last_changed)
+BottleItem::BottleItem(
+    Glib::ustring name, Glib::ustring wine_version, Glib::ustring wine_location, Glib::ustring wine_c_drive, Glib::ustring wine_last_changed)
     : _name(name),
       _is_status_ok(true),
       _win(BottleTypes::Windows::WindowsXP),
@@ -104,9 +101,7 @@ void BottleItem::CreateUI()
   // To lower case
   std::string windows = BottleItem::str_tolower(BottleTypes::toString(this->windows()));
   // Remove spaces
-  windows.erase(std::remove_if(std::begin(windows), std::end(windows),
-                               [l = std::locale{}](auto ch) { return std::isspace(ch, l); }),
-                end(windows));
+  windows.erase(std::remove_if(std::begin(windows), std::end(windows), [l = std::locale{}](auto ch) { return std::isspace(ch, l); }), end(windows));
   Glib::ustring bit = BottleTypes::toString(this->bit());
   Glib::ustring filename = windows + "_" + bit + ".png";
   Glib::ustring name = this->name();

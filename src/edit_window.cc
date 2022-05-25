@@ -137,12 +137,11 @@ void EditWindow::Show()
       {
         auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
         windows_version_combobox.insert(-1, std::to_string(index),
-                                        BottleTypes::toString((*it).first) + " (" +
-                                            BottleTypes::toString((*it).second) + ')');
+                                        BottleTypes::toString((*it).first) + " (" + BottleTypes::toString((*it).second) + ')');
       }
     }
-    windows_version_combobox.set_active_text(BottleTypes::toString(activeBottle->windows()) + " (" +
-                                             BottleTypes::toString(activeBottle->bit()) + ")");
+    windows_version_combobox.set_active_text(BottleTypes::toString(activeBottle->windows()) + " (" + BottleTypes::toString(activeBottle->bit()) +
+                                             ")");
     audiodriver_combobox.set_active_id(std::to_string((int)activeBottle->audio_driver()));
     if (!activeBottle->virtual_desktop().empty())
     {
