@@ -101,9 +101,8 @@ void NewBottleAssistant::setDefaultValues()
 void NewBottleAssistant::createFirstPage()
 {
   // Intro page
-  intro_label.set_markup(
-      "<big><b>Create a New Machine</b></big>\n"
-      "Please use a descriptive name for the Windows machine, and select which Windows version you want to use.");
+  intro_label.set_markup("<big><b>Create a New Machine</b></big>\n"
+                         "Please use a descriptive name for the Windows machine, and select which Windows version you want to use.");
   intro_label.set_halign(Gtk::Align::ALIGN_START);
   intro_label.set_margin_bottom(25);
   m_vbox.pack_start(intro_label, false, false);
@@ -117,9 +116,7 @@ void NewBottleAssistant::createFirstPage()
        it != BottleTypes::SupportedWindowsVersions.end(); ++it)
   {
     auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
-    windows_version_combobox.insert(-1, std::to_string(index),
-                                    BottleTypes::toString((*it).first) + " (" + BottleTypes::toString((*it).second) +
-                                        ')');
+    windows_version_combobox.insert(-1, std::to_string(index), BottleTypes::toString((*it).first) + " (" + BottleTypes::toString((*it).second) + ')');
   }
 
   m_hbox_win.pack_start(windows_version_label, false, true);
@@ -139,10 +136,9 @@ void NewBottleAssistant::createFirstPage()
 void NewBottleAssistant::createSecondPage()
 {
   // Additional page
-  additional_label.set_markup(
-      "<big><b>Additional Settings</b></big>\n"
-      "There you could adapt some additional Windows settings.\n\n<b>Note:</b> If you do not "
-      "know what these settings mean, <b><i>do NOT</i></b> change the settings (keep the default values).");
+  additional_label.set_markup("<big><b>Additional Settings</b></big>\n"
+                              "There you could adapt some additional Windows settings.\n\n<b>Note:</b> If you do not "
+                              "know what these settings mean, <b><i>do NOT</i></b> change the settings (keep the default values).");
   additional_label.set_halign(Gtk::Align::ALIGN_START);
   additional_label.set_margin_bottom(25);
   m_vbox2.pack_start(additional_label, false, false);
@@ -336,8 +332,7 @@ void NewBottleAssistant::on_assistant_apply()
   }
 
   /* Start a timer to give the user feedback about the changes taking a few seconds to apply. */
-  timer =
-      Glib::signal_timeout().connect(sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually), time_interval);
+  timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually), time_interval);
 }
 
 void NewBottleAssistant::on_assistant_cancel()

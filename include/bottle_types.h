@@ -69,27 +69,21 @@ namespace BottleTypes
     win64
   };
 
-  typedef std::pair<Windows, Bit>
-      WindowsAndBit; /*!< Windows + Bit pair, used within the list of supported Windows versions */
+  typedef std::pair<Windows, Bit> WindowsAndBit; /*!< Windows + Bit pair, used within the list of supported Windows versions */
 
   /**
    * \brief Supported list of Windows version with their bit support
    */
   inline std::vector<WindowsAndBit> SupportedWindowsVersions = {
-      std::pair(Windows::Windows20, Bit::win32),     std::pair(Windows::Windows30, Bit::win32),
-      std::pair(Windows::Windows31, Bit::win32),     std::pair(Windows::WindowsNT351, Bit::win32),
-      std::pair(Windows::WindowsNT40, Bit::win32),   std::pair(Windows::Windows95, Bit::win32),
-      std::pair(Windows::Windows98, Bit::win32),     std::pair(Windows::WindowsME, Bit::win32),
-      std::pair(Windows::Windows2000, Bit::win32),   std::pair(Windows::WindowsXP, Bit::win32),
-      std::pair(Windows::WindowsXP, Bit::win64),     std::pair(Windows::Windows2003, Bit::win32),
-      std::pair(Windows::Windows2003, Bit::win64),   std::pair(Windows::WindowsVista, Bit::win32),
-      std::pair(Windows::WindowsVista, Bit::win64),  std::pair(Windows::Windows2008, Bit::win32),
-      std::pair(Windows::Windows2008, Bit::win64),   std::pair(Windows::Windows7, Bit::win32),
-      std::pair(Windows::Windows7, Bit::win64),      std::pair(Windows::Windows2008R2, Bit::win32),
-      std::pair(Windows::Windows2008R2, Bit::win64), std::pair(Windows::Windows8, Bit::win32),
-      std::pair(Windows::Windows8, Bit::win64),      std::pair(Windows::Windows81, Bit::win32),
-      std::pair(Windows::Windows81, Bit::win64),     std::pair(Windows::Windows10, Bit::win32),
-      std::pair(Windows::Windows10, Bit::win64),
+      std::pair(Windows::Windows20, Bit::win32),    std::pair(Windows::Windows30, Bit::win32),     std::pair(Windows::Windows31, Bit::win32),
+      std::pair(Windows::WindowsNT351, Bit::win32), std::pair(Windows::WindowsNT40, Bit::win32),   std::pair(Windows::Windows95, Bit::win32),
+      std::pair(Windows::Windows98, Bit::win32),    std::pair(Windows::WindowsME, Bit::win32),     std::pair(Windows::Windows2000, Bit::win32),
+      std::pair(Windows::WindowsXP, Bit::win32),    std::pair(Windows::WindowsXP, Bit::win64),     std::pair(Windows::Windows2003, Bit::win32),
+      std::pair(Windows::Windows2003, Bit::win64),  std::pair(Windows::WindowsVista, Bit::win32),  std::pair(Windows::WindowsVista, Bit::win64),
+      std::pair(Windows::Windows2008, Bit::win32),  std::pair(Windows::Windows2008, Bit::win64),   std::pair(Windows::Windows7, Bit::win32),
+      std::pair(Windows::Windows7, Bit::win64),     std::pair(Windows::Windows2008R2, Bit::win32), std::pair(Windows::Windows2008R2, Bit::win64),
+      std::pair(Windows::Windows8, Bit::win32),     std::pair(Windows::Windows8, Bit::win64),      std::pair(Windows::Windows81, Bit::win32),
+      std::pair(Windows::Windows81, Bit::win64),    std::pair(Windows::Windows10, Bit::win32),     std::pair(Windows::Windows10, Bit::win64),
   };
 
   //// Default Windows version (Windows XP 32-bit) as WineGUI Bottle

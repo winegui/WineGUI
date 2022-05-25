@@ -58,11 +58,8 @@ public:
     swap(a._virtual_desktop, b._virtual_desktop);
   }
 
-  BottleItem(Glib::ustring name,
-             Glib::ustring wine_version,
-             Glib::ustring wine_location,
-             Glib::ustring wine_c_drive,
-             Glib::ustring wine_last_changed);
+  BottleItem(
+      Glib::ustring name, Glib::ustring wine_version, Glib::ustring wine_location, Glib::ustring wine_c_drive, Glib::ustring wine_last_changed);
 
   BottleItem(Glib::ustring name,
              bool status,
