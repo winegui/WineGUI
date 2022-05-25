@@ -38,6 +38,7 @@ EditWindow::EditWindow(Gtk::Window& parent)
       cancel_button("Cancel"),
       delete_button("Delete Machine"),
       wine_config_button("WineCfg"),
+      busyDialog(*this),
       activeBottle(nullptr)
 {
   set_transient_for(parent);
@@ -119,6 +120,8 @@ void EditWindow::Show()
   if (activeBottle != nullptr)
   {
     set_title("Edit Machine - " + activeBottle->name());
+    // Enable save button (again)
+    save_button.set_sensitive(true);
 
     // Set name
     name_entry.set_text(activeBottle->name());
@@ -182,8 +185,16 @@ void EditWindow::ResetActiveBottle()
  */
 void EditWindow::BottleRemoved()
 {
-  // Close the edit window
-  hide();
+  hide(); // Close the edit window
+}
+
+/**
+ * \brief Handler when the bottle is updated.
+ */
+void EditWindow::on_bottle_updated()
+{
+  busyDialog.close();
+  hide(); // Close the edit Window
 }
 
 /**
@@ -235,9 +246,16 @@ void EditWindow::on_save_button_clicked()
 {
   std::string::size_type sz;
   BottleTypes::Windows windows_version = BottleTypes::Windows::WindowsXP; // Fallback
-  BottleTypes::Bit bit = BottleTypes::Bit::win32;                         // Fallback
   BottleTypes::AudioDriver audio = BottleTypes::AudioDriver::pulseaudio;  // Fallback
   Glib::ustring virtual_desktop_resolution = "";                          // Default empty string
+
+  // First disable save button (avoid multiple presses)
+  save_button.set_sensitive(false);
+
+  // Show busy dialog
+  busyDialog.SetMessage("Updating Windows Machine", "Busy applying all your changes currently.");
+  busyDialog.show();
+
   Glib::ustring name = name_entry.get_text();
   bool isDesktopEnabled = virtual_desktop_check.get_active();
   if (isDesktopEnabled)
@@ -250,7 +268,6 @@ void EditWindow::on_save_button_clicked()
     size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
     const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
     windows_version = currentWindowsBit.first;
-    bit = currentWindowsBit.second;
   }
   catch (const std::runtime_error& error)
   {
@@ -279,5 +296,5 @@ void EditWindow::on_save_button_clicked()
   }
   // Ignore the catches
 
-  updateBottle.emit(name, windows_version, bit, virtual_desktop_resolution, audio);
+  updateBottle.emit(name, windows_version, virtual_desktop_resolution, audio);
 }

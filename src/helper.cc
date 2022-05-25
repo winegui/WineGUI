@@ -404,6 +404,39 @@ void Helper::RemoveWineBottle(const string& prefix_path)
 }
 
 /**
+ * \brief Rename wine bottle folder
+ * \param[in] current_prefix_path - Current wine bottle path
+ * \param[in] new_prefix_path - New wine bottle path
+ */
+void Helper::RenameWineBottleFolder(const string& current_prefix_path, const string& new_prefix_path)
+{
+  if (Helper::DirExists(current_prefix_path))
+  {
+    string result = Exec(("mv \"" + current_prefix_path + "\" \"" + new_prefix_path + "\"; echo $?").c_str());
+    if (!result.empty())
+    {
+      // Remove new lines
+      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+      if (!(result.compare("0") == 0))
+      {
+        throw std::runtime_error("Something went wrong when renaming the Windows Machine. Wine machine: " +
+                                 GetName(current_prefix_path) + "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+      }
+    }
+    else
+    {
+      throw std::runtime_error("Could not rename Windows Machine, no result. Current Wine machine: " + GetName(current_prefix_path) +
+                               "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+    }
+  }
+  else
+  {
+    throw std::runtime_error("Could not rename Windows Machine, prefix is not a directory. Wine machine: " +
+                             GetName(current_prefix_path) + "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+  }
+}
+
+/**
  * \brief Get Wine Bottle Name from configuration file (if possible)
  * \param[in] prefix_path - Bottle prefix
  * \return Bottle name

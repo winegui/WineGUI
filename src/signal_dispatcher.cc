@@ -272,7 +272,6 @@ void SignalDispatcher::on_new_bottle(Glib::ustring& name,
  */
 void SignalDispatcher::on_update_bottle(Glib::ustring& name,
                                         BottleTypes::Windows windows_version,
-                                        BottleTypes::Bit bit,
                                         Glib::ustring& virtual_desktop_resolution,
                                         BottleTypes::AudioDriver audio)
 {
@@ -285,8 +284,8 @@ void SignalDispatcher::on_update_bottle(Glib::ustring& name,
   else
   {
     // Start a new manager thread (executing NewBottle())
-    m_threadBottleManager = new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, audio] {
-      manager.UpdateBottle(this, name, windows_version, bit, virtual_desktop_resolution, audio);
+    m_threadBottleManager = new std::thread([this, name, windows_version, virtual_desktop_resolution, audio] {
+      manager.UpdateBottle(this, name, windows_version, virtual_desktop_resolution, audio);
     });
   }
 }
@@ -303,6 +302,7 @@ void SignalDispatcher::on_new_bottle_created()
 {
   this->CleanUpBottleManagerThread();
 
+  // Inform the main window (which will inform the new bottle assistant)
   this->mainWindow->on_new_bottle_created();
 }
 
@@ -313,10 +313,11 @@ void SignalDispatcher::on_bottle_updated()
 {
   this->CleanUpBottleManagerThread();
 
-  manager.UpdateBottles();
+  // Inform the edit window
+  this->editWindow.on_bottle_updated();
 
-  // Close edit Window
-  this->editWindow.hide();
+  // Update bottle list
+  manager.UpdateBottles();
 }
 
 /**

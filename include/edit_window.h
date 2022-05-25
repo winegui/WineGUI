@@ -21,6 +21,7 @@
 #pragma once
 
 #include "bottle_types.h"
+#include "busy_dialog.h"
 #include <gtkmm.h>
 
 using std::string;
@@ -36,7 +37,7 @@ class EditWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, Glib::ustring&, BottleTypes::AudioDriver>
+  sigc::signal<void, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver>
       updateBottle;                /*!< save button clicked signal */
   sigc::signal<void> removeBottle; /*!< remove button clicked signal */
 
@@ -47,6 +48,9 @@ public:
   void SetActiveBottle(BottleItem* bottle);
   void ResetActiveBottle();
   void BottleRemoved();
+
+  // Signal handlers
+  virtual void on_bottle_updated();
 
 protected:
   // Child widgets
@@ -72,6 +76,8 @@ protected:
   // Buttons second row
   Gtk::ToolButton wine_config_button; /*!< Winecfg button */
 
+  // Busy dialog
+  BusyDialog busyDialog; /*!< Busy dialog, when the user should wait until install is finished */
 private:
   // Signal handlers
   void on_cancel_button_clicked();
