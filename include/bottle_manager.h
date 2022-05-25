@@ -44,70 +44,70 @@ class BottleManager
 {
 public:
   // Signals
-  sigc::signal<void> resetActiveBottle;    /*!< Send signal: Clear the current active bottle */
-  sigc::signal<void> bottleRemoved;        /*!< Send signal: When the bottle is confirmed to be removed */
-  Glib::Dispatcher finishedPackageInstall; /*!< Signal that Wine package install is completed */
+  sigc::signal<void> reset_acctive_bottle;   /*!< Send signal: Clear the current active bottle */
+  sigc::signal<void> bottle_removed;         /*!< Send signal: When the bottle is confirmed to be removed */
+  Glib::Dispatcher finished_package_install; /*!< Signal that Wine package install is completed */
 
-  explicit BottleManager(MainWindow& mainWindow);
+  explicit BottleManager(MainWindow& main_window);
   virtual ~BottleManager();
 
-  void Prepare();
-  void UpdateBottles();
-  void NewBottle(SignalDispatcher* caller,
-                 Glib::ustring name,
-                 BottleTypes::Windows windows_version,
-                 BottleTypes::Bit bit,
-                 Glib::ustring virtual_desktop_resolution,
-                 bool disable_gecko_mono,
-                 BottleTypes::AudioDriver audio);
-  void UpdateBottle(SignalDispatcher* caller,
-                    Glib::ustring name,
-                    BottleTypes::Windows windows_version,
-                    Glib::ustring virtual_desktop_resolution,
-                    BottleTypes::AudioDriver audio);
-  void DeleteBottle();
-  void SetActiveBottle(BottleItem* bottle);
-  const Glib::ustring& GetErrorMessage();
+  void prepare();
+  void update_bottles();
+  void new_bottle(SignalDispatcher* caller,
+                  Glib::ustring name,
+                  BottleTypes::Windows windows_version,
+                  BottleTypes::Bit bit,
+                  Glib::ustring virtual_desktop_resolution,
+                  bool disable_gecko_mono,
+                  BottleTypes::AudioDriver audio);
+  void update_bottle(SignalDispatcher* caller,
+                     Glib::ustring name,
+                     BottleTypes::Windows windows_version,
+                     Glib::ustring virtual_desktop_resolution,
+                     BottleTypes::AudioDriver audio);
+  void delete_bottle();
+  void set_active_bottle(BottleItem* bottle);
+  const Glib::ustring& get_error_message();
 
   // Signal handlers
-  void RunProgram(string filename, bool is_msi_file);
-  void OpenDriveC();
-  void Reboot();
-  void Update();
-  void KillProcesses();
-  void OpenExplorer();
-  void OpenConsole();
-  void OpenWinecfg();
-  void OpenWinetricks();
-  void OpenUninstaller();
-  void OpenTaskManager();
-  void OpenRegistertyEditor();
-  void OpenNotepad();
-  void OpenWordpad();
-  void OpenIexplore();
-  void InstallD3DX9(Gtk::Window& parent, const Glib::ustring& version);
-  void InstallDXVK(Gtk::Window& parent, const Glib::ustring& version);
-  void InstallVisualCppPackage(Gtk::Window& parent, const Glib::ustring& version);
-  void InstallDotNet(Gtk::Window& parent, const Glib::ustring& version);
-  void InstallCoreFonts(Gtk::Window& parent);
-  void InstallLiberation(Gtk::Window& parent);
+  void run_program(string filename, bool is_msi_file);
+  void open_c_drive();
+  void reboot();
+  void update();
+  void kill_processes();
+  void open_explorer();
+  void open_console();
+  void open_winecfg();
+  void open_winetricks();
+  void open_uninstaller();
+  void open_task_manager();
+  void open_registery_editor();
+  void open_notepad();
+  void open_wordpad();
+  void open_iexplorer();
+  void install_d3dx9(Gtk::Window& parent, const Glib::ustring& version);
+  void install_dxvk(Gtk::Window& parent, const Glib::ustring& version);
+  void install_visual_cpp_package(Gtk::Window& parent, const Glib::ustring& version);
+  void install_dot_net(Gtk::Window& parent, const Glib::ustring& version);
+  void install_core_fonts(Gtk::Window& parent);
+  void install_liberation(Gtk::Window& parent);
 
 private:
   // Synchronizes access to data members
-  mutable std::mutex m_Mutex;
+  mutable std::mutex mutex_;
 
-  MainWindow& mainWindow;
-  string bottle_location;
-  std::list<BottleItem> bottles;
-  BottleItem* active_bottle;
-  bool is_wine64_bit;
+  MainWindow& main_window_;
+  string bottle_location_;
+  std::list<BottleItem> bottles_;
+  BottleItem* active_bottle_;
+  bool is_wine64_bit_;
 
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
-  Glib::ustring m_error_message;
+  Glib::ustring error_message_;
 
-  bool isBottleNotNull();
-  Glib::ustring GetDeinstallMonoCommand();
-  string GetWineVersion();
-  std::map<string, unsigned long> GetBottlePaths();
-  std::list<BottleItem> CreateWineBottles(string wineVersion, std::map<string, unsigned long> bottleDirs);
+  bool is_bottle_not_null();
+  Glib::ustring get_deinstall_mono_command();
+  string get_wine_version();
+  std::map<string, unsigned long> get_bottle_paths();
+  std::list<BottleItem> create_wine_bottles(string wine_version, std::map<string, unsigned long> bottle_dirs);
 };

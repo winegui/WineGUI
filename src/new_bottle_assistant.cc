@@ -89,9 +89,9 @@ void NewBottleAssistant::setDefaultValues()
   virtual_desktop_resolution_entry.set_text("960x540");
   loading_bar.set_fraction(0.0);
 
-  if (timer)
+  if (timer_)
   {
-    timer.disconnect();
+    timer_.disconnect();
   }
 }
 
@@ -116,7 +116,8 @@ void NewBottleAssistant::createFirstPage()
        it != BottleTypes::SupportedWindowsVersions.end(); ++it)
   {
     auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
-    windows_version_combobox.insert(-1, std::to_string(index), BottleTypes::toString((*it).first) + " (" + BottleTypes::toString((*it).second) + ')');
+    windows_version_combobox.insert(-1, std::to_string(index),
+                                    BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
   }
 
   m_hbox_win.pack_start(windows_version_label, false, true);
@@ -146,7 +147,7 @@ void NewBottleAssistant::createSecondPage()
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
   {
-    audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::toString(BottleTypes::AudioDriver(i)));
+    audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
 
   m_hbox_audio.pack_start(audiodriver_label, false, true);
@@ -197,12 +198,12 @@ void NewBottleAssistant::createThirdPage()
  * \param[inout] disable_gecko_mono          Enable/Disable Gecko/Mono during install
  * \param[inout] audio                       Audio Driver type
  */
-void NewBottleAssistant::GetResult(Glib::ustring& name,
-                                   BottleTypes::Windows& windows_version,
-                                   BottleTypes::Bit& bit,
-                                   Glib::ustring& virtual_desktop_resolution,
-                                   bool& disable_gecko_mono,
-                                   BottleTypes::AudioDriver& audio)
+void NewBottleAssistant::get_result(Glib::ustring& name,
+                                    BottleTypes::Windows& windows_version,
+                                    BottleTypes::Bit& bit,
+                                    Glib::ustring& virtual_desktop_resolution,
+                                    bool& disable_gecko_mono,
+                                    BottleTypes::AudioDriver& audio)
 {
   std::string::size_type sz;
   windows_version = BottleTypes::Windows::WindowsXP;
@@ -262,16 +263,16 @@ void NewBottleAssistant::GetResult(Glib::ustring& name,
 /**
  * \brief Triggered when the bottle is fully created (signal from the bottle manager thread)
  */
-void NewBottleAssistant::BottleCreated()
+void NewBottleAssistant::bottle_created()
 {
-  // Reset defaults (including timer.disconnect())
+  // Reset defaults (including timer_.disconnect())
   setDefaultValues();
 
   // Close Assistant
   this->hide();
 
-  // Inform UI, emit signal newBottleFinished (causes the GUI to refresh)
-  newBottleFinished.emit();
+  // Inform UI, emit signal new_bottle_finished (causes the GUI to refresh)
+  new_bottle_finished.emit();
 }
 
 /**
@@ -290,7 +291,7 @@ void NewBottleAssistant::on_assistant_apply()
   {
     size_t audio_index = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
     auto audio = BottleTypes::AudioDriver(audio_index);
-    is_non_default_audio_driver = WineDefaults::AUDIO_DRIVER != audio;
+    is_non_default_audio_driver = WineDefaults::AudioDriver != audio;
   }
   catch (const std::runtime_error& error)
   {
@@ -305,7 +306,7 @@ void NewBottleAssistant::on_assistant_apply()
   {
     size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
     auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
-    is_non_default_windows = WineDefaults::WINDOWS_OS != currentWindowsBit.first;
+    is_non_default_windows = WineDefaults::WindowsOs != currentWindowsBit.first;
   }
   catch (const std::runtime_error& error)
   {
@@ -332,7 +333,7 @@ void NewBottleAssistant::on_assistant_apply()
   }
 
   /* Start a timer to give the user feedback about the changes taking a few seconds to apply. */
-  timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually), time_interval);
+  timer_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually), time_interval);
 }
 
 void NewBottleAssistant::on_assistant_cancel()

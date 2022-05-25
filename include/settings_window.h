@@ -55,10 +55,10 @@ public:
   explicit SettingsWindow(Gtk::Window& parent);
   virtual ~SettingsWindow();
 
-  void Show();
-  void SetActiveBottle(BottleItem* bottle);
-  void ResetActiveBottle();
-  void UpdateInstalled();
+  void show();
+  void set_active_bottle(BottleItem* bottle);
+  void reset_active_bottle();
+  void update_installed();
 
 protected:
   // Child widgets
@@ -83,8 +83,8 @@ protected:
   Gtk::ToolButton install_liberation_fonts_button; /*!< Liberation fonts install button */
   Gtk::ToolButton install_core_fonts_button;       /*!< Core fonts install button */
   Gtk::ToolButton install_visual_cpp_button;       /*!< MS Visual C++ Redistributable Package install button */
-  Gtk::ToolButton install_dotnet4_button;          /*!< .NET v4.0 install button */
-  Gtk::ToolButton install_dotnet452_button;        /*!< .NET v4.5.2 install button */
+  Gtk::ToolButton install_dotnet4_0_button;        /*!< .NET v4.0 install button */
+  Gtk::ToolButton install_dotnet4_5_2_button;      /*!< .NET v4.5.2 install button */
 
   // Buttons Third row (supporting tools)
   Gtk::ToolButton wine_uninstall_button;    /*!< Wine Uninstaller button */
@@ -101,13 +101,13 @@ protected:
   Gtk::ToolButton winetricks_button;   /*!< Winetricks button */
 
 private:
-  BottleItem* activeBottle; /*!< Current active bottle */
+  BottleItem* active_bottle_; /*!< Current active bottle */
 
-  bool IsD3DX9Installed();
-  bool IsDXVKInstalled();
-  bool IsLiberationInstalled();
-  bool IsCoreFontsInstalled();
-  bool isVisualCppInstalled();
-  bool isDotnet4Installed();
-  bool isDotnet452Installed();
+  bool is_d3dx9_installed();
+  bool is_dxvk_installed();
+  bool is_liberation_installed();
+  bool is_core_fonts_installed();
+  bool is_visual_cpp_installed();
+  bool is_dotnet_4_0_installed();
+  bool is_dotnet_4_5_2_installed();
 };

@@ -131,9 +131,11 @@ To automatically comply to our style format execute following script (inplace ed
 
 Check only for errors, run: `./scripts/check-format.sh`
 
-### Core Guidelines
+### Guidelines
 
-We also tend to follow the popular [C++ Core Guidelines](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) as much as possible.
+First we try to use the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) as basis.
+
+Next, we also tend to follow the popular [C++ Core Guidelines](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) as much as possible.
 
 ### CI/CD
 

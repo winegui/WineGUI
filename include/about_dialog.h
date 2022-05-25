@@ -35,13 +35,13 @@ public:
   explicit AboutDialog(Gtk::Window& parent);
   virtual ~AboutDialog();
 
-  void RunDialog();
-  void HideDialog(int response);
+  void run_dialog();
+  void hide_dialog(int response);
 
-  static std::string GetVersion();
+  static std::string get_version();
 
 protected:
   Gtk::Image logo; /*!< The logo of the app for the about window */
 
-  Gtk::LinkButton m_visitProjectLinkButton;
+  Gtk::LinkButton visit_project_link_button;
 };

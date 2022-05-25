@@ -37,7 +37,7 @@ public:
   void show();
   void close();
 
-  void SetMessage(const Glib::ustring& headingText, const Glib::ustring& message);
+  void set_message(const Glib::ustring& heading_text, const Glib::ustring& message);
 
 protected:
   Gtk::Label heading_label;     /*!< Heading label */
@@ -45,8 +45,8 @@ protected:
   Gtk::ProgressBar loading_bar; /*!< Loading bar */
 
 private:
-  sigc::connection timer; /*!< Timer connection */
-  Gtk::Window& defaultParent;
+  sigc::connection timer_; /*!< Timer connection */
+  Gtk::Window& default_parent_;
 
-  virtual bool Pulsing();
+  virtual bool pulsing();
 };

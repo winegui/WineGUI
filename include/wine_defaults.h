@@ -28,8 +28,8 @@
 namespace WineDefaults
 {
   //// Default Windows OS Version of Wine
-  static const BottleTypes::Windows WINDOWS_OS = BottleTypes::Windows::Windows7;
+  static const BottleTypes::Windows WindowsOs = BottleTypes::Windows::Windows7;
 
   //// Default AudioDriver of Wine
-  static const BottleTypes::AudioDriver AUDIO_DRIVER = BottleTypes::AudioDriver::pulseaudio;
+  static const BottleTypes::AudioDriver AudioDriver = BottleTypes::AudioDriver::pulseaudio;
 };

@@ -25,45 +25,27 @@
 
 /**
  * \class NewBottleAssistant
- * \brief New Bottle GTK+ Assistant (Wizard)
+ * \brief New Bottle GTK Assistant (Wizard)
  */
 class NewBottleAssistant : public Gtk::Assistant
 {
 public:
   // Signal
-  sigc::signal<void> newBottleFinished; /*!< Signal when New Bottle Assistant is finished */
+  sigc::signal<void> new_bottle_finished; /*!< Signal when New Bottle Assistant is finished */
 
   NewBottleAssistant();
   virtual ~NewBottleAssistant();
 
-  void GetResult(Glib::ustring& name,
-                 BottleTypes::Windows& windows_version,
-                 BottleTypes::Bit& bit,
-                 Glib::ustring& virtual_desktop_resolution,
-                 bool& disable_gecko_mono,
-                 BottleTypes::AudioDriver& audio);
+  void get_result(Glib::ustring& name,
+                  BottleTypes::Windows& windows_version,
+                  BottleTypes::Bit& bit,
+                  Glib::ustring& virtual_desktop_resolution,
+                  bool& disable_gecko_mono,
+                  BottleTypes::AudioDriver& audio);
 
-  void BottleCreated();
+  void bottle_created();
 
-private:
-  // Signal handlers:
-  void on_assistant_apply();
-  void on_assistant_cancel();
-  void on_assistant_close();
-  void on_assistant_prepare(Gtk::Widget* widget);
-  void on_entry_changed();
-  void on_virtual_desktop_toggle();
-  bool apply_changes_gradually();
-
-  // Member functions:
-  void setDefaultValues();
-  void createFirstPage();
-  void createSecondPage();
-  void createThirdPage();
-
-  sigc::connection timer; /*!< Timer connection */
-
-  // Child widgets:
+  // Child widgets
   Gtk::Box m_vbox;
   Gtk::Box m_vbox2;
   Gtk::Box m_vbox3;
@@ -86,4 +68,22 @@ private:
   Gtk::Entry name_entry;
   Gtk::Entry virtual_desktop_resolution_entry;
   Gtk::ProgressBar loading_bar;
+
+private:
+  // Signal handlers
+  void on_assistant_apply();
+  void on_assistant_cancel();
+  void on_assistant_close();
+  void on_assistant_prepare(Gtk::Widget* widget);
+  void on_entry_changed();
+  void on_virtual_desktop_toggle();
+  bool apply_changes_gradually();
+
+  // Member functions
+  void setDefaultValues();
+  void createFirstPage();
+  void createSecondPage();
+  void createThirdPage();
+
+  sigc::connection timer_; /*!< Timer connection */
 };

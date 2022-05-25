@@ -33,34 +33,34 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
 
   // File submenu
   // Using text + image
-  auto preferences_menuitem = CreateImageMenuItem("Preferences", "system-run");
+  auto preferences_menuitem = create_image_menu_item("Preferences", "system-run");
   preferences_menuitem->signal_activate().connect(preferences);
-  auto exit_menuitem = CreateImageMenuItem("Exit", "application-exit");
+  auto exit_menuitem = create_image_menu_item("Exit", "application-exit");
   exit_menuitem->signal_activate().connect(quit);
 
   // View submenu
-  auto refresh_menuitem = CreateImageMenuItem("Refresh List", "view-refresh");
-  refresh_menuitem->signal_activate().connect(refreshView);
+  auto refresh_menuitem = create_image_menu_item("Refresh List", "view-refresh");
+  refresh_menuitem->signal_activate().connect(refresh_view);
 
   // Machine submenu
-  auto newitem_menuitem = CreateImageMenuItem("New", "list-add");
-  newitem_menuitem->signal_activate().connect(newBottle);
-  auto run_menuitem = CreateImageMenuItem("Run...", "media-playback-start");
+  auto newitem_menuitem = create_image_menu_item("New", "list-add");
+  newitem_menuitem->signal_activate().connect(new_bottle);
+  auto run_menuitem = create_image_menu_item("Run...", "media-playback-start");
   run_menuitem->signal_activate().connect(run);
-  auto edit_menuitem = CreateImageMenuItem("Edit", "document-edit");
-  edit_menuitem->signal_activate().connect(editBottle);
-  auto settings_menuitem = CreateImageMenuItem("Settings", "preferences-other");
-  settings_menuitem->signal_activate().connect(settingsBottle);
-  auto remove_menuitem = CreateImageMenuItem("Remove", "edit-delete");
-  remove_menuitem->signal_activate().connect(removeMachine);
-  auto open_drive_c_menuitem = CreateImageMenuItem("Open C: Drive", "drive-harddisk");
-  open_drive_c_menuitem->signal_activate().connect(openDriveC);
+  auto edit_menuitem = create_image_menu_item("Edit", "document-edit");
+  edit_menuitem->signal_activate().connect(edit_bottle);
+  auto settings_menuitem = create_image_menu_item("Settings", "preferences-other");
+  settings_menuitem->signal_activate().connect(settings_bottle);
+  auto remove_menuitem = create_image_menu_item("Remove", "edit-delete");
+  remove_menuitem->signal_activate().connect(remove_bottle);
+  auto open_drive_c_menuitem = create_image_menu_item("Open C: Drive", "drive-harddisk");
+  open_drive_c_menuitem->signal_activate().connect(open_c_drive);
 
   // Help submenu
-  auto feedback_menuitem = CreateImageMenuItem("Give feedback", "help-faq");
-  feedback_menuitem->signal_activate().connect(giveFeedback);
-  auto about_menuitem = CreateImageMenuItem("About WineGUI...", "help-about");
-  about_menuitem->signal_activate().connect(showAbout);
+  auto feedback_menuitem = create_image_menu_item("Give feedback", "help-faq");
+  feedback_menuitem->signal_activate().connect(give_feedback);
+  auto about_menuitem = create_image_menu_item("About WineGUI...", "help-about");
+  about_menuitem->signal_activate().connect(show_about);
 
   // Add items to sub-menu
   // File menu
@@ -103,7 +103,7 @@ Menu::~Menu()
  * \brief Return the machine sub menu only
  * \return GTK::Menu pointer of the machine menu
  */
-Gtk::Menu* Menu::GetMachineMenu()
+Gtk::Menu* Menu::get_machine_menu()
 {
   return &machine_submenu;
 }
@@ -112,7 +112,7 @@ Gtk::Menu* Menu::GetMachineMenu()
  * \brief Helper method for creating a menu with an image
  * \return GTKWidget menu item pointer
  */
-Gtk::MenuItem* Menu::CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name)
+Gtk::MenuItem* Menu::create_image_menu_item(const Glib::ustring& label_text, const Glib::ustring& icon_name)
 {
   Gtk::MenuItem* item = Gtk::manage(new Gtk::MenuItem());
   Gtk::Box* helper_box = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2));

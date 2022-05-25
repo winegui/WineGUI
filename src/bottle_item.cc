@@ -34,20 +34,20 @@ BottleItem::BottleItem()
 /**
  * \brief Copy contructor, used by GTK+
  */
-BottleItem::BottleItem(const BottleItem& bottleItem) : BottleItem()
+BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
 {
-  if (this != &bottleItem)
+  if (this != &bottle_item)
   {
-    _name = bottleItem.name();
-    _is_status_ok = bottleItem.status();
-    _win = bottleItem.windows();
-    _bit = bottleItem.bit();
-    _wine_version = bottleItem.wine_version();
-    _wine_location = bottleItem.wine_location();
-    _wine_c_drive = bottleItem.wine_c_drive();
-    _wine_last_changed = bottleItem.wine_last_changed();
-    _audio_driver = bottleItem.audio_driver();
-    _virtual_desktop = bottleItem.virtual_desktop();
+    name_ = bottle_item.name();
+    is_status_ok_ = bottle_item.status();
+    win_ = bottle_item.windows();
+    bit_ = bottle_item.bit();
+    wine_version_ = bottle_item.wine_version();
+    wine_location_ = bottle_item.wine_location();
+    wine_c_drive_ = bottle_item.wine_c_drive();
+    wine_last_changed_ = bottle_item.wine_last_changed();
+    audio_driver_ = bottle_item.audio_driver();
+    virtual_desktop_ = bottle_item.virtual_desktop();
   }
   CreateUI();
 }
@@ -57,16 +57,16 @@ BottleItem::BottleItem(const BottleItem& bottleItem) : BottleItem()
  */
 BottleItem::BottleItem(
     Glib::ustring name, Glib::ustring wine_version, Glib::ustring wine_location, Glib::ustring wine_c_drive, Glib::ustring wine_last_changed)
-    : _name(name),
-      _is_status_ok(true),
-      _win(BottleTypes::Windows::WindowsXP),
-      _bit(BottleTypes::Bit::win32),
-      _wine_version(wine_version),
-      _wine_location(wine_location),
-      _wine_c_drive(wine_c_drive),
-      _wine_last_changed(wine_last_changed),
-      _audio_driver(BottleTypes::AudioDriver::pulseaudio),
-      _virtual_desktop(""){
+    : name_(name),
+      is_status_ok_(true),
+      win_(BottleTypes::Windows::WindowsXP),
+      bit_(BottleTypes::Bit::win32),
+      wine_version_(wine_version),
+      wine_location_(wine_location),
+      wine_c_drive_(wine_c_drive),
+      wine_last_changed_(wine_last_changed),
+      audio_driver_(BottleTypes::AudioDriver::pulseaudio),
+      virtual_desktop_(""){
           // Gui will be created during the copy contructor called by Gtk
       };
 
@@ -83,32 +83,32 @@ BottleItem::BottleItem(Glib::ustring name,
                        Glib::ustring wine_last_changed,
                        BottleTypes::AudioDriver audio_driver,
                        Glib::ustring virtual_desktop)
-    : _name(name),
-      _is_status_ok(status),
-      _win(win),
-      _bit(bit),
-      _wine_version(wine_version),
-      _wine_location(wine_location),
-      _wine_c_drive(wine_c_drive),
-      _wine_last_changed(wine_last_changed),
-      _audio_driver(audio_driver),
-      _virtual_desktop(virtual_desktop){
+    : name_(name),
+      is_status_ok_(status),
+      win_(win),
+      bit_(bit),
+      wine_version_(wine_version),
+      wine_location_(wine_location),
+      wine_c_drive_(wine_c_drive),
+      wine_last_changed_(wine_last_changed),
+      audio_driver_(audio_driver),
+      virtual_desktop_(virtual_desktop){
           // Gui will be created during the copy contructor called by Gtk
       };
 
 void BottleItem::CreateUI()
 {
   // To lower case
-  std::string windows = BottleItem::str_tolower(BottleTypes::toString(this->windows()));
+  std::string windows = BottleItem::str_tolower(BottleTypes::to_string(this->windows()));
   // Remove spaces
   windows.erase(std::remove_if(std::begin(windows), std::end(windows), [l = std::locale{}](auto ch) { return std::isspace(ch, l); }), end(windows));
-  Glib::ustring bit = BottleTypes::toString(this->bit());
+  Glib::ustring bit = BottleTypes::to_string(this->bit());
   Glib::ustring filename = windows + "_" + bit + ".png";
   Glib::ustring name = this->name();
   bool status = this->status();
 
   // Set left side of the GUI
-  image.set(Helper::GetImageLocation("windows/" + filename));
+  image.set(Helper::get_image_location("windows/" + filename));
   image.set_margin_top(8);
   image.set_margin_end(8);
   image.set_margin_bottom(8);
@@ -120,12 +120,12 @@ void BottleItem::CreateUI()
   Glib::ustring status_text = "Ready";
   if (status)
   {
-    status_icon.set(Helper::GetImageLocation("ready.png"));
+    status_icon.set(Helper::get_image_location("ready.png"));
   }
   else
   {
     status_text = "Not Ready";
-    status_icon.set(Helper::GetImageLocation("not_ready.png"));
+    status_icon.set(Helper::get_image_location("not_ready.png"));
   }
   status_icon.set_size_request(2, -1);
   status_icon.set_halign(Gtk::Align::ALIGN_START);

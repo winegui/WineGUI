@@ -25,10 +25,10 @@
 /**
  * \brief Contructor
  */
-AboutDialog::AboutDialog(Gtk::Window& parent) : m_visitProjectLinkButton("https://gitlab.melroy.org/melroy/winegui", "Visit the GitLab Project")
+AboutDialog::AboutDialog(Gtk::Window& parent) : visit_project_link_button("https://gitlab.melroy.org/melroy/winegui", "Visit the GitLab Project")
 {
   // Set logo
-  logo.set(Helper::GetImageLocation("logo.png"));
+  logo.set(Helper::get_image_location("logo.png"));
   // Set version
   std::vector<Glib::ustring> devs;
   devs.push_back("Melroy van den Berg <melroy@melroy.org>");
@@ -44,8 +44,8 @@ AboutDialog::AboutDialog(Gtk::Window& parent) : m_visitProjectLinkButton("https:
   set_license_type(Gtk::LICENSE_AGPL_3_0);
 
   Gtk::Box* vbox = get_vbox();
-  vbox->pack_end(m_visitProjectLinkButton, Gtk::PackOptions::PACK_SHRINK);
-  m_visitProjectLinkButton.show();
+  vbox->pack_end(visit_project_link_button, Gtk::PackOptions::PACK_SHRINK);
+  visit_project_link_button.show();
 }
 
 AboutDialog::~AboutDialog()
@@ -55,7 +55,7 @@ AboutDialog::~AboutDialog()
 /**
  * \brief Open about dialog
  */
-void AboutDialog::RunDialog()
+void AboutDialog::run_dialog()
 {
   run();
 }
@@ -63,7 +63,7 @@ void AboutDialog::RunDialog()
 /**
  * \brief Close the about dialog
  */
-void AboutDialog::HideDialog(__attribute__((unused)) int response)
+void AboutDialog::hide_dialog(__attribute__((unused)) int response)
 {
   hide();
 }
@@ -72,7 +72,7 @@ void AboutDialog::HideDialog(__attribute__((unused)) int response)
  * \brief Retrieve the app version
  * \return Version number
  */
-std::string AboutDialog::GetVersion()
+std::string AboutDialog::get_version()
 {
   return PROJECT_VER;
 }

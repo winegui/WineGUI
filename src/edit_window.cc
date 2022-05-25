@@ -38,8 +38,8 @@ EditWindow::EditWindow(Gtk::Window& parent)
       cancel_button("Cancel"),
       delete_button("Delete Machine"),
       wine_config_button("WineCfg"),
-      busyDialog(*this),
-      activeBottle(nullptr)
+      busy_dialog(*this),
+      active_bottle_(nullptr)
 {
   set_transient_for(parent);
   set_default_size(550, 300);
@@ -68,7 +68,7 @@ EditWindow::EditWindow(Gtk::Window& parent)
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
   {
-    audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::toString(BottleTypes::AudioDriver(i)));
+    audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
   virtual_desktop_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("960x540");
@@ -96,7 +96,7 @@ EditWindow::EditWindow(Gtk::Window& parent)
   add(vbox);
 
   // Signals
-  delete_button.signal_clicked().connect(removeBottle);
+  delete_button.signal_clicked().connect(remove_bottle);
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &EditWindow::on_virtual_desktop_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &EditWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &EditWindow::on_save_button_clicked));
@@ -115,16 +115,16 @@ EditWindow::~EditWindow()
  * \brief Same as show() but will also update the Window title, set name,
  * update list of windows versions, set active windows, audio driver and virtual desktop
  */
-void EditWindow::Show()
+void EditWindow::show()
 {
-  if (activeBottle != nullptr)
+  if (active_bottle_ != nullptr)
   {
-    set_title("Edit Machine - " + activeBottle->name());
+    set_title("Edit Machine - " + active_bottle_->name());
     // Enable save button (again)
     save_button.set_sensitive(true);
 
     // Set name
-    name_entry.set_text(activeBottle->name());
+    name_entry.set_text(active_bottle_->name());
 
     // Clear list
     windows_version_combobox.remove_all();
@@ -133,19 +133,19 @@ void EditWindow::Show()
          it != BottleTypes::SupportedWindowsVersions.end(); ++it)
     {
       // Only show the same bitness Windows versions
-      if (activeBottle->bit() == (*it).second)
+      if (active_bottle_->bit() == (*it).second)
       {
         auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
         windows_version_combobox.insert(-1, std::to_string(index),
-                                        BottleTypes::toString((*it).first) + " (" + BottleTypes::toString((*it).second) + ')');
+                                        BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
       }
     }
-    windows_version_combobox.set_active_text(BottleTypes::toString(activeBottle->windows()) + " (" + BottleTypes::toString(activeBottle->bit()) +
-                                             ")");
-    audiodriver_combobox.set_active_id(std::to_string((int)activeBottle->audio_driver()));
-    if (!activeBottle->virtual_desktop().empty())
+    windows_version_combobox.set_active_text(BottleTypes::to_string(active_bottle_->windows()) + " (" +
+                                             BottleTypes::to_string(active_bottle_->bit()) + ")");
+    audiodriver_combobox.set_active_id(std::to_string((int)active_bottle_->audio_driver()));
+    if (!active_bottle_->virtual_desktop().empty())
     {
-      virtual_desktop_resolution_entry.set_text(activeBottle->virtual_desktop());
+      virtual_desktop_resolution_entry.set_text(active_bottle_->virtual_desktop());
       virtual_desktop_check.set_active(true);
     }
     else
@@ -166,23 +166,23 @@ void EditWindow::Show()
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void EditWindow::SetActiveBottle(BottleItem* bottle)
+void EditWindow::set_active_bottle(BottleItem* bottle)
 {
-  this->activeBottle = bottle;
+  active_bottle_ = bottle;
 }
 
 /**
  * \brief Signal handler for resetting the active bottle to null
  */
-void EditWindow::ResetActiveBottle()
+void EditWindow::reset_active_bottle()
 {
-  this->activeBottle = nullptr;
+  active_bottle_ = nullptr;
 }
 
 /**
  * \brief Triggered when bottle is actually confirmed to be removed
  */
-void EditWindow::BottleRemoved()
+void EditWindow::bottle_removed()
 {
   hide(); // Close the edit window
 }
@@ -192,14 +192,14 @@ void EditWindow::BottleRemoved()
  */
 void EditWindow::on_bottle_updated()
 {
-  busyDialog.close();
+  busy_dialog.close();
   hide(); // Close the edit Window
 }
 
 /**
  * \brief Show (add) the additional virtual desktop label + input field
  */
-void EditWindow::ShowVirtualDesktopResolution()
+void EditWindow::show_virtual_desktop_resolution()
 {
   edit_grid.attach(virtual_desktop_resolution_label, 0, 4);
   edit_grid.attach(virtual_desktop_resolution_entry, 1, 4);
@@ -208,7 +208,7 @@ void EditWindow::ShowVirtualDesktopResolution()
 /**
  * \brief Hide (remove) the virtual desktop section from grid
  */
-void EditWindow::HideVirtualDesktopResolution()
+void EditWindow::hide_virtual_desktop_resolution()
 {
   edit_grid.remove_row(4);
 }
@@ -221,11 +221,11 @@ void EditWindow::on_virtual_desktop_toggle()
 {
   if (virtual_desktop_check.get_active())
   {
-    ShowVirtualDesktopResolution();
+    show_virtual_desktop_resolution();
   }
   else
   {
-    HideVirtualDesktopResolution();
+    hide_virtual_desktop_resolution();
   }
   show_all_children();
 }
@@ -252,8 +252,8 @@ void EditWindow::on_save_button_clicked()
   save_button.set_sensitive(false);
 
   // Show busy dialog
-  busyDialog.SetMessage("Updating Windows Machine", "Busy applying all your changes currently.");
-  busyDialog.show();
+  busy_dialog.set_message("Updating Windows Machine", "Busy applying all your changes currently.");
+  busy_dialog.show();
 
   Glib::ustring name = name_entry.get_text();
   bool isDesktopEnabled = virtual_desktop_check.get_active();
@@ -295,5 +295,5 @@ void EditWindow::on_save_button_clicked()
   }
   // Ignore the catches
 
-  updateBottle.emit(name, windows_version, virtual_desktop_resolution, audio);
+  update_bottle.emit(name, windows_version, virtual_desktop_resolution, audio);
 }
