@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
       if (arg == "--version")
       {
         // Retrieve version and print it
-        std::string version = AboutDialog::GetVersion();
+        std::string version = AboutDialog::get_version();
         std::cout << "WineGUI " << version << std::endl;
         return 0;
       }
@@ -59,9 +59,9 @@ int main(int argc, char* argv[])
   {
     auto app = Gtk::Application::create("org.melroy.winegui");
     // Setup
-    MainWindow& mainWindow = setupApplication();
+    MainWindow& main_window = setupApplication();
     // Start main loop of GTK
-    return app->run(mainWindow, argc, argv);
+    return app->run(main_window, argc, argv);
   }
 }
 
@@ -69,20 +69,20 @@ static MainWindow& setupApplication()
 {
   // Constructing the top level objects:
   static Menu menu;
-  static MainWindow mainWindow(menu);
-  static PreferencesWindow preferencesWindow(mainWindow);
-  static AboutDialog about(mainWindow);
-  static EditWindow editWindow(mainWindow);
-  static SettingsWindow settingsWindow(mainWindow);
-  static BottleManager manager(mainWindow);
-  static SignalDispatcher signalDispatcher(manager, menu, preferencesWindow, about, editWindow, settingsWindow);
+  static MainWindow main_window(menu);
+  static PreferencesWindow preferences_window(main_window);
+  static AboutDialog about_dialog(main_window);
+  static EditWindow edit_window(main_window);
+  static SettingsWindow settings_window(main_window);
+  static BottleManager manager(main_window);
+  static SignalDispatcher signal_dispatcher(manager, menu, preferences_window, about_dialog, edit_window, settings_window);
 
-  signalDispatcher.SetMainWindow(&mainWindow);
+  signal_dispatcher.set_main_window(&main_window);
   // Do all the signal connections of the life-time of the app
-  signalDispatcher.DispatchSignals();
+  signal_dispatcher.dispatch_signals();
 
   // Call the Bottle Manager prepare method,
   // it will prepare Winetricks & retrieve Wine Bottles
-  manager.Prepare();
-  return mainWindow;
+  manager.prepare();
+  return main_window;
 }

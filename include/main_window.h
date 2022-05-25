@@ -40,31 +40,30 @@ class MainWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void> finishedNewBottle;         /*!< Finished signal */
-  sigc::signal<void, BottleItem*> activeBottle; /*!< Set the active bottle in manager, based on the selected bottle */
-  sigc::signal<void> showEditWindow;            /*!< show Edit window signal */
-  sigc::signal<void> showSettingsWindow;        /*!< show Settings window signal */
+  sigc::signal<void> finished_new_bottle;        /*!< Finished signal */
+  sigc::signal<void, BottleItem*> active_bottle; /*!< Set the active bottle in manager, based on the selected bottle */
+  sigc::signal<void> show_edit_window;           /*!< show Edit window signal */
+  sigc::signal<void> show_settings_window;       /*!< show Settings window signal */
   sigc::signal<void, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, Glib::ustring&, bool&, BottleTypes::AudioDriver>
-      newBottle;                               /*!< Create new Wine Bottle Signal */
-  sigc::signal<void, string, bool> runProgram; /*!< Run an EXE or MSI application in Wine with provided filename */
-  sigc::signal<void> openDriveC;               /*!< Open C: drive signal */
-  sigc::signal<void> rebootBottle;             /*!< Emulate reboot signal */
-  sigc::signal<void> updateBottle;             /*!< Update Wine bottle signal */
-  sigc::signal<void> killRunningProcesses;     /*!< Kill all running processes signal */
-
-  sigc::signal<bool, GdkEventButton*> rightClickMenu; /*!< Right-mouse click in list box signal */
+      new_bottle;                                       /*!< Create new Wine Bottle Signal */
+  sigc::signal<void, string, bool> run_program;         /*!< Run an EXE or MSI application in Wine with provided filename */
+  sigc::signal<void> open_c_drive;                      /*!< Open C: drive signal */
+  sigc::signal<void> reboot_bottle;                     /*!< Emulate reboot signal */
+  sigc::signal<void> update_bottle;                     /*!< Update Wine bottle signal */
+  sigc::signal<void> kill_running_processes;            /*!< Kill all running processes signal */
+  sigc::signal<bool, GdkEventButton*> right_click_menu; /*!< Right-mouse click in list box signal */
 
   explicit MainWindow(Menu& menu);
   virtual ~MainWindow();
 
-  void SetWineBottles(std::list<BottleItem>& bottles);
-  void SetDetailedInfo(BottleItem& bottle);
-  void ResetDetailedInfo();
-  void ShowErrorMessage(const Glib::ustring& message, bool markup = false);
-  bool ShowConfirmDialog(const Glib::ustring& message, bool markup = false);
-  void ShowBusyInstallDialog(const Glib::ustring& message);
-  void ShowBusyInstallDialog(Gtk::Window& parent, const Glib::ustring& message);
-  void CloseBusyDialog();
+  void set_wine_bottles(std::list<BottleItem>& bottles);
+  void set_detailed_info(BottleItem& bottle);
+  void reset_detailed_info();
+  void show_error_message(const Glib::ustring& message, bool markup = false);
+  bool show_confirm_dialog(const Glib::ustring& message, bool markup = false);
+  void show_busy_install_dialog(const Glib::ustring& message);
+  void show_busy_install_dialog(Gtk::Window& parent, const Glib::ustring& message);
+  void close_busy_dialog();
 
   // Signal handlers
   virtual void on_new_bottle_button_clicked();
@@ -109,16 +108,16 @@ protected:
   Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
 
   // Busy dialog
-  BusyDialog busyDialog; /*!< Busy dialog, when the user should wait until install is finished */
+  BusyDialog busy_dialog_; /*!< Busy dialog, when the user should wait until install is finished */
 private:
-  NewBottleAssistant newBottleAssistant; /*!< New bottle wizard (behind: new button toolbar) */
+  NewBottleAssistant new_bottle_assistant_; /*!< New bottle wizard (behind: new button toolbar) */
 
   // Signal handlers
   virtual void on_row_clicked(Gtk::ListBoxRow* row);
   virtual void on_new_bottle_apply();
 
   // Private methods
-  void CreateLeftPanel();
-  void CreateRightPanel();
+  void create_left_panel();
+  void create_right_panel();
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* row, Gtk::ListBoxRow* before);
 };

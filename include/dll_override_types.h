@@ -40,7 +40,7 @@ namespace DLLOverride
     Disabled,
   };
 
-  inline static std::string toString(LoadOrder order)
+  inline static std::string to_string(LoadOrder order)
   {
     switch (order)
     {

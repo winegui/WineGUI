@@ -24,7 +24,7 @@
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), defaultParent(parent)
+BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), default_parent_(parent)
 {
   set_transient_for(parent);
   set_default_size(400, 120);
@@ -59,9 +59,9 @@ BusyDialog::~BusyDialog()
  * \brief Set busy message
  * \param[in] message - Message
  */
-void BusyDialog::SetMessage(const Glib::ustring& headingText, const Glib::ustring& message)
+void BusyDialog::set_message(const Glib::ustring& heading_text, const Glib::ustring& message)
 {
-  this->heading_label.set_markup("<big><b>" + Glib::Markup::escape_text(headingText) + "</b></big>");
+  this->heading_label.set_markup("<big><b>" + Glib::Markup::escape_text(heading_text) + "</b></big>");
   this->message_label.set_text(message + " Please wait...");
 }
 
@@ -70,13 +70,13 @@ void BusyDialog::SetMessage(const Glib::ustring& headingText, const Glib::ustrin
  */
 void BusyDialog::show()
 {
-  if (!timer.empty() && timer.connected())
+  if (!timer_.empty() && timer_.connected())
   {
-    timer.disconnect();
+    timer_.disconnect();
   }
 
   int time_interval = 200;
-  timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BusyDialog::Pulsing), time_interval);
+  timer_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BusyDialog::pulsing), time_interval);
   Gtk::Dialog::show();
 }
 
@@ -86,12 +86,12 @@ void BusyDialog::show()
 void BusyDialog::close()
 {
   // Reset default parent
-  set_transient_for(defaultParent);
+  set_transient_for(default_parent_);
 
   // Stop pulsing timer
-  if (!timer.empty() && timer.connected())
+  if (!timer_.empty() && timer_.connected())
   {
-    timer.disconnect();
+    timer_.disconnect();
   }
   Gtk::Dialog::close();
 }
@@ -100,7 +100,7 @@ void BusyDialog::close()
  * \brief Trigger the loading bar,
  * until timer is disconnected.
  */
-bool BusyDialog::Pulsing()
+bool BusyDialog::pulsing()
 {
   loading_bar.pulse();
   return true; // Keep pulsing, util timer disconnect

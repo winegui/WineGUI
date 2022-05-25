@@ -35,7 +35,7 @@ MainWindow::MainWindow(Menu& menu)
       paned(Gtk::ORIENTATION_HORIZONTAL),
       right_box(Gtk::Orientation::ORIENTATION_VERTICAL),
       separator1(Gtk::ORIENTATION_HORIZONTAL),
-      busyDialog(*this)
+      busy_dialog_(*this)
 {
   // Set some Window properties
   set_title("WineGUI - WINE Manager");
@@ -44,7 +44,7 @@ MainWindow::MainWindow(Menu& menu)
 
   try
   {
-    set_icon_from_file(Helper::GetImageLocation("logo.png"));
+    set_icon_from_file(Helper::get_image_location("logo.png"));
   }
   catch (Glib::FileError& e)
   {
@@ -59,35 +59,35 @@ MainWindow::MainWindow(Menu& menu)
   vbox.pack_end(paned);
 
   // Create rest to vbox
-  CreateLeftPanel();
-  CreateRightPanel();
+  create_left_panel();
+  create_right_panel();
 
   // Using a Vertical box container
   add(vbox);
 
   // Reset the right panel to default values
-  this->ResetDetailedInfo();
+  this->reset_detailed_info();
 
   // Left side (listbox)
 
   listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
-  listbox.signal_button_press_event().connect(rightClickMenu); // TODO: pass the bottle clicked on?
+  listbox.signal_button_press_event().connect(right_click_menu); // TODO: pass the bottle clicked on?
 
   // Right panel toolbar menu buttons
   // New button pressed signal
   new_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_button_clicked));
   // Apply button signal
-  newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_apply));
+  new_bottle_assistant_.signal_apply().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_apply));
   // Connect the new bottle assistant signal to the mainWindow signal
-  newBottleAssistant.newBottleFinished.connect(finishedNewBottle);
+  new_bottle_assistant_.new_bottle_finished.connect(finished_new_bottle);
 
-  edit_button.signal_clicked().connect(showEditWindow);
-  settings_button.signal_clicked().connect(showSettingsWindow);
+  edit_button.signal_clicked().connect(show_edit_window);
+  settings_button.signal_clicked().connect(show_settings_window);
   run_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
-  open_c_driver_button.signal_clicked().connect(openDriveC);
-  reboot_button.signal_clicked().connect(rebootBottle);
-  update_button.signal_clicked().connect(updateBottle);
-  kill_processes_button.signal_clicked().connect(killRunningProcesses);
+  open_c_driver_button.signal_clicked().connect(open_c_drive);
+  reboot_button.signal_clicked().connect(reboot_bottle);
+  update_button.signal_clicked().connect(update_bottle);
+  kill_processes_button.signal_clicked().connect(kill_running_processes);
 
   // Show the widget children
   show_all_children();
@@ -104,7 +104,7 @@ MainWindow::~MainWindow()
  * \brief Set a list/vector of bottles to the left panel
  * \param[in] bottles - Wine Bottle item vector array
  */
-void MainWindow::SetWineBottles(std::list<BottleItem>& bottles)
+void MainWindow::set_wine_bottles(std::list<BottleItem>& bottles)
 {
   // Clear whole listbox
   std::vector<Gtk::Widget*> children = listbox.get_children();
@@ -124,21 +124,21 @@ void MainWindow::SetWineBottles(std::list<BottleItem>& bottles)
  * \brief set the detailed info panel on the right
  * \param[in] bottle - Wine Bottle item object
  */
-void MainWindow::SetDetailedInfo(BottleItem& bottle)
+void MainWindow::set_detailed_info(BottleItem& bottle)
 {
   if (!bottle.is_selected())
     this->listbox.select_row(bottle);
 
   // Set right side of the GUI
   name.set_text(bottle.name());
-  Glib::ustring windows = BottleTypes::toString(bottle.windows());
-  windows += " (" + BottleTypes::toString(bottle.bit()) + ')';
+  Glib::ustring windows = BottleTypes::to_string(bottle.windows());
+  windows += " (" + BottleTypes::to_string(bottle.bit()) + ')';
   window_version.set_text(windows);
   wine_version.set_text(bottle.wine_version());
   wine_location.set_text(bottle.wine_location());
   c_drive_location.set_text(bottle.wine_c_drive());
   wine_last_changed.set_text(bottle.wine_last_changed());
-  audio_driver.set_text(BottleTypes::toString(bottle.audio_driver()));
+  audio_driver.set_text(BottleTypes::to_string(bottle.audio_driver()));
   Glib::ustring virtualDesktop = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
   virtual_desktop.set_text(virtualDesktop);
 }
@@ -146,7 +146,7 @@ void MainWindow::SetDetailedInfo(BottleItem& bottle)
 /**
  * \brief Reset the detailed info panel
  */
-void MainWindow::ResetDetailedInfo()
+void MainWindow::reset_detailed_info()
 {
   name.set_text("-");
   window_version.set_text("");
@@ -164,7 +164,7 @@ void MainWindow::ResetDetailedInfo()
  * \param[in] message - Show this error message
  * \param[in] markup Support markup in message text (default: false)
  */
-void MainWindow::ShowErrorMessage(const Glib::ustring& message, bool markup)
+void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
 {
   // false = no markup
   Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
@@ -179,7 +179,7 @@ void MainWindow::ShowErrorMessage(const Glib::ustring& message, bool markup)
  * \param[in] markup Support markup in message text (default: false)
  * \return True if user pressed confirm (yes), otherwise False
  */
-bool MainWindow::ShowConfirmDialog(const Glib::ustring& message, bool markup)
+bool MainWindow::show_confirm_dialog(const Glib::ustring& message, bool markup)
 {
   // false = no markup
   Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
@@ -198,10 +198,10 @@ bool MainWindow::ShowConfirmDialog(const Glib::ustring& message, bool markup)
  * \brief Show busy indicator (like busy installing corefonts in Wine bottle)
  * \param[in] message Given the user more information what is going on
  */
-void MainWindow::ShowBusyInstallDialog(const Glib::ustring& message)
+void MainWindow::show_busy_install_dialog(const Glib::ustring& message)
 {
-  busyDialog.SetMessage("Installing software", message);
-  busyDialog.show();
+  busy_dialog_.set_message("Installing software", message);
+  busy_dialog_.show();
 }
 
 /**
@@ -209,19 +209,19 @@ void MainWindow::ShowBusyInstallDialog(const Glib::ustring& message)
  * \param[in] parent Parent GTK Window (set to be the GTK transient for)
  * \param[in] message Given the user more information what is going on
  */
-void MainWindow::ShowBusyInstallDialog(Gtk::Window& parent, const Glib::ustring& message)
+void MainWindow::show_busy_install_dialog(Gtk::Window& parent, const Glib::ustring& message)
 {
-  busyDialog.SetMessage("Installing software", message);
-  busyDialog.set_transient_for(parent);
-  busyDialog.show();
+  busy_dialog_.set_message("Installing software", message);
+  busy_dialog_.set_transient_for(parent);
+  busy_dialog_.show();
 }
 
 /**
  * \brief Close the busy dialog again
  */
-void MainWindow::CloseBusyDialog()
+void MainWindow::close_busy_dialog()
 {
-  busyDialog.close();
+  busy_dialog_.close();
 }
 
 /**
@@ -229,8 +229,8 @@ void MainWindow::CloseBusyDialog()
  */
 void MainWindow::on_new_bottle_button_clicked()
 {
-  newBottleAssistant.set_transient_for(*this);
-  newBottleAssistant.show();
+  new_bottle_assistant_.set_transient_for(*this);
+  new_bottle_assistant_.show();
 }
 
 /**
@@ -239,7 +239,7 @@ void MainWindow::on_new_bottle_button_clicked()
  */
 void MainWindow::on_new_bottle_created()
 {
-  newBottleAssistant.BottleCreated();
+  new_bottle_assistant_.bottle_created();
 }
 
 /**
@@ -281,17 +281,17 @@ void MainWindow::on_run_button_clicked()
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
     if (ext == "exe")
     {
-      runProgram.emit(filename, false);
+      run_program.emit(filename, false);
     }
     else if (ext == "msi")
     {
       // Run as MSI (true=MSI)
-      runProgram.emit(filename, true);
+      run_program.emit(filename, true);
     }
     else
     {
       // fall-back: try run as Exe
-      runProgram.emit(filename, false);
+      run_program.emit(filename, false);
     }
     break;
   }
@@ -323,7 +323,7 @@ void MainWindow::on_give_feedback()
 {
   if (!Gio::AppInfo::launch_default_for_uri("https://gitlab.melroy.org/melroy/winegui/-/issues"))
   {
-    this->ShowErrorMessage("Could not open browser.");
+    this->show_error_message("Could not open browser.");
   }
 }
 
@@ -349,10 +349,10 @@ void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 {
   if (row != nullptr)
   {
-    SetDetailedInfo(*dynamic_cast<BottleItem*>(row));
+    set_detailed_info(*dynamic_cast<BottleItem*>(row));
     // Signal activate Bottle with current BottleItem as parameter to the dispatcher
     // Which updates the connected modules accordingly.
-    activeBottle.emit(dynamic_cast<BottleItem*>(row));
+    active_bottle.emit(dynamic_cast<BottleItem*>(row));
   }
 }
 
@@ -370,16 +370,16 @@ void MainWindow::on_new_bottle_apply()
   BottleTypes::AudioDriver audio;
 
   // Retrieve assistant results
-  newBottleAssistant.GetResult(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
+  new_bottle_assistant_.get_result(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
 
   // Emit new bottle signal (see dispatcher)
-  newBottle.emit(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
+  new_bottle.emit(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
 }
 
 /**
  * \brief Create left side of the GUI
  */
-void MainWindow::CreateLeftPanel()
+void MainWindow::create_left_panel()
 {
   // Vertical scroll only
   scrolled_window.set_policy(Gtk::PolicyType::POLICY_NEVER, Gtk::PolicyType::POLICY_AUTOMATIC);
@@ -398,7 +398,7 @@ void MainWindow::CreateLeftPanel()
 /**
  * \brief Create right side of the GUI
  */
-void MainWindow::CreateRightPanel()
+void MainWindow::create_right_panel()
 {
   toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
 

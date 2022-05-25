@@ -37,7 +37,7 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
       wine_console_button("Console"),
       wine_config_button("WineCfg"),
       winetricks_button("Winetricks"),
-      activeBottle(nullptr)
+      active_bottle_(nullptr)
 {
   set_transient_for(parent);
   set_default_size(900, 540);
@@ -132,13 +132,13 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   install_visual_cpp_button.set_tooltip_text("Installs Visual C++ 2013 package");
   second_toolbar.insert(install_visual_cpp_button, 2);
 
-  install_dotnet4_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "40"));
-  install_dotnet4_button.set_tooltip_text("Installs .NET 4.0");
-  second_toolbar.insert(install_dotnet4_button, 4);
+  install_dotnet4_0_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "40"));
+  install_dotnet4_0_button.set_tooltip_text("Installs .NET 4.0");
+  second_toolbar.insert(install_dotnet4_0_button, 4);
 
-  install_dotnet452_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
-  install_dotnet452_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
-  second_toolbar.insert(install_dotnet452_button, 5);
+  install_dotnet4_5_2_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
+  install_dotnet4_5_2_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
+  second_toolbar.insert(install_dotnet4_5_2_button, 5);
 
   // Third row buttons, supporting tools
   Gtk::Image* uninstaller_image = Gtk::manage(new Gtk::Image());
@@ -225,12 +225,12 @@ SettingsWindow::~SettingsWindow()
 /**
  * \brief Same as show() but will also update the Window title
  */
-void SettingsWindow::Show()
+void SettingsWindow::show()
 {
-  this->UpdateInstalled();
+  this->update_installed();
 
-  if (activeBottle != nullptr)
-    set_title("Settings of machine - " + activeBottle->name());
+  if (active_bottle_ != nullptr)
+    set_title("Settings of machine - " + active_bottle_->name());
   else
     set_title("Settings for machine (Unknown machine)");
   // Call parent show
@@ -241,25 +241,25 @@ void SettingsWindow::Show()
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void SettingsWindow::SetActiveBottle(BottleItem* bottle)
+void SettingsWindow::set_active_bottle(BottleItem* bottle)
 {
-  this->activeBottle = bottle;
+  active_bottle_ = bottle;
 }
 
 /**
  * \brief Signal handler for resetting the active bottle to null
  */
-void SettingsWindow::ResetActiveBottle()
+void SettingsWindow::reset_active_bottle()
 {
-  this->activeBottle = nullptr;
+  active_bottle_ = nullptr;
 }
 
 /**
  * \brief Update GUI state depending on the packages installed
  */
-void SettingsWindow::UpdateInstalled()
+void SettingsWindow::update_installed()
 {
-  if (IsD3DX9Installed())
+  if (is_d3dx9_installed())
   {
     Gtk::Image* reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
     reinstall_d3dx9_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -274,7 +274,7 @@ void SettingsWindow::UpdateInstalled()
     install_d3dx9_button.set_icon_widget(*install_d3dx9_image);
   }
 
-  if (IsDXVKInstalled())
+  if (is_dxvk_installed())
   {
     Gtk::Image* reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
     reinstall_d3dx9_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -289,7 +289,7 @@ void SettingsWindow::UpdateInstalled()
     install_dxvk_button.set_icon_widget(*install_d3dx9_image);
   }
 
-  if (IsLiberationInstalled())
+  if (is_liberation_installed())
   {
     Gtk::Image* reinstall_liberation_image = Gtk::manage(new Gtk::Image());
     reinstall_liberation_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -304,7 +304,7 @@ void SettingsWindow::UpdateInstalled()
     install_liberation_fonts_button.set_icon_widget(*install_liberation_image);
   }
 
-  if (IsCoreFontsInstalled())
+  if (is_core_fonts_installed())
   {
     Gtk::Image* reinstall_core_fonts_image = Gtk::manage(new Gtk::Image());
     reinstall_core_fonts_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -319,7 +319,7 @@ void SettingsWindow::UpdateInstalled()
     install_core_fonts_button.set_icon_widget(*install_core_fonts_image);
   }
 
-  if (isVisualCppInstalled())
+  if (is_visual_cpp_installed())
   {
     Gtk::Image* reinstall_visual_cpp_image = Gtk::manage(new Gtk::Image());
     reinstall_visual_cpp_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -334,34 +334,34 @@ void SettingsWindow::UpdateInstalled()
     install_visual_cpp_button.set_icon_widget(*install_visual_cpp_image);
   }
 
-  if (isDotnet4Installed())
+  if (is_dotnet_4_0_installed())
   {
     Gtk::Image* reinstall_dotnet4_image = Gtk::manage(new Gtk::Image());
     reinstall_dotnet4_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_button.set_label("Reinstall .NET v4");
-    install_dotnet4_button.set_icon_widget(*reinstall_dotnet4_image);
+    install_dotnet4_0_button.set_label("Reinstall .NET v4");
+    install_dotnet4_0_button.set_icon_widget(*reinstall_dotnet4_image);
   }
   else
   {
     Gtk::Image* install_dotnet4_image = Gtk::manage(new Gtk::Image());
     install_dotnet4_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_button.set_label("Install .NET v4");
-    install_dotnet4_button.set_icon_widget(*install_dotnet4_image);
+    install_dotnet4_0_button.set_label("Install .NET v4");
+    install_dotnet4_0_button.set_icon_widget(*install_dotnet4_image);
   }
 
-  if (isDotnet452Installed())
+  if (is_dotnet_4_5_2_installed())
   {
     Gtk::Image* reinstall_dotnet452_image = Gtk::manage(new Gtk::Image());
     reinstall_dotnet452_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet452_button.set_label("Reinstall .NET v4.5.2");
-    install_dotnet452_button.set_icon_widget(*reinstall_dotnet452_image);
+    install_dotnet4_5_2_button.set_label("Reinstall .NET v4.5.2");
+    install_dotnet4_5_2_button.set_icon_widget(*reinstall_dotnet452_image);
   }
   else
   {
     Gtk::Image* install_dotnet452_image = Gtk::manage(new Gtk::Image());
     install_dotnet452_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet452_button.set_label("Install .NET v4.5.2");
-    install_dotnet452_button.set_icon_widget(*install_dotnet452_image);
+    install_dotnet4_5_2_button.set_label("Install .NET v4.5.2");
+    install_dotnet4_5_2_button.set_icon_widget(*install_dotnet452_image);
   }
 
   show_all_children();
@@ -371,32 +371,32 @@ void SettingsWindow::UpdateInstalled()
  * \brief Check is D3DX9 (DirectX 9 OpenGL) is installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::IsD3DX9Installed()
+bool SettingsWindow::is_d3dx9_installed()
 {
-  bool isInstalled = false;
-  if (this->activeBottle != nullptr)
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native' load order
-    isInstalled = Helper::GetDLLOverride(wine_prefix, "*d3dx9_43");
+    is_installed = Helper::get_dll_override(wine_prefix, "*d3dx9_43");
   }
-  return isInstalled;
+  return is_installed;
 }
 
 /**
  * \brief Check is DXVK (Vulkan based DirectX 9/10/11) is installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::IsDXVKInstalled()
+bool SettingsWindow::is_dxvk_installed()
 {
-  bool isInstalled = false;
-  if (this->activeBottle != nullptr)
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native' load order
-    isInstalled = Helper::GetDLLOverride(wine_prefix, "*dxgi");
+    is_installed = Helper::get_dll_override(wine_prefix, "*dxgi");
   }
-  return isInstalled;
+  return is_installed;
 }
 
 /**
@@ -404,118 +404,118 @@ bool SettingsWindow::IsDXVKInstalled()
  * As fallback: Wine is looking for the liberation font on the local unix system (in the /usr/share/fonts/.. directory)
  * \return True if installed otherwise False
  */
-bool SettingsWindow::IsLiberationInstalled()
+bool SettingsWindow::is_liberation_installed()
 {
-  bool isInstalled = false;
-  if (this->activeBottle != nullptr)
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    BottleTypes::Bit bit = activeBottle->bit();
-    string fontFilename = Helper::GetFontFilename(wine_prefix, bit, "Liberation Mono (TrueType)");
-    isInstalled = (fontFilename == "liberationmono-regular.ttf");
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    BottleTypes::Bit bit = active_bottle_->bit();
+    string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Liberation Mono (TrueType)");
+    is_installed = (fontFilename == "liberationmono-regular.ttf");
   }
-  return isInstalled;
+  return is_installed;
 }
 
 /**
  * \brief Check if MS Core fonts are installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::IsCoreFontsInstalled()
+bool SettingsWindow::is_core_fonts_installed()
 {
-  bool isInstalled = false;
-  if (this->activeBottle != nullptr)
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
-    BottleTypes::Bit bit = activeBottle->bit();
-    string fontFilename = Helper::GetFontFilename(wine_prefix, bit, "Comic Sans MS (TrueType)");
-    isInstalled = (fontFilename == "comic.ttf");
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    BottleTypes::Bit bit = active_bottle_->bit();
+    string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Comic Sans MS (TrueType)");
+    is_installed = (fontFilename == "comic.ttf");
   }
-  return isInstalled;
+  return is_installed;
 }
 
 /**
  * \brief Check if MS Visual C++ installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::isVisualCppInstalled()
+bool SettingsWindow::is_visual_cpp_installed()
 {
-  bool isInstalled = false;
-  if (this->activeBottle != nullptr)
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native, builtin' load order
-    bool isDllOverride = Helper::GetDLLOverride(wine_prefix, "*msvcp120", DLLOverride::LoadOrder::NativeBuiltin);
-    if (isDllOverride)
+    bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp120", DLLOverride::LoadOrder::NativeBuiltin);
+    if (is_dll_override)
     {
       // Next, check if package can be found to be uninstalled
-      string name = Helper::GetUninstaller(wine_prefix, "{61087a79-ac85-455c-934d-1fa22cc64f36}");
+      string name = Helper::get_uninstaller(wine_prefix, "{61087a79-ac85-455c-934d-1fa22cc64f36}");
       // String starts with
-      isInstalled = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
+      is_installed = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
 
       // Try the 64-bit package (fallback)
-      if (!isInstalled)
+      if (!is_installed)
       {
-        name = Helper::GetUninstaller(wine_prefix, "{ef6b00ec-13e1-4c25-9064-b2f383cb8412}");
-        isInstalled = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
+        name = Helper::get_uninstaller(wine_prefix, "{ef6b00ec-13e1-4c25-9064-b2f383cb8412}");
+        is_installed = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
       }
     }
     else
     {
-      isInstalled = false;
+      is_installed = false;
     }
   }
-  return isInstalled;
+  return is_installed;
 }
 
 /**
  * \brief Check if MS .NET v4.0 is installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::isDotnet4Installed()
+bool SettingsWindow::is_dotnet_4_0_installed()
 {
-  bool isInstalled = false;
-  if (this->activeBottle != nullptr)
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native' load order
-    bool isDllOverride = Helper::GetDLLOverride(wine_prefix, "*mscoree");
-    if (isDllOverride)
+    bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mscoree");
+    if (is_dll_override)
     {
       // Next, check if package can be found to be uninstalled
-      string name = Helper::GetUninstaller(wine_prefix, "Microsoft .NET Framework 4 Extended");
-      isInstalled = (name == "Microsoft .NET Framework 4 Extended");
+      string name = Helper::get_uninstaller(wine_prefix, "Microsoft .NET Framework 4 Extended");
+      is_installed = (name == "Microsoft .NET Framework 4 Extended");
     }
     else
     {
-      isInstalled = false;
+      is_installed = false;
     }
   }
-  return isInstalled;
+  return is_installed;
 }
 
 /**
  * \brief Check ife MS .NET v4.5.2 is installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::isDotnet452Installed()
+bool SettingsWindow::is_dotnet_4_5_2_installed()
 {
-  bool isInstalled = false;
-  if (this->activeBottle != nullptr)
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = activeBottle->wine_location();
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native' load order
-    bool isDllOverride = Helper::GetDLLOverride(wine_prefix, "*mscoree");
-    if (isDllOverride)
+    bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mscoree");
+    if (is_dll_override)
     {
       // Next, check if package can be found to be uninstalled
-      string name = Helper::GetUninstaller(wine_prefix, "{92FB6C44-E685-45AD-9B20-CADF4CABA132}");
-      isInstalled = (name == "Microsoft .NET Framework 4.5.2");
+      string name = Helper::get_uninstaller(wine_prefix, "{92FB6C44-E685-45AD-9B20-CADF4CABA132}");
+      is_installed = (name == "Microsoft .NET Framework 4.5.2");
     }
     else
     {
-      isInstalled = false;
+      is_installed = false;
     }
   }
-  return isInstalled;
+  return is_installed;
 }

@@ -30,21 +30,21 @@ class Menu : public Gtk::MenuBar
 {
 public:
   // Signals
-  sigc::signal<void> preferences;    /*!< preferences button clicked signal */
-  sigc::signal<void> quit;           /*!< quite button clicked signal */
-  sigc::signal<void> refreshView;    /*!< refresh button clicked signal */
-  sigc::signal<void> newBottle;      /*!< new machine button clicked signal */
-  sigc::signal<void> run;            /*!< run button clicked signal */
-  sigc::signal<void> editBottle;     /*!< edit button clicked signal */
-  sigc::signal<void> settingsBottle; /*!< settings button clicked signal */
-  sigc::signal<void> removeMachine;  /*!< remove button clicked signal */
-  sigc::signal<void> openDriveC;     /*!< open C: drive clicked signal */
-  sigc::signal<void> giveFeedback;   /*!< feedback button clicked signal */
-  sigc::signal<void> showAbout;      /*!< about button clicked signal */
+  sigc::signal<void> preferences;     /*!< preferences button clicked signal */
+  sigc::signal<void> quit;            /*!< quite button clicked signal */
+  sigc::signal<void> refresh_view;    /*!< refresh button clicked signal */
+  sigc::signal<void> new_bottle;      /*!< new machine button clicked signal */
+  sigc::signal<void> run;             /*!< run button clicked signal */
+  sigc::signal<void> edit_bottle;     /*!< edit button clicked signal */
+  sigc::signal<void> settings_bottle; /*!< settings button clicked signal */
+  sigc::signal<void> remove_bottle;   /*!< remove button clicked signal */
+  sigc::signal<void> open_c_drive;    /*!< open C: drive clicked signal */
+  sigc::signal<void> give_feedback;   /*!< feedback button clicked signal */
+  sigc::signal<void> show_about;      /*!< about button clicked signal */
 
   Menu();
   virtual ~Menu();
-  Gtk::Menu* GetMachineMenu();
+  Gtk::Menu* get_machine_menu();
 
 protected:
   // Child widgets
@@ -61,5 +61,5 @@ protected:
   Gtk::SeparatorMenuItem separator3; /*!< Menu seperator */
 
 private:
-  Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);
+  Gtk::MenuItem* create_image_menu_item(const Glib::ustring& label_text, const Glib::ustring& icon_name);
 };

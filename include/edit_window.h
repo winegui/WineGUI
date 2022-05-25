@@ -37,16 +37,16 @@ class EditWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver> updateBottle; /*!< save button clicked signal */
-  sigc::signal<void> removeBottle; /*!< remove button clicked signal */
+  sigc::signal<void, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver> update_bottle; /*!< save button clicked signal */
+  sigc::signal<void> remove_bottle; /*!< remove button clicked signal */
 
   explicit EditWindow(Gtk::Window& parent);
   virtual ~EditWindow();
 
-  void Show();
-  void SetActiveBottle(BottleItem* bottle);
-  void ResetActiveBottle();
-  void BottleRemoved();
+  void show();
+  void set_active_bottle(BottleItem* bottle);
+  void reset_active_bottle();
+  void bottle_removed();
 
   // Signal handlers
   virtual void on_bottle_updated();
@@ -76,7 +76,7 @@ protected:
   Gtk::ToolButton wine_config_button; /*!< Winecfg button */
 
   // Busy dialog
-  BusyDialog busyDialog; /*!< Busy dialog, when the user should wait until install is finished */
+  BusyDialog busy_dialog; /*!< Busy dialog, when the user should wait until install is finished */
 private:
   // Signal handlers
   void on_cancel_button_clicked();
@@ -84,8 +84,8 @@ private:
   void on_virtual_desktop_toggle();
 
   // Member functions
-  void ShowVirtualDesktopResolution();
-  void HideVirtualDesktopResolution();
+  void show_virtual_desktop_resolution();
+  void hide_virtual_desktop_resolution();
 
-  BottleItem* activeBottle; /*!< Current active bottle */
+  BottleItem* active_bottle_; /*!< Current active bottle */
 };

@@ -35,20 +35,20 @@
  */
 SignalDispatcher::SignalDispatcher(BottleManager& manager,
                                    Menu& menu,
-                                   PreferencesWindow& preferencesWindow,
-                                   AboutDialog& about,
-                                   EditWindow& editWindow,
-                                   SettingsWindow& settingsWindow)
-    : mainWindow(nullptr),
-      manager(manager),
-      menu(menu),
-      preferencesWindow(preferencesWindow),
-      about(about),
-      editWindow(editWindow),
-      settingsWindow(settingsWindow),
-      m_bottleCreatedDispatcher(),
-      m_errorMessageCreatedDispatcher(),
-      m_threadBottleManager(nullptr)
+                                   PreferencesWindow& preferences_window,
+                                   AboutDialog& about_dialog,
+                                   EditWindow& edit_window,
+                                   SettingsWindow& settings_window)
+    : main_window_(nullptr),
+      manager_(manager),
+      menu_(menu),
+      preferences_window_(preferences_window),
+      about_dialog_(about_dialog),
+      edit_window_(edit_window),
+      settings_window_(settings_window),
+      bottle_created_dispatcher_(),
+      error_message_created_dispatcher_(),
+      thread_bottle_manager_(nullptr)
 {
   // Nothing
 }
@@ -59,17 +59,17 @@ SignalDispatcher::SignalDispatcher(BottleManager& manager,
 SignalDispatcher::~SignalDispatcher()
 {
   // To avoid zombie threads
-  this->CleanUpBottleManagerThread();
+  this->cleanup_bottle_manager_thread();
 }
 
 /**
  * \brief Set main window pointer to Signal Dispatcher
  */
-void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
+void SignalDispatcher::set_main_window(MainWindow* main_window)
 {
-  if (this->mainWindow == nullptr)
+  if (main_window_ == nullptr)
   {
-    this->mainWindow = mainWindow;
+    main_window_ = main_window;
   }
   else
   {
@@ -80,89 +80,89 @@ void SignalDispatcher::SetMainWindow(MainWindow* mainWindow)
 /**
  * \brief This method does all the signal connections between classes/emits/signals
  */
-void SignalDispatcher::DispatchSignals()
+void SignalDispatcher::dispatch_signals()
 {
   // Menu buttons
-  menu.preferences.connect(sigc::mem_fun(preferencesWindow, &PreferencesWindow::show));
-  menu.quit.connect(
-      sigc::mem_fun(*mainWindow, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
-  menu.refreshView.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
-  menu.newBottle.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
-  menu.run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
-  menu.openDriveC.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
-  menu.editBottle.connect(sigc::mem_fun(editWindow, &EditWindow::show));
-  menu.settingsBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
-  menu.removeMachine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
-  menu.giveFeedback.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_give_feedback));
-  menu.showAbout.connect(sigc::mem_fun(about, &AboutDialog::RunDialog));
-  about.signal_response().connect(sigc::mem_fun(about, &AboutDialog::HideDialog));
+  menu_.preferences.connect(sigc::mem_fun(preferences_window_, &PreferencesWindow::show));
+  menu_.quit.connect(
+      sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
+  menu_.refresh_view.connect(sigc::mem_fun(manager_, &BottleManager::update_bottles));
+  menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
+  menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
+  menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
+  menu_.edit_bottle.connect(sigc::mem_fun(edit_window_, &EditWindow::show));
+  menu_.settings_bottle.connect(sigc::mem_fun(settings_window_, &SettingsWindow::show));
+  menu_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
+  menu_.give_feedback.connect(sigc::mem_fun(*main_window_, &MainWindow::on_give_feedback));
+  menu_.show_about.connect(sigc::mem_fun(about_dialog_, &AboutDialog::run_dialog));
+  about_dialog_.signal_response().connect(sigc::mem_fun(about_dialog_, &AboutDialog::hide_dialog));
 
   // Distribute the active bottle signal from Main Window
-  mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
-  mainWindow->activeBottle.connect(sigc::mem_fun(editWindow, &EditWindow::SetActiveBottle));
-  mainWindow->activeBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::SetActiveBottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(manager_, &BottleManager::set_active_bottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(edit_window_, &EditWindow::set_active_bottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(settings_window_, &SettingsWindow::set_active_bottle));
   // Distribute the reset bottle signal from the manager
-  manager.resetActiveBottle.connect(sigc::mem_fun(editWindow, &EditWindow::ResetActiveBottle));
-  manager.resetActiveBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::ResetActiveBottle));
-  manager.resetActiveBottle.connect(sigc::mem_fun(*mainWindow, &MainWindow::ResetDetailedInfo));
+  manager_.reset_acctive_bottle.connect(sigc::mem_fun(edit_window_, &EditWindow::reset_active_bottle));
+  manager_.reset_acctive_bottle.connect(sigc::mem_fun(settings_window_, &SettingsWindow::reset_active_bottle));
+  manager_.reset_acctive_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_detailed_info));
   // Removed bottle signal from the manager
-  manager.bottleRemoved.connect(sigc::mem_fun(editWindow, &EditWindow::BottleRemoved));
+  manager_.bottle_removed.connect(sigc::mem_fun(edit_window_, &EditWindow::bottle_removed));
   // Package install finished (in settings window), close the busy dialog & refresh the settings window
-  manager.finishedPackageInstall.connect(sigc::mem_fun(*mainWindow, &MainWindow::CloseBusyDialog));
-  manager.finishedPackageInstall.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::UpdateInstalled));
+  manager_.finished_package_install.connect(sigc::mem_fun(*main_window_, &MainWindow::close_busy_dialog));
+  manager_.finished_package_install.connect(sigc::mem_fun(settings_window_, &SettingsWindow::update_installed));
 
   // Menu / Toolbar actions
-  mainWindow->newBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
-  mainWindow->finishedNewBottle.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
-  mainWindow->showEditWindow.connect(sigc::mem_fun(editWindow, &EditWindow::Show));
-  mainWindow->showSettingsWindow.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
-  mainWindow->runProgram.connect(sigc::mem_fun(manager, &BottleManager::RunProgram));
-  mainWindow->openDriveC.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
-  mainWindow->rebootBottle.connect(sigc::mem_fun(manager, &BottleManager::Reboot));
-  mainWindow->updateBottle.connect(sigc::mem_fun(manager, &BottleManager::Update));
-  mainWindow->killRunningProcesses.connect(sigc::mem_fun(manager, &BottleManager::KillProcesses));
+  main_window_->new_bottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
+  main_window_->finished_new_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update_bottles));
+  main_window_->show_edit_window.connect(sigc::mem_fun(edit_window_, &EditWindow::show));
+  main_window_->show_settings_window.connect(sigc::mem_fun(settings_window_, &SettingsWindow::show));
+  main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
+  main_window_->open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
+  main_window_->reboot_bottle.connect(sigc::mem_fun(manager_, &BottleManager::reboot));
+  main_window_->update_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update));
+  main_window_->kill_running_processes.connect(sigc::mem_fun(manager_, &BottleManager::kill_processes));
 
   // Edit Window
-  editWindow.updateBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_update_bottle));
-  editWindow.removeBottle.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
+  edit_window_.update_bottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_update_bottle));
+  edit_window_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
 
   // Right click menu in listbox
-  mainWindow->rightClickMenu.connect(sigc::mem_fun(this, &SignalDispatcher::on_mouse_button_pressed));
+  main_window_->right_click_menu.connect(sigc::mem_fun(this, &SignalDispatcher::on_mouse_button_pressed));
 
   // When bottle created, the finish (or error message) event is called
-  m_bottleCreatedDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
-  m_bottleUpdatedDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_bottle_updated));
-  m_errorMessageCreatedDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message_created));
-  m_errorMessageUpdatedDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message_updated));
+  bottle_created_dispatcher_.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
+  bottle_updated_dispatcher_.connect(sigc::mem_fun(this, &SignalDispatcher::on_bottle_updated));
+  error_message_created_dispatcher_.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message_created));
+  error_message_updated_dispatcher_.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message_updated));
 
-  // When the WineExec() results into a non-zero exit code the failureOnExec it triggered
-  Helper& helper = Helper::getInstance();
+  // When the WineExec() results into a non-zero exit code the failure_on_exec it triggered
+  Helper& helper = Helper::get_instance();
   // Using Dispatcher instead of signal, will result in that the message box runs in the main thread.
-  helper.failureOnExec.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_exec_failure));
+  helper.failure_on_exec.connect(sigc::mem_fun(*main_window_, &MainWindow::on_exec_failure));
 
   // Settings gaming package buttons
-  settingsWindow.directx9.connect(sigc::mem_fun(manager, &BottleManager::InstallD3DX9));
-  settingsWindow.vulkan.connect(sigc::mem_fun(manager, &BottleManager::InstallDXVK));
+  settings_window_.directx9.connect(sigc::mem_fun(manager_, &BottleManager::install_d3dx9));
+  settings_window_.vulkan.connect(sigc::mem_fun(manager_, &BottleManager::install_dxvk));
 
   // Settings additional package buttons
-  settingsWindow.liberation_fonts.connect(sigc::mem_fun(manager, &BottleManager::InstallLiberation));
-  settingsWindow.corefonts.connect(sigc::mem_fun(manager, &BottleManager::InstallCoreFonts));
-  settingsWindow.dotnet.connect(sigc::mem_fun(manager, &BottleManager::InstallDotNet));
-  settingsWindow.visual_cpp_package.connect(sigc::mem_fun(manager, &BottleManager::InstallVisualCppPackage));
+  settings_window_.liberation_fonts.connect(sigc::mem_fun(manager_, &BottleManager::install_liberation));
+  settings_window_.corefonts.connect(sigc::mem_fun(manager_, &BottleManager::install_core_fonts));
+  settings_window_.dotnet.connect(sigc::mem_fun(manager_, &BottleManager::install_dot_net));
+  settings_window_.visual_cpp_package.connect(sigc::mem_fun(manager_, &BottleManager::install_visual_cpp_package));
 
   // Settings additional tool buttons
-  settingsWindow.uninstaller.connect(sigc::mem_fun(manager, &BottleManager::OpenUninstaller));
-  settingsWindow.notepad.connect(sigc::mem_fun(manager, &BottleManager::OpenNotepad));
-  settingsWindow.wordpad.connect(sigc::mem_fun(manager, &BottleManager::OpenWordpad));
-  settingsWindow.iexplore.connect(sigc::mem_fun(manager, &BottleManager::OpenIexplore));
-  settingsWindow.task_manager.connect(sigc::mem_fun(manager, &BottleManager::OpenTaskManager));
-  settingsWindow.regedit.connect(sigc::mem_fun(manager, &BottleManager::OpenRegistertyEditor));
+  settings_window_.uninstaller.connect(sigc::mem_fun(manager_, &BottleManager::open_uninstaller));
+  settings_window_.notepad.connect(sigc::mem_fun(manager_, &BottleManager::open_notepad));
+  settings_window_.wordpad.connect(sigc::mem_fun(manager_, &BottleManager::open_wordpad));
+  settings_window_.iexplore.connect(sigc::mem_fun(manager_, &BottleManager::open_iexplorer));
+  settings_window_.task_manager.connect(sigc::mem_fun(manager_, &BottleManager::open_task_manager));
+  settings_window_.regedit.connect(sigc::mem_fun(manager_, &BottleManager::open_registery_editor));
 
   // Settings fallback tool buttons
-  settingsWindow.explorer.connect(sigc::mem_fun(manager, &BottleManager::OpenExplorer));
-  settingsWindow.console.connect(sigc::mem_fun(manager, &BottleManager::OpenConsole));
-  settingsWindow.winetricks.connect(sigc::mem_fun(manager, &BottleManager::OpenWinetricks));
-  settingsWindow.winecfg.connect(sigc::mem_fun(manager, &BottleManager::OpenWinecfg));
+  settings_window_.explorer.connect(sigc::mem_fun(manager_, &BottleManager::open_explorer));
+  settings_window_.console.connect(sigc::mem_fun(manager_, &BottleManager::open_console));
+  settings_window_.winetricks.connect(sigc::mem_fun(manager_, &BottleManager::open_winetricks));
+  settings_window_.winecfg.connect(sigc::mem_fun(manager_, &BottleManager::open_winecfg));
 }
 
 /**
@@ -170,9 +170,9 @@ void SignalDispatcher::DispatchSignals()
  * Now we can trigger the dispatcher so it can run a method
  * (connected to the dispatcher signal) in the GUI thread
  */
-void SignalDispatcher::SignalBottleCreated()
+void SignalDispatcher::signal_bottle_created()
 {
-  m_bottleCreatedDispatcher.emit();
+  bottle_created_dispatcher_.emit();
 }
 
 /**
@@ -180,42 +180,42 @@ void SignalDispatcher::SignalBottleCreated()
  *  Now we can trigger the dispatcher so it can run a method
  * (connected to the dispatcher signal) in the GUI thread
  */
-void SignalDispatcher::SignalBottleUpdated()
+void SignalDispatcher::signal_bottle_updated()
 {
-  m_bottleUpdatedDispatcher.emit();
+  bottle_updated_dispatcher_.emit();
 }
 
 /**
  * \brief Signal error message during bottle creation,
  * called from the thread.
  */
-void SignalDispatcher::SignalErrorMessageDuringCreate()
+void SignalDispatcher::signal_error_message_during_create()
 {
   // Show error message
-  m_errorMessageCreatedDispatcher.emit();
+  error_message_created_dispatcher_.emit();
 }
 
 /**
  * \brief Signal error message during bottle update,
  *  called from the thread.
  */
-void SignalDispatcher::SignalErrorMessageDuringUpdate()
+void SignalDispatcher::signal_error_message_during_update()
 {
   // Show error message
-  m_errorMessageUpdatedDispatcher.emit();
+  error_message_updated_dispatcher_.emit();
 }
 
 /**
  * \brief Helper method for cleaning the manage thread.
  */
-void SignalDispatcher::CleanUpBottleManagerThread()
+void SignalDispatcher::cleanup_bottle_manager_thread()
 {
-  if (m_threadBottleManager)
+  if (thread_bottle_manager_)
   {
-    if (m_threadBottleManager->joinable())
-      m_threadBottleManager->join();
-    delete m_threadBottleManager;
-    m_threadBottleManager = nullptr;
+    if (thread_bottle_manager_->joinable())
+      thread_bottle_manager_->join();
+    delete thread_bottle_manager_;
+    thread_bottle_manager_ = nullptr;
   }
 }
 
@@ -228,7 +228,7 @@ bool SignalDispatcher::on_mouse_button_pressed(GdkEventButton* event)
   // Single click with right mouse button?
   if (event->type == GDK_BUTTON_PRESS && event->button == 3)
   {
-    Gtk::Menu* popup = menu.GetMachineMenu();
+    Gtk::Menu* popup = menu_.get_machine_menu();
     if (popup)
     {
       popup->popup(event->button, event->time);
@@ -250,40 +250,40 @@ void SignalDispatcher::on_new_bottle(Glib::ustring& name,
                                      bool& disable_geck_mono,
                                      BottleTypes::AudioDriver audio)
 {
-  if (m_threadBottleManager)
+  if (thread_bottle_manager_)
   {
-    this->mainWindow->ShowErrorMessage("There is already running a thread. Please wait...");
+    main_window_->show_error_message("There is already running a thread. Please wait...");
     // Always close the wizard (signal as if the bottle was created)
-    m_bottleCreatedDispatcher.emit();
+    bottle_created_dispatcher_.emit();
   }
   else
   {
     // Start a new manager thread (executing NewBottle())
-    m_threadBottleManager = new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio] {
-      manager.NewBottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio);
+    thread_bottle_manager_ = new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio] {
+      manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio);
     });
   }
 }
 
 /**
- * \brief Update existing bottle signal, starting UpdateBottle() within thread
+ * \brief Update existing bottle signal, starting update_bottle() within thread
  */
 void SignalDispatcher::on_update_bottle(Glib::ustring& name,
                                         BottleTypes::Windows windows_version,
                                         Glib::ustring& virtual_desktop_resolution,
                                         BottleTypes::AudioDriver audio)
 {
-  if (m_threadBottleManager)
+  if (thread_bottle_manager_)
   {
-    this->mainWindow->ShowErrorMessage("There is already running a thread. Please wait...");
+    main_window_->show_error_message("There is already running a thread. Please wait...");
     // Close the edit window (signal as if the bottle was updated)
-    m_errorMessageUpdatedDispatcher.emit();
+    error_message_updated_dispatcher_.emit();
   }
   else
   {
     // Start a new manager thread (executing NewBottle())
-    m_threadBottleManager = new std::thread([this, name, windows_version, virtual_desktop_resolution, audio] {
-      manager.UpdateBottle(this, name, windows_version, virtual_desktop_resolution, audio);
+    thread_bottle_manager_ = new std::thread([this, name, windows_version, virtual_desktop_resolution, audio] {
+      manager_.update_bottle(this, name, windows_version, virtual_desktop_resolution, audio);
     });
   }
 }
@@ -298,10 +298,10 @@ void SignalDispatcher::on_update_bottle(Glib::ustring& name,
  */
 void SignalDispatcher::on_new_bottle_created()
 {
-  this->CleanUpBottleManagerThread();
+  this->cleanup_bottle_manager_thread();
 
   // Inform the main window (which will inform the new bottle assistant)
-  this->mainWindow->on_new_bottle_created();
+  main_window_->on_new_bottle_created();
 }
 
 /**
@@ -309,13 +309,13 @@ void SignalDispatcher::on_new_bottle_created()
  */
 void SignalDispatcher::on_bottle_updated()
 {
-  this->CleanUpBottleManagerThread();
+  this->cleanup_bottle_manager_thread();
 
   // Inform the edit window
-  this->editWindow.on_bottle_updated();
+  edit_window_.on_bottle_updated();
 
   // Update bottle list
-  manager.UpdateBottles();
+  manager_.update_bottles();
 }
 
 /**
@@ -324,12 +324,12 @@ void SignalDispatcher::on_bottle_updated()
  */
 void SignalDispatcher::on_error_message_created()
 {
-  this->CleanUpBottleManagerThread();
+  this->cleanup_bottle_manager_thread();
 
-  this->mainWindow->ShowErrorMessage(manager.GetErrorMessage());
+  main_window_->show_error_message(manager_.get_error_message());
 
   // Always close the wizard (signal as if the bottle was updated)
-  m_bottleCreatedDispatcher.emit();
+  bottle_created_dispatcher_.emit();
 }
 
 /**
@@ -338,10 +338,10 @@ void SignalDispatcher::on_error_message_created()
  */
 void SignalDispatcher::on_error_message_updated()
 {
-  this->CleanUpBottleManagerThread();
+  this->cleanup_bottle_manager_thread();
 
-  this->mainWindow->ShowErrorMessage(manager.GetErrorMessage());
+  main_window_->show_error_message(manager_.get_error_message());
 
   // Always close the edit window (signal as if the bottle was updated)
-  m_bottleUpdatedDispatcher.emit();
+  bottle_updated_dispatcher_.emit();
 }
