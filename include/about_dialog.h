@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    about_dialog.h
  * \brief   About Dialog
@@ -34,8 +34,8 @@ public:
   explicit AboutDialog(Gtk::Window& parent);
   virtual ~AboutDialog();
 
-  void run_dialog();
-  void hide_dialog(int response);
+  void RunDialog();
+  void HideDialog(int response);
 
   static std::string GetVersion();
 

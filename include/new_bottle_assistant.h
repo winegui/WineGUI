@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    new_bottle_assistant.h
  * \brief   New Bottle Assistant (Wizard)
@@ -37,10 +37,10 @@ public:
   virtual ~NewBottleAssistant();
 
   void GetResult(Glib::ustring& name,
-                 Glib::ustring& virtual_desktop_resolution,
-                 bool& disable_gecko_mono,
                  BottleTypes::Windows& windows_version,
                  BottleTypes::Bit& bit,
+                 Glib::ustring& virtual_desktop_resolution,
+                 bool& disable_gecko_mono,
                  BottleTypes::AudioDriver& audio);
 
   void BottleCreated();

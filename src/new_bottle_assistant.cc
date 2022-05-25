@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    new_bottle_assistant.cc
  * \brief   New Bottle Assistant (Wizard)
@@ -139,9 +139,10 @@ void NewBottleAssistant::createFirstPage()
 void NewBottleAssistant::createSecondPage()
 {
   // Additional page
-  additional_label.set_markup("<big><b>Additional Settings</b></big>\n"
-                              "There you could adapt some additional Windows settings.\n\n<b>Note:</b> If do not "
-                              "know what these settings will do, *do not* change the settings (leave as default).");
+  additional_label.set_markup(
+      "<big><b>Additional Settings</b></big>\n"
+      "There you could adapt some additional Windows settings.\n\n<b>Note:</b> If you do not "
+      "know what these settings mean, <b><i>do NOT</i></b> change the settings (keep the default values).");
   additional_label.set_halign(Gtk::Align::ALIGN_START);
   additional_label.set_margin_bottom(25);
   m_vbox2.pack_start(additional_label, false, false);
@@ -194,17 +195,17 @@ void NewBottleAssistant::createThirdPage()
  * And reset the values to default values again.
  * Idea: use one struct as in/out parameter
  * \param[inout] name                        Bottle Name
- * \param[inout] virtual_desktop_resolution  Virtual desktop resolution (empty if disabled)
- * \param[inout] disable_gecko_mono          Enable/Disable Gecko/Mono during install
  * \param[inout] windows_version             Windows OS version
  * \param[inout] bit                         Windows Bit (32/64-bit)
+ * \param[inout] virtual_desktop_resolution  Virtual desktop resolution (empty if disabled)
+ * \param[inout] disable_gecko_mono          Enable/Disable Gecko/Mono during install
  * \param[inout] audio                       Audio Driver type
  */
 void NewBottleAssistant::GetResult(Glib::ustring& name,
-                                   Glib::ustring& virtual_desktop_resolution,
-                                   bool& disable_gecko_mono,
                                    BottleTypes::Windows& windows_version,
                                    BottleTypes::Bit& bit,
+                                   Glib::ustring& virtual_desktop_resolution,
+                                   bool& disable_gecko_mono,
                                    BottleTypes::AudioDriver& audio)
 {
   std::string::size_type sz;
@@ -213,19 +214,6 @@ void NewBottleAssistant::GetResult(Glib::ustring& name,
   audio = BottleTypes::AudioDriver::pulseaudio;
 
   name = name_entry.get_text();
-
-  bool isDesktopEnabled = virtual_desktop_check.get_active();
-  if (isDesktopEnabled)
-  {
-    virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
-  }
-  else
-  {
-    // Just empty
-    virtual_desktop_resolution = "";
-  }
-
-  disable_gecko_mono = disable_gecko_mono_check.get_active();
 
   try
   {
@@ -244,6 +232,19 @@ void NewBottleAssistant::GetResult(Glib::ustring& name,
   {
   }
   // Ignore the catches
+
+  bool isDesktopEnabled = virtual_desktop_check.get_active();
+  if (isDesktopEnabled)
+  {
+    virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
+  }
+  else
+  {
+    // Just empty
+    virtual_desktop_resolution = "";
+  }
+
+  disable_gecko_mono = disable_gecko_mono_check.get_active();
 
   try
   {

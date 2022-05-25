@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    about_dialog.cc
  * \brief   The About dialog
@@ -51,7 +51,7 @@ AboutDialog::~AboutDialog()
 /**
  * \brief Open about dialog
  */
-void AboutDialog::run_dialog()
+void AboutDialog::RunDialog()
 {
   run();
 }
@@ -59,7 +59,7 @@ void AboutDialog::run_dialog()
 /**
  * \brief Close the about dialog
  */
-void AboutDialog::hide_dialog(__attribute__((unused)) int response)
+void AboutDialog::HideDialog(__attribute__((unused)) int response)
 {
   hide();
 }

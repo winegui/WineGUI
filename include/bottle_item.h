@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    bottle_item.h
  * \brief   Wine Bottle item class definition
@@ -174,12 +174,12 @@ public:
   {
     return _audio_driver;
   };
-  /// set Wine emulate virtual desktop
+  /// set Wine emulate virtual desktop (set to empty string to disable)
   void virtual_desktop(const Glib::ustring virtual_desktop)
   {
     _virtual_desktop = virtual_desktop;
   };
-  /// get Wine emulate virtual desktop
+  /// get Wine emulate virtual desktop (empty string is disabled)
   const Glib::ustring& virtual_desktop() const
   {
     return _virtual_desktop;

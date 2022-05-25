@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    main_window.cc
  * \brief   Main GTK+ Window class
@@ -39,7 +39,7 @@ MainWindow::MainWindow(Menu& menu)
 {
   // Set some Window properties
   set_title("WineGUI - WINE Manager");
-  set_default_size(1000, 600);
+  set_default_size(1060, 600);
   set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
   try
@@ -78,7 +78,7 @@ MainWindow::MainWindow(Menu& menu)
   new_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_button_clicked));
   // Apply button signal
   newBottleAssistant.signal_apply().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_apply));
-  // Finished signal
+  // Connect the new bottle assistant signal to the mainWindow signal
   newBottleAssistant.newBottleFinished.connect(finishedNewBottle);
 
   edit_button.signal_clicked().connect(showEditWindow);
@@ -139,7 +139,8 @@ void MainWindow::SetDetailedInfo(BottleItem& bottle)
   c_drive_location.set_text(bottle.wine_c_drive());
   wine_last_changed.set_text(bottle.wine_last_changed());
   audio_driver.set_text(BottleTypes::toString(bottle.audio_driver()));
-  virtual_desktop.set_text(bottle.virtual_desktop());
+  Glib::ustring virtualDesktop = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
+  virtual_desktop.set_text(virtualDesktop);
 }
 
 /**
@@ -161,11 +162,12 @@ void MainWindow::ResetDetailedInfo()
  * \brief Show an error message with the provided text.
  * User can only click 'OK'
  * \param[in] message - Show this error message
+ * \param[in] markup Support markup in message text (default: false)
  */
-void MainWindow::ShowErrorMessage(const Glib::ustring& message)
+void MainWindow::ShowErrorMessage(const Glib::ustring& message, bool markup)
 {
   // false = no markup
-  Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
   dialog.set_title("An error has occurred!");
   dialog.set_modal(true);
   dialog.run();
@@ -174,12 +176,13 @@ void MainWindow::ShowErrorMessage(const Glib::ustring& message)
 /**
  * \brief Confirm dialog (Yes/No message)
  * \param[in] message - Show this message during confirmation
+ * \param[in] markup Support markup in message text (default: false)
  * \return True if user pressed confirm (yes), otherwise False
  */
-bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
+bool MainWindow::ShowConfirmDialog(const Glib::ustring& message, bool markup)
 {
   // false = no markup
-  Gtk::MessageDialog dialog(*this, message, false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
   dialog.set_title("Are you sure?");
   dialog.set_modal(true);
   int result = dialog.run();
@@ -195,9 +198,9 @@ bool MainWindow::ShowConfirmDialog(const Glib::ustring& message)
  * \brief Show busy indicator (like busy installing corefonts in Wine bottle)
  * \param[in] message Given the user more information what is going on
  */
-void MainWindow::ShowBusyDialog(const Glib::ustring& message)
+void MainWindow::ShowBusyInstallDialog(const Glib::ustring& message)
 {
-  busyDialog.SetMessage(message);
+  busyDialog.SetMessage("Installing software", message);
   busyDialog.show();
 }
 
@@ -206,9 +209,9 @@ void MainWindow::ShowBusyDialog(const Glib::ustring& message)
  * \param[in] parent Parent GTK Window (set to be the GTK transient for)
  * \param[in] message Given the user more information what is going on
  */
-void MainWindow::ShowBusyDialog(Gtk::Window& parent, const Glib::ustring& message)
+void MainWindow::ShowBusyInstallDialog(Gtk::Window& parent, const Glib::ustring& message)
 {
-  busyDialog.SetMessage(message);
+  busyDialog.SetMessage("Installing software", message);
   busyDialog.set_transient_for(parent);
   busyDialog.show();
 }
@@ -318,11 +321,9 @@ void MainWindow::on_hide_window()
  */
 void MainWindow::on_give_feedback()
 {
-  GError* error = NULL;
-  if (!g_app_info_launch_default_for_uri("mailto://melroy@melroy.org", NULL, &error))
+  if (!Gio::AppInfo::launch_default_for_uri("https://gitlab.melroy.org/melroy/winegui/-/issues"))
   {
-    g_warning("Failed to open email link: %s", error->message);
-    this->ShowErrorMessage("Could not open e-mail program.");
+    this->ShowErrorMessage("Could not open browser.");
   }
 }
 
@@ -363,17 +364,17 @@ void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 void MainWindow::on_new_bottle_apply()
 {
   Glib::ustring name;
-  Glib::ustring virtual_desktop_resolution;
-  bool disable_gecko_mono;
   BottleTypes::Windows windows_version;
   BottleTypes::Bit bit;
+  Glib::ustring virtual_desktop_resolution;
+  bool disable_gecko_mono;
   BottleTypes::AudioDriver audio;
 
   // Retrieve assistant results
-  newBottleAssistant.GetResult(name, virtual_desktop_resolution, disable_gecko_mono, windows_version, bit, audio);
+  newBottleAssistant.GetResult(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
 
   // Emit new bottle signal (see dispatcher)
-  newBottle.emit(name, virtual_desktop_resolution, disable_gecko_mono, windows_version, bit, audio);
+  newBottle.emit(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
 }
 
 /**

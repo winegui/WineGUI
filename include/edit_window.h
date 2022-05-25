@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    edit_window.h
  * \brief   Edit GTK+ window class
@@ -20,6 +20,8 @@
  */
 #pragma once
 
+#include "bottle_types.h"
+#include "busy_dialog.h"
 #include <gtkmm.h>
 
 using std::string;
@@ -34,25 +36,57 @@ class BottleItem;
 class EditWindow : public Gtk::Window
 {
 public:
+  // Signals
+  sigc::signal<void, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver>
+      updateBottle;                /*!< save button clicked signal */
+  sigc::signal<void> removeBottle; /*!< remove button clicked signal */
+
   explicit EditWindow(Gtk::Window& parent);
   virtual ~EditWindow();
 
   void Show();
   void SetActiveBottle(BottleItem* bottle);
   void ResetActiveBottle();
+  void BottleRemoved();
+
+  // Signal handlers
+  virtual void on_bottle_updated();
 
 protected:
   // Child widgets
-  Gtk::Grid settings_grid;
+  Gtk::Box vbox;
+  Gtk::Box hbox_buttons;
+  Gtk::Grid edit_grid;
 
-  Gtk::Label label;
+  Gtk::Label header_edit_label;
+  Gtk::Label name_label;
+  Gtk::Label windows_version_label;
+  Gtk::Label audiodriver_label;
+  Gtk::Label virtual_desktop_resolution_label;
+  Gtk::Entry name_entry;
+  Gtk::Entry virtual_desktop_resolution_entry;
+  Gtk::ComboBoxText windows_version_combobox;
+  Gtk::ComboBoxText audiodriver_combobox;
+  Gtk::CheckButton virtual_desktop_check;
 
-  Gtk::ToolButton save_button;   /*!< save button */
-  Gtk::ToolButton delete_button; /*!< delete button */
+  Gtk::Button save_button;   /*!< save button */
+  Gtk::Button cancel_button; /*!< cancel button */
+  Gtk::Button delete_button; /*!< delete button */
 
   // Buttons second row
   Gtk::ToolButton wine_config_button; /*!< Winecfg button */
 
+  // Busy dialog
+  BusyDialog busyDialog; /*!< Busy dialog, when the user should wait until install is finished */
 private:
+  // Signal handlers
+  void on_cancel_button_clicked();
+  void on_save_button_clicked();
+  void on_virtual_desktop_toggle();
+
+  // Member functions
+  void ShowVirtualDesktopResolution();
+  void HideVirtualDesktopResolution();
+
   BottleItem* activeBottle; /*!< Current active bottle */
 };

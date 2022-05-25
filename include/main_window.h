@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    main_window.h
  * \brief   Main GTK+ window class
@@ -46,10 +46,10 @@ public:
   sigc::signal<void> showSettingsWindow;        /*!< show Settings window signal */
   sigc::signal<void,
                Glib::ustring&,
-               Glib::ustring&,
-               bool&,
                BottleTypes::Windows,
                BottleTypes::Bit,
+               Glib::ustring&,
+               bool&,
                BottleTypes::AudioDriver>
       newBottle;                               /*!< Create new Wine Bottle Signal */
   sigc::signal<void, string, bool> runProgram; /*!< Run an EXE or MSI application in Wine with provided filename */
@@ -66,10 +66,10 @@ public:
   void SetWineBottles(std::list<BottleItem>& bottles);
   void SetDetailedInfo(BottleItem& bottle);
   void ResetDetailedInfo();
-  void ShowErrorMessage(const Glib::ustring& message);
-  bool ShowConfirmDialog(const Glib::ustring& message);
-  void ShowBusyDialog(const Glib::ustring& message);
-  void ShowBusyDialog(Gtk::Window& parent, const Glib::ustring& message);
+  void ShowErrorMessage(const Glib::ustring& message, bool markup = false);
+  bool ShowConfirmDialog(const Glib::ustring& message, bool markup = false);
+  void ShowBusyInstallDialog(const Glib::ustring& message);
+  void ShowBusyInstallDialog(Gtk::Window& parent, const Glib::ustring& message);
   void CloseBusyDialog();
 
   // Signal handlers

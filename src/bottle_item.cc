@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    bottle_item.cc
  * \brief   Wine Bottle Item
@@ -69,7 +69,7 @@ BottleItem::BottleItem(Glib::ustring name,
       _wine_c_drive(wine_c_drive),
       _wine_last_changed(wine_last_changed),
       _audio_driver(BottleTypes::AudioDriver::pulseaudio),
-      _virtual_desktop("disabled"){
+      _virtual_desktop(""){
           // Gui will be created during the copy contructor called by Gtk
       };
 
@@ -120,7 +120,7 @@ void BottleItem::CreateUI()
   image.set_margin_start(8);
 
   name_label.set_xalign(0.0);
-  name_label.set_markup("<span size=\"medium\"><b>" + name + "</b></span>");
+  name_label.set_markup("<span size=\"medium\"><b>" + Glib::Markup::escape_text(name) + "</b></span>");
 
   Glib::ustring status_text = "Ready";
   if (status)
