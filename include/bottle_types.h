@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    bottle_types.h
  * \brief   Bottle type enum definitions (like Windows OS, audio driver, supported Windows list)
@@ -28,9 +28,6 @@
  */
 namespace BottleTypes
 {
-  //// Emulate Virtual Desktop disabled string
-  static const std::string VIRTUAL_DESKTOP_DISABLED = "Disabled";
-
   /**
    * \enum Windows
    * \brief List of Windows versions.

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    signal_dispatcher.cc
  * \brief   Connect different signals and dispatch
@@ -46,8 +46,8 @@ SignalDispatcher::SignalDispatcher(BottleManager& manager,
       about(about),
       editWindow(editWindow),
       settingsWindow(settingsWindow),
-      m_FinishDispatcher(),
-      m_ErrorMessageDispatcher(),
+      m_bottleCreatedDispatcher(),
+      m_errorMessageCreatedDispatcher(),
       m_threadBottleManager(nullptr)
 {
   // Nothing
@@ -59,7 +59,7 @@ SignalDispatcher::SignalDispatcher(BottleManager& manager,
 SignalDispatcher::~SignalDispatcher()
 {
   // To avoid zombie threads
-  CleanUpBottleManagerThread();
+  this->CleanUpBottleManagerThread();
 }
 
 /**
@@ -87,32 +87,34 @@ void SignalDispatcher::DispatchSignals()
   menu.quit.connect(sigc::mem_fun(
       *mainWindow,
       &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
-  menu.refresh_view.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
-  menu.new_machine.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
+  menu.refreshView.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
+  menu.newBottle.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_new_bottle_button_clicked));
   menu.run.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_run_button_clicked));
-  menu.open_drive_c.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
-  menu.edit_machine.connect(sigc::mem_fun(editWindow, &EditWindow::show));
-  menu.settings_machine.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
-  menu.remove_machine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
-  menu.give_feedback.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_give_feedback));
-  menu.show_about.connect(sigc::mem_fun(about, &AboutDialog::run_dialog));
-  about.signal_response().connect(sigc::mem_fun(about, &AboutDialog::hide_dialog));
+  menu.openDriveC.connect(sigc::mem_fun(manager, &BottleManager::OpenDriveC));
+  menu.editBottle.connect(sigc::mem_fun(editWindow, &EditWindow::show));
+  menu.settingsBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
+  menu.removeMachine.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
+  menu.giveFeedback.connect(sigc::mem_fun(*mainWindow, &MainWindow::on_give_feedback));
+  menu.showAbout.connect(sigc::mem_fun(about, &AboutDialog::RunDialog));
+  about.signal_response().connect(sigc::mem_fun(about, &AboutDialog::HideDialog));
 
-  // Distribute the active bottle signal
+  // Distribute the active bottle signal from Main Window
   mainWindow->activeBottle.connect(sigc::mem_fun(manager, &BottleManager::SetActiveBottle));
   mainWindow->activeBottle.connect(sigc::mem_fun(editWindow, &EditWindow::SetActiveBottle));
   mainWindow->activeBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::SetActiveBottle));
-  // Distribute the reset bottle signal
+  // Distribute the reset bottle signal from the manager
   manager.resetActiveBottle.connect(sigc::mem_fun(editWindow, &EditWindow::ResetActiveBottle));
   manager.resetActiveBottle.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::ResetActiveBottle));
   manager.resetActiveBottle.connect(sigc::mem_fun(*mainWindow, &MainWindow::ResetDetailedInfo));
+  // Removed bottle signal from the manager
+  manager.bottleRemoved.connect(sigc::mem_fun(editWindow, &EditWindow::BottleRemoved));
   // Package install finished (in settings window), close the busy dialog & refresh the settings window
   manager.finishedPackageInstall.connect(sigc::mem_fun(*mainWindow, &MainWindow::CloseBusyDialog));
   manager.finishedPackageInstall.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::UpdateInstalled));
 
   // Menu / Toolbar actions
   mainWindow->newBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
-  mainWindow->finishedNewBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_update_bottles));
+  mainWindow->finishedNewBottle.connect(sigc::mem_fun(manager, &BottleManager::UpdateBottles));
   mainWindow->showEditWindow.connect(sigc::mem_fun(editWindow, &EditWindow::Show));
   mainWindow->showSettingsWindow.connect(sigc::mem_fun(settingsWindow, &SettingsWindow::Show));
   mainWindow->runProgram.connect(sigc::mem_fun(manager, &BottleManager::RunProgram));
@@ -121,12 +123,18 @@ void SignalDispatcher::DispatchSignals()
   mainWindow->updateBottle.connect(sigc::mem_fun(manager, &BottleManager::Update));
   mainWindow->killRunningProcesses.connect(sigc::mem_fun(manager, &BottleManager::KillProcesses));
 
+  // Edit Window
+  editWindow.updateBottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_update_bottle));
+  editWindow.removeBottle.connect(sigc::mem_fun(manager, &BottleManager::DeleteBottle));
+
   // Right click menu in listbox
   mainWindow->rightClickMenu.connect(sigc::mem_fun(this, &SignalDispatcher::on_mouse_button_pressed));
 
   // When bottle created, the finish (or error message) event is called
-  m_FinishDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
-  m_ErrorMessageDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message));
+  m_bottleCreatedDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle_created));
+  m_bottleUpdatedDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_bottle_updated));
+  m_errorMessageCreatedDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message_created));
+  m_errorMessageUpdatedDispatcher.connect(sigc::mem_fun(this, &SignalDispatcher::on_error_message_updated));
 
   // When the WineExec() results into a non-zero exit code the failureOnExec it triggered
   Helper& helper = Helper::getInstance();
@@ -159,26 +167,47 @@ void SignalDispatcher::DispatchSignals()
 }
 
 /**
- * \brief Signal finish is called from within thread,
- *  which can trigger the dispatcher so it can run a method
+ * \brief Signal bottle creation is finished, called from the thread.
+ * Now we can trigger the dispatcher so it can run a method
  * (connected to the dispatcher signal) in the GUI thread
  */
 void SignalDispatcher::SignalBottleCreated()
 {
-  m_FinishDispatcher.emit();
+  m_bottleCreatedDispatcher.emit();
 }
 
 /**
- * \brief Helper method for Signal error message
+ * \brief Signal bottle updated is finished, called from the thread.
+ *  Now we can trigger the dispatcher so it can run a method
+ * (connected to the dispatcher signal) in the GUI thread
  */
-void SignalDispatcher::SignalErrorMessage()
+void SignalDispatcher::SignalBottleUpdated()
+{
+  m_bottleUpdatedDispatcher.emit();
+}
+
+/**
+ * \brief Signal error message during bottle creation,
+ * called from the thread.
+ */
+void SignalDispatcher::SignalErrorMessageDuringCreate()
 {
   // Show error message
-  m_ErrorMessageDispatcher.emit();
+  m_errorMessageCreatedDispatcher.emit();
 }
 
 /**
- * \brief Helper method for cleaning the manage thread
+ * \brief Signal error message during bottle update,
+ *  called from the thread.
+ */
+void SignalDispatcher::SignalErrorMessageDuringUpdate()
+{
+  // Show error message
+  m_errorMessageUpdatedDispatcher.emit();
+}
+
+/**
+ * \brief Helper method for cleaning the manage thread.
  */
 void SignalDispatcher::CleanUpBottleManagerThread()
 {
@@ -213,36 +242,51 @@ bool SignalDispatcher::on_mouse_button_pressed(GdkEventButton* event)
 }
 
 /**
- * \brief Update bottles in GUI (typically when the new wizard is finished)
- */
-void SignalDispatcher::on_update_bottles()
-{
-  manager.UpdateBottles();
-}
-
-/**
  * \brief New Bottle signal, starting NewBottle() within thread
  */
 void SignalDispatcher::on_new_bottle(Glib::ustring& name,
-                                     Glib::ustring& virtual_desktop_resolution,
-                                     bool& disable_geck_mono,
                                      BottleTypes::Windows windows_version,
                                      BottleTypes::Bit bit,
+                                     Glib::ustring& virtual_desktop_resolution,
+                                     bool& disable_geck_mono,
                                      BottleTypes::AudioDriver audio)
 {
   if (m_threadBottleManager)
   {
     this->mainWindow->ShowErrorMessage("There is already running a thread. Please wait...");
-    // Always close the wizard (signal 'finish')
-    m_FinishDispatcher.emit();
+    // Always close the wizard (signal as if the bottle was created)
+    m_bottleCreatedDispatcher.emit();
   }
   else
   {
     // Start a new manager thread (executing NewBottle())
     m_threadBottleManager =
-        new std::thread([this, name, virtual_desktop_resolution, disable_geck_mono, windows_version, bit, audio] {
-          manager.NewBottle(this, name, virtual_desktop_resolution, disable_geck_mono, windows_version, bit, audio);
+        new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio] {
+          manager.NewBottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio);
         });
+  }
+}
+
+/**
+ * \brief Update existing bottle signal, starting UpdateBottle() within thread
+ */
+void SignalDispatcher::on_update_bottle(Glib::ustring& name,
+                                        BottleTypes::Windows windows_version,
+                                        Glib::ustring& virtual_desktop_resolution,
+                                        BottleTypes::AudioDriver audio)
+{
+  if (m_threadBottleManager)
+  {
+    this->mainWindow->ShowErrorMessage("There is already running a thread. Please wait...");
+    // Close the edit window (signal as if the bottle was updated)
+    m_errorMessageUpdatedDispatcher.emit();
+  }
+  else
+  {
+    // Start a new manager thread (executing NewBottle())
+    m_threadBottleManager = new std::thread([this, name, windows_version, virtual_desktop_resolution, audio] {
+      manager.UpdateBottle(this, name, windows_version, virtual_desktop_resolution, audio);
+    });
   }
 }
 
@@ -256,21 +300,50 @@ void SignalDispatcher::on_new_bottle(Glib::ustring& name,
  */
 void SignalDispatcher::on_new_bottle_created()
 {
-  CleanUpBottleManagerThread();
+  this->CleanUpBottleManagerThread();
 
+  // Inform the main window (which will inform the new bottle assistant)
   this->mainWindow->on_new_bottle_created();
 }
 
 /**
- * \brief Fetch the error message from the manager (in a thread-safe manner),
+ * \brief Signal handler when bottle is updated, dispatched from the manager thread
+ */
+void SignalDispatcher::on_bottle_updated()
+{
+  this->CleanUpBottleManagerThread();
+
+  // Inform the edit window
+  this->editWindow.on_bottle_updated();
+
+  // Update bottle list
+  manager.UpdateBottles();
+}
+
+/**
+ * \brief Fetch the error message from the manager during bottle creation (in a thread-safe manner),
  * and report it to the main window (runs on the GUI thread).
  */
-void SignalDispatcher::on_error_message()
+void SignalDispatcher::on_error_message_created()
 {
-  CleanUpBottleManagerThread();
+  this->CleanUpBottleManagerThread();
 
   this->mainWindow->ShowErrorMessage(manager.GetErrorMessage());
 
-  // Always close the wizard (signal 'finish')
-  m_FinishDispatcher.emit();
+  // Always close the wizard (signal as if the bottle was updated)
+  m_bottleCreatedDispatcher.emit();
+}
+
+/**
+ * \brief Fetch the error message from the manager during bottle update (in a thread-safe manner),
+ * and report it to the main window (runs on the GUI thread).
+ */
+void SignalDispatcher::on_error_message_updated()
+{
+  this->CleanUpBottleManagerThread();
+
+  this->mainWindow->ShowErrorMessage(manager.GetErrorMessage());
+
+  // Always close the edit window (signal as if the bottle was updated)
+  m_bottleUpdatedDispatcher.emit();
 }

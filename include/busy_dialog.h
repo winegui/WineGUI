@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    busy_dialog.h
  * \brief   GTK+ Busy Dialog
@@ -37,7 +37,7 @@ public:
   void show();
   void close();
 
-  void SetMessage(const Glib::ustring& message);
+  void SetMessage(const Glib::ustring& headingText, const Glib::ustring& message);
 
 protected:
   Gtk::Label heading_label;     /*!< Heading label */

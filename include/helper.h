@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    helper.h
  * \brief   Helper class for Bottle Manager and CLI
@@ -60,6 +60,7 @@ public:
   static void
   CreateWineBottle(bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
   static void RemoveWineBottle(const string& prefix_path);
+  static void RenameWineBottleFolder(const string& current_prefix_path, const string& new_prefix_path);
   static string GetName(const string& prefix_path);
   static BottleTypes::Windows GetWindowsOSVersion(const string& prefix_path);
   static BottleTypes::Bit GetSystemBit(const string& prefix_path);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    menu.h
  * \brief   The main-menu
@@ -29,17 +29,18 @@
 class Menu : public Gtk::MenuBar
 {
 public:
-  sigc::signal<void> preferences;      /*!< preferences button clicked signal */
-  sigc::signal<void> quit;             /*!< quite button clicked signal */
-  sigc::signal<void> refresh_view;     /*!< refresh button clicked signal */
-  sigc::signal<void> new_machine;      /*!< new machine button clicked signal */
-  sigc::signal<void> run;              /*!< run button clicked signal */
-  sigc::signal<void> open_drive_c;     /*!< open C: drive clicked signal */
-  sigc::signal<void> edit_machine;     /*!< edit button clicked signal */
-  sigc::signal<void> settings_machine; /*!< settings button clicked signal */
-  sigc::signal<void> remove_machine;   /*!< remove button clicked signal */
-  sigc::signal<void> give_feedback;    /*!< feedback button clicked signal */
-  sigc::signal<void> show_about;       /*!< about button clicked signal */
+  // Signals
+  sigc::signal<void> preferences;    /*!< preferences button clicked signal */
+  sigc::signal<void> quit;           /*!< quite button clicked signal */
+  sigc::signal<void> refreshView;    /*!< refresh button clicked signal */
+  sigc::signal<void> newBottle;      /*!< new machine button clicked signal */
+  sigc::signal<void> run;            /*!< run button clicked signal */
+  sigc::signal<void> editBottle;     /*!< edit button clicked signal */
+  sigc::signal<void> settingsBottle; /*!< settings button clicked signal */
+  sigc::signal<void> removeMachine;  /*!< remove button clicked signal */
+  sigc::signal<void> openDriveC;     /*!< open C: drive clicked signal */
+  sigc::signal<void> giveFeedback;   /*!< feedback button clicked signal */
+  sigc::signal<void> showAbout;      /*!< about button clicked signal */
 
   Menu();
   virtual ~Menu();
@@ -55,8 +56,9 @@ protected:
   Gtk::Menu view_submenu;            /*!< View sub menu */
   Gtk::Menu machine_submenu;         /*!< Machine sub menu */
   Gtk::Menu help_submenu;            /*!< Help sub menu */
-  Gtk::SeparatorMenuItem separator1; /*!< Seperator */
-  Gtk::SeparatorMenuItem separator2; /*!< Seperator */
+  Gtk::SeparatorMenuItem separator1; /*!< Menu seperator */
+  Gtk::SeparatorMenuItem separator2; /*!< Menu seperator */
+  Gtk::SeparatorMenuItem separator3; /*!< Menu seperator */
 
 private:
   Gtk::MenuItem* CreateImageMenuItem(const Glib::ustring& label_text, const Glib::ustring& icon_name);

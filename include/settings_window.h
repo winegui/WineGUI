@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    settings_window.h
  * \brief   Settings GTK+ window class

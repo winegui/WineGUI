@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    dll_override_types.h
  * \brief   DLL override enum definitions (native, builtin, etc.)

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    bottle_manager.h
  * \brief   Bottle manager controller
@@ -45,6 +45,7 @@ class BottleManager
 public:
   // Signals
   sigc::signal<void> resetActiveBottle;    /*!< Send signal: Clear the current active bottle */
+  sigc::signal<void> bottleRemoved;        /*!< Send signal: When the bottle is confirmed to be removed */
   Glib::Dispatcher finishedPackageInstall; /*!< Signal that Wine package install is completed */
 
   explicit BottleManager(MainWindow& mainWindow);
@@ -54,11 +55,16 @@ public:
   void UpdateBottles();
   void NewBottle(SignalDispatcher* caller,
                  Glib::ustring name,
-                 Glib::ustring virtual_desktop_resolution,
-                 bool disable_gecko_mono,
                  BottleTypes::Windows windows_version,
                  BottleTypes::Bit bit,
+                 Glib::ustring virtual_desktop_resolution,
+                 bool disable_gecko_mono,
                  BottleTypes::AudioDriver audio);
+  void UpdateBottle(SignalDispatcher* caller,
+                    Glib::ustring name,
+                    BottleTypes::Windows windows_version,
+                    Glib::ustring virtual_desktop_resolution,
+                    BottleTypes::AudioDriver audio);
   void DeleteBottle();
   void SetActiveBottle(BottleItem* bottle);
   const Glib::ustring& GetErrorMessage();

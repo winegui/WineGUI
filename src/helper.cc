@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2021 WineGUI
+ * Copyright (c) 2019-2022 WineGUI
  *
  * \file    helper.cc
  * \brief   Provide some helper methods for Bottle Manager and CLI interaction
@@ -206,7 +206,7 @@ void Helper::WaitUntilWineserverIsTerminated(const string& prefix_path)
   string exitCode = Exec(("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w; echo $?").c_str());
   if (exitCode == "124")
   {
-    g_warning("Time-out of wineserver wait command triggered (wineserver is still running..)");
+    std::cout << "Time-out of wineserver wait command triggered (wineserver is still running..)" << std::endl;
   }
 }
 
@@ -281,7 +281,7 @@ string Helper::GetWinetricksLocation()
   }
   else
   {
-    g_warning("Could not find winetricks executable!");
+    std::cout << "Could not find winetricks executable!" << std::endl;
   }
   return path;
 }
@@ -400,6 +400,42 @@ void Helper::RemoveWineBottle(const string& prefix_path)
   {
     throw std::runtime_error("Could not remove Windows Machine, prefix is not a directory. Wine machine: " +
                              GetName(prefix_path) + "\n\nFull path location: " + prefix_path);
+  }
+}
+
+/**
+ * \brief Rename wine bottle folder
+ * \param[in] current_prefix_path - Current wine bottle path
+ * \param[in] new_prefix_path - New wine bottle path
+ */
+void Helper::RenameWineBottleFolder(const string& current_prefix_path, const string& new_prefix_path)
+{
+  if (Helper::DirExists(current_prefix_path))
+  {
+    string result = Exec(("mv \"" + current_prefix_path + "\" \"" + new_prefix_path + "\"; echo $?").c_str());
+    if (!result.empty())
+    {
+      // Remove new lines
+      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+      if (!(result.compare("0") == 0))
+      {
+        throw std::runtime_error(
+            "Something went wrong when renaming the Windows Machine. Wine machine: " + GetName(current_prefix_path) +
+            "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+      }
+    }
+    else
+    {
+      throw std::runtime_error(
+          "Could not rename Windows Machine, no result. Current Wine machine: " + GetName(current_prefix_path) +
+          "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
+    }
+  }
+  else
+  {
+    throw std::runtime_error(
+        "Could not rename Windows Machine, prefix is not a directory. Wine machine: " + GetName(current_prefix_path) +
+        "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
   }
 }
 
@@ -608,7 +644,7 @@ BottleTypes::AudioDriver Helper::GetAudioDriver(const string& prefix_path)
 /**
  * \brief Get emulation resolution
  * \param[in] prefix_path Bottle prefix
- * \return Return the virtual desktop resolution or 'disabled' when disabled fully.
+ * \return Return the virtual desktop resolution or empty string when disabled fully.
  */
 string Helper::GetVirtualDesktop(const string& prefix_path)
 {
@@ -631,7 +667,8 @@ string Helper::GetVirtualDesktop(const string& prefix_path)
   }
   else
   {
-    return BottleTypes::VIRTUAL_DESKTOP_DISABLED;
+    // return empty string
+    return "";
   }
 }
 

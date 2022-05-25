@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020-2021 WineGUI
+ * Copyright (c) 2020-2022 WineGUI
  *
  * \file    busy_dialog.cc
  * \brief   GTK+ Busy dialog
@@ -31,7 +31,6 @@ BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), d
   set_modal(true);
   set_deletable(false);
 
-  heading_label.set_markup("<big><b>Installing software</b></big>");
   heading_label.set_alignment(0.0);
   message_label.set_alignment(0.0);
   loading_bar.set_pulse_step(0.3);
@@ -60,8 +59,9 @@ BusyDialog::~BusyDialog()
  * \brief Set busy message
  * \param[in] message - Message
  */
-void BusyDialog::SetMessage(const Glib::ustring& message)
+void BusyDialog::SetMessage(const Glib::ustring& headingText, const Glib::ustring& message)
 {
+  this->heading_label.set_markup("<big><b>" + Glib::Markup::escape_text(headingText) + "</b></big>");
   this->message_label.set_text(message + " Please wait...");
 }
 
@@ -97,10 +97,11 @@ void BusyDialog::close()
 }
 
 /**
- * \brief Trigger the loading bar, until timer is disconnected
+ * \brief Trigger the loading bar,
+ * until timer is disconnected.
  */
 bool BusyDialog::Pulsing()
 {
   loading_bar.pulse();
-  return true;
+  return true; // Keep pulsing, util timer disconnect
 }
