@@ -71,7 +71,8 @@ MainWindow::MainWindow(Menu& menu)
   // Left side (listbox)
 
   listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
-  listbox.signal_button_press_event().connect(right_click_menu); // TODO: pass the bottle clicked on?
+  // Disabled right-click menu for now, since it doesn't activate the right-clicked bottle as active
+  // listbox.signal_button_press_event().connect(right_click_menu);
 
   // Right panel toolbar menu buttons
   // New button pressed signal
