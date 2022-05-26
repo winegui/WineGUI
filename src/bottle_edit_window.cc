@@ -191,7 +191,7 @@ void BottleEditWindow::bottle_removed()
  */
 void BottleEditWindow::on_bottle_updated()
 {
-  busy_dialog.close();
+  busy_dialog.hide();
   hide(); // Close the edit Window
 }
 

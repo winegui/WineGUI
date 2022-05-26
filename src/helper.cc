@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "helper.h"
-
+#include "wine_defaults.h"
 #include <array>
 #include <cstdio>
 #include <cstring>
@@ -57,7 +57,8 @@ static const string RegKeyType = "[System\\\\CurrentControlSet\\\\Control\\\\Pro
 
 // Reg names
 static const string RegNameNTVersion = "CurrentVersion";
-static const string RegNameNTBuild = "CurrentBuildNumber";
+static const string RegNameNTBuild = "CurrentBuild";
+static const string RegNameNTBuildNumber = "CurrentBuildNumber";
 static const string RegName9xVersion = "VersionNumber";
 static const string RegNameProductType = "ProductType";
 
@@ -74,7 +75,7 @@ static const struct
   const string versionNumber;
   const string buildNumber;
   const string productType;
-} WindowsVersions[] = {{BottleTypes::Windows::Windows10, "10.0", "10240", "WinNT"},
+} WindowsVersions[] = {{BottleTypes::Windows::Windows10, "10.0", "18362", "WinNT"},
                        {BottleTypes::Windows::Windows81, "6.3", "9600", "WinNT"},
                        {BottleTypes::Windows::Windows8, "6.2", "9200", "WinNT"},
                        {BottleTypes::Windows::Windows2008R2, "6.1", "7601", "ServerNT"},
@@ -477,7 +478,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   string version = "";
   if (!(version = Helper::get_reg_value(filename, RegKeyNameNT, RegNameNTVersion)).empty())
   {
-    string build_number_nt = Helper::get_reg_value(filename, RegKeyNameNT, RegNameNTBuild);
+    string build_number_nt = Helper::get_reg_value(filename, RegKeyNameNT, RegNameNTBuildNumber);
     string type_nt = Helper::get_reg_value(filename, RegKeyType, RegNameProductType);
     // Find the correct Windows version, comparing the version, build number as well as NT type (if present)
     for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
@@ -519,6 +520,11 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
       }
     }
   }
+  else if (!(version = Helper::get_reg_value(filename, RegKeyNameNT, RegNameNTBuild)).empty())
+  {
+    string build_number_nt = Helper::get_reg_value(filename, RegKeyNameNT, RegNameNTBuildNumber);
+    string type_nt = Helper::get_reg_value(filename, RegKeyType, RegNameProductType);
+  }
   else if (!(version = Helper::get_reg_value(filename, RegKeyName9x, RegName9xVersion)).empty())
   {
     string current_version = "";
@@ -544,14 +550,17 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
         return WindowsVersions[i].windows;
       }
     }
-    // TODO: Fall-back to just the Windows version, even if the build number doesn't match
+    // Fall-back to default Windows version, even if the build number doesn't match
+    return WineDefaults::WindowsOs;
   }
   else
   {
-    throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + get_name(prefix_path) + "\n\nFull location: " + prefix_path);
+    throw std::runtime_error("Could not determ Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
+                             ". Wine machine: " + get_name(prefix_path) + "\n\nFull location: " + prefix_path);
   }
   // Function didn't return before (meaning no match found)
-  throw std::runtime_error("Could not determ Windows OS version, for Wine machine: " + get_name(prefix_path) + "\n\nFull location: " + prefix_path);
+  throw std::runtime_error("Could not determ Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
+                           ". Wine machine: " + get_name(prefix_path) + "\n\nFull location: " + prefix_path);
 }
 
 /**

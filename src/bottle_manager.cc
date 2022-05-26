@@ -54,6 +54,9 @@ BottleManager::BottleManager(MainWindow& main_window)
     is_wine64_bit_ = true;
   }
 
+  // Connect internal dispatcher(s)
+  update_bottles_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::update_bottles));
+
   // TODO: Enable/disable tracing for the run_program commands (and make it configurable)
 }
 
@@ -402,6 +405,7 @@ void BottleManager::update_bottle(SignalDispatcher* caller,
       error_message_ = "No current Windows Machine was set?";
     }
     caller->signal_error_message_during_update();
+    return; // Stop thread prematurely
   }
 
   // Trigger done signal
@@ -522,7 +526,11 @@ void BottleManager::update()
   if (is_bottle_not_null())
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "wineboot -u", false, false);
+    std::thread t([this, wine64 = std::move(is_wine64_bit_), wine_prefix] {
+      Helper::run_program_under_wine(wine64, wine_prefix, "wineboot -u", false, false);
+      // Emit update bottles (via dispatcher, so it can run in the GUI thread)
+      this->update_bottles_dispatcher_.emit();
+    });
     t.detach();
   }
 }
@@ -935,23 +943,66 @@ std::list<BottleItem> BottleManager::create_wine_bottles(string wine_version, st
     // Reset variables
     string name = "";
     string virtualDesktop = "";
-    bool status = false;
-    BottleTypes::Windows windows = BottleTypes::Windows::WindowsXP;
     BottleTypes::Bit bit = BottleTypes::Bit::win32;
     string c_drive_location = "- Unknown -";
     string last_time_wine_updated = "- Unknown -";
     BottleTypes::AudioDriver audio_driver = BottleTypes::AudioDriver::pulseaudio;
+    BottleTypes::Windows windows = WineDefaults::WindowsOs;
+    bool status = false;
 
     try
     {
       name = Helper::get_name(prefix);
+    }
+    catch (const std::runtime_error& error)
+    {
+      main_window_.show_error_message(error.what());
+    }
+
+    try
+    {
       virtualDesktop = Helper::get_virtual_desktop(prefix);
-      status = Helper::get_bottle_status(prefix);
-      windows = Helper::get_windows_version(prefix);
+    }
+    catch (const std::runtime_error& error)
+    {
+      main_window_.show_error_message(error.what());
+    }
+    try
+    {
       bit = Helper::get_windows_bitness(prefix);
+    }
+    catch (const std::runtime_error& error)
+    {
+      main_window_.show_error_message(error.what());
+    }
+    try
+    {
       c_drive_location = Helper::get_c_letter_drive(prefix);
+    }
+    catch (const std::runtime_error& error)
+    {
+      main_window_.show_error_message(error.what());
+    }
+    try
+    {
       last_time_wine_updated = Helper::get_last_wine_updated(prefix);
+    }
+    catch (const std::runtime_error& error)
+    {
+      main_window_.show_error_message(error.what());
+    }
+    try
+    {
       audio_driver = Helper::get_audio_driver(prefix);
+    }
+    catch (const std::runtime_error& error)
+    {
+      main_window_.show_error_message(error.what());
+    }
+    try
+    {
+      windows = Helper::get_windows_version(prefix);
+      status = Helper::get_bottle_status(prefix);
     }
     catch (const std::runtime_error& error)
     {

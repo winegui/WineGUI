@@ -326,10 +326,10 @@ void SignalDispatcher::on_error_message_created()
 {
   this->cleanup_bottle_manager_thread();
 
-  main_window_->show_error_message(manager_.get_error_message());
-
   // Always close the wizard (signal as if the bottle was updated)
   bottle_created_dispatcher_.emit();
+
+  main_window_->show_error_message(manager_.get_error_message());
 }
 
 /**
@@ -340,8 +340,8 @@ void SignalDispatcher::on_error_message_updated()
 {
   this->cleanup_bottle_manager_thread();
 
-  main_window_->show_error_message(manager_.get_error_message());
-
   // Always close the edit window (signal as if the bottle was updated)
   bottle_updated_dispatcher_.emit();
+
+  main_window_->show_error_message(manager_.get_error_message());
 }
