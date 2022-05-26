@@ -95,6 +95,7 @@ public:
 private:
   // Synchronizes access to data members
   mutable std::mutex mutex_;
+  Glib::Dispatcher update_bottles_dispatcher_; /*!< Dispatcher if the bottle list needs to be updated, from thread */
 
   MainWindow& main_window_;
   string bottle_location_;
