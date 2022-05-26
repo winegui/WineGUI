@@ -54,6 +54,7 @@ static const string UserdefReg = "userdef.reg";
 static const string RegKeyName9x = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion]";
 static const string RegKeyNameNT = "[Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion]";
 static const string RegKeyType = "[System\\\\CurrentControlSet\\\\Control\\\\ProductOptions]";
+static const string RegKeyWine = "[Software\\\\Wine]";
 
 // Reg names
 static const string RegNameNTVersion = "CurrentVersion";
@@ -61,39 +62,43 @@ static const string RegNameNTBuild = "CurrentBuild";
 static const string RegNameNTBuildNumber = "CurrentBuildNumber";
 static const string RegName9xVersion = "VersionNumber";
 static const string RegNameProductType = "ProductType";
+static const string RegNameVersion = "Version";
 
 // Other files
 static const string WineGuiMetaFile = ".winegui.conf";
 static const string UpdateTimestamp = ".update-timestamp";
 
-// Windows version table to convert Windows version in registery to BottleType Windows enum value
-// Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L49
-// Note: Build number is tranformed to decimal number
+/**
+ * \brief Windows version table to convert Windows version in registery to BottleType Windows enum value.
+ *  Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L51
+ * \note Don't forget to update the hardcoded WindowsEnumSize in bottle_types.h!
+ */
 static const struct
 {
   const BottleTypes::Windows windows;
+  const string version;
   const string versionNumber;
   const string buildNumber;
   const string productType;
-} WindowsVersions[] = {{BottleTypes::Windows::Windows10, "10.0", "18362", "WinNT"},
-                       {BottleTypes::Windows::Windows81, "6.3", "9600", "WinNT"},
-                       {BottleTypes::Windows::Windows8, "6.2", "9200", "WinNT"},
-                       {BottleTypes::Windows::Windows2008R2, "6.1", "7601", "ServerNT"},
-                       {BottleTypes::Windows::Windows7, "6.1", "7601", "WinNT"},
-                       {BottleTypes::Windows::Windows2008, "6.0", "6002", "ServerNT"},
-                       {BottleTypes::Windows::WindowsVista, "6.0", "6002", "WinNT"},
-                       {BottleTypes::Windows::Windows2003, "5.2", "3790", "ServerNT"},
-                       {BottleTypes::Windows::WindowsXP, "5.2", "3790", "WinNT"}, // 64-bit
-                       {BottleTypes::Windows::WindowsXP, "5.1", "2600", "WinNT"}, // 32-bit
-                       {BottleTypes::Windows::Windows2000, "5.0", "2195", "WinNT"},
-                       {BottleTypes::Windows::WindowsME, "4.90", "3000", ""},
-                       {BottleTypes::Windows::Windows98, "4.10", "2222", ""},
-                       {BottleTypes::Windows::Windows95, "4.0", "950", ""},
-                       {BottleTypes::Windows::WindowsNT40, "4.0", "1381", "WinNT"},
-                       {BottleTypes::Windows::WindowsNT351, "3.51", "1057", "WinNT"},
-                       {BottleTypes::Windows::Windows31, "3.10", "0", ""},
-                       {BottleTypes::Windows::Windows30, "3.0", "0", ""},
-                       {BottleTypes::Windows::Windows20, "2.0", "0", ""}};
+} WindowsVersions[] = {{BottleTypes::Windows::Windows10, "win10", "10.0", "18362", "WinNT"},
+                       {BottleTypes::Windows::Windows81, "win81", "6.3", "9600", "WinNT"},
+                       {BottleTypes::Windows::Windows8, "win8", "6.2", "9200", "WinNT"},
+                       {BottleTypes::Windows::Windows2008R2, "win2008r2", "6.1", "7601", "ServerNT"},
+                       {BottleTypes::Windows::Windows7, "win7", "6.1", "7601", "WinNT"},
+                       {BottleTypes::Windows::Windows2008, "win2008", "6.0", "6002", "ServerNT"},
+                       {BottleTypes::Windows::WindowsVista, "vista", "6.0", "6002", "WinNT"},
+                       {BottleTypes::Windows::Windows2003, "win2003", "5.2", "3790", "ServerNT"},
+                       {BottleTypes::Windows::WindowsXP, "winxp64", "5.2", "3790", "WinNT"}, // 64-bit
+                       {BottleTypes::Windows::WindowsXP, "winxp", "5.1", "2600", "WinNT"},   // 32-bit
+                       {BottleTypes::Windows::Windows2000, "win2k", "5.0", "2195", "WinNT"},
+                       {BottleTypes::Windows::WindowsME, "winme", "4.90", "3000", ""},
+                       {BottleTypes::Windows::Windows98, "win98", "4.10", "2222", ""},
+                       {BottleTypes::Windows::Windows95, "win95", "4.0", "950", ""},
+                       {BottleTypes::Windows::WindowsNT40, "nt40", "4.0", "1381", "WinNT"},
+                       {BottleTypes::Windows::WindowsNT351, "nt351", "3.51", "1057", "WinNT"},
+                       {BottleTypes::Windows::Windows31, "win31", "3.10", "0", ""},
+                       {BottleTypes::Windows::Windows30, "win30", "3.0", "0", ""},
+                       {BottleTypes::Windows::Windows20, "win20", "2.0", "0", ""}};
 
 /// Meyers Singleton
 Helper::Helper() = default;
@@ -474,12 +479,28 @@ string Helper::get_description(const string& prefix_path)
  */
 BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
 {
-  string filename = Glib::build_filename(prefix_path, SystemReg);
-  string version = "";
-  if (!(version = Helper::get_reg_value(filename, RegKeyNameNT, RegNameNTVersion)).empty())
+  // Trying user registery first
+  string user_reg_file_path = Glib::build_filename(prefix_path, UserReg);
+  string win_version = Helper::get_reg_value(user_reg_file_path, RegKeyWine, RegNameVersion);
+  if (!win_version.empty())
   {
-    string build_number_nt = Helper::get_reg_value(filename, RegKeyNameNT, RegNameNTBuildNumber);
-    string type_nt = Helper::get_reg_value(filename, RegKeyType, RegNameProductType);
+    for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
+    {
+      // Check if Windows version matches the win_version string
+      if (((WindowsVersions[i].version).compare(win_version) == 0))
+      {
+        return WindowsVersions[i].windows;
+      }
+    }
+  }
+
+  // Trying system registery
+  string system_reg_file_path = Glib::build_filename(prefix_path, SystemReg);
+  string version = "";
+  if (!(version = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTVersion)).empty())
+  {
+    string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
+    string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);
     // Find the correct Windows version, comparing the version, build number as well as NT type (if present)
     for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
     {
@@ -520,12 +541,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
       }
     }
   }
-  else if (!(version = Helper::get_reg_value(filename, RegKeyNameNT, RegNameNTBuild)).empty())
-  {
-    string build_number_nt = Helper::get_reg_value(filename, RegKeyNameNT, RegNameNTBuildNumber);
-    string type_nt = Helper::get_reg_value(filename, RegKeyType, RegNameProductType);
-  }
-  else if (!(version = Helper::get_reg_value(filename, RegKeyName9x, RegName9xVersion)).empty())
+  else if (!(version = Helper::get_reg_value(system_reg_file_path, RegKeyName9x, RegName9xVersion)).empty())
   {
     string current_version = "";
     string current_build_number = "";
@@ -570,10 +586,10 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
  */
 BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
 {
-  string filename = Glib::build_filename(prefix_path, UserReg);
+  string file_path = Glib::build_filename(prefix_path, UserReg);
 
   string meta_value_name = "arch";
-  string value = Helper::Helper::get_reg_meta_data(filename, meta_value_name);
+  string value = Helper::Helper::get_reg_meta_data(file_path, meta_value_name);
   if (!value.empty())
   {
     if (value.compare("win32") == 0)
@@ -603,10 +619,10 @@ BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
  */
 BottleTypes::AudioDriver Helper::get_audio_driver(const string& prefix_path)
 {
-  string filename = Glib::build_filename(prefix_path, UserReg);
+  string file_path = Glib::build_filename(prefix_path, UserReg);
   string key_name = "[Software\\\\Wine\\\\Drivers]";
   string value_name = "Audio";
-  string value = Helper::get_reg_value(filename, key_name, value_name);
+  string value = Helper::get_reg_value(file_path, key_name, value_name);
   if (!value.empty())
   {
     if (value.compare("pulse") == 0)
@@ -656,11 +672,11 @@ string Helper::get_virtual_desktop(const string& prefix_path)
   // The resolution can be found in Key: Software\\Wine\\Explorer\\Desktops with the Value name set as value
   // (see above, "Default" is the default value). eg. "Default"="1920x1080"
 
-  string filename = Glib::build_filename(prefix_path, UserReg);
+  string file_path = Glib::build_filename(prefix_path, UserReg);
   string key_name = "[Software\\\\Wine\\\\Explorer\\\\Desktops]";
   string value_name = "Default";
   // TODO: first check of the Desktop value name in Software\\Wine\\Explorer
-  string value = Helper::get_reg_value(filename, key_name, value_name);
+  string value = Helper::get_reg_value(file_path, key_name, value_name);
   if (!value.empty())
   {
     // Return the resolution
@@ -680,10 +696,10 @@ string Helper::get_virtual_desktop(const string& prefix_path)
  */
 string Helper::get_last_wine_updated(const string& prefix_path)
 {
-  string filename = Glib::build_filename(prefix_path, UpdateTimestamp);
-  if (Helper::file_exists(filename))
+  string file_path = Glib::build_filename(prefix_path, UpdateTimestamp);
+  if (Helper::file_exists(file_path))
   {
-    std::vector<string> epoch_time = read_file(filename);
+    std::vector<string> epoch_time = read_file(file_path);
     if (epoch_time.size() >= 1)
     {
       string time = epoch_time.at(0);
@@ -992,10 +1008,10 @@ string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const 
  */
 bool Helper::get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order)
 {
-  string filename = Glib::build_filename(prefix_path, UserReg);
+  string file_path = Glib::build_filename(prefix_path, UserReg);
   string key_name = "[Software\\\\Wine\\\\DllOverrides]";
   string value_name = dll_name;
-  string value = Helper::get_reg_value(filename, key_name, value_name);
+  string value = Helper::get_reg_value(file_path, key_name, value_name);
   return DLLOverride::to_string(load_order) == value;
 }
 
@@ -1008,21 +1024,21 @@ bool Helper::get_dll_override(const string& prefix_path, const string& dll_name,
  */
 string Helper::get_uninstaller(const string& prefix_path, const string& uninstallerKey)
 {
-  string filename = Glib::build_filename(prefix_path, SystemReg);
+  string file_path = Glib::build_filename(prefix_path, SystemReg);
   string key_name = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\" + uninstallerKey;
-  return Helper::get_reg_value(filename, key_name, "DisplayName");
+  return Helper::get_reg_value(file_path, key_name, "DisplayName");
 }
 
 /**
- * \brief Retrieve a font filename from the system registery
+ * \brief Retrieve a font file_path from the system registery
  * \param[in] prefix_path Bottle prefix
  * \param[in] bit Bottle bit (32 or 64) enum
  * \param[in] fontName Font name
- * \return Font filename (or empty string if not found)
+ * \return Font file_path (or empty string if not found)
  */
 string Helper::get_font_filename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName)
 {
-  string filename = Glib::build_filename(prefix_path, SystemReg);
+  string file_path = Glib::build_filename(prefix_path, SystemReg);
   string key_name = "";
   switch (bit)
   {
@@ -1033,7 +1049,7 @@ string Helper::get_font_filename(const string& prefix_path, BottleTypes::Bit bit
     key_name = "[Software\\\\Wow6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Fonts]";
     break;
   }
-  return Helper::get_reg_value(filename, key_name, fontName);
+  return Helper::get_reg_value(file_path, key_name, fontName);
 }
 
 /**
@@ -1200,21 +1216,21 @@ string Helper::get_winetricks_version()
 
 /**
  * \brief Get a value from the registery from disk
- * \param[in] filename  File of registery
+ * \param[in] file_path  File of registery
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \param[in] value_name Specifies the registery value name (eg. Desktop)
  * \return Data of value name
  */
-string Helper::get_reg_value(const string& filename, const string& key_name, const string& value_name)
+string Helper::get_reg_value(const string& file_path, const string& key_name, const string& value_name)
 {
   // We add double quotes around plus equal sign to the value name
   string valuePattern = '"' + value_name + "\"=";
   char* match_pch = NULL;
-  if (Helper::file_exists(filename))
+  if (Helper::file_exists(file_path))
   {
     FILE* f;
     char buffer[100];
-    if ((f = fopen(filename.c_str(), "r")) == NULL)
+    if ((f = fopen(file_path.c_str(), "r")) == NULL)
     {
       throw std::runtime_error("File could not be opened");
     }
@@ -1266,19 +1282,19 @@ string Helper::get_reg_value(const string& filename, const string& key_name, con
 
 /**
  * \brief Get a meta value from the registery from disk
- * \param[in] filename      File of registery
+ * \param[in] file_path      File of registery
  * \param[in] meta_value_name Specifies the registery value name (eg. arch)
  * \return Data of value name
  */
-string Helper::get_reg_meta_data(const string& filename, const string& meta_value_name)
+string Helper::get_reg_meta_data(const string& file_path, const string& meta_value_name)
 {
   string metaPattern = "#" + meta_value_name + "=";
   char* match_pch = NULL;
-  if (Helper::file_exists(filename))
+  if (Helper::file_exists(file_path))
   {
     FILE* f;
     char buffer[100];
-    if ((f = fopen(filename.c_str(), "r")) == NULL)
+    if ((f = fopen(file_path.c_str(), "r")) == NULL)
     {
       throw std::runtime_error("File could not be opened");
     }

@@ -57,7 +57,7 @@ namespace BottleTypes
   };
 
   //// Size of Windows enum class
-  static const unsigned int WindowsEnumSize = 18;
+  static const unsigned int WindowsEnumSize = 19;
 
   /**
    * \enum Bit
