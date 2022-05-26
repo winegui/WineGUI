@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2020-2022 WineGUI
  *
- * \file    settings_window.cc
- * \brief   Setting GTK+ Window class
+ * \file    bottle_edit_window.cc
+ * \brief   Wine bottle edit window
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,26 +18,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "edit_window.h"
+#include "bottle_edit_window.h"
 #include "bottle_item.h"
 
 /**
  * \brief Constructor
- * \param parent Reference to parent GTK+ Window
+ * \param parent Reference to parent GTK Window
  */
-EditWindow::EditWindow(Gtk::Window& parent)
+BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
     : vbox(Gtk::ORIENTATION_VERTICAL, 4),
       hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
       header_edit_label("Edit Machine"),
       name_label("Name: "),
       windows_version_label("Windows Version: "),
-      audiodriver_label("Audio Driver:"),
+      audio_driver_label("Audio Driver:"),
       virtual_desktop_resolution_label("Window Resolution:"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
       save_button("Save"),
       cancel_button("Cancel"),
       delete_button("Delete Machine"),
-      wine_config_button("WineCfg"),
       busy_dialog(*this),
       active_bottle_(nullptr)
 {
@@ -68,21 +67,21 @@ EditWindow::EditWindow(Gtk::Window& parent)
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
   {
-    audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
+    audio_driver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
   virtual_desktop_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("960x540");
 
   name_entry.set_hexpand(true);
   windows_version_combobox.set_hexpand(true);
-  audiodriver_combobox.set_hexpand(true);
+  audio_driver_combobox.set_hexpand(true);
 
   edit_grid.attach(name_label, 0, 0);
   edit_grid.attach(name_entry, 1, 0);
   edit_grid.attach(windows_version_label, 0, 1);
   edit_grid.attach(windows_version_combobox, 1, 1);
-  edit_grid.attach(audiodriver_label, 0, 2);
-  edit_grid.attach(audiodriver_combobox, 1, 2);
+  edit_grid.attach(audio_driver_label, 0, 2);
+  edit_grid.attach(audio_driver_combobox, 1, 2);
   edit_grid.attach(virtual_desktop_check, 0, 3, 2);
 
   hbox_buttons.pack_start(delete_button, false, false, 4);
@@ -97,9 +96,9 @@ EditWindow::EditWindow(Gtk::Window& parent)
 
   // Signals
   delete_button.signal_clicked().connect(remove_bottle);
-  virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &EditWindow::on_virtual_desktop_toggle));
-  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &EditWindow::on_cancel_button_clicked));
-  save_button.signal_clicked().connect(sigc::mem_fun(*this, &EditWindow::on_save_button_clicked));
+  virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
+  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
+  save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_save_button_clicked));
 
   show_all_children();
 }
@@ -107,7 +106,7 @@ EditWindow::EditWindow(Gtk::Window& parent)
 /**
  * \brief Destructor
  */
-EditWindow::~EditWindow()
+BottleEditWindow::~BottleEditWindow()
 {
 }
 
@@ -115,7 +114,7 @@ EditWindow::~EditWindow()
  * \brief Same as show() but will also update the Window title, set name,
  * update list of windows versions, set active windows, audio driver and virtual desktop
  */
-void EditWindow::show()
+void BottleEditWindow::show()
 {
   if (active_bottle_ != nullptr)
   {
@@ -142,7 +141,7 @@ void EditWindow::show()
     }
     windows_version_combobox.set_active_text(BottleTypes::to_string(active_bottle_->windows()) + " (" +
                                              BottleTypes::to_string(active_bottle_->bit()) + ")");
-    audiodriver_combobox.set_active_id(std::to_string((int)active_bottle_->audio_driver()));
+    audio_driver_combobox.set_active_id(std::to_string((int)active_bottle_->audio_driver()));
     if (!active_bottle_->virtual_desktop().empty())
     {
       virtual_desktop_resolution_entry.set_text(active_bottle_->virtual_desktop());
@@ -166,7 +165,7 @@ void EditWindow::show()
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void EditWindow::set_active_bottle(BottleItem* bottle)
+void BottleEditWindow::set_active_bottle(BottleItem* bottle)
 {
   active_bottle_ = bottle;
 }
@@ -174,7 +173,7 @@ void EditWindow::set_active_bottle(BottleItem* bottle)
 /**
  * \brief Signal handler for resetting the active bottle to null
  */
-void EditWindow::reset_active_bottle()
+void BottleEditWindow::reset_active_bottle()
 {
   active_bottle_ = nullptr;
 }
@@ -182,7 +181,7 @@ void EditWindow::reset_active_bottle()
 /**
  * \brief Triggered when bottle is actually confirmed to be removed
  */
-void EditWindow::bottle_removed()
+void BottleEditWindow::bottle_removed()
 {
   hide(); // Close the edit window
 }
@@ -190,7 +189,7 @@ void EditWindow::bottle_removed()
 /**
  * \brief Handler when the bottle is updated.
  */
-void EditWindow::on_bottle_updated()
+void BottleEditWindow::on_bottle_updated()
 {
   busy_dialog.close();
   hide(); // Close the edit Window
@@ -199,7 +198,7 @@ void EditWindow::on_bottle_updated()
 /**
  * \brief Show (add) the additional virtual desktop label + input field
  */
-void EditWindow::show_virtual_desktop_resolution()
+void BottleEditWindow::show_virtual_desktop_resolution()
 {
   edit_grid.attach(virtual_desktop_resolution_label, 0, 4);
   edit_grid.attach(virtual_desktop_resolution_entry, 1, 4);
@@ -208,7 +207,7 @@ void EditWindow::show_virtual_desktop_resolution()
 /**
  * \brief Hide (remove) the virtual desktop section from grid
  */
-void EditWindow::hide_virtual_desktop_resolution()
+void BottleEditWindow::hide_virtual_desktop_resolution()
 {
   edit_grid.remove_row(4);
 }
@@ -217,7 +216,7 @@ void EditWindow::hide_virtual_desktop_resolution()
  * \brief Signal handler when the virtual desktop checkbox is checked.
  * It will show the additional resolution input field.
  */
-void EditWindow::on_virtual_desktop_toggle()
+void BottleEditWindow::on_virtual_desktop_toggle()
 {
   if (virtual_desktop_check.get_active())
   {
@@ -233,7 +232,7 @@ void EditWindow::on_virtual_desktop_toggle()
 /**
  * \brief Triggered when cancel button is clicked
  */
-void EditWindow::on_cancel_button_clicked()
+void BottleEditWindow::on_cancel_button_clicked()
 {
   hide();
 }
@@ -241,7 +240,7 @@ void EditWindow::on_cancel_button_clicked()
 /**
  * \brief Triggered when save button is clicked
  */
-void EditWindow::on_save_button_clicked()
+void BottleEditWindow::on_save_button_clicked()
 {
   std::string::size_type sz;
   BottleTypes::Windows windows_version = BottleTypes::Windows::WindowsXP; // Fallback
@@ -281,7 +280,7 @@ void EditWindow::on_save_button_clicked()
 
   try
   {
-    size_t audio_index = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
+    size_t audio_index = size_t(std::stoi(audio_driver_combobox.get_active_id(), &sz));
     audio = BottleTypes::AudioDriver(audio_index);
   }
   catch (const std::runtime_error& error)

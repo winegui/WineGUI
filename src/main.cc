@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2022 WineGUI
  *
  * \file    main.cc
- * \brief   Main, where it all starts
+ * \brief   Main, where it all begins
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,12 +19,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "about_dialog.h"
+#include "bottle_edit_window.h"
 #include "bottle_manager.h"
-#include "edit_window.h"
+#include "bottle_settings_window.h"
 #include "main_window.h"
 #include "menu.h"
 #include "preferences_window.h"
-#include "settings_window.h"
 #include "signal_dispatcher.h"
 
 #include <gtkmm/application.h>
@@ -34,7 +34,7 @@
 static MainWindow& setupApplication();
 
 /**
- * \brief The beginning, start the main loop
+ * \brief Main function, setup and starting the app main loop
  * \return Status code
  */
 int main(int argc, char* argv[])
@@ -72,8 +72,8 @@ static MainWindow& setupApplication()
   static MainWindow main_window(menu);
   static PreferencesWindow preferences_window(main_window);
   static AboutDialog about_dialog(main_window);
-  static EditWindow edit_window(main_window);
-  static SettingsWindow settings_window(main_window);
+  static BottleEditWindow edit_window(main_window);
+  static BottleSettingsWindow settings_window(main_window);
   static BottleManager manager(main_window);
   static SignalDispatcher signal_dispatcher(manager, menu, preferences_window, about_dialog, edit_window, settings_window);
 

@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2019-2022 WineGUI
  *
- * \file    edit_window.h
- * \brief   Edit GTK+ window class
+ * \file    bottle_edit_window.h
+ * \brief   Wine bottle edit window
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,18 +30,18 @@ using std::string;
 class BottleItem;
 
 /**
- * \class EditWindow
- * \brief GTK+ Window class for the settings
+ * \class BottleEditWindow
+ * \brief Edit Wine bottle GTK Window class
  */
-class EditWindow : public Gtk::Window
+class BottleEditWindow : public Gtk::Window
 {
 public:
   // Signals
   sigc::signal<void, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver> update_bottle; /*!< save button clicked signal */
   sigc::signal<void> remove_bottle; /*!< remove button clicked signal */
 
-  explicit EditWindow(Gtk::Window& parent);
-  virtual ~EditWindow();
+  explicit BottleEditWindow(Gtk::Window& parent);
+  virtual ~BottleEditWindow();
 
   void show();
   void set_active_bottle(BottleItem* bottle);
@@ -53,27 +53,23 @@ public:
 
 protected:
   // Child widgets
-  Gtk::Box vbox;
-  Gtk::Box hbox_buttons;
-  Gtk::Grid edit_grid;
+  Gtk::Box vbox;         /*!< main vertical box */
+  Gtk::Box hbox_buttons; /*!< box for buttons */
+  Gtk::Grid edit_grid;   /*!< grid layout for form */
 
-  Gtk::Label header_edit_label;
-  Gtk::Label name_label;
-  Gtk::Label windows_version_label;
-  Gtk::Label audiodriver_label;
-  Gtk::Label virtual_desktop_resolution_label;
-  Gtk::Entry name_entry;
-  Gtk::Entry virtual_desktop_resolution_entry;
-  Gtk::ComboBoxText windows_version_combobox;
-  Gtk::ComboBoxText audiodriver_combobox;
-  Gtk::CheckButton virtual_desktop_check;
-
-  Gtk::Button save_button;   /*!< save button */
-  Gtk::Button cancel_button; /*!< cancel button */
-  Gtk::Button delete_button; /*!< delete button */
-
-  // Buttons second row
-  Gtk::ToolButton wine_config_button; /*!< Winecfg button */
+  Gtk::Label header_edit_label;                /*!< header edit label */
+  Gtk::Label name_label;                       /*!< name label */
+  Gtk::Label windows_version_label;            /*!< windows version label */
+  Gtk::Label audio_driver_label;               /*!< audio driver label */
+  Gtk::Label virtual_desktop_resolution_label; /*!< virtual desktop resolution label */
+  Gtk::Entry name_entry;                       /*!< name input field */
+  Gtk::Entry virtual_desktop_resolution_entry; /*!< virtual desktop resolution input field */
+  Gtk::ComboBoxText windows_version_combobox;  /*!< windows version combobox */
+  Gtk::ComboBoxText audio_driver_combobox;     /*!< audio driver combobox */
+  Gtk::CheckButton virtual_desktop_check;      /*!< virtual desktop checkbox */
+  Gtk::Button save_button;                     /*!< save button */
+  Gtk::Button cancel_button;                   /*!< cancel button */
+  Gtk::Button delete_button;                   /*!< delete button */
 
   // Busy dialog
   BusyDialog busy_dialog; /*!< Busy dialog, when the user should wait until install is finished */

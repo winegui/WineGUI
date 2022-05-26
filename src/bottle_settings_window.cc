@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2020-2022 WineGUI
  *
- * \file    settings_window.cc
- * \brief   Setting GTK+ Window class
+ * \file    bottle_settings_window.cc
+ * \brief   Wine bottle setting window
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,15 +18,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "settings_window.h"
+#include "bottle_settings_window.h"
 #include "bottle_item.h"
 #include "helper.h"
 
 /**
  * \brief Constructor
- * \param parent Reference to parent GTK+ Window
+ * \param parent Reference to parent GTK Window
  */
-SettingsWindow::SettingsWindow(Gtk::Window& parent)
+BottleSettingsWindow::BottleSettingsWindow(Gtk::Window& parent)
     : wine_uninstall_button("Uninstaller"),
       open_notepad_button("Notepad"),
       open_wordpad_button("Open Wordpad"),
@@ -35,7 +35,7 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
       wine_regedit_button("Windows Registery Editor"),
       explorer_button("Explorer"),
       wine_console_button("Console"),
-      wine_config_button("WineCfg"),
+      wine_config_button("Wine Config"),
       winetricks_button("Winetricks"),
       active_bottle_(nullptr)
 {
@@ -201,7 +201,7 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
   Gtk::Image* winecfg_image = Gtk::manage(new Gtk::Image());
   winecfg_image->set_from_icon_name("preferences-system", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   wine_config_button.signal_clicked().connect(winecfg);
-  wine_config_button.set_tooltip_text("FALLBACK: Open winecfg GUI");
+  wine_config_button.set_tooltip_text("FALLBACK: Open wine configuration GUI");
   wine_config_button.set_icon_widget(*winecfg_image);
   fourth_toolbar.insert(wine_config_button, 2);
 
@@ -218,14 +218,14 @@ SettingsWindow::SettingsWindow(Gtk::Window& parent)
 /**
  * \brief Destructor
  */
-SettingsWindow::~SettingsWindow()
+BottleSettingsWindow::~BottleSettingsWindow()
 {
 }
 
 /**
  * \brief Same as show() but will also update the Window title
  */
-void SettingsWindow::show()
+void BottleSettingsWindow::show()
 {
   this->update_installed();
 
@@ -241,7 +241,7 @@ void SettingsWindow::show()
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void SettingsWindow::set_active_bottle(BottleItem* bottle)
+void BottleSettingsWindow::set_active_bottle(BottleItem* bottle)
 {
   active_bottle_ = bottle;
 }
@@ -249,7 +249,7 @@ void SettingsWindow::set_active_bottle(BottleItem* bottle)
 /**
  * \brief Signal handler for resetting the active bottle to null
  */
-void SettingsWindow::reset_active_bottle()
+void BottleSettingsWindow::reset_active_bottle()
 {
   active_bottle_ = nullptr;
 }
@@ -257,7 +257,7 @@ void SettingsWindow::reset_active_bottle()
 /**
  * \brief Update GUI state depending on the packages installed
  */
-void SettingsWindow::update_installed()
+void BottleSettingsWindow::update_installed()
 {
   if (is_d3dx9_installed())
   {
@@ -371,7 +371,7 @@ void SettingsWindow::update_installed()
  * \brief Check is D3DX9 (DirectX 9 OpenGL) is installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::is_d3dx9_installed()
+bool BottleSettingsWindow::is_d3dx9_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -387,7 +387,7 @@ bool SettingsWindow::is_d3dx9_installed()
  * \brief Check is DXVK (Vulkan based DirectX 9/10/11) is installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::is_dxvk_installed()
+bool BottleSettingsWindow::is_dxvk_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -404,7 +404,7 @@ bool SettingsWindow::is_dxvk_installed()
  * As fallback: Wine is looking for the liberation font on the local unix system (in the /usr/share/fonts/.. directory)
  * \return True if installed otherwise False
  */
-bool SettingsWindow::is_liberation_installed()
+bool BottleSettingsWindow::is_liberation_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -421,7 +421,7 @@ bool SettingsWindow::is_liberation_installed()
  * \brief Check if MS Core fonts are installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::is_core_fonts_installed()
+bool BottleSettingsWindow::is_core_fonts_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -438,7 +438,7 @@ bool SettingsWindow::is_core_fonts_installed()
  * \brief Check if MS Visual C++ installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::is_visual_cpp_installed()
+bool BottleSettingsWindow::is_visual_cpp_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -472,7 +472,7 @@ bool SettingsWindow::is_visual_cpp_installed()
  * \brief Check if MS .NET v4.0 is installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::is_dotnet_4_0_installed()
+bool BottleSettingsWindow::is_dotnet_4_0_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -498,7 +498,7 @@ bool SettingsWindow::is_dotnet_4_0_installed()
  * \brief Check ife MS .NET v4.5.2 is installed
  * \return True if installed otherwise False
  */
-bool SettingsWindow::is_dotnet_4_5_2_installed()
+bool BottleSettingsWindow::is_dotnet_4_5_2_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)

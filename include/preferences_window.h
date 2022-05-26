@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2022 WineGUI
  *
  * \file    preferences_window.h
- * \brief   Application preferences GTK+ window class
+ * \brief   WineGUI Application preferences window
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 
 /**
  * \class PreferencesWindow
- * \brief GTK+ Window class for the application preferences
+ * \brief WineGUI preferences GTK Window class
  */
 class PreferencesWindow : public Gtk::Window
 {

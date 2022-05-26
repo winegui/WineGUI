@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2022 WineGUI
  *
  * \file    bottle_item.h
- * \brief   Wine Bottle item class definition
+ * \brief   Wine bottle item class definition
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify

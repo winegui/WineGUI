@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2022 WineGUI
  *
  * \file    bottle_item.cc
- * \brief   Wine Bottle Item
+ * \brief   Wine bottle item class
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  * \note https://github.com/pirobtumen/Remember/blob/master/src/gui/taskitem.cpp
  *

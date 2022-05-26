@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2022 WineGUI
  *
  * \file    signal_dispatcher.h
- * \brief   Handles different (Gtkmm) signals and dispatch or connect them to other methods within the App
+ * \brief   Handles different GTK signals and dispatch or connect them to other methods/handlers within WineGUI
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,8 +30,8 @@ class BottleManager;
 class Menu;
 class PreferencesWindow;
 class AboutDialog;
-class EditWindow;
-class SettingsWindow;
+class BottleEditWindow;
+class BottleSettingsWindow;
 
 /**
  * \class SignalDispatcher
@@ -50,8 +50,8 @@ public:
                    Menu& menu,
                    PreferencesWindow& preferences_window,
                    AboutDialog& about_dialog,
-                   EditWindow& edit_window,
-                   SettingsWindow& settings_window);
+                   BottleEditWindow& edit_window,
+                   BottleSettingsWindow& settings_window);
   virtual ~SignalDispatcher();
   void set_main_window(MainWindow* main_window);
   void dispatch_signals();
@@ -90,8 +90,8 @@ private:
   Menu& menu_;
   PreferencesWindow& preferences_window_;
   AboutDialog& about_dialog_;
-  EditWindow& edit_window_;
-  SettingsWindow& settings_window_;
+  BottleEditWindow& edit_window_;
+  BottleSettingsWindow& settings_window_;
 
   // Dispatcher for handling signals from the thread towards a GUI thread
   Glib::Dispatcher bottle_created_dispatcher_;

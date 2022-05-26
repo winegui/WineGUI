@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2022 WineGUI
  *
  * \file    main_window.h
- * \brief   Main GTK+ window class
+ * \brief   Main WineGUI window
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,9 +21,9 @@
 #pragma once
 
 #include "bottle_item.h"
+#include "bottle_new_assistant.h"
 #include "busy_dialog.h"
 #include "menu.h"
-#include "new_bottle_assistant.h"
 #include <gtkmm.h>
 #include <iostream>
 #include <list>
@@ -110,7 +110,7 @@ protected:
   // Busy dialog
   BusyDialog busy_dialog_; /*!< Busy dialog, when the user should wait until install is finished */
 private:
-  NewBottleAssistant new_bottle_assistant_; /*!< New bottle wizard (behind: new button toolbar) */
+  BottleNewAssistant new_bottle_assistant_; /*!< New bottle wizard (behind: new button toolbar) */
 
   // Signal handlers
   virtual void on_row_clicked(Gtk::ListBoxRow* row);

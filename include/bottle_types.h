@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2022 WineGUI
  *
  * \file    bottle_types.h
- * \brief   Bottle type enum definitions (like Windows OS, audio driver, supported Windows list)
+ * \brief   Bottle type enum definitions (like Windows OS, audio drivers, supported Windows list)
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify

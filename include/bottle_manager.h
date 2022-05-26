@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2022 WineGUI
  *
  * \file    bottle_manager.h
- * \brief   Bottle manager controller
+ * \brief   Wine Bottle manager controller
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -38,7 +38,7 @@ class BottleItem;
 
 /**
  * \class BottleManager
- * \brief Controller that controls it all
+ * \brief Wine Bottle Controller that controls it all
  */
 class BottleManager
 {

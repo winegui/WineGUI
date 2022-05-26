@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2019-2022 WineGUI
  *
- * \file    new_bottle_assistant.cc
- * \brief   New Bottle Assistant (Wizard)
+ * \file    bottle_new_assistant.cc
+ * \brief   New Wine bottle assistant (Wizard with steps)
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "new_bottle_assistant.h"
+#include "bottle_new_assistant.h"
 #include "bottle_types.h"
 #include "wine_defaults.h"
 #include <iostream>
@@ -28,15 +28,15 @@
 /**
  * \brief Contructor
  */
-NewBottleAssistant::NewBottleAssistant()
-    : m_vbox(Gtk::ORIENTATION_VERTICAL, 4),
-      m_vbox2(Gtk::ORIENTATION_VERTICAL, 4),
-      m_vbox3(Gtk::ORIENTATION_VERTICAL, 4),
-      m_hbox_name(Gtk::ORIENTATION_HORIZONTAL, 12),
-      m_hbox_win(Gtk::ORIENTATION_HORIZONTAL, 12),
+BottleNewAssistant::BottleNewAssistant()
+    : vbox(Gtk::ORIENTATION_VERTICAL, 4),
+      vbox2(Gtk::ORIENTATION_VERTICAL, 4),
+      vbox3(Gtk::ORIENTATION_VERTICAL, 4),
+      hbox_name(Gtk::ORIENTATION_HORIZONTAL, 12),
+      hbox_win(Gtk::ORIENTATION_HORIZONTAL, 12),
       name_label("Name:"),
       windows_version_label("Windows Version:"),
-      audiodriver_label("Audio Driver:"),
+      audio_driver_label("Audio Driver:"),
       virtual_desktop_resolution_label("Window Resolution:"),
       confirm_label("Confirmation page"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
@@ -55,21 +55,21 @@ NewBottleAssistant::NewBottleAssistant()
   // Initial set defaults
   setDefaultValues();
 
-  signal_apply().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_assistant_apply));
-  signal_cancel().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_assistant_cancel));
-  signal_close().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_assistant_close));
-  signal_prepare().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_assistant_prepare));
+  signal_apply().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_apply));
+  signal_cancel().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_cancel));
+  signal_close().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_close));
+  signal_prepare().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_prepare));
 
   show_all_children();
 
   // By default hide resolution label & entry
-  m_hbox_virtual_desktop.hide();
+  hbox_virtual_desktop.hide();
 }
 
 /**
  * \brief Destructor
  */
-NewBottleAssistant::~NewBottleAssistant()
+BottleNewAssistant::~BottleNewAssistant()
 {
 }
 
@@ -77,13 +77,13 @@ NewBottleAssistant::~NewBottleAssistant()
  * \brief Set default values of all input fields from the wizard,
  * so even after the second time, all values are correctly resetted.
  */
-void NewBottleAssistant::setDefaultValues()
+void BottleNewAssistant::setDefaultValues()
 {
   apply_label.set_text("Please wait, changes are getting applied.");
   name_entry.set_text("");
   // TODO: Allow default to override from WineGUI settings?
   windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
-  audiodriver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
+  audio_driver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
   virtual_desktop_check.set_active(false);
   disable_gecko_mono_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("960x540");
@@ -98,18 +98,18 @@ void NewBottleAssistant::setDefaultValues()
 /**
  * \brief First page of the wizard
  */
-void NewBottleAssistant::createFirstPage()
+void BottleNewAssistant::createFirstPage()
 {
   // Intro page
   intro_label.set_markup("<big><b>Create a New Machine</b></big>\n"
                          "Please use a descriptive name for the Windows machine, and select which Windows version you want to use.");
   intro_label.set_halign(Gtk::Align::ALIGN_START);
   intro_label.set_margin_bottom(25);
-  m_vbox.pack_start(intro_label, false, false);
+  vbox.pack_start(intro_label, false, false);
 
-  m_hbox_name.pack_start(name_label, false, true);
-  m_hbox_name.pack_start(name_entry);
-  m_vbox.pack_start(m_hbox_name, false, false);
+  hbox_name.pack_start(name_label, false, true);
+  hbox_name.pack_start(name_entry);
+  vbox.pack_start(hbox_name, false, false);
 
   // Fill-in Windows versions in combobox
   for (std::vector<BottleTypes::WindowsAndBit>::iterator it = BottleTypes::SupportedWindowsVersions.begin();
@@ -120,21 +120,21 @@ void NewBottleAssistant::createFirstPage()
                                     BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
   }
 
-  m_hbox_win.pack_start(windows_version_label, false, true);
-  m_hbox_win.pack_start(windows_version_combobox);
-  m_vbox.pack_start(m_hbox_win, false, false);
+  hbox_win.pack_start(windows_version_label, false, true);
+  hbox_win.pack_start(windows_version_combobox);
+  vbox.pack_start(hbox_win, false, false);
 
-  name_entry.signal_changed().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_entry_changed));
+  name_entry.signal_changed().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_entry_changed));
 
-  append_page(m_vbox);
-  set_page_type(m_vbox, Gtk::ASSISTANT_PAGE_INTRO);
+  append_page(vbox);
+  set_page_type(vbox, Gtk::ASSISTANT_PAGE_INTRO);
   set_page_title(*get_nth_page(0), "Choose Name & Windows version");
 }
 
 /**
  * \brief Second page of the wizard
  */
-void NewBottleAssistant::createSecondPage()
+void BottleNewAssistant::createSecondPage()
 {
   // Additional page
   additional_label.set_markup("<big><b>Additional Settings</b></big>\n"
@@ -142,48 +142,48 @@ void NewBottleAssistant::createSecondPage()
                               "know what these settings mean, <b><i>do NOT</i></b> change the settings (keep the default values).");
   additional_label.set_halign(Gtk::Align::ALIGN_START);
   additional_label.set_margin_bottom(25);
-  m_vbox2.pack_start(additional_label, false, false);
+  vbox2.pack_start(additional_label, false, false);
 
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
   {
-    audiodriver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
+    audio_driver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
 
-  m_hbox_audio.pack_start(audiodriver_label, false, true);
-  m_hbox_audio.pack_start(audiodriver_combobox);
-  m_vbox2.pack_start(m_hbox_audio, false, false);
+  hbox_audio.pack_start(audio_driver_label, false, true);
+  hbox_audio.pack_start(audio_driver_combobox);
+  vbox2.pack_start(hbox_audio, false, false);
 
-  m_vbox2.pack_start(virtual_desktop_check, false, false);
-  virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &NewBottleAssistant::on_virtual_desktop_toggle));
+  vbox2.pack_start(virtual_desktop_check, false, false);
+  virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_virtual_desktop_toggle));
 
-  m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_label, false, false);
-  m_hbox_virtual_desktop.pack_start(virtual_desktop_resolution_entry, false, false);
-  m_vbox2.pack_start(m_hbox_virtual_desktop, false, false);
+  hbox_virtual_desktop.pack_start(virtual_desktop_resolution_label, false, false);
+  hbox_virtual_desktop.pack_start(virtual_desktop_resolution_entry, false, false);
+  vbox2.pack_start(hbox_virtual_desktop, false, false);
 
-  m_vbox2.pack_start(disable_gecko_mono_check, false, false);
+  vbox2.pack_start(disable_gecko_mono_check, false, false);
 
-  append_page(m_vbox2);
-  set_page_complete(m_vbox2, true);
-  set_page_type(m_vbox2, Gtk::ASSISTANT_PAGE_CONFIRM);
+  append_page(vbox2);
+  set_page_complete(vbox2, true);
+  set_page_type(vbox2, Gtk::ASSISTANT_PAGE_CONFIRM);
   set_page_title(*get_nth_page(1), "Additional settings");
 }
 
 /**
  * \brief Last page of the wizard
  */
-void NewBottleAssistant::createThirdPage()
+void BottleNewAssistant::createThirdPage()
 {
-  m_vbox3.set_halign(Gtk::Align::ALIGN_CENTER);
-  m_vbox3.set_valign(Gtk::Align::ALIGN_CENTER);
+  vbox3.set_halign(Gtk::Align::ALIGN_CENTER);
+  vbox3.set_valign(Gtk::Align::ALIGN_CENTER);
 
-  m_vbox3.pack_start(apply_label, false, false);
-  m_vbox3.pack_start(loading_bar, false, false);
-  append_page(m_vbox3);
+  vbox3.pack_start(apply_label, false, false);
+  vbox3.pack_start(loading_bar, false, false);
+  append_page(vbox3);
 
   // Wait before we close the window
-  set_page_complete(m_vbox3, false);
-  set_page_type(m_vbox3, Gtk::ASSISTANT_PAGE_PROGRESS);
+  set_page_complete(vbox3, false);
+  set_page_type(vbox3, Gtk::ASSISTANT_PAGE_PROGRESS);
   set_page_title(*get_nth_page(2), "Applying changes");
 }
 
@@ -198,7 +198,7 @@ void NewBottleAssistant::createThirdPage()
  * \param[inout] disable_gecko_mono          Enable/Disable Gecko/Mono during install
  * \param[inout] audio                       Audio Driver type
  */
-void NewBottleAssistant::get_result(Glib::ustring& name,
+void BottleNewAssistant::get_result(Glib::ustring& name,
                                     BottleTypes::Windows& windows_version,
                                     BottleTypes::Bit& bit,
                                     Glib::ustring& virtual_desktop_resolution,
@@ -245,7 +245,7 @@ void NewBottleAssistant::get_result(Glib::ustring& name,
 
   try
   {
-    size_t audio_index = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
+    size_t audio_index = size_t(std::stoi(audio_driver_combobox.get_active_id(), &sz));
     audio = BottleTypes::AudioDriver(audio_index);
   }
   catch (const std::runtime_error& error)
@@ -263,7 +263,7 @@ void NewBottleAssistant::get_result(Glib::ustring& name,
 /**
  * \brief Triggered when the bottle is fully created (signal from the bottle manager thread)
  */
-void NewBottleAssistant::bottle_created()
+void BottleNewAssistant::bottle_created()
 {
   // Reset defaults (including timer_.disconnect())
   setDefaultValues();
@@ -279,7 +279,7 @@ void NewBottleAssistant::bottle_created()
  * \brief Triggered when the apply is pressed
  * apply_changes_gradually
  */
-void NewBottleAssistant::on_assistant_apply()
+void BottleNewAssistant::on_assistant_apply()
 {
   // Guess the time interval based on the user input
   bool is_desktop_enabled = virtual_desktop_check.get_active();
@@ -289,7 +289,7 @@ void NewBottleAssistant::on_assistant_apply()
   std::string::size_type sz;
   try
   {
-    size_t audio_index = size_t(std::stoi(audiodriver_combobox.get_active_id(), &sz));
+    size_t audio_index = size_t(std::stoi(audio_driver_combobox.get_active_id(), &sz));
     auto audio = BottleTypes::AudioDriver(audio_index);
     is_non_default_audio_driver = WineDefaults::AudioDriver != audio;
   }
@@ -333,15 +333,15 @@ void NewBottleAssistant::on_assistant_apply()
   }
 
   /* Start a timer to give the user feedback about the changes taking a few seconds to apply. */
-  timer_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &NewBottleAssistant::apply_changes_gradually), time_interval);
+  timer_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BottleNewAssistant::apply_changes_gradually), time_interval);
 }
 
-void NewBottleAssistant::on_assistant_cancel()
+void BottleNewAssistant::on_assistant_cancel()
 {
   hide();
 }
 
-void NewBottleAssistant::on_assistant_close()
+void BottleNewAssistant::on_assistant_close()
 {
   hide();
 }
@@ -349,7 +349,7 @@ void NewBottleAssistant::on_assistant_close()
 /**
  * \brief Prepare handler for each page, is emitted before making the page visable.
  */
-void NewBottleAssistant::on_assistant_prepare(Gtk::Widget* /* widget*/)
+void BottleNewAssistant::on_assistant_prepare(Gtk::Widget* /* widget*/)
 {
   set_title(Glib::ustring::compose("Gtk::Assistant example (Page %1 of %2)", get_current_page() + 1, get_n_pages()));
 
@@ -364,33 +364,33 @@ void NewBottleAssistant::on_assistant_prepare(Gtk::Widget* /* widget*/)
 /**
  * \brief Only complete the first page, when the name input field is *not* empty
  */
-void NewBottleAssistant::on_entry_changed()
+void BottleNewAssistant::on_entry_changed()
 {
   // The page is only complete if the name entry contains text.
   if (name_entry.get_text_length() != 0)
-    set_page_complete(m_vbox, true);
+    set_page_complete(vbox, true);
   else
-    set_page_complete(m_vbox, false);
+    set_page_complete(vbox, false);
 }
 
 /**
  * \brief Signal handler when the virtual desktop checkbox is checked.
  * It will show the additional resolution input field.
  */
-void NewBottleAssistant::on_virtual_desktop_toggle()
+void BottleNewAssistant::on_virtual_desktop_toggle()
 {
   if (virtual_desktop_check.get_active())
     // Show resolution label & input field
-    m_hbox_virtual_desktop.show();
+    hbox_virtual_desktop.show();
   else
-    m_hbox_virtual_desktop.hide();
+    hbox_virtual_desktop.hide();
 }
 
 /**
  * \brief Smooth loading bar and pulse loading bar when
  * it takes longer than expected
  */
-bool NewBottleAssistant::apply_changes_gradually()
+bool BottleNewAssistant::apply_changes_gradually()
 {
   double fraction = (loading_bar.get_fraction() + 0.02);
   if (fraction <= 1.0)

@@ -5,6 +5,7 @@ doc/doxygen/
 build/
 build_debug/
 build_prod/
+build_docs/
 
 # winetricks script
 winetricks
