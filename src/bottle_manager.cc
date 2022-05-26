@@ -510,6 +510,7 @@ void BottleManager::reboot()
     Glib::ustring wine_prefix = active_bottle_->wine_location();
     std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "wineboot -r", false, false);
     t.detach();
+    main_window_.show_info_message("Machine reboot emulated");
   }
 }
 
@@ -536,6 +537,7 @@ void BottleManager::kill_processes()
     Glib::ustring wine_prefix = active_bottle_->wine_location();
     std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "wineboot -k", false, false);
     t.detach();
+    main_window_.show_info_message("Kill processes requested");
   }
 }
 

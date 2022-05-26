@@ -159,8 +159,21 @@ void MainWindow::reset_detailed_info()
 }
 
 /**
- * \brief Show an error message with the provided text.
- * User can only click 'OK'
+ * \brief Show info message. User can only click 'OK'.
+ * \param[in] message - Show this error message
+ * \param[in] markup Support markup in message text (default: false)
+ */
+void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
+{
+  // false = no markup
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+  dialog.set_title("Information message");
+  dialog.set_modal(true);
+  dialog.run();
+}
+
+/**
+ * \brief Show an error message with the provided text. User can only click 'OK'.
  * \param[in] message - Show this error message
  * \param[in] markup Support markup in message text (default: false)
  */
