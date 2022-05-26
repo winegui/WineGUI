@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2019-2022 WineGUI
  *
- * \file    settings_window.h
- * \brief   Settings GTK+ window class
+ * \file    bottle_settings_window.h
+ * \brief   Wine bottle settings window
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,10 +28,10 @@ using std::string;
 class BottleItem;
 
 /**
- * \class SettingsWindow
- * \brief GTK+ Window class for the settings
+ * \class BottleSettingsWindow
+ * \brief Wine Bottle settings GTK Window class
  */
-class SettingsWindow : public Gtk::Window
+class BottleSettingsWindow : public Gtk::Window
 {
 public:
   // Signals
@@ -52,8 +52,8 @@ public:
   sigc::signal<void> winecfg;                                          /*!< Open Winecfg GUI (fallback) signal */
   sigc::signal<void> winetricks;                                       /*!< Open Winetricks GUI (fallback) signal */
 
-  explicit SettingsWindow(Gtk::Window& parent);
-  virtual ~SettingsWindow();
+  explicit BottleSettingsWindow(Gtk::Window& parent);
+  virtual ~BottleSettingsWindow();
 
   void show();
   void set_active_bottle(BottleItem* bottle);

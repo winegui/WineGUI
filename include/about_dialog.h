@@ -27,7 +27,7 @@
 
 /**
  * \class AboutDialog
- * \brief The About dialog
+ * \brief About WineGUI dialog class
  */
 class AboutDialog : public Gtk::AboutDialog
 {
@@ -43,5 +43,5 @@ public:
 protected:
   Gtk::Image logo; /*!< The logo of the app for the about window */
 
-  Gtk::LinkButton visit_project_link_button;
+  Gtk::LinkButton visit_project_link_button; /*!< Link button to the GitLab project */
 };

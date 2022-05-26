@@ -2,7 +2,7 @@
  * Copyright (c) 2020-2022 WineGUI
  *
  * \file    busy_dialog.cc
- * \brief   GTK+ Busy dialog
+ * \brief   Busy Dialog (showing a loading process bar)
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -57,7 +57,8 @@ BusyDialog::~BusyDialog()
 
 /**
  * \brief Set busy message
- * \param[in] message - Message
+ * \param[in] heading_text Heading text (displayed above the message)
+ * \param[in] message Message
  */
 void BusyDialog::set_message(const Glib::ustring& heading_text, const Glib::ustring& message)
 {

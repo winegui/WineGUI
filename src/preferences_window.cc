@@ -22,7 +22,7 @@
 
 /**
  * \brief Constructor
- * \param parent Reference to parent GTK+ Window
+ * \param parent Reference to parent GTK Window
  */
 PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
 {

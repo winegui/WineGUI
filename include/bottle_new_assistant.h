@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2019-2022 WineGUI
  *
- * \file    new_bottle_assistant.h
- * \brief   New Bottle Assistant (Wizard)
+ * \file    bottle_new_assistant.h
+ * \brief   New Wine bottle assistant (Wizard with steps)
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,17 +24,17 @@
 #include <gtkmm.h>
 
 /**
- * \class NewBottleAssistant
- * \brief New Bottle GTK Assistant (Wizard)
+ * \class BottleNewAssistant
+ * \brief New Wine Bottle GTK Assistant class
  */
-class NewBottleAssistant : public Gtk::Assistant
+class BottleNewAssistant : public Gtk::Assistant
 {
 public:
   // Signal
   sigc::signal<void> new_bottle_finished; /*!< Signal when New Bottle Assistant is finished */
 
-  NewBottleAssistant();
-  virtual ~NewBottleAssistant();
+  BottleNewAssistant();
+  virtual ~BottleNewAssistant();
 
   void get_result(Glib::ustring& name,
                   BottleTypes::Windows& windows_version,
@@ -46,23 +46,23 @@ public:
   void bottle_created();
 
   // Child widgets
-  Gtk::Box m_vbox;
-  Gtk::Box m_vbox2;
-  Gtk::Box m_vbox3;
-  Gtk::Box m_hbox_name;
-  Gtk::Box m_hbox_win;
-  Gtk::Box m_hbox_audio;
-  Gtk::Box m_hbox_virtual_desktop;
+  Gtk::Box vbox;
+  Gtk::Box vbox2;
+  Gtk::Box vbox3;
+  Gtk::Box hbox_name;
+  Gtk::Box hbox_win;
+  Gtk::Box hbox_audio;
+  Gtk::Box hbox_virtual_desktop;
   Gtk::Label intro_label;
   Gtk::Label name_label;
   Gtk::Label windows_version_label;
   Gtk::Label additional_label;
-  Gtk::Label audiodriver_label;
+  Gtk::Label audio_driver_label;
   Gtk::Label virtual_desktop_resolution_label;
   Gtk::Label confirm_label;
   Gtk::Label apply_label;
   Gtk::ComboBoxText windows_version_combobox;
-  Gtk::ComboBoxText audiodriver_combobox;
+  Gtk::ComboBoxText audio_driver_combobox;
   Gtk::CheckButton virtual_desktop_check;
   Gtk::CheckButton disable_gecko_mono_check;
   Gtk::Entry name_entry;

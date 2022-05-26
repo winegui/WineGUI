@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2022 WineGUI
  *
  * \file    busy_dialog.h
- * \brief   GTK+ Busy Dialog
+ * \brief   Busy Dialog (showing a loading process bar)
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify

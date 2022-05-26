@@ -50,12 +50,12 @@ set(HEADERS
     include/menu.h
     include/main_window.h
     include/preferences_window.h
-    include/edit_window.h
-    include/settings_window.h
+    include/bottle_edit_window.h
+    include/bottle_settings_window.h
     include/busy_dialog.h
     include/bottle_manager.h
     include/bottle_item.h
-    include/new_bottle_assistant.h
+    include/bottle_new_assistant.h
     include/about_dialog.h
     include/helper.h
     include/signal_dispatcher.h
@@ -65,12 +65,12 @@ set(SOURCES
     src/menu.cc
     src/main_window.cc
     src/preferences_window.cc
-    src/edit_window.cc
-    src/settings_window.cc
+    src/bottle_edit_window.cc
+    src/bottle_settings_window.cc
     src/busy_dialog.cc
     src/bottle_manager.cc
     src/bottle_item.cc
-    src/new_bottle_assistant.cc
+    src/bottle_new_assistant.cc
     src/about_dialog.cc
     src/helper.cc
     src/signal_dispatcher.cc
