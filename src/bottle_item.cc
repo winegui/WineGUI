@@ -49,6 +49,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
     audio_driver_ = bottle_item.audio_driver();
     virtual_desktop_ = bottle_item.virtual_desktop();
   }
+
   CreateUI();
 }
 
