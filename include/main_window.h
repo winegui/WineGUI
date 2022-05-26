@@ -59,6 +59,7 @@ public:
   void set_wine_bottles(std::list<BottleItem>& bottles);
   void set_detailed_info(BottleItem& bottle);
   void reset_detailed_info();
+  void show_info_message(const Glib::ustring& message, bool markup = false);
   void show_error_message(const Glib::ustring& message, bool markup = false);
   bool show_confirm_dialog(const Glib::ustring& message, bool markup = false);
   void show_busy_install_dialog(const Glib::ustring& message);
