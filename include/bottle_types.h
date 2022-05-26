@@ -180,13 +180,13 @@ namespace BottleTypes
     switch (win)
     {
     case Windows::Windows20:
-      return "win20"; // Not yet implemented by Winetrick?
+      return "win20";
     case Windows::Windows30:
-      return "win30"; // Not yet implemented by Winetrick?
+      return "win30";
     case Windows::Windows31:
       return "win31";
     case Windows::WindowsNT351:
-      return "nt351"; // Not yet implemented by Winetricks?
+      return "nt351";
     case Windows::WindowsNT40:
       return "nt40";
     case Windows::Windows95:
