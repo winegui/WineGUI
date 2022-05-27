@@ -110,5 +110,5 @@ private:
   Glib::ustring get_deinstall_mono_command();
   string get_wine_version();
   std::map<string, unsigned long> get_bottle_paths();
-  std::list<BottleItem> create_wine_bottles(string wine_version, std::map<string, unsigned long> bottle_dirs);
+  std::list<BottleItem> create_wine_bottles(std::map<string, unsigned long> bottle_dirs);
 };

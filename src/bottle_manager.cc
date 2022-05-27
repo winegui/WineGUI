@@ -132,7 +132,7 @@ void BottleManager::update_bottles()
     try
     {
       // Create wine bottles from bottle directories and wine version
-      bottles_ = create_wine_bottles(get_wine_version(), bottle_dirs);
+      bottles_ = create_wine_bottles(bottle_dirs);
     }
     catch (const std::runtime_error& error)
     {
@@ -929,12 +929,12 @@ std::map<string, unsigned long> BottleManager::get_bottle_paths()
 
 /**
  * \brief Create wine bottle classes and add them to the private bottles variable
- * \param[in] wine_version The current wine version used (currently the same version for all bottles)
  * \param[in] bottle_dirs  The list of bottle directories
  */
-std::list<BottleItem> BottleManager::create_wine_bottles(string wine_version, std::map<string, unsigned long> bottle_dirs)
+std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsigned long> bottle_dirs)
 {
   std::list<BottleItem> bottles;
+  string wine_version = get_wine_version();
 
   // Retrieve detailed info for each wine bottle prefix
   for (const auto& [prefix, _] : bottle_dirs)
@@ -1009,8 +1009,8 @@ std::list<BottleItem> BottleManager::create_wine_bottles(string wine_version, st
       main_window_.show_error_message(error.what());
     }
 
-    BottleItem* bottle =
-        new BottleItem(name, status, windows, bit, wine_version, prefix, c_drive_location, last_time_wine_updated, audio_driver, virtualDesktop);
+    BottleItem* bottle = new BottleItem(name, status, windows, bit, wine_version, is_wine64_bit_, prefix, c_drive_location, last_time_wine_updated,
+                                        audio_driver, virtualDesktop);
     bottles.push_back(*bottle);
   }
   return bottles;

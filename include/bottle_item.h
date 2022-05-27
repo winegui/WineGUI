@@ -52,20 +52,26 @@ public:
     swap(a.win_, b.win_);
     swap(a.bit_, b.bit_);
     swap(a.wine_version_, b.wine_version_);
+    swap(a.is_wine64_bit_, b.is_wine64_bit_);
     swap(a.wine_c_drive_, b.wine_c_drive_);
     swap(a.wine_last_changed_, b.wine_last_changed_);
     swap(a.audio_driver_, b.audio_driver_);
     swap(a.virtual_desktop_, b.virtual_desktop_);
   }
 
-  BottleItem(
-      Glib::ustring name, Glib::ustring wine_version, Glib::ustring wine_location, Glib::ustring wine_c_drive, Glib::ustring wine_last_changed);
+  BottleItem(Glib::ustring name,
+             Glib::ustring wine_version,
+             bool is_wine64_bit,
+             Glib::ustring wine_location,
+             Glib::ustring wine_c_drive,
+             Glib::ustring wine_last_changed);
 
   BottleItem(Glib::ustring name,
              bool status,
              BottleTypes::Windows win,
              BottleTypes::Bit bit,
              Glib::ustring wine_version,
+             bool is_wine64_bit,
              Glib::ustring wine_location,
              Glib::ustring wine_c_drive,
              Glib::ustring wine_last_changed,
@@ -125,10 +131,20 @@ public:
   {
     wine_version_ = wine_version;
   };
-  /// set Wine version
+  /// get Wine version
   const Glib::ustring& wine_version() const
   {
     return wine_version_;
+  };
+  /// set is Wine 64-bit executable
+  void is_wine64_bit(bool is_wine64_bit)
+  {
+    is_wine64_bit_ = is_wine64_bit;
+  };
+  /// get is Wine 64-bit executable
+  bool is_wine64_bit() const
+  {
+    return is_wine64_bit_;
   };
   /// set Wine location
   void wine_location(const Glib::ustring wine_location)
@@ -196,6 +212,7 @@ private:
   BottleTypes::Windows win_;
   BottleTypes::Bit bit_;
   Glib::ustring wine_version_;
+  bool is_wine64_bit_;
   Glib::ustring wine_location_;
   Glib::ustring wine_c_drive_;
   Glib::ustring wine_last_changed_;

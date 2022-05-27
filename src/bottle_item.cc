@@ -44,6 +44,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
     win_ = bottle_item.windows();
     bit_ = bottle_item.bit();
     wine_version_ = bottle_item.wine_version();
+    is_wine64_bit_ = bottle_item.is_wine64_bit();
     wine_location_ = bottle_item.wine_location();
     wine_c_drive_ = bottle_item.wine_c_drive();
     wine_last_changed_ = bottle_item.wine_last_changed();
@@ -57,13 +58,18 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
 /**
  * \brief Contruct a new Wine Bottle Item with limited inputs
  */
-BottleItem::BottleItem(
-    Glib::ustring name, Glib::ustring wine_version, Glib::ustring wine_location, Glib::ustring wine_c_drive, Glib::ustring wine_last_changed)
+BottleItem::BottleItem(Glib::ustring name,
+                       Glib::ustring wine_version,
+                       bool is_wine64_bit,
+                       Glib::ustring wine_location,
+                       Glib::ustring wine_c_drive,
+                       Glib::ustring wine_last_changed)
     : name_(name),
       is_status_ok_(true),
       win_(WineDefaults::WindowsOs),
       bit_(BottleTypes::Bit::win32),
       wine_version_(wine_version),
+      is_wine64_bit_(is_wine64_bit),
       wine_location_(wine_location),
       wine_c_drive_(wine_c_drive),
       wine_last_changed_(wine_last_changed),
@@ -80,6 +86,7 @@ BottleItem::BottleItem(Glib::ustring name,
                        BottleTypes::Windows win,
                        BottleTypes::Bit bit,
                        Glib::ustring wine_version,
+                       bool is_wine64_bit,
                        Glib::ustring wine_location,
                        Glib::ustring wine_c_drive,
                        Glib::ustring wine_last_changed,
@@ -90,6 +97,7 @@ BottleItem::BottleItem(Glib::ustring name,
       win_(win),
       bit_(bit),
       wine_version_(wine_version),
+      is_wine64_bit_(is_wine64_bit),
       wine_location_(wine_location),
       wine_c_drive_(wine_c_drive),
       wine_last_changed_(wine_last_changed),
