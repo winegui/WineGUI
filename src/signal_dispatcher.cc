@@ -86,7 +86,7 @@ void SignalDispatcher::dispatch_signals()
   menu_.preferences.connect(sigc::mem_fun(preferences_window_, &PreferencesWindow::show));
   menu_.quit.connect(
       sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
-  menu_.refresh_view.connect(sigc::mem_fun(manager_, &BottleManager::update_bottles));
+  menu_.refresh_view.connect(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles));
   menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
   menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
   menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
@@ -113,7 +113,7 @@ void SignalDispatcher::dispatch_signals()
 
   // Menu / Toolbar actions
   main_window_->new_bottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
-  main_window_->finished_new_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update_bottles));
+  main_window_->finished_new_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles));
   main_window_->show_edit_window.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
   main_window_->show_settings_window.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::show));
   main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
@@ -163,6 +163,9 @@ void SignalDispatcher::dispatch_signals()
   settings_window_.console.connect(sigc::mem_fun(manager_, &BottleManager::open_console));
   settings_window_.winetricks.connect(sigc::mem_fun(manager_, &BottleManager::open_winetricks));
   settings_window_.winecfg.connect(sigc::mem_fun(manager_, &BottleManager::open_winecfg));
+
+  // WineGUI Preference Window
+  preferences_window_.config_saved.connect(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles));
 }
 
 /**
@@ -315,7 +318,7 @@ void SignalDispatcher::on_bottle_updated()
   edit_window_.on_bottle_updated();
 
   // Update bottle list
-  manager_.update_bottles();
+  manager_.update_config_and_bottles();
 }
 
 /**

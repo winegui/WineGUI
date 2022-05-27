@@ -20,6 +20,7 @@
  */
 #include "bottle_manager.h"
 #include "bottle_item.h"
+#include "config_file.h"
 #include "dll_override_types.h"
 #include "helper.h"
 #include "main_window.h"
@@ -44,18 +45,8 @@ BottleManager::BottleManager(MainWindow& main_window)
       is_wine64_bit_(false),
       error_message_()
 {
-  // TODO: Make it configurable via settings
-  std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui", "prefixes"};
-  bottle_location_ = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
-
-  int wineStatus = Helper::determine_wine_executable();
-  if (wineStatus == 1)
-  {
-    is_wine64_bit_ = true;
-  }
-
   // Connect internal dispatcher(s)
-  update_bottles_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::update_bottles));
+  update_bottles_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::update_config_and_bottles));
 
   // TODO: Enable/disable tracing for the run_program commands (and make it configurable)
 }
@@ -103,14 +94,17 @@ void BottleManager::prepare()
   }
 
   // Start the initial read from disk to fetch the bottles & update GUI
-  update_bottles();
+  update_config_and_bottles();
 }
 
 /**
- * \brief Update bottles by reading the Wine Bottles from disk and update GUI
+ * \brief Update WineGUI Config and update bottles by reading the Wine Bottles from disk and update GUI
  */
-void BottleManager::update_bottles()
+void BottleManager::update_config_and_bottles()
 {
+  // Update config
+  load_config();
+
   // Clear bottles
   if (!bottles_.empty())
     bottles_.clear();
@@ -432,7 +426,7 @@ void BottleManager::delete_bottle()
         // Signal that bottle is removed
         bottle_removed.emit();
         Helper::remove_wine_bottle(prefix_path);
-        this->update_bottles();
+        this->update_config_and_bottles();
       }
       else
       {
@@ -839,6 +833,17 @@ void BottleManager::install_liberation(Gtk::Window& parent)
 /*************************************************************
  * Private member functions                                  *
  *************************************************************/
+
+/**
+ * \brief Load configuration values from file and apply
+ */
+void BottleManager::load_config()
+{
+  ConfigData config = ConfigFile::read_config_file();
+  bottle_location_ = config.default_folder;
+  is_wine64_bit_ = ((Helper::determine_wine_executable() == 1) || config.prefer_wine64);
+  is_debug_logging_ = config.enable_debug_logging;
+}
 
 bool BottleManager::is_bottle_not_null()
 {
