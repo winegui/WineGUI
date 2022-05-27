@@ -206,10 +206,9 @@ void BottleNewAssistant::get_result(Glib::ustring& name,
                                     BottleTypes::AudioDriver& audio)
 {
   std::string::size_type sz;
-  windows_version = BottleTypes::Windows::WindowsXP;
+  windows_version = WineDefaults::WindowsOs;
   bit = BottleTypes::Bit::win32;
-  audio = BottleTypes::AudioDriver::pulseaudio;
-
+  audio = WineDefaults::AudioDriver;
   name = name_entry.get_text();
 
   try

@@ -20,6 +20,7 @@
  */
 #include "bottle_edit_window.h"
 #include "bottle_item.h"
+#include "wine_defaults.h"
 
 /**
  * \brief Constructor
@@ -41,7 +42,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       active_bottle_(nullptr)
 {
   set_transient_for(parent);
-  set_default_size(550, 300);
+  set_default_size(400, 350);
   set_modal(true);
 
   edit_grid.set_margin_top(5);
@@ -63,6 +64,8 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
 
   name_label.set_halign(Gtk::Align::ALIGN_END);
   windows_version_label.set_halign(Gtk::Align::ALIGN_END);
+  audio_driver_label.set_halign(Gtk::Align::ALIGN_END);
+  virtual_desktop_resolution_label.set_halign(Gtk::Align::ALIGN_END);
 
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
@@ -88,7 +91,6 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   hbox_buttons.pack_end(save_button, false, false, 4);
   hbox_buttons.pack_end(cancel_button, false, false, 4);
 
-  // vbox.pack_start(vbox_delete, true, true, 4);
   vbox.pack_start(header_edit_label, false, false, 4);
   vbox.pack_start(edit_grid, true, true, 4);
   vbox.pack_start(hbox_buttons, false, false, 4);
@@ -243,9 +245,9 @@ void BottleEditWindow::on_cancel_button_clicked()
 void BottleEditWindow::on_save_button_clicked()
 {
   std::string::size_type sz;
-  BottleTypes::Windows windows_version = BottleTypes::Windows::WindowsXP; // Fallback
-  BottleTypes::AudioDriver audio = BottleTypes::AudioDriver::pulseaudio;  // Fallback
-  Glib::ustring virtual_desktop_resolution = "";                          // Default empty string
+  BottleTypes::Windows windows_version = WineDefaults::WindowsOs; // Fallback
+  BottleTypes::AudioDriver audio = WineDefaults::AudioDriver;     // Fallback
+  Glib::ustring virtual_desktop_resolution = "";                  // Default empty string
 
   // First disable save button (avoid multiple presses)
   save_button.set_sensitive(false);
