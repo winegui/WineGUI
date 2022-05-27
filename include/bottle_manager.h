@@ -52,7 +52,7 @@ public:
   virtual ~BottleManager();
 
   void prepare();
-  void update_bottles();
+  void update_config_and_bottles();
   void new_bottle(SignalDispatcher* caller,
                   Glib::ustring name,
                   BottleTypes::Windows windows_version,
@@ -102,10 +102,12 @@ private:
   std::list<BottleItem> bottles_;
   BottleItem* active_bottle_;
   bool is_wine64_bit_;
+  bool is_debug_logging_;
 
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
   Glib::ustring error_message_;
 
+  void load_config();
   bool is_bottle_not_null();
   Glib::ustring get_deinstall_mono_command();
   string get_wine_version();
