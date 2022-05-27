@@ -44,7 +44,7 @@ See latest [WineGUI Developer Docs](https://gitlab.melroy.org/melroy/winegui/-/j
 
 Dependencies should be met before build:
 
-- gcc/g++ (adviced: v7.3 or later)
+- gcc/g++ (adviced: v8 or later)
 - cmake (adviced: v3.10 or later)
 - ninja-build
 - libgtkmm-3.0-dev (implicit dependency with libgtk-3-dev)
