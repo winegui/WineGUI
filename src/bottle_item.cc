@@ -22,6 +22,7 @@
 #include "bottle_item.h"
 
 #include "helper.h"
+#include "wine_defaults.h"
 
 /**
  * \brief Default contructor
@@ -60,13 +61,13 @@ BottleItem::BottleItem(
     Glib::ustring name, Glib::ustring wine_version, Glib::ustring wine_location, Glib::ustring wine_c_drive, Glib::ustring wine_last_changed)
     : name_(name),
       is_status_ok_(true),
-      win_(BottleTypes::Windows::WindowsXP),
+      win_(WineDefaults::WindowsOs),
       bit_(BottleTypes::Bit::win32),
       wine_version_(wine_version),
       wine_location_(wine_location),
       wine_c_drive_(wine_c_drive),
       wine_last_changed_(wine_last_changed),
-      audio_driver_(BottleTypes::AudioDriver::pulseaudio),
+      audio_driver_(WineDefaults::AudioDriver),
       virtual_desktop_(""){
           // Gui will be created during the copy contructor called by Gtk
       };
