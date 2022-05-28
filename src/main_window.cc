@@ -72,6 +72,9 @@ MainWindow::MainWindow(Menu& menu)
   // Load window settings from gsettings schema file
   load_stored_window_settings();
 
+  // By default disable the toolbar buttons
+  set_sensitive_toolbar_buttons(false);
+
   // Left side (listbox)
   listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
   // Disabled right-click menu for now, since it doesn't activate the right-clicked bottle as active
@@ -125,6 +128,8 @@ void MainWindow::set_wine_bottles(std::list<BottleItem>& bottles)
   {
     listbox.add(bottle);
   }
+  // Enable/disable toolbar buttons depending on listbox
+  set_sensitive_toolbar_buttons(bottles.size() > 0);
   listbox.show_all();
 }
 
@@ -165,6 +170,8 @@ void MainWindow::reset_detailed_info()
   wine_last_changed.set_text("");
   audio_driver.set_text("");
   virtual_desktop.set_text("");
+  // Disable toolbar buttons
+  set_sensitive_toolbar_buttons(false);
 }
 
 /**
@@ -642,6 +649,22 @@ void MainWindow::create_right_panel()
 
   // Add box to paned
   paned.add2(right_box);
+}
+
+/**
+ * \brief set sensitive toolbar buttons (eg. when a bottle is active)
+ * \param sensitive Set toolbar buttons sensitivity (true is enabled, false is disabled)
+ */
+void MainWindow::set_sensitive_toolbar_buttons(bool sensitive)
+{
+  edit_button.set_sensitive(sensitive);
+  settings_button.set_sensitive(sensitive);
+  run_button.set_sensitive(sensitive);
+  open_c_driver_button.set_sensitive(sensitive);
+  reboot_button.set_sensitive(sensitive);
+  update_button.set_sensitive(sensitive);
+  open_log_file_button.set_sensitive(sensitive);
+  kill_processes_button.set_sensitive(sensitive);
 }
 
 /**

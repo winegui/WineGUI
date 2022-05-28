@@ -88,6 +88,7 @@ void BottleNewAssistant::setDefaultValues()
   disable_gecko_mono_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("960x540");
   loading_bar.set_fraction(0.0);
+  // TODO: Unable to reset the cancel button after previous commit()?
 
   if (timer_)
   {

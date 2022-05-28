@@ -104,10 +104,10 @@ protected:
 
   // Toolbar buttons
   Gtk::ToolButton new_button;            /*!< New toolbar button */
-  Gtk::ToolButton run_button;            /*!< Run... toolbar button */
-  Gtk::ToolButton open_c_driver_button;  /*!< Open C:\ drive toolbar button */
   Gtk::ToolButton edit_button;           /*!< Edit toolbar button */
   Gtk::ToolButton settings_button;       /*!< Settings toolbar button */
+  Gtk::ToolButton run_button;            /*!< Run... toolbar button */
+  Gtk::ToolButton open_c_driver_button;  /*!< Open C:\ drive toolbar button */
   Gtk::ToolButton reboot_button;         /*!< Reboot toolbar button */
   Gtk::ToolButton update_button;         /*!< Update toolbar button */
   Gtk::ToolButton open_log_file_button;  /*!< Open log file toolbar button */
@@ -126,5 +126,6 @@ private:
   void load_stored_window_settings();
   void create_left_panel();
   void create_right_panel();
+  void set_sensitive_toolbar_buttons(bool sensitive);
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* row, Gtk::ListBoxRow* before);
 };

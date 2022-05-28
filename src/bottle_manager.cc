@@ -168,7 +168,7 @@ void BottleManager::update_config_and_bottles()
       main_window_.show_error_message("Could not create an overview of Windows Machines. Empty list.");
 
       // Send reset signal to reset the active bottle to NULL
-      reset_acctive_bottle.emit();
+      reset_active_bottle.emit();
       // Reset locally
       active_bottle_ = nullptr;
     }
@@ -176,7 +176,7 @@ void BottleManager::update_config_and_bottles()
   else
   {
     // Send reset signal to reset the active bottle to NULL
-    reset_acctive_bottle.emit();
+    reset_active_bottle.emit();
     // Reset locally
     active_bottle_ = nullptr;
   }
