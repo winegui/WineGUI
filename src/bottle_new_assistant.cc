@@ -81,7 +81,6 @@ void BottleNewAssistant::setDefaultValues()
 {
   apply_label.set_text("Please wait, changes are getting applied.");
   name_entry.set_text("");
-  // TODO: Allow default to override from WineGUI settings?
   windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
   audio_driver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
   virtual_desktop_check.set_active(false);
