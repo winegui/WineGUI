@@ -47,10 +47,11 @@ public:
   static Helper& get_instance();
 
   static std::map<string, unsigned long> get_bottles_paths(const string& dir_path);
-  static string run_program(string prefix_path, string program, bool give_error);
-  static string run_program_under_wine(bool wine_64_bit, string prefix_path, string program, bool give_error);
-  static string run_program_blocking_wait(string prefix_path, string program, bool give_error);
-  static void write_to_log_file(const string& logging);
+  static string run_program(const string& prefix_path, const string& program, bool give_error = true, bool stderr_output = true);
+  static string
+  run_program_under_wine(bool wine_64_bit, const string& prefix_path, const string& program, bool give_error = true, bool stderr_output = true);
+  static string run_program_blocking_wait(const string& prefix_path, const string& program, bool give_error = true, bool stderr_output = true);
+  static void write_to_log_file(const string& logging_bottle_prefix, const string& logging);
   static void wait_until_wineserver_is_terminated(const string& prefix_path);
   static int determine_wine_executable();
   static string get_wine_executable_location(bool bit64);

@@ -143,67 +143,73 @@ std::map<std::string, unsigned long> Helper::get_bottles_paths(const string& dir
 
 /**
  * \brief Run any program with only setting the WINEPREFIX env variable (run this method async).
- * This method will only return if you set give_error = true.
- * \param[in] prefix_path - The path to wine bottle
- * \param[in] program - Program that gets executed (ideally full path)
- * \param[in] give_error - Inform user when application exit with non-zero exit code
- * \return Terminal stdout/stderr output (only hwn give_error is true)
+ * \param[in] prefix_path The path to wine bottle
+ * \param[in] program Program that gets executed (ideally full path)
+ * \param[in] give_error Inform user when application exit with non-zero exit code
+ * \param[in] stderr_output Also output stderr (together with stout)
+ * \return Terminal stdout output
  */
-string Helper::run_program(string prefix_path, string program, bool give_error = true)
+string Helper::run_program(const string& prefix_path, const string& program, bool give_error, bool stderr_output)
 {
   string output;
+  string exec_program = (stderr_output) ? program + " 2>&1" : program;
+  string command = "WINEPREFIX=\"" + prefix_path + "\" " + exec_program;
   if (give_error)
   {
-    // Execute the command that also show error to the user when exit code is non-zero
-    output = exec_error_message(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
+    // Execute the command that also shows an error message to the user when exit code is non-zero
+    output = exec_error_message(command.c_str());
   }
   else
   {
-    // No tracing and no error message when exit code is non-zero
-    exec(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
+    // No error message when exit code is non-zero, but we can still return the output and log to disk (if logging is enabled)
+    output = exec(command.c_str());
   }
   return output;
 }
 
 /**
- * \brief Run a Windows program under Wine (run this method async)
+ * \brief Run a Windows program under Wine (run this method async).
+ * Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
  * \param[in] prefix_path The path to bottle wine
  * \param[in] program Program/executable that will be executed (be sure your application executable is between
  * brackets in case of spaces)
- * \param[in] give_error - Inform user when application exit with non-zero exit code
- * \return Terminal stdout/stderr output (if give_error is true)
+ * \param[in] give_error Inform user when application exit with non-zero exit code
+ * \param[in] stderr_output Also output stderr (together with stout)
+ * \return Terminal stdout output
  */
-string Helper::run_program_under_wine(bool wine_64_bit, string prefix_path, string program, bool give_error = true)
+string Helper::run_program_under_wine(bool wine_64_bit, const string& prefix_path, const string& program, bool give_error, bool stderr_output)
 {
-  return run_program(prefix_path, Helper::get_wine_executable_location(wine_64_bit) + " " + program, give_error);
+  return run_program(prefix_path, Helper::get_wine_executable_location(wine_64_bit) + " " + program, give_error, stderr_output);
 }
 
 /**
  * \brief Run a Windows program under Wine (run this method async)
  * This method will really wait until the wineserver is down.
- * \param[in] prefix_path - The path to bottle wine
- * \param[in] program - Program/executable that will be executed
- * \param[in] give_error - Inform user when application exit with non-zero exit code
- * \return Terminal stdout/stderr output (only when give_error is true)
+ * \param[in] prefix_path The path to bottle wine
+ * \param[in] program Program/executable that will be executed
+ * \param[in] give_error Inform user when application exit with non-zero exit code
+ * \param[in] stderr_output Also output stderr (together with stout)
+ * \return Terminal stdout output
  */
-string Helper::run_program_blocking_wait(string prefix_path, string program, bool give_error = true)
+string Helper::run_program_blocking_wait(const string& prefix_path, const string& program, bool give_error, bool stderr_output)
 {
   // Be-sure to execute the program also between brackets (in case of spaces)
-  string output = run_program(prefix_path, program, give_error);
+  string output = run_program(prefix_path, program, give_error, stderr_output);
   // Blocking wait until wineserver is terminated (before we can look in the reg files for example)
   Helper::wait_until_wineserver_is_terminated(prefix_path);
-
   return output;
 }
 
 /**
- * \brief Write logging to log file
+ * \brief Write/apend logging to log file
+ * \param logging_bottle_prefix Wine Bottle prefix location
  * \param logging Logging data
  */
-void Helper::write_to_log_file(const string& logging)
+void Helper::write_to_log_file(const string& logging_bottle_prefix, const string& logging)
 {
-  auto file = Gio::File::create_for_path("/home/melroy/.winegui/test.log");
+  string log_path = Glib::build_filename(logging_bottle_prefix, "winegui.log");
+  auto file = Gio::File::create_for_path(log_path);
   try
   {
     auto output = file->append_to(Gio::FileCreateFlags::FILE_CREATE_NONE);
@@ -1090,9 +1096,9 @@ string Helper::get_image_location(const string& filename)
  ****************************************************************************/
 
 /**
- * \brief Execute command on terminal. Return output.
+ * \brief Execute command on terminal. Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] cmd The command to be executed
- * \return Terminal stdout/stderr output
+ * \return Terminal stdout output
  */
 string Helper::exec(const char* cmd)
 {
@@ -1116,8 +1122,9 @@ string Helper::exec(const char* cmd)
 
 /**
  * \brief Execute command on terminal, give user an error message when exit code is non-zero.
+ * Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] cmd The command to be executed
- * \return Terminal stdout/stderr output
+ * \return Terminal stdout output
  */
 string Helper::exec_error_message(const char* cmd)
 {

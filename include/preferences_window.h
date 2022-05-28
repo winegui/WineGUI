@@ -43,15 +43,17 @@ protected:
   Gtk::Box hbox_buttons;   /*!< box for buttons */
   Gtk::Grid settings_grid; /*!< grid layout for settings */
 
-  Gtk::Label header_preferences_label;         /*!< header preferences label */
-  Gtk::Label default_folder_label;             /*!< default folder label */
-  Gtk::Label prefer_wine64_label;              /*!< prefer wine 64-bit label */
-  Gtk::Label debug_logging_label;              /*!< windows version label */
-  Gtk::Entry default_folder_entry;             /*!< default folder input field */
-  Gtk::CheckButton prefer_wine64_check;        /*!< prefer wine 64-bit checkbox */
-  Gtk::CheckButton enable_debug_logging_check; /*!< debug logging checkbox */
-  Gtk::Button save_button;                     /*!< save button */
-  Gtk::Button cancel_button;                   /*!< cancel button */
+  Gtk::Label header_preferences_label;          /*!< header preferences label */
+  Gtk::Label default_folder_label;              /*!< default folder label */
+  Gtk::Label prefer_wine64_label;               /*!< prefer wine 64-bit label */
+  Gtk::Label debug_logging_label;               /*!< debug logging label */
+  Gtk::Label logging_stderr_label;              /*!< logging stderr label */
+  Gtk::Entry default_folder_entry;              /*!< default folder input field */
+  Gtk::CheckButton prefer_wine64_check;         /*!< prefer wine 64-bit checkbox */
+  Gtk::CheckButton enable_debug_logging_check;  /*!< debug logging checkbox */
+  Gtk::CheckButton enable_logging_stderr_check; /*!< debug logging checkbox */
+  Gtk::Button save_button;                      /*!< save button */
+  Gtk::Button cancel_button;                    /*!< cancel button */
 
 private:
   // Signal handlers

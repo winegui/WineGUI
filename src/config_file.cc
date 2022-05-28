@@ -33,6 +33,7 @@ bool ConfigFile::write_config_file(const ConfigData& config_data)
     keyfile.set_string("General", "DefaultFolder", config_data.default_folder);
     keyfile.set_boolean("General", "PreferWine64", config_data.prefer_wine64);
     keyfile.set_boolean("General", "EnableDebugLogging", config_data.enable_debug_logging);
+    keyfile.set_boolean("General", "EnableLoggingStderr", config_data.enable_logging_stderr);
     success = keyfile.save_to_file(file_path);
   }
   catch (const Glib::Error& ex)
@@ -54,10 +55,11 @@ ConfigData ConfigFile::read_config_file()
   std::string default_prefix_folder = Glib::build_path(G_DIR_SEPARATOR_S, prefix_dirs);
 
   struct ConfigData config;
-  // Defaults values
+  // Defaults config values
   config.default_folder = default_prefix_folder;
   config.prefer_wine64 = false;
   config.enable_debug_logging = false;
+  config.enable_logging_stderr = true;
 
   // Check if config file exists
   if (!Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR))
@@ -74,11 +76,13 @@ ConfigData ConfigFile::read_config_file()
       config.default_folder = keyfile.get_string("General", "DefaultFolder");
       config.prefer_wine64 = keyfile.get_boolean("General", "PreferWine64");
       config.enable_debug_logging = keyfile.get_boolean("General", "EnableDebugLogging");
+      config.enable_logging_stderr = keyfile.get_boolean("General", "EnableLoggingStderr");
     }
     catch (const Glib::Error& ex)
     {
       std::cerr << "Error: Exception while loading config file: " << ex.what() << std::endl;
-      // will return default values
+      // Lets write a new config file and return the default values below
+      ConfigFile::write_config_file(config);
     }
   }
   return config;

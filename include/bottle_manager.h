@@ -85,10 +85,10 @@ public:
   void open_notepad();
   void open_wordpad();
   void open_iexplorer();
-  void install_d3dx9(Gtk::Window& parent, const Glib::ustring& version);
-  void install_dxvk(Gtk::Window& parent, const Glib::ustring& version);
-  void install_visual_cpp_package(Gtk::Window& parent, const Glib::ustring& version);
-  void install_dot_net(Gtk::Window& parent, const Glib::ustring& version);
+  void install_d3dx9(Gtk::Window& parent, const string& version);
+  void install_dxvk(Gtk::Window& parent, const string& version);
+  void install_visual_cpp_package(Gtk::Window& parent, const string& version);
+  void install_dot_net(Gtk::Window& parent, const string& version);
   void install_core_fonts(Gtk::Window& parent);
   void install_liberation(Gtk::Window& parent);
 
@@ -105,9 +105,11 @@ private:
   BottleItem* active_bottle_;
   bool is_wine64_bit_;
   bool is_debug_logging_;
+  bool is_logging_stderr_;
 
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
   Glib::ustring error_message_;
+  std::string logging_bottle_prefix_;
   std::string output_logging_;
 
   // Signal handlers
@@ -115,7 +117,7 @@ private:
 
   void load_config();
   bool is_bottle_not_null();
-  Glib::ustring get_deinstall_mono_command();
+  string get_deinstall_mono_command();
   string get_wine_version();
   std::map<string, unsigned long> get_bottle_paths();
   std::list<BottleItem> create_wine_bottles(std::map<string, unsigned long> bottle_dirs);

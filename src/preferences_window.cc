@@ -32,8 +32,10 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
       default_folder_label("Default Machine folder: "),
       prefer_wine64_label("Prefer Wine 64-bit:"),
       debug_logging_label("Enable logging:"),
+      logging_stderr_label("Also log stderr:"),
       prefer_wine64_check("Prefer Wine 64-bit executable (over 32-bit)"),
       enable_debug_logging_check("Enable debug logging"),
+      enable_logging_stderr_check("Also log standard error to logging"),
       save_button("Save"),
       cancel_button("Cancel")
 {
@@ -62,6 +64,7 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
   default_folder_label.set_halign(Gtk::Align::ALIGN_END);
   prefer_wine64_label.set_halign(Gtk::Align::ALIGN_END);
   debug_logging_label.set_halign(Gtk::Align::ALIGN_END);
+  logging_stderr_label.set_halign(Gtk::Align::ALIGN_END);
 
   default_folder_entry.set_hexpand(true);
 
@@ -71,6 +74,8 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
   settings_grid.attach(prefer_wine64_check, 1, 1);
   settings_grid.attach(debug_logging_label, 0, 2);
   settings_grid.attach(enable_debug_logging_check, 1, 2);
+  settings_grid.attach(logging_stderr_label, 0, 3);
+  settings_grid.attach(enable_logging_stderr_check, 1, 3);
 
   hbox_buttons.pack_end(save_button, false, false, 4);
   hbox_buttons.pack_end(cancel_button, false, false, 4);
@@ -103,6 +108,7 @@ void PreferencesWindow::show()
   default_folder_entry.set_text(config.default_folder);
   prefer_wine64_check.set_active(config.prefer_wine64);
   enable_debug_logging_check.set_active(config.enable_debug_logging);
+  enable_logging_stderr_check.set_active(config.enable_logging_stderr);
   // Call parent show
   Gtk::Widget::show();
 }
@@ -125,6 +131,7 @@ void PreferencesWindow::on_save_button_clicked()
   config.default_folder = default_folder_entry.get_text();
   config.prefer_wine64 = prefer_wine64_check.get_active();
   config.enable_debug_logging = enable_debug_logging_check.get_active();
+  config.enable_logging_stderr = enable_logging_stderr_check.get_active();
   if (!ConfigFile::write_config_file(config))
   {
     Gtk::MessageDialog dialog(*this, "Error occurred during saving config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
