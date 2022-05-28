@@ -142,24 +142,27 @@ std::map<std::string, unsigned long> Helper::get_bottles_paths(const string& dir
 }
 
 /**
- * \brief Run any program with only setting the WINEPREFIX env variable (run this method async)
+ * \brief Run any program with only setting the WINEPREFIX env variable (run this method async).
+ * This method will only return if you set give_error = true.
  * \param[in] prefix_path - The path to wine bottle
  * \param[in] program - Program that gets executed (ideally full path)
  * \param[in] give_error - Inform user when application exit with non-zero exit code
- * \param[in] enable_tracing - Enable debugging tracing to file (give_error should be true as well!)
+ * \return Terminal stdout/stderr output (only hwn give_error is true)
  */
-void Helper::run_program(string prefix_path, string program, bool give_error = true, bool enable_tracing = false)
+string Helper::run_program(string prefix_path, string program, bool give_error = true)
 {
+  string output;
   if (give_error)
   {
-    // Execute the command and show the user a message when exit code is non-zero
-    exec_tracing(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str(), enable_tracing);
+    // Execute the command that also show error to the user when exit code is non-zero
+    output = exec_error_message(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
   }
   else
   {
     // No tracing and no error message when exit code is non-zero
     exec(("WINEPREFIX=\"" + prefix_path + "\" " + program).c_str());
   }
+  return output;
 }
 
 /**
@@ -167,36 +170,48 @@ void Helper::run_program(string prefix_path, string program, bool give_error = t
  * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
  * \param[in] prefix_path The path to bottle wine
  * \param[in] program Program/executable that will be executed (be sure your application executable is between
- * brackets in case of spaces) \param[in] give_error - Inform user when application exit with non-zero exit code
- * \param[in] enable_tracing Enable debugging tracing to file (give_error should be true as well!)
+ * brackets in case of spaces)
+ * \param[in] give_error - Inform user when application exit with non-zero exit code
+ * \return Terminal stdout/stderr output (if give_error is true)
  */
-void Helper::run_program_under_wine(bool wine_64_bit, string prefix_path, string program, bool give_error = true, bool enable_tracing = false)
+string Helper::run_program_under_wine(bool wine_64_bit, string prefix_path, string program, bool give_error = true)
 {
-  run_program(prefix_path, Helper::get_wine_executable_location(wine_64_bit) + " " + program, give_error, enable_tracing);
+  return run_program(prefix_path, Helper::get_wine_executable_location(wine_64_bit) + " " + program, give_error);
 }
 
 /**
- * \brief Run a Windows program under Wine  (run this method async)
+ * \brief Run a Windows program under Wine (run this method async)
  * This method will really wait until the wineserver is down.
  * \param[in] prefix_path - The path to bottle wine
  * \param[in] program - Program/executable that will be executed
- * \param[in] finish_signal - Signal handler to be called when execution is finished
  * \param[in] give_error - Inform user when application exit with non-zero exit code
- * \param[in] enable_tracing - Enable debugging tracing to file (give_error should be true as well!)
+ * \return Terminal stdout/stderr output (only when give_error is true)
  */
-void Helper::run_program_with_finish_callback(
-    string prefix_path, string program, Glib::Dispatcher* finish_signal, bool give_error = true, bool enable_tracing = false)
+string Helper::run_program_blocking_wait(string prefix_path, string program, bool give_error = true)
 {
   // Be-sure to execute the program also between brackets (in case of spaces)
-  run_program(prefix_path, program, give_error, enable_tracing);
-
+  string output = run_program(prefix_path, program, give_error);
   // Blocking wait until wineserver is terminated (before we can look in the reg files for example)
   Helper::wait_until_wineserver_is_terminated(prefix_path);
 
-  // When the server is termined (or timed-out), finally fire the finish signal
-  if (finish_signal != nullptr)
+  return output;
+}
+
+/**
+ * \brief Write logging to log file
+ * \param logging Logging data
+ */
+void Helper::write_to_log_file(const string& logging)
+{
+  auto file = Gio::File::create_for_path("/home/melroy/.winegui/test.log");
+  try
   {
-    finish_signal->emit();
+    auto output = file->append_to(Gio::FileCreateFlags::FILE_CREATE_NONE);
+    output->write(logging);
+  }
+  catch (const Glib::Error& ex)
+  {
+    std::cout << "Error: Couldn't write debug logging to log file. Error " << ex.what() << std::endl;
   }
 }
 
@@ -220,12 +235,12 @@ int Helper::determine_wine_executable()
 {
   int return_status = -2;
   // Try wine 32-bit
-  string result32 = exec(("command -v " + Helper::get_wine_executable_location(false) + " >/dev/null 2>&1; echo $?").c_str());
-  if (!result32.empty())
+  string output32 = exec(("command -v " + Helper::get_wine_executable_location(false) + " >/dev/null 2>&1; echo $?").c_str());
+  if (!output32.empty())
   {
     // Remove new lines
-    result32.erase(std::remove(result32.begin(), result32.end(), '\n'), result32.end());
-    if (result32.compare("0") == 0)
+    output32.erase(std::remove(output32.begin(), output32.end(), '\n'), output32.end());
+    if (output32.compare("0") == 0)
     {
       return_status = 0;
     }
@@ -233,12 +248,12 @@ int Helper::determine_wine_executable()
   // Try wine 64-bit
   if (return_status == -2)
   {
-    string result64 = exec(("command -v " + Helper::get_wine_executable_location(true) + " >/dev/null 2>&1; echo $?").c_str());
-    if (!result64.empty())
+    string output64 = exec(("command -v " + Helper::get_wine_executable_location(true) + " >/dev/null 2>&1; echo $?").c_str());
+    if (!output64.empty())
     {
       // Remove new lines
-      result64.erase(std::remove(result64.begin(), result64.end(), '\n'), result64.end());
-      if (result64.compare("0") == 0)
+      output64.erase(std::remove(output64.begin(), output64.end(), '\n'), output64.end());
+      if (output64.compare("0") == 0)
       {
         return_status = 1;
       }
@@ -293,10 +308,10 @@ string Helper::get_winetricks_location()
  */
 string Helper::get_wine_version(bool wine_64_bit)
 {
-  string result = exec((Helper::get_wine_executable_location(wine_64_bit) + " --version").c_str());
-  if (!result.empty())
+  string output = exec((Helper::get_wine_executable_location(wine_64_bit) + " --version").c_str());
+  if (!output.empty())
   {
-    std::vector<string> results = split(result, '-');
+    std::vector<string> results = split(output, '-');
     if (results.size() >= 2)
     {
       string result2 = results.at(1);
@@ -348,12 +363,12 @@ void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, Bot
   string wine_command =
       "WINEPREFIX=\"" + prefix_path + "\"" + wine_arch + wine_dll_overrides + " " + Helper::get_wine_executable_location(wine_64_bit) + " wineboot";
   string command = wine_command + ">/dev/null 2>&1; echo $?";
-  string result = exec(command.c_str());
-  if (!result.empty())
+  string output = exec(command.c_str());
+  if (!output.empty())
   {
     // Remove new lines
-    result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-    if (!(result.compare("0") == 0))
+    output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+    if (!(output.compare("0") == 0))
     {
       throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + get_name(prefix_path) +
                                "\n\nCommand executed: " + wine_command + "\nFull path location: " + prefix_path);
@@ -374,12 +389,12 @@ void Helper::remove_wine_bottle(const string& prefix_path)
 {
   if (Helper::dir_exists(prefix_path))
   {
-    string result = exec(("rm -rf \"" + prefix_path + "\"; echo $?").c_str());
-    if (!result.empty())
+    string output = exec(("rm -rf \"" + prefix_path + "\"; echo $?").c_str());
+    if (!output.empty())
     {
       // Remove new lines
-      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      if (!(result.compare("0") == 0))
+      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+      if (!(output.compare("0") == 0))
       {
         throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + get_name(prefix_path) +
                                  "\n\nFull path location: " + prefix_path);
@@ -407,12 +422,12 @@ void Helper::rename_wine_bottle_folder(const string& current_prefix_path, const 
 {
   if (Helper::dir_exists(current_prefix_path))
   {
-    string result = exec(("mv \"" + current_prefix_path + "\" \"" + new_prefix_path + "\"; echo $?").c_str());
-    if (!result.empty())
+    string output = exec(("mv \"" + current_prefix_path + "\" \"" + new_prefix_path + "\"; echo $?").c_str());
+    if (!output.empty())
     {
       // Remove new lines
-      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      if (!(result.compare("0") == 0))
+      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+      if (!(output.compare("0") == 0))
       {
         throw std::runtime_error("Something went wrong when renaming the Windows Machine. Wine machine: " + get_name(current_prefix_path) +
                                  "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
@@ -449,26 +464,7 @@ string Helper::get_name(const string& prefix_path)
  */
 string Helper::get_description(const string& prefix_path)
 {
-  try
-  {
-    std::vector<std::string> config = read_file(Glib::build_filename(prefix_path, WineGuiMetaFile));
-    for (std::vector<std::string>::iterator config_line = config.begin(); config_line != config.end(); ++config_line)
-    {
-      auto delimiter_pos = (*config_line).find("=");
-      auto name = (*config_line).substr(0, delimiter_pos);
-      auto value = (*config_line).substr(delimiter_pos + 1);
-      if (name.compare("description") == 0)
-      {
-        return value;
-      }
-    }
-  }
-  catch (const std::exception& e)
-  {
-    // Do nothing, continue
-  }
-
-  // Empty otherwise
+  // TODO: Use Glib::KeyFile..
   return "";
 }
 
@@ -699,7 +695,7 @@ string Helper::get_last_wine_updated(const string& prefix_path)
   string file_path = Glib::build_filename(prefix_path, UpdateTimestamp);
   if (Helper::file_exists(file_path))
   {
-    std::vector<string> epoch_time = read_file(file_path);
+    std::vector<string> epoch_time = read_file_lines(file_path);
     if (epoch_time.size() >= 1)
     {
       string time = epoch_time.at(0);
@@ -835,11 +831,11 @@ void Helper::self_update_winetricks()
 {
   if (file_exists(WinetricksExecutable))
   {
-    string result = exec((WinetricksExecutable + " --self-update >/dev/null 2>&1; echo $?").c_str());
-    if (!result.empty())
+    string output = exec((WinetricksExecutable + " --self-update >/dev/null 2>&1; echo $?").c_str());
+    if (!output.empty())
     {
-      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      if (result.compare("0") != 0)
+      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+      if (output.compare("0") != 0)
       {
         throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::get_winetricks_version());
       }
@@ -865,11 +861,11 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
   if (file_exists(WinetricksExecutable))
   {
     string win = BottleTypes::get_winetricks_string(windows);
-    string result = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " " + win + ">/dev/null 2>&1; echo $?").c_str());
-    if (!result.empty())
+    string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " " + win + ">/dev/null 2>&1; echo $?").c_str());
+    if (!output.empty())
     {
-      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      if (result.compare("0") != 0)
+      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+      if (output.compare("0") != 0)
       {
         throw std::runtime_error("Could not set Windows OS version");
       }
@@ -913,10 +909,10 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
       exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
       // Something returns non-zero... winetricks on the command line, does return zero ..
       /*
-string result = exec(..)
-if (!result.empty()) {
-  result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-  if (result.compare("0") != 0) {
+string output = exec(..)
+if (!output.empty()) {
+  output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+  if (output.compare("0") != 0) {
     throw std::runtime_error("Could not set virtual desktop resolution");
   }
 } else {
@@ -941,10 +937,10 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
     exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=off>/dev/null 2>&1; echo $?").c_str());
     // Something returns non-zero... winetricks on the command line, does return zero ..
     /*
-string result = exec(...)
-if (!result.empty()) {
-  result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-  if (result.compare("0") != 0) {
+string output = exec(...)
+if (!output.empty()) {
+  output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+  if (output.compare("0") != 0) {
     throw std::runtime_error("Could not Disable Virtual Desktop");
   }
 } else {
@@ -964,11 +960,11 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
   {
     string audio = BottleTypes::get_winetricks_string(audio_driver);
     //
-    string result = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " sound=" + audio + ">/dev/null 2>&1; echo $?").c_str());
-    if (!result.empty())
+    string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " sound=" + audio + ">/dev/null 2>&1; echo $?").c_str());
+    if (!output.empty())
     {
-      result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-      if (result.compare("0") != 0)
+      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+      if (output.compare("0") != 0)
       {
         throw std::runtime_error("Could not set Audio driver");
       }
@@ -989,14 +985,14 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
  */
 string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name)
 {
-  string result = exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::get_wine_executable_location(wine_64_bit) + " uninstaller --list | grep \"" +
+  string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::get_wine_executable_location(wine_64_bit) + " uninstaller --list | grep \"" +
                         application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1")
                            .c_str());
-  if (!result.empty())
+  if (!output.empty())
   {
-    result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+    output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
   }
-  return result;
+  return output;
 }
 
 /**
@@ -1096,13 +1092,13 @@ string Helper::get_image_location(const string& filename)
 /**
  * \brief Execute command on terminal. Return output.
  * \param[in] cmd The command to be executed
- * \return Terminal stdout
+ * \return Terminal stdout/stderr output
  */
 string Helper::exec(const char* cmd)
 {
   // Max 128 characters
   std::array<char, 128> buffer;
-  string result = "";
+  string output = "";
 
   // Execute command using popen,
   // And use the standard C pclose method during stream closure.
@@ -1113,23 +1109,21 @@ string Helper::exec(const char* cmd)
   }
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
   {
-    result += buffer.data();
+    output += buffer.data();
   }
-  return result;
+  return output;
 }
 
 /**
- * \brief Execute command on terminal, give user an error went something went wrong.
- * Also write output to log (if debugging is enabled).
+ * \brief Execute command on terminal, give user an error message when exit code is non-zero.
  * \param[in] cmd The command to be executed
- * \param[in] enable_tracing Enable debugging tracing to log file (default false)
- * \return Terminal stdout
+ * \return Terminal stdout/stderr output
  */
-void Helper::exec_tracing(const char* cmd, bool enable_tracing)
+string Helper::exec_error_message(const char* cmd)
 {
   // Max 128 characters
   std::array<char, 128> buffer;
-  string result = "";
+  string output = "";
 
   // Execute command using popen
   // Use a custom close file function during the pipe close (close_exec_stream method, see below)
@@ -1140,14 +1134,9 @@ void Helper::exec_tracing(const char* cmd, bool enable_tracing)
   }
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
   {
-    result += buffer.data();
+    output += buffer.data();
   }
-
-  if (enable_tracing)
-  {
-    // TODO: Dump result to log file instead.
-    std::cout << "\n=== Tracing output started ===\n\n" << result << "\n\n=== Tracing ended ===\n" << std::endl;
-  }
+  return output;
 }
 
 /**
@@ -1172,25 +1161,25 @@ int Helper::close_exec_stream(std::FILE* file)
 
 /**
  * \brief Write C buffer (gchar *) to file
- * \param[in] filename
+ * \param[in] filename Filename
  * \param[in] contents - File data
- * \param[in] length - Length (-1 for nul-termined string)
+ * \throw Glib::FileError
  * \return True when successful otherwise False
  */
-bool Helper::write_file(const string& filename, const gchar* contents, const gsize length)
+void Helper::write_file(const string& filename, const string& contents)
 {
-  return g_file_set_contents(filename.c_str(), contents, length, NULL);
+  Glib::file_set_contents(filename, contents);
 }
 
 /**
- * \brief Read file to C buffer (gchar *)
- * \param[in] filename
- * \param[out] contents - File data
- * \return True when successful otherwise False
+ * \brief Read file from disk
+ * \param[in] filename Filename
+ * \throw Glib::FileError
+ * \return The file contents
  */
-bool Helper::read_file(const string& filename, gchar* contents)
+string Helper::read_file(const string& filename)
 {
-  return g_file_get_contents(filename.c_str(), &contents, NULL, NULL);
+  return Glib::file_get_contents(filename);
 }
 
 /**
@@ -1202,12 +1191,12 @@ string Helper::get_winetricks_version()
   string version = "";
   if (file_exists(WinetricksExecutable))
   {
-    string result = exec((WinetricksExecutable + " --version").c_str());
-    if (!result.empty())
+    string output = exec((WinetricksExecutable + " --version").c_str());
+    if (!output.empty())
     {
-      if (result.length() >= 8)
+      if (output.length() >= 8)
       {
-        version = result.substr(0, 8); // Retrieve YYYYMMDD
+        version = output.substr(0, 8); // Retrieve YYYYMMDD
       }
     }
   }
@@ -1377,7 +1366,7 @@ string Helper::char_pointer_value_to_string(char* charp)
  * \param[in] file_path File location to be read
  * \return Data from file
  */
-std::vector<string> Helper::read_file(const string& file_path)
+std::vector<string> Helper::read_file_lines(const string& file_path)
 {
   std::vector<string> output;
   std::ifstream myfile(file_path);
