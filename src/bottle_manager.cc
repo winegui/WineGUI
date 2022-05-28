@@ -570,8 +570,6 @@ void BottleManager::update()
                    output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
                    output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
       string output = Helper::run_program_under_wine(wine64, wine_prefix, "wineboot -u", true, logging_stderr);
-      // Emit update bottles (via dispatcher, so the GUI update can take place in the GUI thread)
-      update_bottles_dispatcher->emit();
       if (debug_logging && !output.empty())
       {
         {
@@ -581,6 +579,9 @@ void BottleManager::update()
         }
         write_log_dispatcher->emit();
       }
+      Helper::wait_until_wineserver_is_terminated(wine_prefix);
+      // Emit update bottles (via dispatcher, so the GUI update can take place in the GUI thread)
+      update_bottles_dispatcher->emit();
     });
     t.detach();
   }
