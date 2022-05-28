@@ -5,7 +5,7 @@
 rm -rf build_prod
 mkdir build_prod
 cd build_prod
-cmake -GNinja -Ddoc=ON -DCMAKE_BUILD_TYPE=Release ..
+cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -Ddoc=ON -DCMAKE_BUILD_TYPE=Release ..
 ninja && 
 echo "INFO: Building packages...";
 cpack -G "TGZ;DEB;RPM"

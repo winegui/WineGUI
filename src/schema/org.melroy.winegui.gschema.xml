@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema path="/org/melroy/winegui/" id="org.melroy.winegui">
+    <key name="width" type="i">
+      <default>1000</default>
+      <summary>Window width</summary>
+    </key>
+    <key name="height" type="i">
+      <default>800</default>
+      <summary>Window height</summary>
+    </key>
+    <key name="maximized" type="b">
+      <default>false</default>
+      <summary>Is window maximized</summary>
+    </key>
+  </schema>
+</schemalist>

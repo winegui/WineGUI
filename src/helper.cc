@@ -185,13 +185,13 @@ string Helper::run_program_under_wine(bool wine_64_bit, const string& prefix_pat
 }
 
 /**
- * \brief Write/apend logging to log file
+ * \brief Write/apend logging to WineGUI log file
  * \param logging_bottle_prefix Wine Bottle prefix location
  * \param logging Logging data
  */
 void Helper::write_to_log_file(const string& logging_bottle_prefix, const string& logging)
 {
-  string log_path = Glib::build_filename(logging_bottle_prefix, "winegui.log");
+  string log_path = Helper::get_log_file_path(logging_bottle_prefix);
   auto file = Gio::File::create_for_path(log_path);
   try
   {
@@ -202,6 +202,16 @@ void Helper::write_to_log_file(const string& logging_bottle_prefix, const string
   {
     std::cout << "Error: Couldn't write debug logging to log file. Error " << ex.what() << std::endl;
   }
+}
+
+/**
+ * \brief Retrieve wineGUI log file path of provided bottle prefix
+ * \param logging_bottle_prefix Wine Bottle prefix location
+ * \return log file path
+ */
+string Helper::get_log_file_path(const string& logging_bottle_prefix)
+{
+  return Glib::build_filename(logging_bottle_prefix, "winegui.log");
 }
 
 /**
@@ -777,7 +787,7 @@ bool Helper::create_dir(const string& dir_path)
 }
 
 /**
- * \brief Check if *file* exists or not
+ * \brief Check if regular file exists or not. True if exists.
  * \param[in] file_path The file to be checked for existence
  * \return true if exists, otherwise false
  */

@@ -74,6 +74,7 @@ public:
   void open_c_drive();
   void reboot();
   void update();
+  void open_log_file();
   void kill_processes();
   void open_explorer();
   void open_console();

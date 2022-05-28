@@ -50,6 +50,7 @@ public:
   sigc::signal<void> open_c_drive;                      /*!< Open C: drive signal */
   sigc::signal<void> reboot_bottle;                     /*!< Emulate reboot signal */
   sigc::signal<void> update_bottle;                     /*!< Update Wine bottle signal */
+  sigc::signal<void> open_log_file;                     /*!< Open log file signal */
   sigc::signal<void> kill_running_processes;            /*!< Kill all running processes signal */
   sigc::signal<bool, GdkEventButton*> right_click_menu; /*!< Right-mouse click in list box signal */
 
@@ -60,6 +61,7 @@ public:
   void set_detailed_info(BottleItem& bottle);
   void reset_detailed_info();
   void show_info_message(const Glib::ustring& message, bool markup = false);
+  void show_warning_message(const Glib::ustring& message, bool markup = false);
   void show_error_message(const Glib::ustring& message, bool markup = false);
   bool show_confirm_dialog(const Glib::ustring& message, bool markup = false);
   void show_busy_install_dialog(const Glib::ustring& message);
@@ -75,14 +77,16 @@ public:
   virtual void on_exec_failure();
 
 protected:
+  // Signal handlers
+  bool delete_window(GdkEventAny* any_event);
+  Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
+
   // Child widgets
   Gtk::Box vbox;    /*!< The main vertical box */
   Gtk::Paned paned; /*!< The main paned panel (horizontal) */
-
   // Left widgets
   Gtk::ScrolledWindow scrolled_window; /*!< Scrolled Window container, which contains the listbox */
   Gtk::ListBox listbox;                /*!< Listbox in the left panel */
-
   // Right widgets
   Gtk::Box right_box;        /*!< Right panel horizontal box */
   Gtk::Toolbar toolbar;      /*!< Toolbar at top */
@@ -106,6 +110,7 @@ protected:
   Gtk::ToolButton settings_button;       /*!< Settings toolbar button */
   Gtk::ToolButton reboot_button;         /*!< Reboot toolbar button */
   Gtk::ToolButton update_button;         /*!< Update toolbar button */
+  Gtk::ToolButton open_log_file_button;  /*!< Open log file toolbar button */
   Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
 
   // Busy dialog
@@ -118,6 +123,7 @@ private:
   virtual void on_new_bottle_apply();
 
   // Private methods
+  void load_stored_window_settings();
   void create_left_panel();
   void create_right_panel();
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* row, Gtk::ListBoxRow* before);
