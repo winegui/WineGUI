@@ -783,8 +783,7 @@ void BottleManager::install_d3dx9(Gtk::Window& parent, const string& version)
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_blocking_wait(wine_prefix, program, true, logging_stderr);
-      finish_dispatcher->emit();
+      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -794,6 +793,8 @@ void BottleManager::install_d3dx9(Gtk::Window& parent, const string& version)
         }
         write_log_dispatcher->emit();
       }
+      Helper::wait_until_wineserver_is_terminated(wine_prefix);
+      finish_dispatcher->emit();
     });
     t.detach();
   }
@@ -824,8 +825,7 @@ void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_blocking_wait(wine_prefix, program, true, logging_stderr);
-      finish_dispatcher->emit();
+      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -835,6 +835,8 @@ void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
         }
         write_log_dispatcher->emit();
       }
+      Helper::wait_until_wineserver_is_terminated(wine_prefix);
+      finish_dispatcher->emit();
     });
     t.detach();
   }
@@ -860,8 +862,7 @@ void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_blocking_wait(wine_prefix, program, true, logging_stderr);
-      finish_dispatcher->emit();
+      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -871,6 +872,8 @@ void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string
         }
         write_log_dispatcher->emit();
       }
+      Helper::wait_until_wineserver_is_terminated(wine_prefix);
+      finish_dispatcher->emit();
     });
     t.detach();
   }
@@ -915,8 +918,7 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
                      logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                      logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                      write_log_dispatcher = &write_log_dispatcher_] {
-        string output = Helper::run_program_blocking_wait(wine_prefix, program, true, logging_stderr);
-        finish_dispatcher->emit();
+        string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
         if (debug_logging && !output.empty())
         {
           {
@@ -926,6 +928,8 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
           }
           write_log_dispatcher->emit();
         }
+        Helper::wait_until_wineserver_is_terminated(wine_prefix);
+        finish_dispatcher->emit();
       });
       t.detach();
     }
@@ -954,8 +958,7 @@ void BottleManager::install_core_fonts(Gtk::Window& parent)
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_blocking_wait(wine_prefix, program, true, logging_stderr);
-      finish_dispatcher->emit();
+      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -965,6 +968,8 @@ void BottleManager::install_core_fonts(Gtk::Window& parent)
         }
         write_log_dispatcher->emit();
       }
+      Helper::wait_until_wineserver_is_terminated(wine_prefix);
+      finish_dispatcher->emit();
     });
     t.detach();
   }
@@ -988,8 +993,7 @@ void BottleManager::install_liberation(Gtk::Window& parent)
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_blocking_wait(wine_prefix, program, true, logging_stderr);
-      finish_dispatcher->emit();
+      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -999,6 +1003,8 @@ void BottleManager::install_liberation(Gtk::Window& parent)
         }
         write_log_dispatcher->emit();
       }
+      Helper::wait_until_wineserver_is_terminated(wine_prefix);
+      finish_dispatcher->emit();
     });
     t.detach();
   }
