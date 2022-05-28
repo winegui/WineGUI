@@ -94,10 +94,10 @@ target_link_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_LIBRARY_DIRS})
 target_compile_options(${PROJECT_TARGET} PRIVATE ${GTKMM_CFLAGS_OTHER})
 
 install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
-install(FILES misc/winegui.desktop DESTINATION share/applications)
-install(FILES misc/winegui.png DESTINATION share/icons/hicolor/48x48/apps)
-install(FILES misc/winegui.svg DESTINATION share/icons/hicolor/scalable/apps)
-install(DIRECTORY images DESTINATION share/winegui)
+install(FILES misc/winegui.desktop DESTINATION ${DATADIR}/applications)
+install(FILES misc/winegui.png DESTINATION ${DATADIR}/icons/hicolor/48x48/apps)
+install(FILES misc/winegui.svg DESTINATION ${DATADIR}/icons/hicolor/scalable/apps)
+install(DIRECTORY images DESTINATION ${DATADIR}/winegui)
 # Could be easily extened with eg. scripts:
 #   DIRECTORY images scripts/ DESTINATION ....
 #   PATTERN "scripts/*"
