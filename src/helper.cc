@@ -143,6 +143,7 @@ std::map<std::string, unsigned long> Helper::get_bottles_paths(const string& dir
 
 /**
  * \brief Run any program with only setting the WINEPREFIX env variable (run this method async).
+ * Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] prefix_path The path to wine bottle
  * \param[in] program Program that gets executed (ideally full path)
  * \param[in] give_error Inform user when application exit with non-zero exit code
@@ -181,24 +182,6 @@ string Helper::run_program(const string& prefix_path, const string& program, boo
 string Helper::run_program_under_wine(bool wine_64_bit, const string& prefix_path, const string& program, bool give_error, bool stderr_output)
 {
   return run_program(prefix_path, Helper::get_wine_executable_location(wine_64_bit) + " " + program, give_error, stderr_output);
-}
-
-/**
- * \brief Run a Windows program under Wine (run this method async)
- * This method will really wait until the wineserver is down.
- * \param[in] prefix_path The path to bottle wine
- * \param[in] program Program/executable that will be executed
- * \param[in] give_error Inform user when application exit with non-zero exit code
- * \param[in] stderr_output Also output stderr (together with stout)
- * \return Terminal stdout output
- */
-string Helper::run_program_blocking_wait(const string& prefix_path, const string& program, bool give_error, bool stderr_output)
-{
-  // Be-sure to execute the program also between brackets (in case of spaces)
-  string output = run_program(prefix_path, program, give_error, stderr_output);
-  // Blocking wait until wineserver is terminated (before we can look in the reg files for example)
-  Helper::wait_until_wineserver_is_terminated(prefix_path);
-  return output;
 }
 
 /**
