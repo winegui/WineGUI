@@ -7,7 +7,7 @@ At last, a user-interface friendly [Wine](https://www.winehq.org/) (A compatibil
 [![Matrix](https://img.shields.io/badge/chat-on%20matrix-brightgreen)](https://matrix.to/#/#winegui:melroy.org)
 [![Release](https://img.shields.io/badge/release-latest-orange)](https://gitlab.melroy.org/melroy/winegui/-/releases)
 
-![WineGUI](misc/winegui_screenshot.png)
+![WineGUI](misc/winegui_screenshots.gif)
 
 ## Download
 
