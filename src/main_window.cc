@@ -415,6 +415,7 @@ void MainWindow::create_left_panel()
  */
 void MainWindow::create_right_panel()
 {
+  // TODO: Make it configurable to only show icons, text or both using preferences
   toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
 
   // Buttons in toolbar
@@ -423,6 +424,7 @@ void MainWindow::create_right_panel()
   new_button.set_label("New");
   new_button.set_tooltip_text("Create a new machine!");
   new_button.set_icon_widget(*new_image);
+  new_button.set_homogeneous(false);
   toolbar.insert(new_button, 0);
 
   Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
@@ -430,6 +432,7 @@ void MainWindow::create_right_panel()
   run_button.set_label("Run Program...");
   run_button.set_tooltip_text("Run exe or msi in Wine Machine");
   run_button.set_icon_widget(*run_image);
+  run_button.set_homogeneous(false);
   toolbar.insert(run_button, 1);
 
   Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
@@ -437,6 +440,7 @@ void MainWindow::create_right_panel()
   open_c_driver_button.set_label("Open C: Drive");
   open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
   open_c_driver_button.set_icon_widget(*open_c_drive_image);
+  open_c_driver_button.set_homogeneous(false);
   toolbar.insert(open_c_driver_button, 2);
 
   Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
@@ -444,15 +448,18 @@ void MainWindow::create_right_panel()
   edit_button.set_label("Edit");
   edit_button.set_tooltip_text("Edit Wine Machine");
   edit_button.set_icon_widget(*edit_image);
+  edit_button.set_homogeneous(false);
   toolbar.insert(edit_button, 3);
 
   // Idea: Extra button for the configurations? And call settings just 'install packages'..?
+  // TODO: Add button to open debug log
 
   Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
   manage_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   settings_button.set_label("Settings");
   settings_button.set_tooltip_text("Install additional packages");
   settings_button.set_icon_widget(*manage_image);
+  settings_button.set_homogeneous(false);
   toolbar.insert(settings_button, 4);
 
   Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
@@ -460,6 +467,7 @@ void MainWindow::create_right_panel()
   reboot_button.set_label("Reboot");
   reboot_button.set_tooltip_text("Simulate Machine Reboot");
   reboot_button.set_icon_widget(*reboot_image);
+  reboot_button.set_homogeneous(false);
   toolbar.insert(reboot_button, 5);
 
   Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
@@ -467,6 +475,7 @@ void MainWindow::create_right_panel()
   update_button.set_label("Update Config");
   update_button.set_tooltip_text("Update the Wine Machine configuration");
   update_button.set_icon_widget(*update_image);
+  update_button.set_homogeneous(false);
   toolbar.insert(update_button, 6);
 
   Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
@@ -474,6 +483,7 @@ void MainWindow::create_right_panel()
   kill_processes_button.set_label("Kill processes");
   kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
   kill_processes_button.set_icon_widget(*kill_processes_image);
+  kill_processes_button.set_homogeneous(false);
   toolbar.insert(kill_processes_button, 7);
 
   // Add toolbar to right box
