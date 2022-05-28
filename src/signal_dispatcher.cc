@@ -103,9 +103,9 @@ void SignalDispatcher::dispatch_signals()
   main_window_->active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::set_active_bottle));
   // Distribute the reset bottle signal from the manager
-  manager_.reset_acctive_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::reset_active_bottle));
-  manager_.reset_acctive_bottle.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::reset_active_bottle));
-  manager_.reset_acctive_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_detailed_info));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::reset_active_bottle));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::reset_active_bottle));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_detailed_info));
   // Removed bottle signal from the manager
   manager_.bottle_removed.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::bottle_removed));
   // Package install finished (in settings window), close the busy dialog & refresh the settings window
