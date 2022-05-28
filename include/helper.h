@@ -47,10 +47,10 @@ public:
   static Helper& get_instance();
 
   static std::map<string, unsigned long> get_bottles_paths(const string& dir_path);
-  static void run_program(string prefix_path, string program, bool give_error, bool enable_tracing);
-  static void run_program_under_wine(bool wine_64_bit, string prefix_path, string program, bool give_error, bool enable_tracing);
-  static void
-  run_program_with_finish_callback(string prefix_path, string program, Glib::Dispatcher* finish_signal, bool give_error, bool enable_tracing);
+  static string run_program(string prefix_path, string program, bool give_error);
+  static string run_program_under_wine(bool wine_64_bit, string prefix_path, string program, bool give_error);
+  static string run_program_blocking_wait(string prefix_path, string program, bool give_error);
+  static void write_to_log_file(const string& logging);
   static void wait_until_wineserver_is_terminated(const string& prefix_path);
   static int determine_wine_executable();
   static string get_wine_executable_location(bool bit64);
@@ -90,16 +90,16 @@ private:
   Helper& operator=(const Helper&) = delete;
 
   static string exec(const char* cmd);
-  static void exec_tracing(const char* cmd, bool enable_tracing);
+  static string exec_error_message(const char* cmd);
   static int close_exec_stream(std::FILE* file);
-  static bool write_file(const string& filename, const gchar* contents, const gsize length);
-  static bool read_file(const string& filename, gchar* contents);
+  static void write_file(const string& filename, const string& contents);
+  static string read_file(const string& filename);
   static string get_winetricks_version();
   static string get_reg_value(const string& filename, const string& key_name, const string& value_name);
   static string get_reg_meta_data(const string& filename, const string& meta_value_name);
   static string get_bottle_dir_from_prefix(const string& prefix_path);
   static string char_pointer_value_to_string(char* charp);
-  static std::vector<string> read_file(const string& file_path);
+  static std::vector<string> read_file_lines(const string& file_path);
   static unsigned long get_modified_time(const string& file_path);
   static std::vector<string> split(const string& s, char delimiter);
 };

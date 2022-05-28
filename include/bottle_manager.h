@@ -44,9 +44,9 @@ class BottleManager
 {
 public:
   // Signals
-  sigc::signal<void> reset_acctive_bottle;   /*!< Send signal: Clear the current active bottle */
-  sigc::signal<void> bottle_removed;         /*!< Send signal: When the bottle is confirmed to be removed */
-  Glib::Dispatcher finished_package_install; /*!< Signal that Wine package install is completed */
+  sigc::signal<void> reset_acctive_bottle;              /*!< Send signal: Clear the current active bottle */
+  sigc::signal<void> bottle_removed;                    /*!< Send signal: When the bottle is confirmed to be removed */
+  Glib::Dispatcher finished_package_install_dispatcher; /*!< Signal that Wine package install is completed */
 
   explicit BottleManager(MainWindow& main_window);
   virtual ~BottleManager();
@@ -93,9 +93,11 @@ public:
   void install_liberation(Gtk::Window& parent);
 
 private:
-  // Synchronizes access to data members
-  mutable std::mutex mutex_;
+  // Synchronizes access to data members using mutexes
+  mutable std::mutex error_message_mutex_;
+  mutable std::mutex output_loging_mutex_;
   Glib::Dispatcher update_bottles_dispatcher_; /*!< Dispatcher if the bottle list needs to be updated, from thread */
+  Glib::Dispatcher write_log_dispatcher_;      /*!< Dispatcher if we can write the output logging to disk */
 
   MainWindow& main_window_;
   string bottle_location_;
@@ -106,6 +108,10 @@ private:
 
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
   Glib::ustring error_message_;
+  std::string output_logging_;
+
+  // Signal handlers
+  virtual void write_log_to_file();
 
   void load_config();
   bool is_bottle_not_null();

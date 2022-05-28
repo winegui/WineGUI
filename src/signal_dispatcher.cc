@@ -108,8 +108,8 @@ void SignalDispatcher::dispatch_signals()
   // Removed bottle signal from the manager
   manager_.bottle_removed.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::bottle_removed));
   // Package install finished (in settings window), close the busy dialog & refresh the settings window
-  manager_.finished_package_install.connect(sigc::mem_fun(*main_window_, &MainWindow::close_busy_dialog));
-  manager_.finished_package_install.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::update_installed));
+  manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(*main_window_, &MainWindow::close_busy_dialog));
+  manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::update_installed));
 
   // Menu / Toolbar actions
   main_window_->new_bottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
