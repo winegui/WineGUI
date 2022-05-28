@@ -34,11 +34,12 @@ public:
   sigc::signal<void> quit;            /*!< quite button clicked signal */
   sigc::signal<void> refresh_view;    /*!< refresh button clicked signal */
   sigc::signal<void> new_bottle;      /*!< new machine button clicked signal */
-  sigc::signal<void> run;             /*!< run button clicked signal */
   sigc::signal<void> edit_bottle;     /*!< edit button clicked signal */
   sigc::signal<void> settings_bottle; /*!< settings button clicked signal */
+  sigc::signal<void> run;             /*!< run button clicked signal */
   sigc::signal<void> remove_bottle;   /*!< remove button clicked signal */
   sigc::signal<void> open_c_drive;    /*!< open C: drive clicked signal */
+  sigc::signal<void> open_log_file;   /*!< open log file clicked signal */
   sigc::signal<void> give_feedback;   /*!< feedback button clicked signal */
   sigc::signal<void> show_about;      /*!< about button clicked signal */
 

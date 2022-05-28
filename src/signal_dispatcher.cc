@@ -89,10 +89,11 @@ void SignalDispatcher::dispatch_signals()
   menu_.refresh_view.connect(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles));
   menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
   menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
-  menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
   menu_.edit_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
   menu_.settings_bottle.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::show));
   menu_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
+  menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
+  menu_.open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
   menu_.give_feedback.connect(sigc::mem_fun(*main_window_, &MainWindow::on_give_feedback));
   menu_.show_about.connect(sigc::mem_fun(about_dialog_, &AboutDialog::run_dialog));
   about_dialog_.signal_response().connect(sigc::mem_fun(about_dialog_, &AboutDialog::hide_dialog));
@@ -114,12 +115,13 @@ void SignalDispatcher::dispatch_signals()
   // Menu / Toolbar actions
   main_window_->new_bottle.connect(sigc::mem_fun(this, &SignalDispatcher::on_new_bottle));
   main_window_->finished_new_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles));
+  main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
   main_window_->show_edit_window.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
   main_window_->show_settings_window.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::show));
-  main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
   main_window_->open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
   main_window_->reboot_bottle.connect(sigc::mem_fun(manager_, &BottleManager::reboot));
   main_window_->update_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update));
+  main_window_->open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
   main_window_->kill_running_processes.connect(sigc::mem_fun(manager_, &BottleManager::kill_processes));
 
   // Edit Window

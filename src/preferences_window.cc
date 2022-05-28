@@ -32,10 +32,10 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
       default_folder_label("Default Machine folder: "),
       prefer_wine64_label("Prefer Wine 64-bit:"),
       debug_logging_label("Enable logging:"),
-      logging_stderr_label("Also log stderr:"),
+      logging_stderr_label("Log standard error:"),
       prefer_wine64_check("Prefer Wine 64-bit executable (over 32-bit)"),
       enable_debug_logging_check("Enable debug logging"),
-      enable_logging_stderr_check("Also log standard error to logging"),
+      enable_logging_stderr_check("Also log standard error to logging (if logging is enabled)"),
       save_button("Save"),
       cancel_button("Cancel")
 {

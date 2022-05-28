@@ -31,7 +31,8 @@
  * \brief Contructor
  */
 MainWindow::MainWindow(Menu& menu)
-    : vbox(Gtk::ORIENTATION_VERTICAL),
+    : window_settings(),
+      vbox(Gtk::ORIENTATION_VERTICAL),
       paned(Gtk::ORIENTATION_HORIZONTAL),
       right_box(Gtk::Orientation::ORIENTATION_VERTICAL),
       separator1(Gtk::ORIENTATION_HORIZONTAL),
@@ -39,7 +40,7 @@ MainWindow::MainWindow(Menu& menu)
 {
   // Set some Window properties
   set_title("WineGUI - WINE Manager");
-  set_default_size(1060, 600);
+  set_default_size(1100, 600);
   set_position(Gtk::WIN_POS_CENTER_ALWAYS);
 
   try
@@ -48,7 +49,7 @@ MainWindow::MainWindow(Menu& menu)
   }
   catch (Glib::FileError& e)
   {
-    cout << "Catched " << e.what() << endl;
+    cout << "Error: couldn't load our logo: " << e.what() << endl;
   }
 
   // Add menu to box (top), no expand/fill
@@ -66,10 +67,12 @@ MainWindow::MainWindow(Menu& menu)
   add(vbox);
 
   // Reset the right panel to default values
-  this->reset_detailed_info();
+  reset_detailed_info();
+
+  // Load window settings from gsettings schema file
+  load_stored_window_settings();
 
   // Left side (listbox)
-
   listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
   // Disabled right-click menu for now, since it doesn't activate the right-clicked bottle as active
   // listbox.signal_button_press_event().connect(right_click_menu);
@@ -82,13 +85,17 @@ MainWindow::MainWindow(Menu& menu)
   // Connect the new bottle assistant signal to the mainWindow signal
   new_bottle_assistant_.new_bottle_finished.connect(finished_new_bottle);
 
+  run_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
   edit_button.signal_clicked().connect(show_edit_window);
   settings_button.signal_clicked().connect(show_settings_window);
-  run_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
   open_c_driver_button.signal_clicked().connect(open_c_drive);
   reboot_button.signal_clicked().connect(reboot_bottle);
   update_button.signal_clicked().connect(update_bottle);
+  open_log_file_button.signal_clicked().connect(open_log_file);
   kill_processes_button.signal_clicked().connect(kill_running_processes);
+
+  // Window closed signal
+  signal_delete_event().connect(sigc::mem_fun(this, &MainWindow::delete_window));
 
   // Show the widget children
   show_all_children();
@@ -162,12 +169,11 @@ void MainWindow::reset_detailed_info()
 
 /**
  * \brief Show info message. User can only click 'OK'.
- * \param[in] message - Show this error message
+ * \param[in] message Show this information message
  * \param[in] markup Support markup in message text (default: false)
  */
 void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 {
-  // false = no markup
   Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
   dialog.set_title("Information message");
   dialog.set_modal(true);
@@ -175,13 +181,25 @@ void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 }
 
 /**
+ * \brief Show warning message. User can only click 'OK'.
+ * \param[in] message Show this warning message
+ * \param[in] markup Support markup in message text (default: false)
+ */
+void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
+{
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
+  dialog.set_title("Warning message");
+  dialog.set_modal(true);
+  dialog.run();
+}
+
+/**
  * \brief Show an error message with the provided text. User can only click 'OK'.
- * \param[in] message - Show this error message
+ * \param[in] message Show this error message
  * \param[in] markup Support markup in message text (default: false)
  */
 void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
 {
-  // false = no markup
   Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
   dialog.set_title("An error has occurred!");
   dialog.set_modal(true);
@@ -190,13 +208,12 @@ void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
 
 /**
  * \brief Confirm dialog (Yes/No message)
- * \param[in] message - Show this message during confirmation
+ * \param[in] message Show this message during confirmation
  * \param[in] markup Support markup in message text (default: false)
  * \return True if user pressed confirm (yes), otherwise False
  */
 bool MainWindow::show_confirm_dialog(const Glib::ustring& message, bool markup)
 {
-  // false = no markup
   Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
   dialog.set_title("Are you sure?");
   dialog.set_modal(true);
@@ -392,6 +409,42 @@ void MainWindow::on_new_bottle_apply()
 }
 
 /**
+ * \brief Called when Window is closed/exited
+ */
+bool MainWindow::delete_window(GdkEventAny* any_event __attribute__((unused)))
+{
+  if (window_settings)
+  {
+    // Save the schema settings
+    window_settings->set_int("width", get_width());
+    window_settings->set_int("height", get_height());
+    window_settings->set_boolean("maximized", is_maximized());
+  }
+  return false;
+}
+
+/**
+ * \brief Load window settings from schema file
+ */
+void MainWindow::load_stored_window_settings()
+{
+  // Load schema settings file
+  auto schemaSource = Gio::SettingsSchemaSource::get_default()->lookup("org.melroy.winegui", true);
+  if (schemaSource)
+  {
+    window_settings = Gio::Settings::create("org.melroy.winegui");
+    // Apply global settings
+    set_default_size(window_settings->get_int("width"), window_settings->get_int("height"));
+    if (window_settings->get_boolean("maximized"))
+      maximize();
+  }
+  else
+  {
+    std::cerr << "Error: Gsettings schema file could not be found." << std::endl;
+  }
+}
+
+/**
  * \brief Create left side of the GUI
  */
 void MainWindow::create_left_panel()
@@ -427,32 +480,15 @@ void MainWindow::create_right_panel()
   new_button.set_homogeneous(false);
   toolbar.insert(new_button, 0);
 
-  Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
-  run_image->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  run_button.set_label("Run Program...");
-  run_button.set_tooltip_text("Run exe or msi in Wine Machine");
-  run_button.set_icon_widget(*run_image);
-  run_button.set_homogeneous(false);
-  toolbar.insert(run_button, 1);
-
-  Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
-  open_c_drive_image->set_from_icon_name("drive-harddisk", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  open_c_driver_button.set_label("Open C: Drive");
-  open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
-  open_c_driver_button.set_icon_widget(*open_c_drive_image);
-  open_c_driver_button.set_homogeneous(false);
-  toolbar.insert(open_c_driver_button, 2);
-
   Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
   edit_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   edit_button.set_label("Edit");
   edit_button.set_tooltip_text("Edit Wine Machine");
   edit_button.set_icon_widget(*edit_image);
   edit_button.set_homogeneous(false);
-  toolbar.insert(edit_button, 3);
+  toolbar.insert(edit_button, 1);
 
   // Idea: Extra button for the configurations? And call settings just 'install packages'..?
-  // TODO: Add button to open debug log
 
   Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
   manage_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -460,7 +496,23 @@ void MainWindow::create_right_panel()
   settings_button.set_tooltip_text("Install additional packages");
   settings_button.set_icon_widget(*manage_image);
   settings_button.set_homogeneous(false);
-  toolbar.insert(settings_button, 4);
+  toolbar.insert(settings_button, 2);
+
+  Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
+  run_image->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  run_button.set_label("Run Program...");
+  run_button.set_tooltip_text("Run exe or msi in Wine Machine");
+  run_button.set_icon_widget(*run_image);
+  run_button.set_homogeneous(false);
+  toolbar.insert(run_button, 3);
+
+  Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
+  open_c_drive_image->set_from_icon_name("drive-harddisk", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  open_c_driver_button.set_label("Open C: Drive");
+  open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
+  open_c_driver_button.set_icon_widget(*open_c_drive_image);
+  open_c_driver_button.set_homogeneous(false);
+  toolbar.insert(open_c_driver_button, 4);
 
   Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
   reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -478,13 +530,21 @@ void MainWindow::create_right_panel()
   update_button.set_homogeneous(false);
   toolbar.insert(update_button, 6);
 
+  Gtk::Image* open_log_file_image = Gtk::manage(new Gtk::Image());
+  open_log_file_image->set_from_icon_name("text-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  open_log_file_button.set_label("Open Log");
+  open_log_file_button.set_tooltip_text("Open debug logging file");
+  open_log_file_button.set_icon_widget(*open_log_file_image);
+  open_log_file_button.set_homogeneous(false);
+  toolbar.insert(open_log_file_button, 7);
+
   Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
   kill_processes_image->set_from_icon_name("process-stop", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  kill_processes_button.set_label("Kill processes");
+  kill_processes_button.set_label("Kill Processes");
   kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
   kill_processes_button.set_icon_widget(*kill_processes_image);
   kill_processes_button.set_homogeneous(false);
-  toolbar.insert(kill_processes_button, 7);
+  toolbar.insert(kill_processes_button, 8);
 
   // Add toolbar to right box
   right_box.add(toolbar);

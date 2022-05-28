@@ -45,16 +45,18 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
   // Machine submenu
   auto newitem_menuitem = create_image_menu_item("New", "list-add");
   newitem_menuitem->signal_activate().connect(new_bottle);
-  auto run_menuitem = create_image_menu_item("Run...", "media-playback-start");
-  run_menuitem->signal_activate().connect(run);
   auto edit_menuitem = create_image_menu_item("Edit", "document-edit");
   edit_menuitem->signal_activate().connect(edit_bottle);
   auto settings_menuitem = create_image_menu_item("Settings", "preferences-other");
   settings_menuitem->signal_activate().connect(settings_bottle);
+  auto run_menuitem = create_image_menu_item("Run...", "media-playback-start");
+  run_menuitem->signal_activate().connect(run);
   auto remove_menuitem = create_image_menu_item("Remove", "edit-delete");
   remove_menuitem->signal_activate().connect(remove_bottle);
   auto open_drive_c_menuitem = create_image_menu_item("Open C: Drive", "drive-harddisk");
   open_drive_c_menuitem->signal_activate().connect(open_c_drive);
+  auto open_log_file_menuitem = create_image_menu_item("Open Log file", "text-x-generic");
+  open_log_file_menuitem->signal_activate().connect(open_log_file);
 
   // Help submenu
   auto feedback_menuitem = create_image_menu_item("Give feedback", "help-faq");
@@ -74,12 +76,13 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
   // Machine menu
   machine_submenu.append(*newitem_menuitem);
   machine_submenu.append(separator2);
-  machine_submenu.append(*run_menuitem);
   machine_submenu.append(*edit_menuitem);
   machine_submenu.append(*settings_menuitem);
+  machine_submenu.append(*run_menuitem);
   machine_submenu.append(*remove_menuitem);
   machine_submenu.append(separator3);
   machine_submenu.append(*open_drive_c_menuitem);
+  machine_submenu.append(*open_log_file_menuitem);
 
   // Help menu
   help_submenu.append(*feedback_menuitem);

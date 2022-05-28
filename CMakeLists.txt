@@ -9,6 +9,8 @@ option(doc "Build Documentation" OFF)
 
 # Get VERSION from most recent git tag
 include(git_version)
+# Include cmake GTK GSettings schema
+include(g_settings)
 
 # Don't forget to update the about_dialog.h VERSION as well
 project(${PROJECT_NAME}
@@ -37,6 +39,8 @@ find_package(PkgConfig REQUIRED)
 PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+set (DATADIR share CACHE PATH "datadir")
 
 # Production build
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
@@ -79,7 +83,10 @@ set(SOURCES
     ${HEADERS}
 )
 
-add_executable(${PROJECT_TARGET} src/main.cc ${SOURCES})
+# Install and recompile glib gsettings schema
+add_schema("org.melroy.winegui.gschema.xml" GSCHEMA_RING)
+
+add_executable(${PROJECT_TARGET} ${GSCHEMA_RING} src/main.cc ${SOURCES})
 target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
 target_include_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})

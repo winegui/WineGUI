@@ -588,6 +588,30 @@ void BottleManager::update()
 }
 
 /**
+ * \brief Open debug log of current bottle
+ */
+void BottleManager::open_log_file()
+{
+  if (is_bottle_not_null())
+  {
+    string log_file_path = Helper::get_log_file_path(active_bottle_->wine_location());
+    if (Helper::file_exists(log_file_path))
+    {
+      if (!Gio::AppInfo::launch_default_for_uri(Glib::filename_to_uri(log_file_path)))
+      {
+        main_window_.show_error_message("Could not open log file.");
+      }
+    }
+    else
+    {
+      main_window_.show_warning_message("There is no log file present (yet) for this machine.\n\nPlease <b>ENABLE logging</b> at File -> "
+                                        "Preferences.\n\n Also did you ran something already?",
+                                        true);
+    }
+  }
+}
+
+/**
  * \brief Kill running processes in bottle
  */
 void BottleManager::kill_processes()

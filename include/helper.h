@@ -51,6 +51,7 @@ public:
   static string
   run_program_under_wine(bool wine_64_bit, const string& prefix_path, const string& program, bool give_error = true, bool stderr_output = true);
   static void write_to_log_file(const string& logging_bottle_prefix, const string& logging);
+  static string get_log_file_path(const string& logging_bottle_prefix);
   static void wait_until_wineserver_is_terminated(const string& prefix_path);
   static int determine_wine_executable();
   static string get_wine_executable_location(bool bit64);
