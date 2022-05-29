@@ -339,6 +339,32 @@ string Helper::get_wine_version(bool wine_64_bit)
 }
 
 /**
+ * \brief Read data (file) from uri / url. If the contents is not too big.
+ * Ignore errors (returns empty string).
+ * \param uri URI/URL
+ * \return data
+ */
+string Helper::open_file_from_uri(const string& uri)
+{
+  string contents;
+  // Maybe also use: Glib::uri_unescape_string() ?
+  auto file = Gio::File::create_for_uri(uri);
+  try
+  {
+    gsize size = 0;
+    auto stream = file->read();
+    std::vector<uint8_t> buffer(stream->query_info()->get_size());
+    stream->read_all(buffer.data(), buffer.size(), size);
+    contents.assign(buffer.begin(), buffer.end());
+  }
+  catch (const Glib::Error& ex)
+  {
+    std::cout << "Error: Could not open and/or read from URI. " << ex.what() << std::endl;
+  }
+  return contents;
+}
+
+/**
  * \brief Create new Wine bottle from prefix
  * \throw Throw an error when something went wrong during the creation of the bottle
  * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary

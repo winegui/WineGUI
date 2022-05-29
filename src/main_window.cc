@@ -20,6 +20,7 @@
  */
 #include "main_window.h"
 #include "helper.h"
+#include "project_config.h"
 #include "signal_dispatcher.h"
 #include <locale>
 
@@ -97,6 +98,8 @@ MainWindow::MainWindow(Menu& menu)
   open_log_file_button.signal_clicked().connect(open_log_file);
   kill_processes_button.signal_clicked().connect(kill_running_processes);
 
+  // Check for update (when GTK is idle)
+  Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_startup_version_update), Glib::PRIORITY_DEFAULT_IDLE);
   // Window closed signal
   signal_delete_event().connect(sigc::mem_fun(this, &MainWindow::delete_window));
 
@@ -367,6 +370,14 @@ void MainWindow::on_give_feedback()
 }
 
 /**
+ * \brief When the check version button is pressed
+ */
+void MainWindow::on_check_version()
+{
+  check_version_update(true); // Also show message when versions matches
+}
+
+/**
  * \brief Not implemented feature
  */
 void MainWindow::on_exec_failure()
@@ -416,6 +427,14 @@ void MainWindow::on_new_bottle_apply()
 }
 
 /**
+ * \brief Check for WineGUI version, is there an update?
+ */
+void MainWindow::on_startup_version_update()
+{
+  check_version_update(); // Without message when versions are equal
+}
+
+/**
  * \brief Called when Window is closed/exited
  */
 bool MainWindow::delete_window(GdkEventAny* any_event __attribute__((unused)))
@@ -428,6 +447,37 @@ bool MainWindow::delete_window(GdkEventAny* any_event __attribute__((unused)))
     window_settings->set_boolean("maximized", is_maximized());
   }
   return false;
+}
+
+/**
+ * \brief Check for WineGUI version, is there an update?
+ * \param show_equal Also show user message when the versions matches.
+ */
+void MainWindow::check_version_update(bool show_equal)
+{
+  string version = Helper::open_file_from_uri("https://winegui.melroy.org/latest_release.txt");
+  // Remove new lines
+  version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
+  // Is there a different version? Show the user the message to update to the latest release.
+  if (version.compare(PROJECT_VER) != 0)
+  {
+    string message = "<b>New WineGUI release is out.</b> Please, <i>update</i> WineGUI to the latest release.\n"
+                     "You are using: v" +
+                     std::string(PROJECT_VER) + ". Latest version: v" + version + ".";
+    Gtk::MessageDialog dialog(*this, message, true, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
+    dialog.set_secondary_text("<big><a href=\"https://gitlab.melroy.org/melroy/winegui/-/releases\">Download the latest release now!</a></big>",
+                              true);
+    dialog.set_title("New WineGUI Release!");
+    dialog.set_modal(true);
+    dialog.run();
+  }
+  else
+  {
+    if (show_equal)
+    {
+      show_info_message("WineGUI release is up-to-date. Well done!");
+    }
+  }
 }
 
 /**

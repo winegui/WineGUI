@@ -41,6 +41,7 @@ public:
   sigc::signal<void> open_c_drive;    /*!< open C: drive clicked signal */
   sigc::signal<void> open_log_file;   /*!< open log file clicked signal */
   sigc::signal<void> give_feedback;   /*!< feedback button clicked signal */
+  sigc::signal<void> check_version;   /*!< check version update button clicked signal */
   sigc::signal<void> show_about;      /*!< about button clicked signal */
 
   Menu();
