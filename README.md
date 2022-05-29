@@ -97,6 +97,22 @@ cd build_debug
 gdb -ex=run bin/winegui
 ```
 
+### Memory check
+
+First **build** the (Linux) target including *debug symbols*. Binary should be present in the `build/bin` folder.
+
+Next, check for memory leaks using `valgrind` by executing:
+
+```sh
+./scripts/valgrind.sh
+```
+
+Or to generate a memory usage plot in [massif format](https://valgrind.org/docs/manual/ms-manual.html), execute:
+
+```sh
+./scripts/valgrind_plot.sh
+```
+
 ### Production
 
 For production build and DEB file package, you can run: `./scripts/build_prod.sh`

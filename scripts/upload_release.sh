@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # By: Melroy van den Berg
-# File: upload_release.sh
 # Description: Deploy the tar, deb and rpm files to the WineGUI website download directory
 
 if [ -z ${APP_VERSION} ]; then
