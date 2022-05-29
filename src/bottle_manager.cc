@@ -120,8 +120,8 @@ void BottleManager::write_log_to_file()
  */
 void BottleManager::update_config_and_bottles()
 {
-  // Update config
-  load_config();
+  // Read generic config
+  load_generic_config();
 
   // Clear bottles
   if (!bottles_.empty())
@@ -1076,7 +1076,7 @@ void BottleManager::install_liberation(Gtk::Window& parent)
 /**
  * \brief Load generic configuration values from file and apply
  */
-void BottleManager::load_config()
+void BottleManager::load_generic_config()
 {
   GenericConfigData generic_config = GenericConfigFile::read_config_file();
   bottle_location_ = generic_config.default_folder;

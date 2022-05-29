@@ -117,7 +117,7 @@ private:
   // Signal handlers
   virtual void write_log_to_file();
 
-  void load_config();
+  void load_generic_config();
   bool is_bottle_not_null();
   string get_deinstall_mono_command();
   string get_wine_version();
