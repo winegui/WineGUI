@@ -1,11 +1,12 @@
 # Doxygen
 doc/doxygen/
 
-# Build stuff
+# Build artifacts
 build/
 build_debug/
 build_prod/
 build_docs/
+latest_release.txt
 
 # winetricks script
 winetricks
