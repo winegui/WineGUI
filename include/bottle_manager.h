@@ -54,21 +54,21 @@ public:
   void prepare();
   void update_config_and_bottles();
   void new_bottle(SignalDispatcher* caller,
-                  Glib::ustring name,
+                  const Glib::ustring& name,
                   BottleTypes::Windows windows_version,
                   BottleTypes::Bit bit,
-                  Glib::ustring virtual_desktop_resolution,
+                  const Glib::ustring& virtual_desktop_resolution,
                   bool disable_gecko_mono,
                   BottleTypes::AudioDriver audio);
   void update_bottle(SignalDispatcher* caller,
-                     Glib::ustring name,
-                     Glib::ustring folder_name,
+                     const Glib::ustring& name,
+                     const Glib::ustring& folder_name,
                      BottleTypes::Windows windows_version,
-                     Glib::ustring virtual_desktop_resolution,
+                     const Glib::ustring& virtual_desktop_resolution,
                      BottleTypes::AudioDriver audio);
   void delete_bottle();
   void set_active_bottle(BottleItem* bottle);
-  const Glib::ustring& get_error_message();
+  const Glib::ustring& get_error_message() const;
 
   // Signal handlers
   void run_program(string filename, bool is_msi_file);
