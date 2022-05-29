@@ -194,10 +194,10 @@ void BottleManager::update_config_and_bottles()
  * \param[in] audio                       - Audio Driver type
  */
 void BottleManager::new_bottle(SignalDispatcher* caller,
-                               Glib::ustring name,
+                               const Glib::ustring& name,
                                BottleTypes::Windows windows_version,
                                BottleTypes::Bit bit,
-                               Glib::ustring virtual_desktop_resolution,
+                               const Glib::ustring& virtual_desktop_resolution,
                                bool disable_gecko_mono,
                                BottleTypes::AudioDriver audio)
 {
@@ -216,6 +216,8 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
   // Create Bottle config data struct
   BottleConfigData bottle_config;
   bottle_config.name = name;
+  bottle_config.description = ""; // TODO
+  bottle_config.log_level = 1; // 1 = Normal logging level
 
   // Build prefix
   // Name of the bottle we be used as folder name as well
@@ -320,10 +322,10 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
  * \param[in] audio                       - Audio Driver type
  */
 void BottleManager::update_bottle(SignalDispatcher* caller,
-                                  Glib::ustring name,
-                                  Glib::ustring folder_name,
+                                  const Glib::ustring& name,
+                                  const Glib::ustring& folder_name,
                                   BottleTypes::Windows windows_version,
-                                  Glib::ustring virtual_desktop_resolution,
+                                  const Glib::ustring& virtual_desktop_resolution,
                                   BottleTypes::AudioDriver audio)
 {
   if (active_bottle_ != nullptr)
@@ -509,7 +511,7 @@ void BottleManager::set_active_bottle(BottleItem* bottle)
  * \brief Get error message (stored from manager thread)
  * \return Return the error message
  */
-const Glib::ustring& BottleManager::get_error_message()
+const Glib::ustring& BottleManager::get_error_message() const
 {
   std::lock_guard<std::mutex> lock(error_message_mutex_);
   return error_message_;
