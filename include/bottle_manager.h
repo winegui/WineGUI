@@ -108,6 +108,8 @@ private:
   bool is_wine64_bit_;
   bool is_debug_logging_;
   bool is_logging_stderr_;
+  int previous_active_bottle_index_;
+  std::size_t previous_bottles_list_size_;
 
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
   Glib::ustring error_message_;
