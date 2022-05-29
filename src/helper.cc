@@ -395,13 +395,13 @@ void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, Bot
     output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
     if (!(output.compare("0") == 0))
     {
-      throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + get_name(prefix_path) +
+      throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + get_folder_name(prefix_path) +
                                "\n\nCommand executed: " + wine_command + "\nFull path location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + get_name(prefix_path) +
+    throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + get_folder_name(prefix_path) +
                              "\n\nCommand executed: " + wine_command + "\nFull location: " + prefix_path);
   }
 }
@@ -421,19 +421,19 @@ void Helper::remove_wine_bottle(const string& prefix_path)
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (!(output.compare("0") == 0))
       {
-        throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + get_name(prefix_path) +
+        throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + get_folder_name(prefix_path) +
                                  "\n\nFull path location: " + prefix_path);
       }
     }
     else
     {
-      throw std::runtime_error("Could not remove Windows Machine, no result. Wine machine: " + get_name(prefix_path) +
+      throw std::runtime_error("Could not remove Windows Machine, no result. Wine machine: " + get_folder_name(prefix_path) +
                                "\n\nFull path location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Could not remove Windows Machine, prefix is not a directory. Wine machine: " + get_name(prefix_path) +
+    throw std::runtime_error("Could not remove Windows Machine, prefix is not a directory. Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull path location: " + prefix_path);
   }
 }
@@ -454,31 +454,31 @@ void Helper::rename_wine_bottle_folder(const string& current_prefix_path, const 
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (!(output.compare("0") == 0))
       {
-        throw std::runtime_error("Something went wrong when renaming the Windows Machine. Wine machine: " + get_name(current_prefix_path) +
+        throw std::runtime_error("Something went wrong when renaming the Windows Machine. Wine machine: " + get_folder_name(current_prefix_path) +
                                  "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
       }
     }
     else
     {
-      throw std::runtime_error("Could not rename Windows Machine, no result. Current Wine machine: " + get_name(current_prefix_path) +
+      throw std::runtime_error("Could not rename Windows Machine, no result. Current Wine machine: " + get_folder_name(current_prefix_path) +
                                "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Could not rename Windows Machine, prefix is not a directory. Wine machine: " + get_name(current_prefix_path) +
+    throw std::runtime_error("Could not rename Windows Machine, prefix is not a directory. Wine machine: " + get_folder_name(current_prefix_path) +
                              "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
   }
 }
 
 /**
- * \brief Get Wine bottle name
+ * \brief Get Wine bottle folder name
  * \param[in] prefix_path - Bottle prefix
- * \return Bottle name
+ * \return Folder name
  */
-string Helper::get_name(const string& prefix_path)
+string Helper::get_folder_name(const string& prefix_path)
 {
-  // Retrieve bottle name from the directory path
+  // Retrieve bottle folder from the directory path
   return get_bottle_dir_from_prefix(prefix_path);
 }
 
@@ -582,11 +582,11 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   else
   {
     throw std::runtime_error("Could not determ Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
-                             ". Wine machine: " + get_name(prefix_path) + "\n\nFull location: " + prefix_path);
+                             ". Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
   }
   // Function didn't return before (meaning no match found)
   throw std::runtime_error("Could not determ Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
-                           ". Wine machine: " + get_name(prefix_path) + "\n\nFull location: " + prefix_path);
+                           ". Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
 }
 
 /**
@@ -613,12 +613,13 @@ BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
     else
     {
       throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64, value: " + value +
-                               "), for Wine machine: " + get_name(prefix_path) + "\n\nFull location: " + prefix_path);
+                               "), for Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Could not determ Windows system bit, for Wine machine: " + get_name(prefix_path) + "\n\nFull location: " + prefix_path);
+    throw std::runtime_error("Could not determ Windows system bit, for Wine machine: " + get_folder_name(prefix_path) +
+                             "\n\nFull location: " + prefix_path);
   }
 }
 
@@ -720,13 +721,13 @@ string Helper::get_last_wine_updated(const string& prefix_path)
     }
     else
     {
-      throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + get_name(prefix_path) +
+      throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + get_folder_name(prefix_path) +
                                "\n\nFull location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + get_name(prefix_path) +
+    throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull location: " + prefix_path);
   }
 }
@@ -776,7 +777,7 @@ string Helper::get_c_letter_drive(const string& prefix_path)
   }
   else
   {
-    throw std::runtime_error("Could not determ C:\\ drive location, for Wine machine: " + get_name(prefix_path) +
+    throw std::runtime_error("Could not determ C:\\ drive location, for Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull location: " + prefix_path);
   }
 }

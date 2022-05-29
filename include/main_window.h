@@ -96,6 +96,7 @@ protected:
   Gtk::Grid detail_grid;     /*!< Grid layout container to have multiple rows & columns below the toolbar */
   // Detailed info labels on the right panel
   Gtk::Label name;              /*!< Bottle name */
+  Gtk::Label folder_name;       /*!< Folder name */
   Gtk::Label window_version;    /*!< Windows version text */
   Gtk::Label wine_version;      /*!< Wine version text */
   Gtk::Label wine_location;     /*!< Wine location text */

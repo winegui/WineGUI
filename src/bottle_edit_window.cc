@@ -31,6 +31,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
       header_edit_label("Edit Machine"),
       name_label("Name: "),
+      folder_name_label("Folder Name: "),
       windows_version_label("Windows Version: "),
       audio_driver_label("Audio Driver:"),
       virtual_desktop_resolution_label("Window Resolution:"),
@@ -63,6 +64,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   header_edit_label.set_margin_bottom(5);
 
   name_label.set_halign(Gtk::Align::ALIGN_END);
+  folder_name_label.set_halign(Gtk::Align::ALIGN_END);
   windows_version_label.set_halign(Gtk::Align::ALIGN_END);
   audio_driver_label.set_halign(Gtk::Align::ALIGN_END);
   virtual_desktop_resolution_label.set_halign(Gtk::Align::ALIGN_END);
@@ -76,16 +78,19 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   virtual_desktop_resolution_entry.set_text("960x540");
 
   name_entry.set_hexpand(true);
+  folder_name_entry.set_hexpand(true);
   windows_version_combobox.set_hexpand(true);
   audio_driver_combobox.set_hexpand(true);
 
   edit_grid.attach(name_label, 0, 0);
   edit_grid.attach(name_entry, 1, 0);
-  edit_grid.attach(windows_version_label, 0, 1);
-  edit_grid.attach(windows_version_combobox, 1, 1);
-  edit_grid.attach(audio_driver_label, 0, 2);
-  edit_grid.attach(audio_driver_combobox, 1, 2);
-  edit_grid.attach(virtual_desktop_check, 0, 3, 2);
+  edit_grid.attach(folder_name_label, 0, 1);
+  edit_grid.attach(folder_name_entry, 1, 1);
+  edit_grid.attach(windows_version_label, 0, 2);
+  edit_grid.attach(windows_version_combobox, 1, 2);
+  edit_grid.attach(audio_driver_label, 0, 3);
+  edit_grid.attach(audio_driver_combobox, 1, 3);
+  edit_grid.attach(virtual_desktop_check, 0, 4, 2);
 
   hbox_buttons.pack_start(delete_button, false, false, 4);
   hbox_buttons.pack_end(save_button, false, false, 4);
@@ -120,12 +125,15 @@ void BottleEditWindow::show()
 {
   if (active_bottle_ != nullptr)
   {
-    set_title("Edit Machine - " + active_bottle_->name());
+    set_title("Edit Machine - " +
+              ((!active_bottle_->name().empty()) ? active_bottle_->name() : active_bottle_->folder_name())); // Fallback to folder name
     // Enable save button (again)
     save_button.set_sensitive(true);
 
     // Set name
     name_entry.set_text(active_bottle_->name());
+    // Set folder name
+    folder_name_entry.set_text(active_bottle_->folder_name());
 
     // Clear list
     windows_version_combobox.remove_all();
@@ -202,8 +210,8 @@ void BottleEditWindow::on_bottle_updated()
  */
 void BottleEditWindow::show_virtual_desktop_resolution()
 {
-  edit_grid.attach(virtual_desktop_resolution_label, 0, 4);
-  edit_grid.attach(virtual_desktop_resolution_entry, 1, 4);
+  edit_grid.attach(virtual_desktop_resolution_label, 0, 5);
+  edit_grid.attach(virtual_desktop_resolution_entry, 1, 5);
 }
 
 /**
@@ -211,7 +219,7 @@ void BottleEditWindow::show_virtual_desktop_resolution()
  */
 void BottleEditWindow::hide_virtual_desktop_resolution()
 {
-  edit_grid.remove_row(4);
+  edit_grid.remove_row(5);
 }
 
 /**
@@ -257,6 +265,7 @@ void BottleEditWindow::on_save_button_clicked()
   busy_dialog.show();
 
   Glib::ustring name = name_entry.get_text();
+  Glib::ustring folder_name = folder_name_entry.get_text();
   bool isDesktopEnabled = virtual_desktop_check.get_active();
   if (isDesktopEnabled)
   {
@@ -296,5 +305,5 @@ void BottleEditWindow::on_save_button_clicked()
   }
   // Ignore the catches
 
-  update_bottle.emit(name, windows_version, virtual_desktop_resolution, audio);
+  update_bottle.emit(name, folder_name, windows_version, virtual_desktop_resolution, audio);
 }

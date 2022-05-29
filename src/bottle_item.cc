@@ -40,6 +40,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
   if (this != &bottle_item)
   {
     name_ = bottle_item.name();
+    folder_name_ = bottle_item.folder_name();
     is_status_ok_ = bottle_item.status();
     win_ = bottle_item.windows();
     bit_ = bottle_item.bit();
@@ -59,12 +60,14 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
  * \brief Contruct a new Wine Bottle Item with limited inputs
  */
 BottleItem::BottleItem(Glib::ustring name,
+                       Glib::ustring folder_name,
                        Glib::ustring wine_version,
                        bool is_wine64_bit,
                        Glib::ustring wine_location,
                        Glib::ustring wine_c_drive,
                        Glib::ustring wine_last_changed)
     : name_(name),
+      folder_name_(folder_name),
       is_status_ok_(true),
       win_(WineDefaults::WindowsOs),
       bit_(BottleTypes::Bit::win32),
@@ -82,6 +85,7 @@ BottleItem::BottleItem(Glib::ustring name,
  * \brief Contruct a new Wine Bottle Item
  */
 BottleItem::BottleItem(Glib::ustring name,
+                       Glib::ustring folder_name,
                        bool status,
                        BottleTypes::Windows win,
                        BottleTypes::Bit bit,
@@ -93,6 +97,7 @@ BottleItem::BottleItem(Glib::ustring name,
                        BottleTypes::AudioDriver audio_driver,
                        Glib::ustring virtual_desktop)
     : name_(name),
+      folder_name_(folder_name),
       is_status_ok_(status),
       win_(win),
       bit_(bit),
@@ -115,6 +120,8 @@ void BottleItem::CreateUI()
   Glib::ustring bit = BottleTypes::to_string(this->bit());
   Glib::ustring filename = windows + "_" + bit + ".png";
   Glib::ustring name = this->name();
+  Glib::ustring folder_name = this->folder_name();
+  Glib::ustring name_label_text = (!name.empty()) ? name : folder_name; // Fallback to folder name
   bool status = this->status();
 
   // Set left side of the GUI
@@ -125,7 +132,7 @@ void BottleItem::CreateUI()
   image.set_margin_start(8);
 
   name_label.set_xalign(0.0);
-  name_label.set_markup("<span size=\"medium\"><b>" + Glib::Markup::escape_text(name) + "</b></span>");
+  name_label.set_markup("<span size=\"medium\"><b>" + Glib::Markup::escape_text(name_label_text) + "</b></span>");
 
   Glib::ustring status_text = "Ready";
   if (status)

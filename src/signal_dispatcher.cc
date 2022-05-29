@@ -275,6 +275,7 @@ void SignalDispatcher::on_new_bottle(Glib::ustring& name,
  * \brief Update existing bottle signal, starting update_bottle() within thread
  */
 void SignalDispatcher::on_update_bottle(Glib::ustring& name,
+                                        Glib::ustring& folder_name,
                                         BottleTypes::Windows windows_version,
                                         Glib::ustring& virtual_desktop_resolution,
                                         BottleTypes::AudioDriver audio)
@@ -288,8 +289,8 @@ void SignalDispatcher::on_update_bottle(Glib::ustring& name,
   else
   {
     // Start a new manager thread (executing NewBottle())
-    thread_bottle_manager_ = new std::thread([this, name, windows_version, virtual_desktop_resolution, audio] {
-      manager_.update_bottle(this, name, windows_version, virtual_desktop_resolution, audio);
+    thread_bottle_manager_ = new std::thread([this, name, folder_name, windows_version, virtual_desktop_resolution, audio] {
+      manager_.update_bottle(this, name, folder_name, windows_version, virtual_desktop_resolution, audio);
     });
   }
 }

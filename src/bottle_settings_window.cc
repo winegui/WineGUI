@@ -230,7 +230,8 @@ void BottleSettingsWindow::show()
   this->update_installed();
 
   if (active_bottle_ != nullptr)
-    set_title("Settings of machine - " + active_bottle_->name());
+    set_title("Settings of machine - " +
+              ((!active_bottle_->name().empty()) ? active_bottle_->name() : active_bottle_->folder_name())); // Fall-back to folder name
   else
     set_title("Settings for machine (Unknown machine)");
   // Call parent show

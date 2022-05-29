@@ -37,7 +37,8 @@ class BottleEditWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver> update_bottle; /*!< save button clicked signal */
+  sigc::signal<void, Glib::ustring&, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver>
+      update_bottle;                /*!< save button clicked signal */
   sigc::signal<void> remove_bottle; /*!< remove button clicked signal */
 
   explicit BottleEditWindow(Gtk::Window& parent);
@@ -59,10 +60,12 @@ protected:
 
   Gtk::Label header_edit_label;                /*!< header edit label */
   Gtk::Label name_label;                       /*!< name label */
+  Gtk::Label folder_name_label;                /*!< folder name label */
   Gtk::Label windows_version_label;            /*!< windows version label */
   Gtk::Label audio_driver_label;               /*!< audio driver label */
   Gtk::Label virtual_desktop_resolution_label; /*!< virtual desktop resolution label */
   Gtk::Entry name_entry;                       /*!< name input field */
+  Gtk::Entry folder_name_entry;                /*!< folder name input field */
   Gtk::Entry virtual_desktop_resolution_entry; /*!< virtual desktop resolution input field */
   Gtk::ComboBoxText windows_version_combobox;  /*!< windows version combobox */
   Gtk::ComboBoxText audio_driver_combobox;     /*!< audio driver combobox */
