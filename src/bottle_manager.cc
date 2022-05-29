@@ -20,8 +20,8 @@
  */
 #include "bottle_manager.h"
 #include "bottle_item.h"
-#include "config_file.h"
 #include "dll_override_types.h"
+#include "generic_config_file.h"
 #include "helper.h"
 #include "main_window.h"
 #include "signal_dispatcher.h"
@@ -1040,15 +1040,15 @@ void BottleManager::install_liberation(Gtk::Window& parent)
  *************************************************************/
 
 /**
- * \brief Load configuration values from file and apply
+ * \brief Load generic configuration values from file and apply
  */
 void BottleManager::load_config()
 {
-  ConfigData config = ConfigFile::read_config_file();
-  bottle_location_ = config.default_folder;
-  is_wine64_bit_ = ((Helper::determine_wine_executable() == 1) || config.prefer_wine64);
-  is_debug_logging_ = config.enable_debug_logging;
-  is_logging_stderr_ = config.enable_logging_stderr;
+  GenericConfigData generic_config = GenericConfigFile::read_config_file();
+  bottle_location_ = generic_config.default_folder;
+  is_wine64_bit_ = ((Helper::determine_wine_executable() == 1) || generic_config.prefer_wine64);
+  is_debug_logging_ = generic_config.enable_debug_logging;
+  is_logging_stderr_ = generic_config.enable_logging_stderr;
 }
 
 bool BottleManager::is_bottle_not_null()
