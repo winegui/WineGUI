@@ -74,10 +74,12 @@ public:
   virtual void on_run_button_clicked();
   virtual void on_hide_window();
   virtual void on_give_feedback();
+  virtual void on_check_version();
   virtual void on_exec_failure();
 
 protected:
   // Signal handlers
+  void on_startup_version_update();
   bool delete_window(GdkEventAny* any_event);
   Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
 
@@ -123,6 +125,7 @@ private:
   virtual void on_new_bottle_apply();
 
   // Private methods
+  void check_version_update(bool show_equal = false);
   void load_stored_window_settings();
   void create_left_panel();
   void create_right_panel();

@@ -61,6 +61,8 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
   // Help submenu
   auto feedback_menuitem = create_image_menu_item("Give feedback", "help-faq");
   feedback_menuitem->signal_activate().connect(give_feedback);
+  auto check_update_menuitem = create_image_menu_item("Check for updates", "system-software-update");
+  check_update_menuitem->signal_activate().connect(check_version);
   auto about_menuitem = create_image_menu_item("About WineGUI...", "help-about");
   about_menuitem->signal_activate().connect(show_about);
 
@@ -86,6 +88,7 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
 
   // Help menu
   help_submenu.append(*feedback_menuitem);
+  help_submenu.append(*check_update_menuitem);
   help_submenu.append(*about_menuitem);
 
   // Add menu items to menu bar
