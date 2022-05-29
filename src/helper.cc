@@ -483,17 +483,6 @@ string Helper::get_name(const string& prefix_path)
 }
 
 /**
- * \brief Get Wine bottle description from meta file
- * \param[in] prefix_path - Bottle prefix
- * \return Bottle name
- */
-string Helper::get_description(const string& prefix_path)
-{
-  // TODO: Use Glib::KeyFile..
-  return "";
-}
-
-/**
  * \brief Get current Windows OS version
  * \param[in] prefix_path Bottle prefix
  * \return Return the Windows OS version

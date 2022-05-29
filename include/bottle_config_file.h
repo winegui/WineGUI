@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2022 WineGUI
  *
- * \file    config_file.h
- * \brief   WineGUI Configuration file supporting methods
+ * \file    bottle_config_file.h
+ * \brief   Wine bottle config file helper class
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,33 +20,31 @@
  */
 #pragma once
 
-#include <glibmm.h>
 #include <string>
 
-struct ConfigData
+struct BottleConfigData
 {
-  std::string default_folder;
-  bool prefer_wine64;
-  bool enable_debug_logging;
-  bool enable_logging_stderr;
+  std::string name;
+  std::string description;
+  int log_level;
 };
 
 /**
- * \class ConfigFile
- * \brief Config file helper methods
+ * \class BottleConfigFile
+ * \brief Bottle Config file helper methods
  */
-class ConfigFile
+class BottleConfigFile
 {
 public:
   // Singleton
-  static ConfigFile& get_instance();
+  static BottleConfigFile& get_instance();
 
-  static bool write_config_file(const ConfigData& config_data);
-  static ConfigData read_config_file();
+  static bool write_config_file(const std::string& prefix_path, const BottleConfigData& bottle_config);
+  static BottleConfigData read_config_file(const std::string& prefix_path);
 
 private:
-  ConfigFile();
-  ~ConfigFile();
-  ConfigFile(const ConfigFile&) = delete;
-  ConfigFile& operator=(const ConfigFile&) = delete;
+  BottleConfigFile();
+  ~BottleConfigFile();
+  BottleConfigFile(const BottleConfigFile&) = delete;
+  BottleConfigFile& operator=(const BottleConfigFile&) = delete;
 };

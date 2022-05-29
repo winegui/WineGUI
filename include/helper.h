@@ -21,7 +21,6 @@
 #pragma once
 
 #include <gtkmm.h>
-#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -29,7 +28,6 @@
 #include "bottle_types.h"
 #include "dll_override_types.h"
 
-using std::cout;
 using std::endl;
 using std::string;
 
@@ -62,7 +60,6 @@ public:
   static void remove_wine_bottle(const string& prefix_path);
   static void rename_wine_bottle_folder(const string& current_prefix_path, const string& new_prefix_path);
   static string get_name(const string& prefix_path);
-  static string get_description(const string& prefix_path);
   static BottleTypes::Windows get_windows_version(const string& prefix_path);
   static BottleTypes::Bit get_windows_bitness(const string& prefix_path);
   static BottleTypes::AudioDriver get_audio_driver(const string& prefix_path);
