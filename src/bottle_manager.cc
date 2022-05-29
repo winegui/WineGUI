@@ -217,7 +217,7 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
   BottleConfigData bottle_config;
   bottle_config.name = name;
   bottle_config.description = ""; // TODO
-  bottle_config.log_level = 1; // 1 = Normal logging level
+  bottle_config.log_level = 1;    // 1 = Normal logging level
 
   // Build prefix
   // Name of the bottle we be used as folder name as well
