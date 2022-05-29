@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # By: Melroy van den Berg
-# File: create_latest_release_file.sh
 # Description: Create a latest_release.txt file on winegui.melroy.org,
 #  which can be used to verify if the user is using the latest version of WineGUI.
 
