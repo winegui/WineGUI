@@ -115,8 +115,8 @@ MainWindow::~MainWindow()
 }
 
 /**
- * \brief Set a list/vector of bottles to the left panel
- * \param[in] bottles - Wine Bottle item vector array
+ * \brief Set a list of bottles to the left panel
+ * \param[in] bottles - Wine Bottle item list
  */
 void MainWindow::set_wine_bottles(std::list<BottleItem>& bottles)
 {

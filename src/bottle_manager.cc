@@ -123,6 +123,14 @@ void BottleManager::update_config_and_bottles()
   // Read generic config
   load_generic_config();
 
+  bool try_to_restore = (active_bottle_ != nullptr);
+  if (try_to_restore)
+  {
+    previous_active_bottle_index_ = active_bottle_->get_index();
+    // Save the current bottle list size
+    previous_bottles_list_size_ = bottles_.size();
+  }
+
   // Clear bottles
   if (!bottles_.empty())
     bottles_.clear();
@@ -157,12 +165,28 @@ void BottleManager::update_config_and_bottles()
       // Update main Window
       main_window_.set_wine_bottles(bottles_);
 
-      // Set first Bottle in the detailed info panel,
-      // begin() gives you an iterator
-      auto first = bottles_.begin();
-      main_window_.set_detailed_info(*first);
-      // Set active bottle at the first
-      active_bottle_ = &(*first);
+      // Is try to store boolean true?
+      // And: Is the bottle list size the same?
+      // And: Is the previous index not bigger than the list size?
+      if (try_to_restore && (bottles_.size() == previous_bottles_list_size_) && (previous_active_bottle_index_ < bottles_.size()))
+      {
+        // Let's reeset the previous state!
+        auto front = bottles_.begin();
+        std::advance(front, previous_active_bottle_index_);
+        // Set the previous element as current
+        main_window_.set_detailed_info(*front);
+        // Set active bottle at the previous index
+        active_bottle_ = &(*front);
+      }
+      else
+      {
+        // Bottle list is changed, let's set the first bottle in the detailed info panel.
+        // begin() gives us an iterator with the first element
+        auto first = bottles_.begin();
+        main_window_.set_detailed_info(*first);
+        // Set active bottle at the first
+        active_bottle_ = &(*first);
+      }
     }
     else
     {
