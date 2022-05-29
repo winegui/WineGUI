@@ -76,9 +76,9 @@ BottleConfigData BottleConfigFile::read_config_file(const std::string& prefix_pa
 
   struct BottleConfigData bottle_config;
   // Defaults config values
-  bottle_config.name = Helper::get_name(file_path); // Name from wine prefix
+  bottle_config.name = Helper::get_folder_name(prefix_path); // Name from wine prefix
   bottle_config.description = "";
-  bottle_config.log_level = 1; // Normal Wine logging
+  bottle_config.log_level = 1; // Normal Wine logging (0=disabled, 1=normal logging,2=extra logging,3=logging all/extra verbose)
 
   // Check if config file exists
   if (!Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR))

@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "bottle_manager.h"
+#include "bottle_config_file.h"
 #include "bottle_item.h"
 #include "dll_override_types.h"
 #include "generic_config_file.h"
@@ -212,7 +213,12 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
     return; // Stop thread prematurely
   }
 
+  // Create Bottle config data struct
+  BottleConfigData bottle_config;
+  bottle_config.name = name;
+
   // Build prefix
+  // Name of the bottle we be used as folder name as well
   std::vector<string> dirs{bottle_location_, name};
   string prefix_path = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
   bool bottle_created = false;
@@ -220,6 +226,13 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
   {
     // Now create a new Wine Bottle
     Helper::create_wine_bottle(is_wine64_bit_, prefix_path, bit, disable_gecko_mono);
+    // Next, write the WineGUI bottle config file
+    if (!BottleConfigFile::write_config_file(prefix_path, bottle_config))
+    {
+      // TODO: Maybe a warning message to the user?
+      // No critical failure, only log an error to console.
+      std::cout << "Error: Could not write bottle config file." << std::endl;
+    }
     bottle_created = true;
   }
   catch (const std::runtime_error& error)
@@ -301,12 +314,14 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
  * \brief Update existing Wine bottle (runs in thread)
  * \param[in] caller                      - Signal Dispatcher pointer, in order to signal back events
  * \param[in] name                        - Bottle Name
+ * \param[in] folder_name                 - Bottle Folder Name
  * \param[in] windows_version             - Windows OS version
  * \param[in] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)ze
  * \param[in] audio                       - Audio Driver type
  */
 void BottleManager::update_bottle(SignalDispatcher* caller,
                                   Glib::ustring name,
+                                  Glib::ustring folder_name,
                                   BottleTypes::Windows windows_version,
                                   Glib::ustring virtual_desktop_resolution,
                                   BottleTypes::AudioDriver audio)
@@ -314,6 +329,23 @@ void BottleManager::update_bottle(SignalDispatcher* caller,
   if (active_bottle_ != nullptr)
   {
     string prefix_path = active_bottle_->wine_location();
+
+    bool need_update_bottle_config_file = false;
+    BottleConfigData bottle_config = BottleConfigFile::read_config_file(prefix_path);
+    if (active_bottle_->name() != name)
+    {
+      bottle_config.name = name;
+      need_update_bottle_config_file = true;
+    }
+
+    if (need_update_bottle_config_file)
+    {
+      if (!BottleConfigFile::write_config_file(prefix_path, bottle_config))
+      {
+        // Silent error
+        std::cout << "Error: Could not update bottle config file." << std::endl;
+      }
+    }
 
     if (active_bottle_->windows() != windows_version)
     {
@@ -387,12 +419,12 @@ void BottleManager::update_bottle(SignalDispatcher* caller,
     // Wait until wineserver terminates
     Helper::wait_until_wineserver_is_terminated(prefix_path);
 
-    // LAST but not least, rename Wine bottle (=renaming folder)
+    // LAST but not least, rename Wine bottle folder
     // Do this after the wait on wineserver, since otherwise renaming may break the Wine installation during update
-    if (active_bottle_->name() != name)
+    if (active_bottle_->folder_name() != folder_name)
     {
       // Build new prefix
-      std::vector<string> dirs{bottle_location_, name};
+      std::vector<string> dirs{bottle_location_, folder_name};
       string new_prefix_path = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
       try
       {
@@ -402,7 +434,7 @@ void BottleManager::update_bottle(SignalDispatcher* caller,
       {
         {
           std::lock_guard<std::mutex> lock(error_message_mutex_);
-          error_message_ = ("Something went wrong during during changing the name (= renaming the folder).\n" + Glib::ustring(error.what()));
+          error_message_ = ("Something went wrong during during changing the folder name.\n" + Glib::ustring(error.what()));
         }
         caller->signal_error_message_during_update();
         return; // Stop thread prematurely
@@ -436,7 +468,7 @@ void BottleManager::delete_bottle()
       string windows = BottleTypes::to_string(active_bottle_->windows());
       // Are you sure?
       Glib::ustring confirm_message = "Are you sure you want to <b>PERMANENTLY</b> remove machine named '" +
-                                      Glib::Markup::escape_text(Helper::get_name(prefix_path)) + "' running " + windows +
+                                      Glib::Markup::escape_text(Helper::get_folder_name(prefix_path)) + "' running " + windows +
                                       "?\n\n<i>Note:</i> This action cannot be undone!";
       if (main_window_.show_confirm_dialog(confirm_message, true))
       {
@@ -1153,6 +1185,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
     std::ignore = _;
     // Reset variables
     string name = "";
+    string folder_name = "";
     string virtualDesktop = "";
     BottleTypes::Bit bit = BottleTypes::Bit::win32;
     string c_drive_location = "- Unknown -";
@@ -1161,9 +1194,13 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
     BottleTypes::Windows windows = WineDefaults::WindowsOs;
     bool status = false;
 
+    // Retrieve bottle config data
+    BottleConfigData bottle_config = BottleConfigFile::read_config_file(prefix);
+    name = bottle_config.name;
+
     try
     {
-      name = Helper::get_name(prefix);
+      folder_name = Helper::get_folder_name(prefix);
     }
     catch (const std::runtime_error& error)
     {
@@ -1220,8 +1257,8 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
       main_window_.show_error_message(error.what());
     }
 
-    BottleItem* bottle = new BottleItem(name, status, windows, bit, wine_version, is_wine64_bit_, prefix, c_drive_location, last_time_wine_updated,
-                                        audio_driver, virtualDesktop);
+    BottleItem* bottle = new BottleItem(name, folder_name, status, windows, bit, wine_version, is_wine64_bit_, prefix, c_drive_location,
+                                        last_time_wine_updated, audio_driver, virtualDesktop);
     bottles.push_back(*bottle);
   }
   return bottles;
