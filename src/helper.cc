@@ -923,18 +923,19 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
         resolution = "640x480";
       }
 
-      exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
-      // Something returns non-zero... winetricks on the command line, does return zero ..
-      /*
-string output = exec(..)
-if (!output.empty()) {
-  output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-  if (output.compare("0") != 0) {
-    throw std::runtime_error("Could not set virtual desktop resolution");
-  }
-} else {
-  throw std::runtime_error("Could not set virtual desktop resolution");
-}*/
+      string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
+      if (!output.empty())
+      {
+        output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+        if (output.compare("0") != 0)
+        {
+          throw std::runtime_error("Could not set virtual desktop resolution");
+        }
+      }
+      else
+      {
+        throw std::runtime_error("Could not set virtual desktop resolution");
+      }
     }
     else
     {
@@ -951,18 +952,19 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
 {
   if (file_exists(WinetricksExecutable))
   {
-    exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=off>/dev/null 2>&1; echo $?").c_str());
-    // Something returns non-zero... winetricks on the command line, does return zero ..
-    /*
-string output = exec(...)
-if (!output.empty()) {
-  output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-  if (output.compare("0") != 0) {
-    throw std::runtime_error("Could not Disable Virtual Desktop");
-  }
-} else {
-  throw std::runtime_error("Could not Disable Virtual Desktop");
-}*/
+    string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=off>/dev/null 2>&1; echo $?").c_str());
+    if (!output.empty())
+    {
+      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+      if (output.compare("0") != 0)
+      {
+        throw std::runtime_error("Could not Disable Virtual Desktop");
+      }
+    }
+    else
+    {
+      throw std::runtime_error("Could not Disable Virtual Desktop");
+    }
   }
 }
 
