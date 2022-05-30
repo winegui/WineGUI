@@ -76,7 +76,6 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
     audio_driver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
   virtual_desktop_check.set_active(false);
-  virtual_desktop_resolution_entry.set_sensitive(false);
   virtual_desktop_resolution_entry.set_text("1024x768");
   description_label.set_halign(Gtk::Align::ALIGN_START);
 
@@ -113,6 +112,9 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   vbox.pack_start(edit_grid, true, true, 4);
   vbox.pack_start(hbox_buttons, false, false, 4);
   add(vbox);
+
+  // Gray-out virtual desktop by default
+  virtual_desktop_resolution_sensitive(false);
 
   // Signals
   delete_button.signal_clicked().connect(remove_bottle);

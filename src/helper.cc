@@ -55,6 +55,10 @@ static const string RegKeyName9x = "[Software\\\\Microsoft\\\\Windows\\\\Current
 static const string RegKeyNameNT = "[Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion]";
 static const string RegKeyType = "[System\\\\CurrentControlSet\\\\Control\\\\ProductOptions]";
 static const string RegKeyWine = "[Software\\\\Wine]";
+static const string RegKeyAudio = "[Software\\\\Wine\\\\Drivers]";
+static const string RegKeyVirtualDesktop = "[Software\\\\Wine\\\\Explorer]";
+static const string RegKeyVirtualDesktopResolution = "[Software\\\\Wine\\\\Explorer\\\\Desktops]";
+static const string RegKeyDllOverrides = "[Software\\\\Wine\\\\DllOverrides]";
 
 // Reg names
 static const string RegNameNTVersion = "CurrentVersion";
@@ -62,7 +66,10 @@ static const string RegNameNTBuild = "CurrentBuild";
 static const string RegNameNTBuildNumber = "CurrentBuildNumber";
 static const string RegName9xVersion = "VersionNumber";
 static const string RegNameProductType = "ProductType";
-static const string RegNameVersion = "Version";
+static const string RegNameWindowsVersion = "Version";
+static const string RegNameAudio = "Audio";
+static const string RegNameVirtualDesktop = "Desktop";
+static const string RegNameVirtualDesktopDefault = "Default";
 
 // Other files
 static const string WineGuiMetaFile = ".winegui.conf";
@@ -491,7 +498,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
 {
   // Trying user registery first
   string user_reg_file_path = Glib::build_filename(prefix_path, UserReg);
-  string win_version = Helper::get_reg_value(user_reg_file_path, RegKeyWine, RegNameVersion);
+  string win_version = Helper::get_reg_value(user_reg_file_path, RegKeyWine, RegNameWindowsVersion);
   if (!win_version.empty())
   {
     for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
@@ -631,9 +638,7 @@ BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
 BottleTypes::AudioDriver Helper::get_audio_driver(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
-  string key_name = "[Software\\\\Wine\\\\Drivers]";
-  string value_name = "Audio";
-  string value = Helper::get_reg_value(file_path, key_name, value_name);
+  string value = Helper::get_reg_value(file_path, RegKeyAudio, RegNameAudio);
   if (!value.empty())
   {
     if (value.compare("pulse") == 0)
@@ -676,28 +681,25 @@ BottleTypes::AudioDriver Helper::get_audio_driver(const string& prefix_path)
  */
 string Helper::get_virtual_desktop(const string& prefix_path)
 {
+  string file_path = Glib::build_filename(prefix_path, UserReg);
   // TODO: Check if virtual desktop is enabled or disabled first! By looking if this value name is set:
   // If the user.reg key: "Software\\Wine\\Explorer" Value name: "Desktop" is NOT set, its disabled.
   // If this value name is set (store the value of "Desktop"...), virtual desktop is enabled.
   //
-  // The resolution can be found in Key: Software\\Wine\\Explorer\\Desktops with the Value name set as value
-  // (see above, "Default" is the default value). eg. "Default"="1920x1080"
-
-  string file_path = Glib::build_filename(prefix_path, UserReg);
-  string key_name = "[Software\\\\Wine\\\\Explorer\\\\Desktops]";
-  string value_name = "Default";
-  // TODO: first check of the Desktop value name in Software\\Wine\\Explorer
-  string value = Helper::get_reg_value(file_path, key_name, value_name);
-  if (!value.empty())
+  // Check if emulate desktop is enabled. Eg. "Desktop"="Default"
+  string emulate_desktop_value = Helper::get_reg_value(file_path, RegKeyVirtualDesktop, RegNameVirtualDesktop);
+  string resolution;
+  if (!emulate_desktop_value.empty())
   {
-    // Return the resolution
-    return value;
+    // The resolution can be found in Key: Software\\Wine\\Explorer\\Desktops with the Value name set as value
+    // (see above, "Default" is the default value). eg. "Default"="1024x768"
+    string resolution_value = Helper::get_reg_value(file_path, RegKeyVirtualDesktopResolution, RegNameVirtualDesktopDefault);
+    if (!resolution_value.empty())
+    {
+      resolution = resolution_value;
+    }
   }
-  else
-  {
-    // return empty string
-    return "";
-  }
+  return resolution;
 }
 
 /**
@@ -1020,9 +1022,8 @@ string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const 
 bool Helper::get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
-  string key_name = "[Software\\\\Wine\\\\DllOverrides]";
   string value_name = dll_name;
-  string value = Helper::get_reg_value(file_path, key_name, value_name);
+  string value = Helper::get_reg_value(file_path, RegKeyDllOverrides, value_name);
   return DLLOverride::to_string(load_order) == value;
 }
 
