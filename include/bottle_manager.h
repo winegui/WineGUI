@@ -63,6 +63,7 @@ public:
   void update_bottle(SignalDispatcher* caller,
                      const Glib::ustring& name,
                      const Glib::ustring& folder_name,
+                     const Glib::ustring& description,
                      BottleTypes::Windows windows_version,
                      const Glib::ustring& virtual_desktop_resolution,
                      BottleTypes::AudioDriver audio);

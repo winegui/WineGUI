@@ -35,6 +35,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       windows_version_label("Windows Version: "),
       audio_driver_label("Audio Driver:"),
       virtual_desktop_resolution_label("Window Resolution:"),
+      description_label("Description:"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
       save_button("Save"),
       cancel_button("Cancel"),
@@ -43,7 +44,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       active_bottle_(nullptr)
 {
   set_transient_for(parent);
-  set_default_size(400, 350);
+  set_default_size(500, 420);
   set_modal(true);
 
   edit_grid.set_margin_top(5);
@@ -75,12 +76,19 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
     audio_driver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
   virtual_desktop_check.set_active(false);
-  virtual_desktop_resolution_entry.set_text("960x540");
+  virtual_desktop_resolution_entry.set_sensitive(false);
+  virtual_desktop_resolution_entry.set_text("1024x768");
+  description_label.set_halign(Gtk::Align::ALIGN_START);
 
   name_entry.set_hexpand(true);
   folder_name_entry.set_hexpand(true);
   windows_version_combobox.set_hexpand(true);
   audio_driver_combobox.set_hexpand(true);
+  description_text_view.set_hexpand(true);
+
+  description_scrolled_window.add(description_text_view);
+  description_scrolled_window.set_hexpand(true);
+  description_scrolled_window.set_vexpand(true);
 
   edit_grid.attach(name_label, 0, 0);
   edit_grid.attach(name_entry, 1, 0);
@@ -91,6 +99,11 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   edit_grid.attach(audio_driver_label, 0, 3);
   edit_grid.attach(audio_driver_combobox, 1, 3);
   edit_grid.attach(virtual_desktop_check, 0, 4, 2);
+  edit_grid.attach(virtual_desktop_resolution_label, 0, 5);
+  edit_grid.attach(virtual_desktop_resolution_entry, 1, 5);
+  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 6, 2);
+  edit_grid.attach(description_label, 0, 7, 2);
+  edit_grid.attach(description_scrolled_window, 0, 8, 2);
 
   hbox_buttons.pack_start(delete_button, false, false, 4);
   hbox_buttons.pack_end(save_button, false, false, 4);
@@ -134,6 +147,8 @@ void BottleEditWindow::show()
     name_entry.set_text(active_bottle_->name());
     // Set folder name
     folder_name_entry.set_text(active_bottle_->folder_name());
+    // Set description
+    description_text_view.get_buffer()->set_text(active_bottle_->description());
 
     // Clear list
     windows_version_combobox.remove_all();
@@ -206,20 +221,13 @@ void BottleEditWindow::on_bottle_updated()
 }
 
 /**
- * \brief Show (add) the additional virtual desktop label + input field
+ * \brief Enable/disable desktop resolution fields.
+ * \param sensitive Set true to enable, false for disable
  */
-void BottleEditWindow::show_virtual_desktop_resolution()
+void BottleEditWindow::virtual_desktop_resolution_sensitive(bool sensitive)
 {
-  edit_grid.attach(virtual_desktop_resolution_label, 0, 5);
-  edit_grid.attach(virtual_desktop_resolution_entry, 1, 5);
-}
-
-/**
- * \brief Hide (remove) the virtual desktop section from grid
- */
-void BottleEditWindow::hide_virtual_desktop_resolution()
-{
-  edit_grid.remove_row(5);
+  virtual_desktop_resolution_label.set_sensitive(sensitive);
+  virtual_desktop_resolution_entry.set_sensitive(sensitive);
 }
 
 /**
@@ -228,15 +236,7 @@ void BottleEditWindow::hide_virtual_desktop_resolution()
  */
 void BottleEditWindow::on_virtual_desktop_toggle()
 {
-  if (virtual_desktop_check.get_active())
-  {
-    show_virtual_desktop_resolution();
-  }
-  else
-  {
-    hide_virtual_desktop_resolution();
-  }
-  show_all_children();
+  virtual_desktop_resolution_sensitive(virtual_desktop_check.get_active());
 }
 
 /**
@@ -266,6 +266,7 @@ void BottleEditWindow::on_save_button_clicked()
 
   Glib::ustring name = name_entry.get_text();
   Glib::ustring folder_name = folder_name_entry.get_text();
+  Glib::ustring description = description_text_view.get_buffer()->get_text();
   bool isDesktopEnabled = virtual_desktop_check.get_active();
   if (isDesktopEnabled)
   {
@@ -305,5 +306,5 @@ void BottleEditWindow::on_save_button_clicked()
   }
   // Ignore the catches
 
-  update_bottle.emit(name, folder_name, windows_version, virtual_desktop_resolution, audio);
+  update_bottle.emit(name, folder_name, description, windows_version, virtual_desktop_resolution, audio);
 }

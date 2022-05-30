@@ -78,6 +78,7 @@ private:
                              BottleTypes::AudioDriver audio);
   virtual void on_update_bottle(Glib::ustring& name,
                                 Glib::ustring& folder_name,
+                                Glib::ustring& description,
                                 BottleTypes::Windows windows_version,
                                 Glib::ustring& virtual_desktop_resolution,
                                 BottleTypes::AudioDriver audio);

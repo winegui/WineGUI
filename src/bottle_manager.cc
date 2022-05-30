@@ -341,6 +341,7 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
  * \param[in] caller                      - Signal Dispatcher pointer, in order to signal back events
  * \param[in] name                        - Bottle Name
  * \param[in] folder_name                 - Bottle Folder Name
+ * \param[in] description                 - Description text
  * \param[in] windows_version             - Windows OS version
  * \param[in] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)ze
  * \param[in] audio                       - Audio Driver type
@@ -348,6 +349,7 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
 void BottleManager::update_bottle(SignalDispatcher* caller,
                                   const Glib::ustring& name,
                                   const Glib::ustring& folder_name,
+                                  const Glib::ustring& description,
                                   BottleTypes::Windows windows_version,
                                   const Glib::ustring& virtual_desktop_resolution,
                                   BottleTypes::AudioDriver audio)
@@ -361,6 +363,12 @@ void BottleManager::update_bottle(SignalDispatcher* caller,
     if (active_bottle_->name() != name)
     {
       bottle_config.name = name;
+      need_update_bottle_config_file = true;
+    }
+
+    if (active_bottle_->description() != description)
+    {
+      bottle_config.description = description;
       need_update_bottle_config_file = true;
     }
 
