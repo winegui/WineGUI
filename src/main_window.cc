@@ -463,24 +463,34 @@ void MainWindow::check_version_update(bool show_equal)
   string version = Helper::open_file_from_uri("https://winegui.melroy.org/latest_release.txt");
   // Remove new lines
   version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
-  // Is there a different version? Show the user the message to update to the latest release.
-  if (version.compare(PROJECT_VER) != 0)
+  if (!version.empty())
   {
-    string message = "<b>New WineGUI release is out.</b> Please, <i>update</i> WineGUI to the latest release.\n"
-                     "You are using: v" +
-                     std::string(PROJECT_VER) + ". Latest version: v" + version + ".";
-    Gtk::MessageDialog dialog(*this, message, true, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
-    dialog.set_secondary_text("<big><a href=\"https://gitlab.melroy.org/melroy/winegui/-/releases\">Download the latest release now!</a></big>",
-                              true);
-    dialog.set_title("New WineGUI Release!");
-    dialog.set_modal(true);
-    dialog.run();
+    // Is there a different version? Show the user the message to update to the latest release.
+    if (version.compare(PROJECT_VER) != 0)
+    {
+      string message = "<b>New WineGUI release is out.</b> Please, <i>update</i> WineGUI to the latest release.\n"
+                       "You are using: v" +
+                       std::string(PROJECT_VER) + ". Latest version: v" + version + ".";
+      Gtk::MessageDialog dialog(*this, message, true, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
+      dialog.set_secondary_text("<big><a href=\"https://gitlab.melroy.org/melroy/winegui/-/releases\">Download the latest release now!</a></big>",
+                                true);
+      dialog.set_title("New WineGUI Release!");
+      dialog.set_modal(true);
+      dialog.run();
+    }
+    else
+    {
+      if (show_equal)
+      {
+        show_info_message("WineGUI release is up-to-date. Well done!");
+      }
+    }
   }
   else
   {
     if (show_equal)
     {
-      show_info_message("WineGUI release is up-to-date. Well done!");
+      show_error_message("We could determine the latest WineGUI version. Try again later.");
     }
   }
 }
