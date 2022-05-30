@@ -49,6 +49,7 @@ public:
     using std::swap;
     swap(a.name_, b.name_);
     swap(a.folder_name_, b.folder_name_);
+    swap(a.description_, b.description_);
     swap(a.is_status_ok_, b.is_status_ok_);
     swap(a.win_, b.win_);
     swap(a.bit_, b.bit_);
@@ -70,6 +71,7 @@ public:
 
   BottleItem(Glib::ustring name,
              Glib::ustring folder_name,
+             Glib::ustring description,
              bool status,
              BottleTypes::Windows win,
              BottleTypes::Bit bit,
@@ -108,6 +110,16 @@ public:
   const Glib::ustring& folder_name() const
   {
     return folder_name_;
+  };
+  /// set description
+  void description(const Glib::ustring description)
+  {
+    description_ = description;
+  };
+  /// get description
+  const Glib::ustring& description() const
+  {
+    return description_;
   };
   /// set status
   void status(const bool status)
@@ -222,6 +234,7 @@ protected:
 private:
   Glib::ustring name_;
   Glib::ustring folder_name_;
+  Glib::ustring description_;
   bool is_status_ok_;
   BottleTypes::Windows win_;
   BottleTypes::Bit bit_;

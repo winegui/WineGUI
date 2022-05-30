@@ -41,6 +41,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
   {
     name_ = bottle_item.name();
     folder_name_ = bottle_item.folder_name();
+    description_ = bottle_item.description();
     is_status_ok_ = bottle_item.status();
     win_ = bottle_item.windows();
     bit_ = bottle_item.bit();
@@ -68,6 +69,7 @@ BottleItem::BottleItem(Glib::ustring name,
                        Glib::ustring wine_last_changed)
     : name_(name),
       folder_name_(folder_name),
+      description_(""),
       is_status_ok_(true),
       win_(WineDefaults::WindowsOs),
       bit_(BottleTypes::Bit::win32),
@@ -86,6 +88,7 @@ BottleItem::BottleItem(Glib::ustring name,
  */
 BottleItem::BottleItem(Glib::ustring name,
                        Glib::ustring folder_name,
+                       Glib::ustring description,
                        bool status,
                        BottleTypes::Windows win,
                        BottleTypes::Bit bit,
@@ -98,6 +101,7 @@ BottleItem::BottleItem(Glib::ustring name,
                        Glib::ustring virtual_desktop)
     : name_(name),
       folder_name_(folder_name),
+      description_(description),
       is_status_ok_(status),
       win_(win),
       bit_(bit),

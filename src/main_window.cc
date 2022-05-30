@@ -157,8 +157,10 @@ void MainWindow::set_detailed_info(BottleItem& bottle)
   c_drive_location.set_text(bottle.wine_c_drive());
   wine_last_changed.set_text(bottle.wine_last_changed());
   audio_driver.set_text(BottleTypes::to_string(bottle.audio_driver()));
-  Glib::ustring virtualDesktop = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
-  virtual_desktop.set_text(virtualDesktop);
+  Glib::ustring virtual_desktop_text = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
+  virtual_desktop.set_text(virtual_desktop_text);
+  Glib::ustring description_text = (bottle.description().empty()) ? "None" : bottle.description();
+  description.set_text(description_text);
 }
 
 /**
@@ -175,6 +177,7 @@ void MainWindow::reset_detailed_info()
   wine_last_changed.set_text("");
   audio_driver.set_text("");
   virtual_desktop.set_text("");
+  description.set_text("");
   // Disable toolbar buttons
   set_sensitive_toolbar_buttons(false);
 }
@@ -668,7 +671,7 @@ void MainWindow::create_right_panel()
   detail_grid.attach(*wine_last_changed_label, 0, 7, 2, 1);
   detail_grid.attach_next_to(wine_last_changed, *wine_last_changed_label, Gtk::PositionType::POS_RIGHT, 1, 1);
   // End General
-  detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 8, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 8, 3, 1);
 
   // Audio heading
   Gtk::Image* audio_icon = Gtk::manage(new Gtk::Image());
@@ -684,7 +687,7 @@ void MainWindow::create_right_panel()
   detail_grid.attach(*audio_driver_label, 0, 10, 2, 1);
   detail_grid.attach_next_to(audio_driver, *audio_driver_label, Gtk::PositionType::POS_RIGHT, 1, 1);
   // End Audio driver
-  detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 11, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 11, 3, 1);
 
   // Display heading
   Gtk::Image* display_icon = Gtk::manage(new Gtk::Image());
@@ -700,7 +703,21 @@ void MainWindow::create_right_panel()
   detail_grid.attach(*virtual_desktop_label, 0, 13, 2, 1);
   detail_grid.attach_next_to(virtual_desktop, *virtual_desktop_label, Gtk::PositionType::POS_RIGHT, 1, 1);
   // End Display
-  detail_grid.attach(*new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL), 0, 14, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 14, 3, 1);
+
+  // Description heading
+  Gtk::Image* description_icon = Gtk::manage(new Gtk::Image());
+  description_icon->set_from_icon_name("user-available", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  Gtk::Label* description_label = Gtk::manage(new Gtk::Label());
+  description_label->set_markup("<b>Description</b>");
+  detail_grid.attach(*description_icon, 0, 15, 1, 1);
+  detail_grid.attach_next_to(*description_label, *description_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+
+  // Description text
+  description.set_xalign(0.0);
+  detail_grid.attach(description, 0, 16, 3, 1);
+  // End Description
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 17, 3, 1);
 
   // Add detail grid to box
   right_box.pack_start(detail_grid, false, false);

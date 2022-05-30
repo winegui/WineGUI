@@ -104,6 +104,7 @@ protected:
   Gtk::Label wine_last_changed; /*!< Last changed text */
   Gtk::Label audio_driver;      /*!< Audio driver text */
   Gtk::Label virtual_desktop;   /*!< Virtual desktop text */
+  Gtk::Label description;       /*!< description text */
 
   // Toolbar buttons
   Gtk::ToolButton new_button;            /*!< New toolbar button */
