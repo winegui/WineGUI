@@ -85,7 +85,7 @@ void BottleNewAssistant::setDefaultValues()
   audio_driver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
   virtual_desktop_check.set_active(false);
   disable_gecko_mono_check.set_active(false);
-  virtual_desktop_resolution_entry.set_text("960x540");
+  virtual_desktop_resolution_entry.set_text("1024x768");
   loading_bar.set_fraction(0.0);
   // TODO: Unable to reset the cancel button after previous commit()?
 

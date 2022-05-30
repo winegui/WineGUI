@@ -37,7 +37,7 @@ class BottleEditWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void, Glib::ustring&, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver>
+  sigc::signal<void, Glib::ustring&, Glib::ustring&, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver>
       update_bottle;                /*!< save button clicked signal */
   sigc::signal<void> remove_bottle; /*!< remove button clicked signal */
 
@@ -58,21 +58,24 @@ protected:
   Gtk::Box hbox_buttons; /*!< box for buttons */
   Gtk::Grid edit_grid;   /*!< grid layout for form */
 
-  Gtk::Label header_edit_label;                /*!< header edit label */
-  Gtk::Label name_label;                       /*!< name label */
-  Gtk::Label folder_name_label;                /*!< folder name label */
-  Gtk::Label windows_version_label;            /*!< windows version label */
-  Gtk::Label audio_driver_label;               /*!< audio driver label */
-  Gtk::Label virtual_desktop_resolution_label; /*!< virtual desktop resolution label */
-  Gtk::Entry name_entry;                       /*!< name input field */
-  Gtk::Entry folder_name_entry;                /*!< folder name input field */
-  Gtk::Entry virtual_desktop_resolution_entry; /*!< virtual desktop resolution input field */
-  Gtk::ComboBoxText windows_version_combobox;  /*!< windows version combobox */
-  Gtk::ComboBoxText audio_driver_combobox;     /*!< audio driver combobox */
-  Gtk::CheckButton virtual_desktop_check;      /*!< virtual desktop checkbox */
-  Gtk::Button save_button;                     /*!< save button */
-  Gtk::Button cancel_button;                   /*!< cancel button */
-  Gtk::Button delete_button;                   /*!< delete button */
+  Gtk::Label header_edit_label;                    /*!< header edit label */
+  Gtk::Label name_label;                           /*!< name label */
+  Gtk::Label folder_name_label;                    /*!< folder name label */
+  Gtk::Label windows_version_label;                /*!< windows version label */
+  Gtk::Label audio_driver_label;                   /*!< audio driver label */
+  Gtk::Label virtual_desktop_resolution_label;     /*!< virtual desktop resolution label */
+  Gtk::Label description_label;                    /*!< description label */
+  Gtk::Entry name_entry;                           /*!< name input field */
+  Gtk::Entry folder_name_entry;                    /*!< folder name input field */
+  Gtk::Entry virtual_desktop_resolution_entry;     /*!< virtual desktop resolution input field */
+  Gtk::ComboBoxText windows_version_combobox;      /*!< windows version combobox */
+  Gtk::ComboBoxText audio_driver_combobox;         /*!< audio driver combobox */
+  Gtk::CheckButton virtual_desktop_check;          /*!< virtual desktop checkbox */
+  Gtk::ScrolledWindow description_scrolled_window; /*!< description scrolled window */
+  Gtk::TextView description_text_view;             /*!< description text view */
+  Gtk::Button save_button;                         /*!< save button */
+  Gtk::Button cancel_button;                       /*!< cancel button */
+  Gtk::Button delete_button;                       /*!< delete button */
 
   // Busy dialog
   BusyDialog busy_dialog; /*!< Busy dialog, when the user should wait until install is finished */
@@ -83,8 +86,7 @@ private:
   void on_virtual_desktop_toggle();
 
   // Member functions
-  void show_virtual_desktop_resolution();
-  void hide_virtual_desktop_resolution();
+  void virtual_desktop_resolution_sensitive(bool sensitive);
 
   BottleItem* active_bottle_; /*!< Current active bottle */
 };
