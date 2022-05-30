@@ -42,7 +42,7 @@ MainWindow::MainWindow(Menu& menu)
   // Set some Window properties
   set_title("WineGUI - WINE Manager");
   set_default_size(1100, 600);
-  set_position(Gtk::WIN_POS_CENTER_ALWAYS);
+  set_position(Gtk::WIN_POS_CENTER);
 
   try
   {
@@ -512,17 +512,17 @@ void MainWindow::load_stored_window_settings()
 void MainWindow::create_left_panel()
 {
   // Vertical scroll only
-  scrolled_window.set_policy(Gtk::PolicyType::POLICY_NEVER, Gtk::PolicyType::POLICY_AUTOMATIC);
+  scrolled_window_listbox.set_policy(Gtk::PolicyType::POLICY_NEVER, Gtk::PolicyType::POLICY_AUTOMATIC);
 
   // Add scrolled window with listbox to paned
-  paned.pack1(scrolled_window, false, true);
-  scrolled_window.set_size_request(240, -1);
+  paned.pack1(scrolled_window_listbox, false, true);
+  scrolled_window_listbox.set_size_request(240, -1);
 
   // Set function that will add seperators between each item
   listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
 
   // Add list box to scrolled window
-  scrolled_window.add(listbox);
+  scrolled_window_listbox.add(listbox);
 }
 
 /**
@@ -719,8 +719,10 @@ void MainWindow::create_right_panel()
   // End Description
   detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 17, 3, 1);
 
-  // Add detail grid to box
-  right_box.pack_start(detail_grid, false, false);
+  scrolled_window_grid.add(detail_grid);
+
+  // Add detail grid window to box
+  right_box.pack_start(scrolled_window_grid, true, true);
 
   // Add box to paned
   paned.add2(right_box);
