@@ -168,7 +168,7 @@ void BottleManager::update_config_and_bottles()
       // Is try to store boolean true?
       // And: Is the bottle list size the same?
       // And: Is the previous index not bigger than the list size?
-      if (try_to_restore && (bottles_.size() == previous_bottles_list_size_) && (previous_active_bottle_index_ < bottles_.size()))
+      if (try_to_restore && (bottles_.size() == previous_bottles_list_size_) && ((size_t)previous_active_bottle_index_ < bottles_.size()))
       {
         // Let's reeset the previous state!
         auto front = bottles_.begin();
@@ -1212,6 +1212,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
     // Reset variables
     string name = "";
     string folder_name = "";
+    string description = "";
     string virtualDesktop = "";
     BottleTypes::Bit bit = BottleTypes::Bit::win32;
     string c_drive_location = "- Unknown -";
@@ -1223,6 +1224,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
     // Retrieve bottle config data
     BottleConfigData bottle_config = BottleConfigFile::read_config_file(prefix);
     name = bottle_config.name;
+    description = bottle_config.description;
 
     try
     {
@@ -1283,7 +1285,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
       main_window_.show_error_message(error.what());
     }
 
-    BottleItem* bottle = new BottleItem(name, folder_name, status, windows, bit, wine_version, is_wine64_bit_, prefix, c_drive_location,
+    BottleItem* bottle = new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix, c_drive_location,
                                         last_time_wine_updated, audio_driver, virtualDesktop);
     bottles.push_back(*bottle);
   }
