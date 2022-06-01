@@ -152,16 +152,19 @@ std::map<std::string, unsigned long> Helper::get_bottles_paths(const string& dir
  * \brief Run any program with only setting the WINEPREFIX env variable (run this method async).
  * Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] prefix_path The path to wine bottle
+ * \param[in] debug_log_level Debug log level
  * \param[in] program Program that gets executed (ideally full path)
  * \param[in] give_error Inform user when application exit with non-zero exit code
  * \param[in] stderr_output Also output stderr (together with stout)
  * \return Terminal stdout output
  */
-string Helper::run_program(const string& prefix_path, const string& program, bool give_error, bool stderr_output)
+string Helper::run_program(const string& prefix_path, int debug_log_level, const string& program, bool give_error, bool stderr_output)
 {
   string output;
+
+  string debug = (debug_log_level != 1) ? "WINEDEBUG=" + Helper::log_level_to_winedebug_string(debug_log_level) + " " : "";
   string exec_program = (stderr_output) ? program + " 2>&1" : program;
-  string command = "WINEPREFIX=\"" + prefix_path + "\" " + exec_program;
+  string command = debug + "WINEPREFIX=\"" + prefix_path + "\" " + exec_program;
   if (give_error)
   {
     // Execute the command that also shows an error message to the user when exit code is non-zero
@@ -180,15 +183,17 @@ string Helper::run_program(const string& prefix_path, const string& program, boo
  * Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
  * \param[in] prefix_path The path to bottle wine
+ * \param[in] debug_log_level Debug log level
  * \param[in] program Program/executable that will be executed (be sure your application executable is between
  * brackets in case of spaces)
  * \param[in] give_error Inform user when application exit with non-zero exit code
  * \param[in] stderr_output Also output stderr (together with stout)
  * \return Terminal stdout output
  */
-string Helper::run_program_under_wine(bool wine_64_bit, const string& prefix_path, const string& program, bool give_error, bool stderr_output)
+string Helper::run_program_under_wine(
+    bool wine_64_bit, const string& prefix_path, int debug_log_level, const string& program, bool give_error, bool stderr_output)
 {
-  return run_program(prefix_path, Helper::get_wine_executable_location(wine_64_bit) + " " + program, give_error, stderr_output);
+  return run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit) + " " + program, give_error, stderr_output);
 }
 
 /**
@@ -870,8 +875,8 @@ void Helper::self_update_winetricks()
 
 /**
  * \brief Set Windows OS version by using Winetricks
- * \param[in] prefix_path - Bottle prefix
- * \param[in] windows - Windows version (enum)
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] windows Windows version (enum)
  */
 void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows windows)
 {
@@ -896,8 +901,8 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
 
 /**
  * \brief Set custom virtual desktop resolution by using Winetricks
- * \param[in] prefix_path - Bottle prefix
- * \param[in] resolution - New screen resolution (eg. 1920x1080)
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] resolution New screen resolution (eg. 1920x1080)
  */
 void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
 {
@@ -946,7 +951,7 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
 
 /**
  * \brief Disable Virtual Desktop fully by using Winetricks
- * \param[in] prefix_path - Bottle prefix
+ * \param[in] prefix_path Bottle prefix
  */
 void Helper::disable_virtual_desktop(const string& prefix_path)
 {
@@ -970,8 +975,8 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
 
 /**
  * \brief Set Audio Driver by using Winetricks
- * \param[in] prefix_path - Bottle prefix
- * \param[in] audio_driver - Audio driver to be set
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] audio_driver Audio driver to be set
  */
 void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver)
 {
@@ -992,6 +997,40 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
     {
       throw std::runtime_error("Could not set Audio driver");
     }
+  }
+}
+
+/**
+ * \brief Retrieve WINEDEBUG string from debug log level
+ * \param[in] log_level Log level
+ * \return Wine Debug string (can be used in WINEDEBUG)
+ */
+string Helper::log_level_to_winedebug_string(int log_level)
+{
+  switch (log_level)
+  {
+  case 0: // Off
+    return "-all";
+  case 1:      // Default
+    return ""; // Do nothing (default)
+  case 2:      // Only errors
+    return "fixme-all";
+  case 3: // Warning + all (recommended for debugging)
+    return "warn+all";
+  case 4: // Log Frames per seconds
+    return "+fps";
+  case 5: // Disable D3D messages / checking for GL errors
+    return "-d3d";
+  case 6: // Relay + Heap
+    return "+relay,+heap";
+  case 7: // Relay + message box
+    return "+relay,+msgbox";
+  case 8: // All except relay
+    return "+all,-relay";
+  case 9: // Log all
+    return "+all";
+  default:
+    return "- Unknown Log Level -";
   }
 }
 

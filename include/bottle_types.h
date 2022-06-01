@@ -182,19 +182,21 @@ namespace BottleTypes
     case 1:
       return "Default";
     case 2:
-      return "Only errors";
+      return "Only errors (Could improve performance)";
     case 3:
-      return "Warnings + Errors + Fixme";
+      return "Also log warnings (Recommended for debugging)";
     case 4:
-      return "Log Frames per seconds";
+      return "Log frames per seconds";
     case 5:
-      return "Relay + Heap";
+      return "Disable D3D/GL messages (Could improve performance)";
     case 6:
-      return "Relay + Message box";
+      return "Relay + Heap";
     case 7:
-      return "All except relay";
+      return "Relay + Message box";
     case 8:
-      return "All";
+      return "All except relay";
+    case 9:
+      return "All (Too verbose!)";
     default:
       return "- Unknown Log Level -";
     }
