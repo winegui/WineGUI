@@ -104,7 +104,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   log_level_combobox.set_hexpand(true);
   description_text_view.set_hexpand(true);
   virtual_desktop_check.set_tooltip_text("Enable emulate virtual desktop resolution");
-  folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name, above.");
+  folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name instead, see above.");
   description_label.set_tooltip_text("Add an additional description text to your machine");
 
   description_scrolled_window.add(description_text_view);
