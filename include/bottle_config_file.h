@@ -26,7 +26,7 @@ struct BottleConfigData
 {
   std::string name;
   std::string description;
-  int log_level;
+  int debug_log_level;
 };
 
 /**

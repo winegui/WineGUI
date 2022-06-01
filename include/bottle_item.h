@@ -59,6 +59,7 @@ public:
     swap(a.wine_last_changed_, b.wine_last_changed_);
     swap(a.audio_driver_, b.audio_driver_);
     swap(a.virtual_desktop_, b.virtual_desktop_);
+    swap(a.debug_log_level_, b.debug_log_level_);
   }
 
   BottleItem(Glib::ustring name,
@@ -81,7 +82,8 @@ public:
              Glib::ustring wine_c_drive,
              Glib::ustring wine_last_changed,
              BottleTypes::AudioDriver audio_driver,
-             Glib::ustring virtual_desktop);
+             Glib::ustring virtual_desktop,
+             int debug_log_level);
 
   /**
    * \brief Destruct
@@ -222,6 +224,16 @@ public:
   {
     return virtual_desktop_;
   };
+  /// set Wine debug log level
+  void debug_log_level(int debug_log_level)
+  {
+    debug_log_level_ = debug_log_level;
+  };
+  /// get Wine debug log level
+  int debug_log_level() const
+  {
+    return debug_log_level_;
+  };
 
 protected:
   // Widgets
@@ -245,6 +257,7 @@ private:
   Glib::ustring wine_last_changed_;
   BottleTypes::AudioDriver audio_driver_;
   Glib::ustring virtual_desktop_;
+  int debug_log_level_;
 
   void CreateUI();
   static std::string str_tolower(std::string s);

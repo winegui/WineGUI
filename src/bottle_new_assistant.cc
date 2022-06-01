@@ -116,8 +116,7 @@ void BottleNewAssistant::createFirstPage()
        it != BottleTypes::SupportedWindowsVersions.end(); ++it)
   {
     auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
-    windows_version_combobox.insert(-1, std::to_string(index),
-                                    BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
+    windows_version_combobox.append(std::to_string(index), BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
   }
 
   hbox_win.pack_start(windows_version_label, false, true);
@@ -147,7 +146,7 @@ void BottleNewAssistant::createSecondPage()
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
   {
-    audio_driver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
+    audio_driver_combobox.append(std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
 
   hbox_audio.pack_start(audio_driver_label, false, true);

@@ -81,7 +81,8 @@ private:
                                 Glib::ustring& description,
                                 BottleTypes::Windows windows_version,
                                 Glib::ustring& virtual_desktop_resolution,
-                                BottleTypes::AudioDriver audio);
+                                BottleTypes::AudioDriver audio,
+                                int debug_log_level);
   virtual void on_new_bottle_created();
   virtual void on_bottle_updated();
   virtual void on_error_message_created();
