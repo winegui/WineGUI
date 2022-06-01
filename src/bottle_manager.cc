@@ -240,8 +240,8 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
   // Create Bottle config data struct
   BottleConfigData bottle_config;
   bottle_config.name = name;
-  bottle_config.description = ""; // TODO
-  bottle_config.log_level = 1;    // 1 = Normal logging level
+  bottle_config.description = "";    // By default empty description
+  bottle_config.debug_log_level = 1; // 1 (default) = Normal debug log level
 
   // Build prefix
   // Name of the bottle we be used as folder name as well
@@ -338,13 +338,14 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
 
 /**
  * \brief Update existing Wine bottle (runs in thread)
- * \param[in] caller                      - Signal Dispatcher pointer, in order to signal back events
- * \param[in] name                        - Bottle Name
- * \param[in] folder_name                 - Bottle Folder Name
- * \param[in] description                 - Description text
- * \param[in] windows_version             - Windows OS version
- * \param[in] virtual_desktop_resolution  - Virtual desktop resolution (empty if disabled)ze
- * \param[in] audio                       - Audio Driver type
+ * \param[in] caller                      Signal Dispatcher pointer, in order to signal back events
+ * \param[in] name                        Bottle Name
+ * \param[in] folder_name                 Bottle Folder Name
+ * \param[in] description                 Description text
+ * \param[in] windows_version             Windows OS version
+ * \param[in] virtual_desktop_resolution  Virtual desktop resolution (empty if disabled)ze
+ * \param[in] audio                       Audio Driver type
+ * \param[in] debug_log_level             Bottle Debug Log Level
  */
 void BottleManager::update_bottle(SignalDispatcher* caller,
                                   const Glib::ustring& name,
@@ -352,7 +353,8 @@ void BottleManager::update_bottle(SignalDispatcher* caller,
                                   const Glib::ustring& description,
                                   BottleTypes::Windows windows_version,
                                   const Glib::ustring& virtual_desktop_resolution,
-                                  BottleTypes::AudioDriver audio)
+                                  BottleTypes::AudioDriver audio,
+                                  int debug_log_level)
 {
   if (active_bottle_ != nullptr)
   {
@@ -369,6 +371,12 @@ void BottleManager::update_bottle(SignalDispatcher* caller,
     if (active_bottle_->description() != description)
     {
       bottle_config.description = description;
+      need_update_bottle_config_file = true;
+    }
+
+    if (active_bottle_->debug_log_level() != debug_log_level)
+    {
+      bottle_config.debug_log_level = debug_log_level;
       need_update_bottle_config_file = true;
     }
 
@@ -1221,18 +1229,20 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
     string name = "";
     string folder_name = "";
     string description = "";
-    string virtualDesktop = "";
+    string virtual_desktop = "";
     BottleTypes::Bit bit = BottleTypes::Bit::win32;
     string c_drive_location = "- Unknown -";
     string last_time_wine_updated = "- Unknown -";
     BottleTypes::AudioDriver audio_driver = BottleTypes::AudioDriver::pulseaudio;
     BottleTypes::Windows windows = WineDefaults::WindowsOs;
+    int debug_log_level = 1;
     bool status = false;
 
     // Retrieve bottle config data
     BottleConfigData bottle_config = BottleConfigFile::read_config_file(prefix);
     name = bottle_config.name;
     description = bottle_config.description;
+    debug_log_level = bottle_config.debug_log_level;
 
     try
     {
@@ -1243,14 +1253,6 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
       main_window_.show_error_message(error.what());
     }
 
-    try
-    {
-      virtualDesktop = Helper::get_virtual_desktop(prefix);
-    }
-    catch (const std::runtime_error& error)
-    {
-      main_window_.show_error_message(error.what());
-    }
     try
     {
       bit = Helper::get_windows_bitness(prefix);
@@ -1292,9 +1294,17 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
     {
       main_window_.show_error_message(error.what());
     }
+    try
+    {
+      virtual_desktop = Helper::get_virtual_desktop(prefix);
+    }
+    catch (const std::runtime_error& error)
+    {
+      main_window_.show_error_message(error.what());
+    }
 
     BottleItem* bottle = new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix, c_drive_location,
-                                        last_time_wine_updated, audio_driver, virtualDesktop);
+                                        last_time_wine_updated, audio_driver, virtual_desktop, debug_log_level);
     bottles.push_back(*bottle);
   }
   return bottles;

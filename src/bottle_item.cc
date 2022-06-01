@@ -29,11 +29,11 @@
  */
 BottleItem::BottleItem()
 {
-  // Gui will be created during the copy contructor called by Gtk
+  // Gui will be created during the copy contructor called by GTK
 }
 
 /**
- * \brief Copy contructor, used by GTK+
+ * \brief Copy contructor, used by GTK
  */
 BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
 {
@@ -52,6 +52,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
     wine_last_changed_ = bottle_item.wine_last_changed();
     audio_driver_ = bottle_item.audio_driver();
     virtual_desktop_ = bottle_item.virtual_desktop();
+    debug_log_level_ = bottle_item.debug_log_level();
   }
 
   CreateUI();
@@ -79,7 +80,8 @@ BottleItem::BottleItem(Glib::ustring name,
       wine_c_drive_(wine_c_drive),
       wine_last_changed_(wine_last_changed),
       audio_driver_(WineDefaults::AudioDriver),
-      virtual_desktop_(""){
+      virtual_desktop_(""),
+      debug_log_level_(1){
           // Gui will be created during the copy contructor called by Gtk
       };
 
@@ -98,7 +100,8 @@ BottleItem::BottleItem(Glib::ustring name,
                        Glib::ustring wine_c_drive,
                        Glib::ustring wine_last_changed,
                        BottleTypes::AudioDriver audio_driver,
-                       Glib::ustring virtual_desktop)
+                       Glib::ustring virtual_desktop,
+                       int debug_log_level)
     : name_(name),
       folder_name_(folder_name),
       description_(description),
@@ -111,7 +114,8 @@ BottleItem::BottleItem(Glib::ustring name,
       wine_c_drive_(wine_c_drive),
       wine_last_changed_(wine_last_changed),
       audio_driver_(audio_driver),
-      virtual_desktop_(virtual_desktop){
+      virtual_desktop_(virtual_desktop),
+      debug_log_level_(debug_log_level){
           // Gui will be created during the copy contructor called by Gtk
       };
 

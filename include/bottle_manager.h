@@ -66,7 +66,8 @@ public:
                      const Glib::ustring& description,
                      BottleTypes::Windows windows_version,
                      const Glib::ustring& virtual_desktop_resolution,
-                     BottleTypes::AudioDriver audio);
+                     BottleTypes::AudioDriver audio,
+                     int debug_log_level);
   void delete_bottle();
   void set_active_bottle(BottleItem* bottle);
   const Glib::ustring& get_error_message() const;

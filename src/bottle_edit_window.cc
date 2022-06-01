@@ -35,6 +35,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       windows_version_label("Windows Version: "),
       audio_driver_label("Audio Driver:"),
       virtual_desktop_resolution_label("Window Resolution:"),
+      log_level_label("Log Level:"),
       description_label("Description:"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
       save_button("Save"),
@@ -69,21 +70,42 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   windows_version_label.set_halign(Gtk::Align::ALIGN_END);
   audio_driver_label.set_halign(Gtk::Align::ALIGN_END);
   virtual_desktop_resolution_label.set_halign(Gtk::Align::ALIGN_END);
+  log_level_label.set_halign(Gtk::Align::ALIGN_END);
+  name_label.set_tooltip_text("Change the machine name");
+  folder_name_label.set_tooltip_text("Change the folder. NOTE: This break your shortcuts!");
+  windows_version_label.set_tooltip_text("Change the Windows version");
+  audio_driver_label.set_tooltip_text("Change the audio driver");
+  virtual_desktop_resolution_label.set_tooltip_text("Set the emulated desktop resolution");
+  log_level_label.set_tooltip_text("Change the Wine debug messages for logging");
 
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
   {
-    audio_driver_combobox.insert(-1, std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
+    audio_driver_combobox.append(std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
   virtual_desktop_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("1024x768");
-  description_label.set_halign(Gtk::Align::ALIGN_START);
 
+  description_label.set_halign(Gtk::Align::ALIGN_START);
+  log_level_combobox.append("0", "Off");
+  log_level_combobox.append("1", "Error + Fixme (default)");
+  log_level_combobox.append("2", "Only Error");
+  log_level_combobox.append("3", "Warning + Error + Fixme");
+  log_level_combobox.append("4", "FPS (Frames per second)");
+  log_level_combobox.append("5", "Relay + Heap");
+  log_level_combobox.append("6", "Relay + Message box");
+  log_level_combobox.append("7", "All (Except relay)");
+  log_level_combobox.append("8", "All (maybe too verbose)");
+  log_level_combobox.set_tooltip_text("More info: https://wiki.winehq.org/Debug_Channels");
   name_entry.set_hexpand(true);
   folder_name_entry.set_hexpand(true);
   windows_version_combobox.set_hexpand(true);
   audio_driver_combobox.set_hexpand(true);
+  log_level_combobox.set_hexpand(true);
   description_text_view.set_hexpand(true);
+  virtual_desktop_check.set_tooltip_text("Enable emulate virtual desktop resolution");
+  folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name, above.");
+  description_label.set_tooltip_text("Add an additional description text to your machine");
 
   description_scrolled_window.add(description_text_view);
   description_scrolled_window.set_hexpand(true);
@@ -100,9 +122,11 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   edit_grid.attach(virtual_desktop_check, 0, 4, 2);
   edit_grid.attach(virtual_desktop_resolution_label, 0, 5);
   edit_grid.attach(virtual_desktop_resolution_entry, 1, 5);
-  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 6, 2);
-  edit_grid.attach(description_label, 0, 7, 2);
-  edit_grid.attach(description_scrolled_window, 0, 8, 2);
+  edit_grid.attach(log_level_label, 0, 6);
+  edit_grid.attach(log_level_combobox, 1, 6);
+  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 7, 2);
+  edit_grid.attach(description_label, 0, 8, 2);
+  edit_grid.attach(description_scrolled_window, 0, 9, 2);
 
   hbox_buttons.pack_start(delete_button, false, false, 4);
   hbox_buttons.pack_end(save_button, false, false, 4);
@@ -162,7 +186,7 @@ void BottleEditWindow::show()
       if (active_bottle_->bit() == (*it).second)
       {
         auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
-        windows_version_combobox.insert(-1, std::to_string(index),
+        windows_version_combobox.append(std::to_string(index),
                                         BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
       }
     }
@@ -178,6 +202,8 @@ void BottleEditWindow::show()
     {
       virtual_desktop_check.set_active(false);
     }
+    log_level_combobox.set_active_id(std::to_string((int)active_bottle_->debug_log_level()));
+
     show_all_children();
   }
   else
@@ -258,6 +284,7 @@ void BottleEditWindow::on_save_button_clicked()
   BottleTypes::Windows windows_version = WineDefaults::WindowsOs; // Fallback
   BottleTypes::AudioDriver audio = WineDefaults::AudioDriver;     // Fallback
   Glib::ustring virtual_desktop_resolution = "";                  // Default empty string
+  int debug_log_level = 1;                                        // 1 = Default wine debug logging
 
   // First disable save button (avoid multiple presses)
   save_button.set_sensitive(false);
@@ -269,12 +296,26 @@ void BottleEditWindow::on_save_button_clicked()
   Glib::ustring name = name_entry.get_text();
   Glib::ustring folder_name = folder_name_entry.get_text();
   Glib::ustring description = description_text_view.get_buffer()->get_text();
-  bool isDesktopEnabled = virtual_desktop_check.get_active();
-  if (isDesktopEnabled)
+  bool is_desktop_enabled = virtual_desktop_check.get_active();
+  if (is_desktop_enabled)
   {
     virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
   }
 
+  try
+  {
+    debug_log_level = std::stoi(log_level_combobox.get_active_id(), &sz);
+  }
+  catch (const std::runtime_error& error)
+  {
+  }
+  catch (std::invalid_argument& e)
+  {
+  }
+  catch (std::out_of_range& e)
+  {
+  }
+  // Ignore the catches
   try
   {
     size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
@@ -291,7 +332,6 @@ void BottleEditWindow::on_save_button_clicked()
   {
   }
   // Ignore the catches
-
   try
   {
     size_t audio_index = size_t(std::stoi(audio_driver_combobox.get_active_id(), &sz));
@@ -308,5 +348,5 @@ void BottleEditWindow::on_save_button_clicked()
   }
   // Ignore the catches
 
-  update_bottle.emit(name, folder_name, description, windows_version, virtual_desktop_resolution, audio);
+  update_bottle.emit(name, folder_name, description, windows_version, virtual_desktop_resolution, audio, debug_log_level);
 }
