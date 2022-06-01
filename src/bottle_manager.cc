@@ -567,14 +567,15 @@ void BottleManager::run_program(string filename, bool is_msi_file = false)
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
+    int debug_log_level = active_bottle_->debug_log_level();
     string program_prefix = is_msi_file ? "msiexec /i" : "start /unix";
     // Be-sure to execute the filename also between brackets (in case of spaces)
     string program = program_prefix + " \"" + filename + "\"";
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, program, debug_logging = std::move(is_debug_logging_),
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, debug_logging = std::move(is_debug_logging_),
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_under_wine(wine64, wine_prefix, program, true, logging_stderr);
+      string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -611,11 +612,12 @@ void BottleManager::reboot()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_logging = std::move(is_debug_logging_),
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, debug_logging = std::move(is_debug_logging_),
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_under_wine(wine64, wine_prefix, "wineboot -r", true, logging_stderr);
+      string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -r", true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -639,11 +641,12 @@ void BottleManager::update()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, update_bottles_dispatcher = &update_bottles_dispatcher_,
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, update_bottles_dispatcher = &update_bottles_dispatcher_,
                    debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
                    output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
                    output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_under_wine(wine64, wine_prefix, "wineboot -u", true, logging_stderr);
+      string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -693,11 +696,12 @@ void BottleManager::kill_processes()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_logging = std::move(is_debug_logging_),
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, debug_logging = std::move(is_debug_logging_),
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_under_wine(wine64, wine_prefix, "wineboot -k", true, logging_stderr);
+      string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -k", true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -721,7 +725,8 @@ void BottleManager::open_explorer()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "explorer", false, false);
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, debug_log_level, "explorer", false, false);
     t.detach();
   }
 }
@@ -734,7 +739,8 @@ void BottleManager::open_console()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "wineconsole", false, false);
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, debug_log_level, "wineconsole", false, false);
     t.detach();
   }
 }
@@ -747,7 +753,8 @@ void BottleManager::open_winecfg()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "winecfg", false, false);
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, debug_log_level, "winecfg", false, false);
     t.detach();
   }
 }
@@ -760,12 +767,13 @@ void BottleManager::open_winetricks()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
+    int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " --gui";
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, program, debug_logging = std::move(is_debug_logging_),
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, debug_logging = std::move(is_debug_logging_),
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_under_wine(wine64, wine_prefix, program, true, logging_stderr);
+      string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -788,7 +796,8 @@ void BottleManager::open_uninstaller()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "uninstaller", false, false);
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, debug_log_level, "uninstaller", false, false);
     t.detach();
   }
 }
@@ -801,7 +810,8 @@ void BottleManager::open_task_manager()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "taskmgr", false, false);
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, debug_log_level, "taskmgr", false, false);
     t.detach();
   }
 }
@@ -814,7 +824,8 @@ void BottleManager::open_registery_editor()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "regedit", false, false);
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, debug_log_level, "regedit", false, false);
     t.detach();
   }
 }
@@ -827,7 +838,8 @@ void BottleManager::open_notepad()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "notepad", false, false);
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, debug_log_level, "notepad", false, false);
     t.detach();
   }
 }
@@ -840,7 +852,8 @@ void BottleManager::open_wordpad()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "wordpad", false, false);
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, debug_log_level, "wordpad", false, false);
     t.detach();
   }
 }
@@ -853,7 +866,8 @@ void BottleManager::open_iexplorer()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
-    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, "iexplore", false, false);
+    int debug_log_level = active_bottle_->debug_log_level();
+    std::thread t(&Helper::run_program_under_wine, is_wine64_bit_, wine_prefix, debug_log_level, "iexplore", false, false);
     t.detach();
   }
 }
@@ -876,13 +890,14 @@ void BottleManager::install_d3dx9(Gtk::Window& parent, const string& version)
       package += "_" + version;
     }
     string wine_prefix = active_bottle_->wine_location();
+    int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
-    std::thread t([wine_prefix, program, finish_dispatcher = &finished_package_install_dispatcher, debug_logging = std::move(is_debug_logging_),
-                   logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
-                   logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-                   write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
+    std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
+                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+                   output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
+      string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -918,13 +933,14 @@ void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
       package += version;
     }
     string wine_prefix = active_bottle_->wine_location();
+    int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
-    std::thread t([wine_prefix, program, finish_dispatcher = &finished_package_install_dispatcher, debug_logging = std::move(is_debug_logging_),
-                   logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
-                   logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-                   write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
+    std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
+                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+                   output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
+      string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -955,13 +971,14 @@ void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string
 
     string package = "vcrun" + version;
     string wine_prefix = active_bottle_->wine_location();
+    int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
-    std::thread t([wine_prefix, program, finish_dispatcher = &finished_package_install_dispatcher, debug_logging = std::move(is_debug_logging_),
-                   logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
-                   logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-                   write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
+    std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
+                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+                   output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
+      string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -1000,6 +1017,7 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
 
       string package = "dotnet" + version;
       string wine_prefix = active_bottle_->wine_location();
+      int debug_log_level = active_bottle_->debug_log_level();
       // I can't use -q with .NET installs
       string install_command = Helper::get_winetricks_location() + " " + package;
       string program = "";
@@ -1013,11 +1031,11 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
         program = install_command;
       }
       // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
-      std::thread t([wine_prefix, program, finish_dispatcher = &finished_package_install_dispatcher, debug_logging = std::move(is_debug_logging_),
-                     logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
-                     logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-                     write_log_dispatcher = &write_log_dispatcher_] {
-        string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
+      std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
+                     debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                     output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+                     output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
+        string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
         if (debug_logging && !output.empty())
         {
           {
@@ -1051,13 +1069,14 @@ void BottleManager::install_core_fonts(Gtk::Window& parent)
     main_window_.show_busy_install_dialog(parent, "Installing MS Core fonts.");
 
     string wine_prefix = active_bottle_->wine_location();
+    int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q corefonts";
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
-    std::thread t([wine_prefix, program, finish_dispatcher = &finished_package_install_dispatcher, debug_logging = std::move(is_debug_logging_),
-                   logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
-                   logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-                   write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
+    std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
+                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+                   output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
+      string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {
@@ -1086,13 +1105,14 @@ void BottleManager::install_liberation(Gtk::Window& parent)
     main_window_.show_busy_install_dialog(parent, "Installing Liberation open-source fonts.");
 
     string wine_prefix = active_bottle_->wine_location();
+    int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q liberation";
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
-    std::thread t([wine_prefix, program, finish_dispatcher = &finished_package_install_dispatcher, debug_logging = std::move(is_debug_logging_),
-                   logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
-                   logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-                   write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program(wine_prefix, program, true, logging_stderr);
+    std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
+                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+                   output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
+      string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
       if (debug_logging && !output.empty())
       {
         {

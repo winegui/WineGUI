@@ -45,9 +45,9 @@ public:
   static Helper& get_instance();
 
   static std::map<string, unsigned long> get_bottles_paths(const string& dir_path);
-  static string run_program(const string& prefix_path, const string& program, bool give_error = true, bool stderr_output = true);
-  static string
-  run_program_under_wine(bool wine_64_bit, const string& prefix_path, const string& program, bool give_error = true, bool stderr_output = true);
+  static string run_program(const string& prefix_path, int debug_log_level, const string& program, bool give_error = true, bool stderr_output = true);
+  static string run_program_under_wine(
+      bool wine_64_bit, const string& prefix_path, int debug_log_level, const string& program, bool give_error = true, bool stderr_output = true);
   static void write_to_log_file(const string& logging_bottle_prefix, const string& logging);
   static string get_log_file_path(const string& logging_bottle_prefix);
   static void wait_until_wineserver_is_terminated(const string& prefix_path);
@@ -76,6 +76,7 @@ public:
   static void set_virtual_desktop(const string& prefix_path, string resolution);
   static void disable_virtual_desktop(const string& prefix_path);
   static void set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver);
+  static string log_level_to_winedebug_string(int log_level);
   static string get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name);
   static bool get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
   static string get_uninstaller(const string& prefix_path, const string& uninstallerKey);
