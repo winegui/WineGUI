@@ -88,7 +88,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
 
   description_label.set_halign(Gtk::Align::ALIGN_START);
   log_level_combobox.append("0", "Off");
-  log_level_combobox.append("1", "Error + Fixme (default)");
+  log_level_combobox.append("1", "Error + Fixme (Default)");
   log_level_combobox.append("2", "Only Error");
   log_level_combobox.append("3", "Warning + Error + Fixme");
   log_level_combobox.append("4", "FPS (Frames per second)");

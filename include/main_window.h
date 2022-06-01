@@ -99,9 +99,10 @@ protected:
   Gtk::Label name;              /*!< Bottle name */
   Gtk::Label folder_name;       /*!< Folder name */
   Gtk::Label window_version;    /*!< Windows version text */
+  Gtk::Label c_drive_location;  /*!< C:\ drive location text */
   Gtk::Label wine_version;      /*!< Wine version text */
   Gtk::Label wine_location;     /*!< Wine location text */
-  Gtk::Label c_drive_location;  /*!< C:\ drive location text */
+  Gtk::Label debug_log_level;   /*!< Debug log level text */
   Gtk::Label wine_last_changed; /*!< Last changed text */
   Gtk::Label audio_driver;      /*!< Audio driver text */
   Gtk::Label virtual_desktop;   /*!< Virtual desktop text */

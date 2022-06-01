@@ -172,6 +172,34 @@ namespace BottleTypes
     }
   }
 
+  // Debug log level to string
+  inline static std::string debug_log_level_to_string(int log_level)
+  {
+    switch (log_level)
+    {
+    case 0:
+      return "Off";
+    case 1:
+      return "Default";
+    case 2:
+      return "Only errors";
+    case 3:
+      return "Warnings + Errors + Fixme";
+    case 4:
+      return "Log Frames per seconds";
+    case 5:
+      return "Relay + Heap";
+    case 6:
+      return "Relay + Message box";
+    case 7:
+      return "All except relay";
+    case 8:
+      return "All";
+    default:
+      return "- Unknown Log Level -";
+    }
+  }
+
   /**
    * Get Winetricks Windows OS version string
    */
