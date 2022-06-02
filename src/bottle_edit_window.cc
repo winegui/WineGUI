@@ -314,7 +314,6 @@ void BottleEditWindow::on_save_button_clicked()
   update_bottle_struct.windows_version = WineDefaults::WindowsOs; // Fallback
   update_bottle_struct.audio = WineDefaults::AudioDriver;         // Fallback
   update_bottle_struct.virtual_desktop_resolution = "";           // Empty string default (= disabled windowed mode)
-  update_bottle_struct.is_debug_logging = false;                  // Disable logging by default
   update_bottle_struct.debug_log_level = 1;                       // // 1 = Default wine debug logging
 
   // First disable save button (avoid multiple presses)
