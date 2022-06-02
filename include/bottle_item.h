@@ -59,6 +59,7 @@ public:
     swap(a.wine_last_changed_, b.wine_last_changed_);
     swap(a.audio_driver_, b.audio_driver_);
     swap(a.virtual_desktop_, b.virtual_desktop_);
+    swap(a.is_debug_logging_, b.is_debug_logging_);
     swap(a.debug_log_level_, b.debug_log_level_);
   }
 
@@ -83,6 +84,7 @@ public:
              Glib::ustring wine_last_changed,
              BottleTypes::AudioDriver audio_driver,
              Glib::ustring virtual_desktop,
+             bool is_debug_logging,
              int debug_log_level);
 
   /**
@@ -224,6 +226,16 @@ public:
   {
     return virtual_desktop_;
   };
+  /// set enable/disable debug logging to disk
+  void is_debug_logging(bool is_debug_logging)
+  {
+    is_debug_logging_ = is_debug_logging;
+  };
+  /// get enable/dissable debug logging to disk
+  bool is_debug_logging() const
+  {
+    return is_debug_logging_;
+  };
   /// set Wine debug log level
   void debug_log_level(int debug_log_level)
   {
@@ -257,6 +269,7 @@ private:
   Glib::ustring wine_last_changed_;
   BottleTypes::AudioDriver audio_driver_;
   Glib::ustring virtual_desktop_;
+  bool is_debug_logging_;
   int debug_log_level_;
 
   void CreateUI();

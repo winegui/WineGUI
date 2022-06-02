@@ -29,6 +29,18 @@ using std::string;
 // Forward declaration
 class BottleItem;
 
+struct UpdateBottleStruct
+{
+  Glib::ustring name;
+  Glib::ustring folder_name;
+  Glib::ustring description;
+  BottleTypes::Windows windows_version;
+  Glib::ustring virtual_desktop_resolution;
+  BottleTypes::AudioDriver audio;
+  bool is_debug_logging;
+  int debug_log_level;
+};
+
 /**
  * \class BottleEditWindow
  * \brief Edit Wine bottle GTK Window class
@@ -37,9 +49,8 @@ class BottleEditWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void, Glib::ustring&, Glib::ustring&, Glib::ustring&, BottleTypes::Windows, Glib::ustring&, BottleTypes::AudioDriver, int>
-      update_bottle;                /*!< save button clicked signal */
-  sigc::signal<void> remove_bottle; /*!< remove button clicked signal */
+  sigc::signal<void, UpdateBottleStruct&> update_bottle; /*!< save button clicked signal */
+  sigc::signal<void> remove_bottle;                      /*!< remove button clicked signal */
 
   explicit BottleEditWindow(Gtk::Window& parent);
   virtual ~BottleEditWindow();
@@ -72,6 +83,7 @@ protected:
   Gtk::ComboBoxText windows_version_combobox;      /*!< windows version combobox */
   Gtk::ComboBoxText audio_driver_combobox;         /*!< audio driver combobox */
   Gtk::CheckButton virtual_desktop_check;          /*!< virtual desktop checkbox */
+  Gtk::CheckButton enable_logging_check;           /**!< debug logging checkbox */
   Gtk::ComboBoxText log_level_combobox;            /*!< log level combobox */
   Gtk::ScrolledWindow description_scrolled_window; /*!< description scrolled window */
   Gtk::TextView description_text_view;             /*!< description text view */
@@ -86,9 +98,11 @@ private:
   void on_cancel_button_clicked();
   void on_save_button_clicked();
   void on_virtual_desktop_toggle();
+  void on_debug_logging_toggle();
 
   // Member functions
   void virtual_desktop_resolution_sensitive(bool sensitive);
+  void log_level_sensitive(bool sensitive);
 
   BottleItem* active_bottle_; /*!< Current active bottle */
 };

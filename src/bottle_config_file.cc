@@ -53,6 +53,7 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path, const B
   {
     keyfile.set_string("General", "Name", bottle_config.name);
     keyfile.set_string("General", "Description", bottle_config.description);
+    keyfile.set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
     keyfile.set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
     success = keyfile.save_to_file(file_path);
   }
@@ -78,6 +79,7 @@ BottleConfigData BottleConfigFile::read_config_file(const std::string& prefix_pa
   // Defaults config values
   bottle_config.name = Helper::get_folder_name(prefix_path); // Name from wine prefix
   bottle_config.description = "";                            // Empty description
+  bottle_config.logging_enabled = false;                     // Disable logging by default
   bottle_config.debug_log_level = 1;                         // 1 (default)= Normal Wine debug logging: https://wiki.winehq.org/Debug_Channels
 
   // Check if config file exists
@@ -94,6 +96,7 @@ BottleConfigData BottleConfigFile::read_config_file(const std::string& prefix_pa
       keyfile.load_from_file(file_path);
       bottle_config.name = keyfile.get_string("General", "Name");
       bottle_config.description = keyfile.get_string("General", "Description");
+      bottle_config.logging_enabled = keyfile.get_boolean("Logging", "Enabled");
       bottle_config.debug_log_level = keyfile.get_integer("Logging", "DebugLevel");
     }
     catch (const Glib::Error& ex)
