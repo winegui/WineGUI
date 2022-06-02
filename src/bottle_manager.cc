@@ -22,7 +22,6 @@
 #include "bottle_config_file.h"
 #include "bottle_item.h"
 #include "dll_override_types.h"
-#include "generic_config_file.h"
 #include "helper.h"
 #include "main_window.h"
 #include "signal_dispatcher.h"
@@ -120,8 +119,10 @@ void BottleManager::write_log_to_file()
  */
 void BottleManager::update_config_and_bottles()
 {
-  // Read generic config
-  load_generic_config();
+  // Read general & save config in bottle manager
+  GeneralConfigData config_data = load_and_save_general_config();
+  // Set/update main window about the latest general config data
+  main_window_.set_general_config(config_data);
 
   bool try_to_restore = (active_bottle_ != nullptr);
   if (try_to_restore)
@@ -507,7 +508,7 @@ void BottleManager::delete_bottle()
     try
     {
       string prefix_path = active_bottle_->wine_location();
-      string windows = BottleTypes::to_string(active_bottle_->windows());
+      Glib::ustring windows = BottleTypes::to_string(active_bottle_->windows());
       // Are you sure?
       Glib::ustring confirm_message = "Are you sure you want to <b>PERMANENTLY</b> remove machine named '" +
                                       Glib::Markup::escape_text(Helper::get_folder_name(prefix_path)) + "' running " + windows +
@@ -1134,15 +1135,17 @@ void BottleManager::install_liberation(Gtk::Window& parent)
  *************************************************************/
 
 /**
- * \brief Load generic configuration values from file and apply
+ * \brief Load general configuration values from file and save them
+ * \return GeneralConfigData
  */
-void BottleManager::load_generic_config()
+GeneralConfigData BottleManager::load_and_save_general_config()
 {
-  GenericConfigData generic_config = GenericConfigFile::read_config_file();
-  bottle_location_ = generic_config.default_folder;
-  is_wine64_bit_ = ((Helper::determine_wine_executable() == 1) || generic_config.prefer_wine64);
-  is_debug_logging_ = generic_config.enable_debug_logging;
-  is_logging_stderr_ = generic_config.enable_logging_stderr;
+  GeneralConfigData general_config = GeneralConfigFile::read_config_file();
+  bottle_location_ = general_config.default_folder;
+  is_wine64_bit_ = ((Helper::determine_wine_executable() == 1) || general_config.prefer_wine64);
+  is_debug_logging_ = general_config.enable_debug_logging;
+  is_logging_stderr_ = general_config.enable_logging_stderr;
+  return general_config;
 }
 
 bool BottleManager::is_bottle_not_null()

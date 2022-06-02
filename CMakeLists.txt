@@ -62,7 +62,7 @@ set(HEADERS
   include/bottle_item.h
   include/bottle_new_assistant.h
   include/about_dialog.h
-  include/generic_config_file.h
+  include/general_config_file.h
   include/helper.h
   include/signal_dispatcher.h
 )
@@ -80,7 +80,7 @@ set(SOURCES
   src/bottle_item.cc
   src/bottle_new_assistant.cc
   src/about_dialog.cc
-  src/generic_config_file.cc
+  src/general_config_file.cc
   src/helper.cc
   src/signal_dispatcher.cc
   ${HEADERS}

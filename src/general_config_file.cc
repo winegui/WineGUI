@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2022 WineGUI
  *
- * \file    generic_config_file.cc
+ * \file    general_config_file.cc
  * \brief   WineGUI Configuration file supporting methods
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
@@ -18,31 +18,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "generic_config_file.h"
+#include "general_config_file.h"
 #include <glibmm.h>
 #include <iostream>
 
 /// Meyers Singleton
-GenericConfigFile::GenericConfigFile() = default;
+GeneralConfigFile::GeneralConfigFile() = default;
 /// Destructor
-GenericConfigFile::~GenericConfigFile() = default;
+GeneralConfigFile::~GeneralConfigFile() = default;
 
 /**
  * \brief Get singleton instance
- * \return GenericConfigFile reference (singleton)
+ * \return GeneralConfigFile reference (singleton)
  */
-GenericConfigFile& GenericConfigFile::get_instance()
+GeneralConfigFile& GeneralConfigFile::get_instance()
 {
-  static GenericConfigFile instance;
+  static GeneralConfigFile instance;
   return instance;
 }
 
 /**
  * \brief Write generic config file to disk
- * \param generic_config Generic configuration data struct
+ * \param general_config Generic configuration data struct
  * \return true if succesfully written, otherwise false
  */
-bool GenericConfigFile::write_config_file(const GenericConfigData& generic_config)
+bool GeneralConfigFile::write_config_file(const GeneralConfigData& general_config)
 {
   bool success = false;
   Glib::KeyFile keyfile;
@@ -51,10 +51,10 @@ bool GenericConfigFile::write_config_file(const GenericConfigData& generic_confi
   std::string file_path = Glib::build_filename(config_location, "config.ini");
   try
   {
-    keyfile.set_string("General", "DefaultFolder", generic_config.default_folder);
-    keyfile.set_boolean("General", "PreferWine64", generic_config.prefer_wine64);
-    keyfile.set_boolean("General", "EnableDebugLogging", generic_config.enable_debug_logging);
-    keyfile.set_boolean("General", "EnableLoggingStderr", generic_config.enable_logging_stderr);
+    keyfile.set_string("General", "DefaultFolder", general_config.default_folder);
+    keyfile.set_boolean("General", "PreferWine64", general_config.prefer_wine64);
+    keyfile.set_boolean("General", "EnableDebugLogging", general_config.enable_debug_logging);
+    keyfile.set_boolean("General", "EnableLoggingStderr", general_config.enable_logging_stderr);
     success = keyfile.save_to_file(file_path);
   }
   catch (const Glib::Error& ex)
@@ -69,7 +69,7 @@ bool GenericConfigFile::write_config_file(const GenericConfigData& generic_confi
  * \brief Read generic config file from disk
  * \return Generic Config data
  */
-GenericConfigData GenericConfigFile::read_config_file()
+GeneralConfigData GeneralConfigFile::read_config_file()
 {
   Glib::KeyFile keyfile;
   std::vector<std::string> config_dirs{Glib::get_home_dir(), ".winegui"};
@@ -79,18 +79,18 @@ GenericConfigData GenericConfigFile::read_config_file()
   std::vector<std::string> prefix_dirs{Glib::get_home_dir(), ".winegui", "prefixes"};
   std::string default_prefix_folder = Glib::build_path(G_DIR_SEPARATOR_S, prefix_dirs);
 
-  struct GenericConfigData generic_config;
+  struct GeneralConfigData general_config;
   // Defaults config values
-  generic_config.default_folder = default_prefix_folder;
-  generic_config.prefer_wine64 = false;
-  generic_config.enable_debug_logging = false;
-  generic_config.enable_logging_stderr = true;
+  general_config.default_folder = default_prefix_folder;
+  general_config.prefer_wine64 = false;
+  general_config.enable_debug_logging = false;
+  general_config.enable_logging_stderr = true;
 
   // Check if config file exists
   if (!Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR))
   {
     // Config file doesn't exist, make a new file with default configs, retun default config data below
-    GenericConfigFile::write_config_file(generic_config);
+    GeneralConfigFile::write_config_file(general_config);
   }
   else
   {
@@ -98,17 +98,17 @@ GenericConfigData GenericConfigFile::read_config_file()
     try
     {
       keyfile.load_from_file(file_path);
-      generic_config.default_folder = keyfile.get_string("General", "DefaultFolder");
-      generic_config.prefer_wine64 = keyfile.get_boolean("General", "PreferWine64");
-      generic_config.enable_debug_logging = keyfile.get_boolean("General", "EnableDebugLogging");
-      generic_config.enable_logging_stderr = keyfile.get_boolean("General", "EnableLoggingStderr");
+      general_config.default_folder = keyfile.get_string("General", "DefaultFolder");
+      general_config.prefer_wine64 = keyfile.get_boolean("General", "PreferWine64");
+      general_config.enable_debug_logging = keyfile.get_boolean("General", "EnableDebugLogging");
+      general_config.enable_logging_stderr = keyfile.get_boolean("General", "EnableLoggingStderr");
     }
     catch (const Glib::Error& ex)
     {
       std::cerr << "Error: Exception while loading config file: " << ex.what() << std::endl;
       // Lets write a new config file and return the default values below
-      GenericConfigFile::write_config_file(generic_config);
+      GeneralConfigFile::write_config_file(general_config);
     }
   }
-  return generic_config;
+  return general_config;
 }

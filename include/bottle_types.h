@@ -20,6 +20,7 @@
  */
 #pragma once
 
+#include <glibmm/ustring.h>
 #include <string>
 #include <vector>
 
@@ -111,7 +112,7 @@ namespace BottleTypes
   static const int DefaultAudioDriverIndex = (int)AudioDriver::pulseaudio;
 
   // Bit enum to string
-  inline static std::string to_string(Bit bit)
+  inline static Glib::ustring to_string(Bit bit)
   {
     switch (bit)
     {
@@ -127,7 +128,7 @@ namespace BottleTypes
   // Windows enum to string
   // TODO: Move the helper.cc windows list to bottle_types,
   // in order to have a single point of definition of Windows names
-  inline static std::string to_string(Windows win)
+  inline static Glib::ustring to_string(Windows win)
   {
     switch (win)
     {
@@ -173,7 +174,7 @@ namespace BottleTypes
   }
 
   // Debug log level to string
-  inline static std::string debug_log_level_to_string(int log_level)
+  inline static Glib::ustring debug_log_level_to_string(int log_level)
   {
     switch (log_level)
     {
@@ -204,6 +205,7 @@ namespace BottleTypes
 
   /**
    * Get Winetricks Windows OS version string
+   * \return std::string (since it's not used in GTK GUI)
    */
   inline static std::string get_winetricks_string(Windows win)
   {
@@ -251,7 +253,7 @@ namespace BottleTypes
   }
 
   // AudioDriver enum to string
-  inline static std::string to_string(AudioDriver audio)
+  inline static Glib::ustring to_string(AudioDriver audio)
   {
     switch (audio)
     {
@@ -269,7 +271,8 @@ namespace BottleTypes
   }
 
   /**
-   * \brief Get Winetricks Audio driver string
+   * \brief Get Winetricks Audio driver string   *
+   * \return std::string (since it's not used in GTK GUI)
    */
   inline static std::string get_winetricks_string(AudioDriver audio)
   {

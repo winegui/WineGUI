@@ -155,7 +155,12 @@ void MainWindow::set_detailed_info(BottleItem& bottle)
   Glib::ustring wine_bitness = (bottle.is_wine64_bit()) ? "64-bit" : "32-bit";
   wine_version.set_text(bottle.wine_version() + " (" + wine_bitness + ")");
   wine_location.set_text(bottle.wine_location());
-  debug_log_level.set_text(BottleTypes::debug_log_level_to_string(bottle.debug_log_level()));
+
+  Glib::ustring debug_log_level_str = BottleTypes::debug_log_level_to_string(bottle.debug_log_level());
+  debug_log_level_str =
+      (general_config_data_.enable_debug_logging) ? debug_log_level_str : "<s>" + debug_log_level_str + "</s>"; // Strikethrough when disabled
+  Glib::ustring general_logging_str = (general_config_data_.enable_debug_logging) ? "Enabled" : "Disabled";
+  debug_log_level.set_markup(debug_log_level_str + " (General logging is: <b>" + general_logging_str + "</b>)");
   wine_last_changed.set_text(bottle.wine_last_changed());
   audio_driver.set_text(BottleTypes::to_string(bottle.audio_driver()));
   Glib::ustring virtual_desktop_text = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
@@ -182,6 +187,14 @@ void MainWindow::reset_detailed_info()
   description.set_text("");
   // Disable toolbar buttons
   set_sensitive_toolbar_buttons(false);
+}
+
+/**
+ * \brief Set the (latest) general config data
+ */
+void MainWindow::set_general_config(GeneralConfigData config_data)
+{
+  general_config_data_ = config_data;
 }
 
 /**
@@ -692,8 +705,9 @@ void MainWindow::create_right_panel()
   detail_grid.attach_next_to(wine_version, *wine_version_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 
   // Wine debug log level
-  Gtk::Label* wine_log_level_label = Gtk::manage(new Gtk::Label("Debug level:", 0.0, -1));
+  Gtk::Label* wine_log_level_label = Gtk::manage(new Gtk::Label("Log level:", 0.0, -1));
   debug_log_level.set_xalign(0.0);
+  debug_log_level.set_tooltip_text("For general logging settings see: File -> Preferences");
   detail_grid.attach(*wine_log_level_label, 0, 10, 2, 1);
   detail_grid.attach_next_to(debug_log_level, *wine_log_level_label, Gtk::PositionType::POS_RIGHT, 1, 1);
 

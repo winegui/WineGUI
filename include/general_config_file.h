@@ -22,7 +22,7 @@
 
 #include <string>
 
-struct GenericConfigData
+struct GeneralConfigData
 {
   std::string default_folder;
   bool prefer_wine64;
@@ -31,21 +31,21 @@ struct GenericConfigData
 };
 
 /**
- * \class GenericConfigFile
+ * \class GeneralConfigFile
  * \brief Generic Config file helper methods
  */
-class GenericConfigFile
+class GeneralConfigFile
 {
 public:
   // Singleton
-  static GenericConfigFile& get_instance();
+  static GeneralConfigFile& get_instance();
 
-  static bool write_config_file(const GenericConfigData& generic_config);
-  static GenericConfigData read_config_file();
+  static bool write_config_file(const GeneralConfigData& generic_config);
+  static GeneralConfigData read_config_file();
 
 private:
-  GenericConfigFile();
-  ~GenericConfigFile();
-  GenericConfigFile(const GenericConfigFile&) = delete;
-  GenericConfigFile& operator=(const GenericConfigFile&) = delete;
+  GeneralConfigFile();
+  ~GeneralConfigFile();
+  GeneralConfigFile(const GeneralConfigFile&) = delete;
+  GeneralConfigFile& operator=(const GeneralConfigFile&) = delete;
 };
