@@ -68,6 +68,7 @@ public:
                      BottleTypes::Windows windows_version,
                      const Glib::ustring& virtual_desktop_resolution,
                      BottleTypes::AudioDriver audio,
+                     bool is_debug_logging,
                      int debug_log_level);
   void delete_bottle();
   void set_active_bottle(BottleItem* bottle);
@@ -109,7 +110,6 @@ private:
   std::list<BottleItem> bottles_;
   BottleItem* active_bottle_;
   bool is_wine64_bit_;
-  bool is_debug_logging_;
   bool is_logging_stderr_;
   int previous_active_bottle_index_;
   std::size_t previous_bottles_list_size_;

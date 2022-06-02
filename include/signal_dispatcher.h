@@ -32,6 +32,7 @@ class PreferencesWindow;
 class AboutDialog;
 class BottleEditWindow;
 class BottleSettingsWindow;
+struct UpdateBottleStruct;
 
 /**
  * \class SignalDispatcher
@@ -76,13 +77,7 @@ private:
                              Glib::ustring& virtual_desktop_resolution,
                              bool& disable_geck_mono,
                              BottleTypes::AudioDriver audio);
-  virtual void on_update_bottle(Glib::ustring& name,
-                                Glib::ustring& folder_name,
-                                Glib::ustring& description,
-                                BottleTypes::Windows windows_version,
-                                Glib::ustring& virtual_desktop_resolution,
-                                BottleTypes::AudioDriver audio,
-                                int debug_log_level);
+  virtual void on_update_bottle(const UpdateBottleStruct& update_bottle_struct);
   virtual void on_new_bottle_created();
   virtual void on_bottle_updated();
   virtual void on_error_message_created();

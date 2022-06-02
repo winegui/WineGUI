@@ -195,9 +195,9 @@ namespace BottleTypes
     case 7:
       return "Relay + Message box";
     case 8:
-      return "All except relay";
+      return "All except relay (too verbose!)";
     case 9:
-      return "All (Too verbose!)";
+      return "All (too verbose!)";
     default:
       return "- Unknown Log Level -";
     }

@@ -38,6 +38,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       log_level_label("Log Level:"),
       description_label("Description:"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
+      enable_logging_check("Enable debug logging"),
       save_button("Save"),
       cancel_button("Cancel"),
       delete_button("Delete Machine"),
@@ -85,6 +86,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   }
   virtual_desktop_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("1024x768");
+  enable_logging_check.set_active(false);
 
   description_label.set_halign(Gtk::Align::ALIGN_START);
   log_level_combobox.append("0", "Off");
@@ -95,7 +97,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   log_level_combobox.append("5", "Disable D3D/GL messages (could improve performance)");
   log_level_combobox.append("6", "Relay + Heap");
   log_level_combobox.append("7", "Relay + Message box");
-  log_level_combobox.append("8", "All (Except relay)");
+  log_level_combobox.append("8", "All Except relay (too verbose)");
   log_level_combobox.append("9", "All (most likely too verbose)");
   log_level_combobox.set_tooltip_text("More info: https://wiki.winehq.org/Debug_Channels");
   name_entry.set_hexpand(true);
@@ -105,6 +107,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   log_level_combobox.set_hexpand(true);
   description_text_view.set_hexpand(true);
   virtual_desktop_check.set_tooltip_text("Enable emulate virtual desktop resolution");
+  enable_logging_check.set_tooltip_text("Enable output logging to disk");
   folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name instead, see above.");
   description_label.set_tooltip_text("Add an additional description text to your machine");
 
@@ -123,11 +126,12 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   edit_grid.attach(virtual_desktop_check, 0, 4, 2);
   edit_grid.attach(virtual_desktop_resolution_label, 0, 5);
   edit_grid.attach(virtual_desktop_resolution_entry, 1, 5);
-  edit_grid.attach(log_level_label, 0, 6);
-  edit_grid.attach(log_level_combobox, 1, 6);
-  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 7, 2);
-  edit_grid.attach(description_label, 0, 8, 2);
-  edit_grid.attach(description_scrolled_window, 0, 9, 2);
+  edit_grid.attach(enable_logging_check, 0, 6, 2);
+  edit_grid.attach(log_level_label, 0, 7);
+  edit_grid.attach(log_level_combobox, 1, 7);
+  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 8, 2);
+  edit_grid.attach(description_label, 0, 9, 2);
+  edit_grid.attach(description_scrolled_window, 0, 10, 2);
 
   hbox_buttons.pack_start(delete_button, false, false, 4);
   hbox_buttons.pack_end(save_button, false, false, 4);
@@ -138,12 +142,14 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   vbox.pack_start(hbox_buttons, false, false, 4);
   add(vbox);
 
-  // Gray-out virtual desktop by default
+  // Gray-out virtual desktop & log level by default
   virtual_desktop_resolution_sensitive(false);
+  log_level_sensitive(false);
 
   // Signals
   delete_button.signal_clicked().connect(remove_bottle);
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
+  enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_save_button_clicked));
 
@@ -203,6 +209,8 @@ void BottleEditWindow::show()
     {
       virtual_desktop_check.set_active(false);
     }
+
+    enable_logging_check.set_active(active_bottle_->is_debug_logging());
     log_level_combobox.set_active_id(std::to_string((int)active_bottle_->debug_log_level()));
 
     show_all_children();
@@ -260,12 +268,31 @@ void BottleEditWindow::virtual_desktop_resolution_sensitive(bool sensitive)
 }
 
 /**
+ * \brief Enable/disable debug log level
+ * \param sensitive Set true to enable, false for disable
+ */
+void BottleEditWindow::log_level_sensitive(bool sensitive)
+{
+  log_level_label.set_sensitive(sensitive);
+  log_level_combobox.set_sensitive(sensitive);
+}
+
+/**
  * \brief Signal handler when the virtual desktop checkbox is checked.
  * It will show the additional resolution input field.
  */
 void BottleEditWindow::on_virtual_desktop_toggle()
 {
   virtual_desktop_resolution_sensitive(virtual_desktop_check.get_active());
+}
+
+/**
+ * \brief Signal handler when the debug logging checkbox is checked.
+ * It will show the additional log level input field.
+ */
+void BottleEditWindow::on_debug_logging_toggle()
+{
+  log_level_sensitive(enable_logging_check.get_active());
 }
 
 /**
@@ -282,10 +309,13 @@ void BottleEditWindow::on_cancel_button_clicked()
 void BottleEditWindow::on_save_button_clicked()
 {
   std::string::size_type sz;
-  BottleTypes::Windows windows_version = WineDefaults::WindowsOs; // Fallback
-  BottleTypes::AudioDriver audio = WineDefaults::AudioDriver;     // Fallback
-  Glib::ustring virtual_desktop_resolution = "";                  // Default empty string
-  int debug_log_level = 1;                                        // 1 = Default wine debug logging
+
+  UpdateBottleStruct update_bottle_struct;
+  update_bottle_struct.windows_version = WineDefaults::WindowsOs; // Fallback
+  update_bottle_struct.audio = WineDefaults::AudioDriver;         // Fallback
+  update_bottle_struct.virtual_desktop_resolution = "";           // Empty string default (= disabled windowed mode)
+  update_bottle_struct.is_debug_logging = false;                  // Disable logging by default
+  update_bottle_struct.debug_log_level = 1;                       // // 1 = Default wine debug logging
 
   // First disable save button (avoid multiple presses)
   save_button.set_sensitive(false);
@@ -294,18 +324,18 @@ void BottleEditWindow::on_save_button_clicked()
   busy_dialog.set_message("Updating Windows Machine", "Busy applying all your changes currently.");
   busy_dialog.show();
 
-  Glib::ustring name = name_entry.get_text();
-  Glib::ustring folder_name = folder_name_entry.get_text();
-  Glib::ustring description = description_text_view.get_buffer()->get_text();
+  update_bottle_struct.name = name_entry.get_text();
+  update_bottle_struct.folder_name = folder_name_entry.get_text();
+  update_bottle_struct.description = description_text_view.get_buffer()->get_text();
   bool is_desktop_enabled = virtual_desktop_check.get_active();
   if (is_desktop_enabled)
   {
-    virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
+    update_bottle_struct.virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
   }
-
+  update_bottle_struct.is_debug_logging = enable_logging_check.get_active();
   try
   {
-    debug_log_level = std::stoi(log_level_combobox.get_active_id(), &sz);
+    update_bottle_struct.debug_log_level = std::stoi(log_level_combobox.get_active_id(), &sz);
   }
   catch (const std::runtime_error& error)
   {
@@ -321,7 +351,7 @@ void BottleEditWindow::on_save_button_clicked()
   {
     size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
     const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
-    windows_version = currentWindowsBit.first;
+    update_bottle_struct.windows_version = currentWindowsBit.first;
   }
   catch (const std::runtime_error& error)
   {
@@ -336,7 +366,7 @@ void BottleEditWindow::on_save_button_clicked()
   try
   {
     size_t audio_index = size_t(std::stoi(audio_driver_combobox.get_active_id(), &sz));
-    audio = BottleTypes::AudioDriver(audio_index);
+    update_bottle_struct.audio = BottleTypes::AudioDriver(audio_index);
   }
   catch (const std::runtime_error& error)
   {
@@ -349,5 +379,5 @@ void BottleEditWindow::on_save_button_clicked()
   }
   // Ignore the catches
 
-  update_bottle.emit(name, folder_name, description, windows_version, virtual_desktop_resolution, audio, debug_log_level);
+  update_bottle.emit(update_bottle_struct);
 }

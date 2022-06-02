@@ -28,13 +28,11 @@
 PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
     : vbox(Gtk::ORIENTATION_VERTICAL, 4),
       hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
-      header_preferences_label("Preferences - Settings"),
+      header_preferences_label("Preferences"),
       default_folder_label("Default Machine folder: "),
       prefer_wine64_label("Prefer Wine 64-bit:"),
-      debug_logging_label("Enable logging:"),
       logging_stderr_label("Log standard error:"),
       prefer_wine64_check("Prefer Wine 64-bit executable (over 32-bit)"),
-      enable_debug_logging_check("Enable debug logging"),
       enable_logging_stderr_check("Also log standard error to logging (if logging is enabled)"),
       save_button("Save"),
       cancel_button("Cancel")
@@ -61,21 +59,20 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
   header_preferences_label.set_margin_top(5);
   header_preferences_label.set_margin_bottom(5);
 
+  logging_label_heading.set_markup("<big><b>Logging</b></big>");
   default_folder_label.set_halign(Gtk::Align::ALIGN_END);
   prefer_wine64_label.set_halign(Gtk::Align::ALIGN_END);
-  debug_logging_label.set_halign(Gtk::Align::ALIGN_END);
   logging_stderr_label.set_halign(Gtk::Align::ALIGN_END);
-
   default_folder_entry.set_hexpand(true);
 
   settings_grid.attach(default_folder_label, 0, 0);
   settings_grid.attach(default_folder_entry, 1, 0);
   settings_grid.attach(prefer_wine64_label, 0, 1);
   settings_grid.attach(prefer_wine64_check, 1, 1);
-  settings_grid.attach(debug_logging_label, 0, 2);
-  settings_grid.attach(enable_debug_logging_check, 1, 2);
-  settings_grid.attach(logging_stderr_label, 0, 3);
-  settings_grid.attach(enable_logging_stderr_check, 1, 3);
+  settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 2, 2);
+  settings_grid.attach(logging_label_heading, 0, 3, 2);
+  settings_grid.attach(logging_stderr_label, 0, 4);
+  settings_grid.attach(enable_logging_stderr_check, 1, 4);
 
   hbox_buttons.pack_end(save_button, false, false, 4);
   hbox_buttons.pack_end(cancel_button, false, false, 4);
@@ -107,7 +104,6 @@ void PreferencesWindow::show()
   GeneralConfigData general_config = GeneralConfigFile::read_config_file();
   default_folder_entry.set_text(general_config.default_folder);
   prefer_wine64_check.set_active(general_config.prefer_wine64);
-  enable_debug_logging_check.set_active(general_config.enable_debug_logging);
   enable_logging_stderr_check.set_active(general_config.enable_logging_stderr);
   // Call parent show
   Gtk::Widget::show();
@@ -130,7 +126,6 @@ void PreferencesWindow::on_save_button_clicked()
   GeneralConfigData general_config;
   general_config.default_folder = default_folder_entry.get_text();
   general_config.prefer_wine64 = prefer_wine64_check.get_active();
-  general_config.enable_debug_logging = enable_debug_logging_check.get_active();
   general_config.enable_logging_stderr = enable_logging_stderr_check.get_active();
   if (!GeneralConfigFile::write_config_file(general_config))
   {

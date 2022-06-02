@@ -44,7 +44,6 @@ BottleManager::BottleManager(MainWindow& main_window)
       main_window_(main_window),
       active_bottle_(nullptr),
       is_wine64_bit_(false),
-      is_debug_logging_(false),
       is_logging_stderr_(true),
       error_message_()
 {
@@ -241,8 +240,9 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
   // Create Bottle config data struct
   BottleConfigData bottle_config;
   bottle_config.name = name;
-  bottle_config.description = "";    // By default empty description
-  bottle_config.debug_log_level = 1; // 1 (default) = Normal debug log level
+  bottle_config.description = "";        // By default empty description
+  bottle_config.logging_enabled = false; // By default disable logging
+  bottle_config.debug_log_level = 1;     // 1 (default) = Normal debug log level
 
   // Build prefix
   // Name of the bottle we be used as folder name as well
@@ -346,6 +346,7 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
  * \param[in] windows_version             Windows OS version
  * \param[in] virtual_desktop_resolution  Virtual desktop resolution (empty if disabled)ze
  * \param[in] audio                       Audio Driver type
+ * \param[in] is_debug_logging            Enable/disable debug logging to disk
  * \param[in] debug_log_level             Bottle Debug Log Level
  */
 void BottleManager::update_bottle(SignalDispatcher* caller,
@@ -355,6 +356,7 @@ void BottleManager::update_bottle(SignalDispatcher* caller,
                                   BottleTypes::Windows windows_version,
                                   const Glib::ustring& virtual_desktop_resolution,
                                   BottleTypes::AudioDriver audio,
+                                  bool is_debug_logging,
                                   int debug_log_level)
 {
   if (active_bottle_ != nullptr)
@@ -368,13 +370,16 @@ void BottleManager::update_bottle(SignalDispatcher* caller,
       bottle_config.name = name;
       need_update_bottle_config_file = true;
     }
-
     if (active_bottle_->description() != description)
     {
       bottle_config.description = description;
       need_update_bottle_config_file = true;
     }
-
+    if (active_bottle_->is_debug_logging() != is_debug_logging)
+    {
+      bottle_config.logging_enabled = is_debug_logging;
+      need_update_bottle_config_file = true;
+    }
     if (active_bottle_->debug_log_level() != debug_log_level)
     {
       bottle_config.debug_log_level = debug_log_level;
@@ -568,11 +573,12 @@ void BottleManager::run_program(string filename, bool is_msi_file = false)
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program_prefix = is_msi_file ? "msiexec /i" : "start /unix";
     // Be-sure to execute the filename also between brackets (in case of spaces)
     string program = program_prefix + " \"" + filename + "\"";
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, debug_logging = std::move(is_debug_logging_),
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, debug_logging = std::move(is_debug_logging),
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
@@ -613,8 +619,9 @@ void BottleManager::reboot()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, debug_logging = std::move(is_debug_logging_),
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, debug_logging = std::move(is_debug_logging),
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
@@ -642,9 +649,10 @@ void BottleManager::update()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, update_bottles_dispatcher = &update_bottles_dispatcher_,
-                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   debug_logging = std::move(is_debug_logging), logging_stderr = std::move(is_logging_stderr_),
                    output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
                    output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
       string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", true, logging_stderr);
@@ -682,8 +690,8 @@ void BottleManager::open_log_file()
     }
     else
     {
-      main_window_.show_warning_message("There is no log file present (yet) for this machine.\n\nPlease <b>ENABLE logging</b> at File -> "
-                                        "Preferences.\n\n Also did you ran something already?",
+      main_window_.show_warning_message("There is no log file present (yet).\n\nPlease, be sure you <b>enabled</b> debug logging in the Edit "
+                                        "window.\n\n Also did you ran something already?",
                                         true);
     }
   }
@@ -697,8 +705,9 @@ void BottleManager::kill_processes()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, debug_logging = std::move(is_debug_logging_),
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, debug_logging = std::move(is_debug_logging),
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
@@ -768,9 +777,10 @@ void BottleManager::open_winetricks()
   if (is_bottle_not_null())
   {
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " --gui";
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, debug_logging = std::move(is_debug_logging_),
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, debug_logging = std::move(is_debug_logging),
                    logging_stderr = std::move(is_logging_stderr_), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
                    write_log_dispatcher = &write_log_dispatcher_] {
@@ -891,11 +901,12 @@ void BottleManager::install_d3dx9(Gtk::Window& parent, const string& version)
       package += "_" + version;
     }
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
-                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   debug_logging = std::move(is_debug_logging), logging_stderr = std::move(is_logging_stderr_),
                    output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
                    output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
       string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
@@ -934,11 +945,12 @@ void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
       package += version;
     }
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
-                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   debug_logging = std::move(is_debug_logging), logging_stderr = std::move(is_logging_stderr_),
                    output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
                    output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
       string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
@@ -972,11 +984,12 @@ void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string
 
     string package = "vcrun" + version;
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
-                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   debug_logging = std::move(is_debug_logging), logging_stderr = std::move(is_logging_stderr_),
                    output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
                    output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
       string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
@@ -1018,6 +1031,7 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
 
       string package = "dotnet" + version;
       string wine_prefix = active_bottle_->wine_location();
+      bool is_debug_logging = active_bottle_->is_debug_logging();
       int debug_log_level = active_bottle_->debug_log_level();
       // I can't use -q with .NET installs
       string install_command = Helper::get_winetricks_location() + " " + package;
@@ -1033,7 +1047,7 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
       }
       // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
       std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
-                     debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                     debug_logging = std::move(is_debug_logging), logging_stderr = std::move(is_logging_stderr_),
                      output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
                      output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
         string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
@@ -1070,11 +1084,12 @@ void BottleManager::install_core_fonts(Gtk::Window& parent)
     main_window_.show_busy_install_dialog(parent, "Installing MS Core fonts.");
 
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q corefonts";
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
-                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   debug_logging = std::move(is_debug_logging), logging_stderr = std::move(is_logging_stderr_),
                    output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
                    output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
       string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
@@ -1106,11 +1121,12 @@ void BottleManager::install_liberation(Gtk::Window& parent)
     main_window_.show_busy_install_dialog(parent, "Installing Liberation open-source fonts.");
 
     string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program = Helper::get_winetricks_location() + " -q liberation";
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t([wine_prefix, debug_log_level, program, finish_dispatcher = &finished_package_install_dispatcher,
-                   debug_logging = std::move(is_debug_logging_), logging_stderr = std::move(is_logging_stderr_),
+                   debug_logging = std::move(is_debug_logging), logging_stderr = std::move(is_logging_stderr_),
                    output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
                    output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_] {
       string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
@@ -1143,7 +1159,6 @@ GeneralConfigData BottleManager::load_and_save_general_config()
   GeneralConfigData general_config = GeneralConfigFile::read_config_file();
   bottle_location_ = general_config.default_folder;
   is_wine64_bit_ = ((Helper::determine_wine_executable() == 1) || general_config.prefer_wine64);
-  is_debug_logging_ = general_config.enable_debug_logging;
   is_logging_stderr_ = general_config.enable_logging_stderr;
   return general_config;
 }
@@ -1258,6 +1273,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
     string last_time_wine_updated = "- Unknown -";
     BottleTypes::AudioDriver audio_driver = BottleTypes::AudioDriver::pulseaudio;
     BottleTypes::Windows windows = WineDefaults::WindowsOs;
+    bool debug_logging_enabled = false;
     int debug_log_level = 1;
     bool status = false;
 
@@ -1265,6 +1281,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
     BottleConfigData bottle_config = BottleConfigFile::read_config_file(prefix);
     name = bottle_config.name;
     description = bottle_config.description;
+    debug_logging_enabled = bottle_config.logging_enabled;
     debug_log_level = bottle_config.debug_log_level;
 
     try
@@ -1327,7 +1344,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsign
     }
 
     BottleItem* bottle = new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix, c_drive_location,
-                                        last_time_wine_updated, audio_driver, virtual_desktop, debug_log_level);
+                                        last_time_wine_updated, audio_driver, virtual_desktop, debug_logging_enabled, debug_log_level);
     bottles.push_back(*bottle);
   }
   return bottles;
