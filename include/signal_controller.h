@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2019-2022 WineGUI
  *
- * \file    signal_dispatcher.h
+ * \file    signal_controller.h
  * \brief   Handles different GTK signals and dispatch or connect them to other methods/handlers within WineGUI
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
@@ -35,10 +35,10 @@ class BottleSettingsWindow;
 struct UpdateBottleStruct;
 
 /**
- * \class SignalDispatcher
+ * \class SignalController
  * \brief Dispatch and manage GTK signals across the app
  */
-class SignalDispatcher : public Gtk::Window
+class SignalController : public Gtk::Window
 {
   friend class MainWindow;
 
@@ -47,13 +47,13 @@ public:
   sigc::signal<void> signal_show_edit_window;     /*!< show Edit window signal */
   sigc::signal<void> signal_show_settings_window; /*!< show Settings window signal */
 
-  SignalDispatcher(BottleManager& manager,
+  SignalController(BottleManager& manager,
                    Menu& menu,
                    PreferencesWindow& preferences_window,
                    AboutDialog& about_dialog,
                    BottleEditWindow& edit_window,
                    BottleSettingsWindow& settings_window);
-  virtual ~SignalDispatcher();
+  virtual ~SignalController();
   void set_main_window(MainWindow* main_window);
   void dispatch_signals();
 

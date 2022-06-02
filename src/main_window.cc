@@ -21,7 +21,6 @@
 #include "main_window.h"
 #include "helper.h"
 #include "project_config.h"
-#include "signal_dispatcher.h"
 #include <locale>
 
 /************************

@@ -24,7 +24,7 @@
 #include "dll_override_types.h"
 #include "helper.h"
 #include "main_window.h"
-#include "signal_dispatcher.h"
+#include "signal_controller.h"
 #include "wine_defaults.h"
 
 #include <chrono>
@@ -217,7 +217,7 @@ void BottleManager::update_config_and_bottles()
  * \param[in] disable_gecko_mono          - Disable Gecko/Mono install
  * \param[in] audio                       - Audio Driver type
  */
-void BottleManager::new_bottle(SignalDispatcher* caller,
+void BottleManager::new_bottle(SignalController* caller,
                                const Glib::ustring& name,
                                BottleTypes::Windows windows_version,
                                BottleTypes::Bit bit,
@@ -349,7 +349,7 @@ void BottleManager::new_bottle(SignalDispatcher* caller,
  * \param[in] is_debug_logging            Enable/disable debug logging to disk
  * \param[in] debug_log_level             Bottle Debug Log Level
  */
-void BottleManager::update_bottle(SignalDispatcher* caller,
+void BottleManager::update_bottle(SignalController* caller,
                                   const Glib::ustring& name,
                                   const Glib::ustring& folder_name,
                                   const Glib::ustring& description,
