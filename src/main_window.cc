@@ -191,8 +191,9 @@ void MainWindow::reset_detailed_info()
 
 /**
  * \brief Set the (latest) general config data
+ * \param config_data The general config data
  */
-void MainWindow::set_general_config(GeneralConfigData config_data)
+void MainWindow::set_general_config(const GeneralConfigData& config_data)
 {
   general_config_data_ = config_data;
 }
