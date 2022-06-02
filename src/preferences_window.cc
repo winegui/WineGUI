@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "preferences_window.h"
-#include "generic_config_file.h"
+#include "general_config_file.h"
 
 /**
  * \brief Constructor
@@ -104,11 +104,11 @@ PreferencesWindow::~PreferencesWindow()
  */
 void PreferencesWindow::show()
 {
-  GenericConfigData generic_config = GenericConfigFile::read_config_file();
-  default_folder_entry.set_text(generic_config.default_folder);
-  prefer_wine64_check.set_active(generic_config.prefer_wine64);
-  enable_debug_logging_check.set_active(generic_config.enable_debug_logging);
-  enable_logging_stderr_check.set_active(generic_config.enable_logging_stderr);
+  GeneralConfigData general_config = GeneralConfigFile::read_config_file();
+  default_folder_entry.set_text(general_config.default_folder);
+  prefer_wine64_check.set_active(general_config.prefer_wine64);
+  enable_debug_logging_check.set_active(general_config.enable_debug_logging);
+  enable_logging_stderr_check.set_active(general_config.enable_logging_stderr);
   // Call parent show
   Gtk::Widget::show();
 }
@@ -127,12 +127,12 @@ void PreferencesWindow::on_cancel_button_clicked()
 void PreferencesWindow::on_save_button_clicked()
 {
   // Save preferences to disk
-  GenericConfigData generic_config;
-  generic_config.default_folder = default_folder_entry.get_text();
-  generic_config.prefer_wine64 = prefer_wine64_check.get_active();
-  generic_config.enable_debug_logging = enable_debug_logging_check.get_active();
-  generic_config.enable_logging_stderr = enable_logging_stderr_check.get_active();
-  if (!GenericConfigFile::write_config_file(generic_config))
+  GeneralConfigData general_config;
+  general_config.default_folder = default_folder_entry.get_text();
+  general_config.prefer_wine64 = prefer_wine64_check.get_active();
+  general_config.enable_debug_logging = enable_debug_logging_check.get_active();
+  general_config.enable_logging_stderr = enable_logging_stderr_check.get_active();
+  if (!GeneralConfigFile::write_config_file(general_config))
   {
     Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
     dialog.set_title("An error has occurred!");

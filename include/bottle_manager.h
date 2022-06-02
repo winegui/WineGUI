@@ -28,6 +28,7 @@
 #include <thread>
 
 #include "bottle_types.h"
+#include "general_config_file.h"
 
 using std::string;
 
@@ -121,7 +122,7 @@ private:
   // Signal handlers
   virtual void write_log_to_file();
 
-  void load_generic_config();
+  GeneralConfigData load_and_save_general_config();
   bool is_bottle_not_null();
   string get_deinstall_mono_command();
   string get_wine_version();

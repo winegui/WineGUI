@@ -23,6 +23,7 @@
 #include "bottle_item.h"
 #include "bottle_new_assistant.h"
 #include "busy_dialog.h"
+#include "general_config_file.h"
 #include "menu.h"
 #include <gtkmm.h>
 #include <iostream>
@@ -60,6 +61,7 @@ public:
   void set_wine_bottles(std::list<BottleItem>& bottles);
   void set_detailed_info(BottleItem& bottle);
   void reset_detailed_info();
+  void set_general_config(GeneralConfigData config_data);
   void show_info_message(const Glib::ustring& message, bool markup = false);
   void show_warning_message(const Glib::ustring& message, bool markup = false);
   void show_error_message(const Glib::ustring& message, bool markup = false);
@@ -123,6 +125,7 @@ protected:
   BusyDialog busy_dialog_; /*!< Busy dialog, when the user should wait until install is finished */
 private:
   BottleNewAssistant new_bottle_assistant_; /*!< New bottle wizard (behind: new button toolbar) */
+  GeneralConfigData general_config_data_;
 
   // Signal handlers
   virtual void on_row_clicked(Gtk::ListBoxRow* row);
