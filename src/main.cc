@@ -25,7 +25,7 @@
 #include "main_window.h"
 #include "menu.h"
 #include "preferences_window.h"
-#include "signal_dispatcher.h"
+#include "signal_controller.h"
 
 #include <gtkmm/application.h>
 #include <iostream>
@@ -75,11 +75,11 @@ static MainWindow& setupApplication()
   static BottleEditWindow edit_window(main_window);
   static BottleSettingsWindow settings_window(main_window);
   static BottleManager manager(main_window);
-  static SignalDispatcher signal_dispatcher(manager, menu, preferences_window, about_dialog, edit_window, settings_window);
+  static SignalController signal_controller(manager, menu, preferences_window, about_dialog, edit_window, settings_window);
 
-  signal_dispatcher.set_main_window(&main_window);
+  signal_controller.set_main_window(&main_window);
   // Do all the signal connections of the life-time of the app
-  signal_dispatcher.dispatch_signals();
+  signal_controller.dispatch_signals();
 
   // Call the Bottle Manager prepare method,
   // it will prepare Winetricks & retrieve Wine Bottles

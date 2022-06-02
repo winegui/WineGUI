@@ -34,7 +34,7 @@ using std::string;
 
 // Forward declaration
 class MainWindow;
-class SignalDispatcher;
+class SignalController;
 class BottleItem;
 
 /**
@@ -54,14 +54,14 @@ public:
 
   void prepare();
   void update_config_and_bottles();
-  void new_bottle(SignalDispatcher* caller,
+  void new_bottle(SignalController* caller,
                   const Glib::ustring& name,
                   BottleTypes::Windows windows_version,
                   BottleTypes::Bit bit,
                   const Glib::ustring& virtual_desktop_resolution,
                   bool disable_gecko_mono,
                   BottleTypes::AudioDriver audio);
-  void update_bottle(SignalDispatcher* caller,
+  void update_bottle(SignalController* caller,
                      const Glib::ustring& name,
                      const Glib::ustring& folder_name,
                      const Glib::ustring& description,

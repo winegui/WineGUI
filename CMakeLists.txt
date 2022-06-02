@@ -64,7 +64,7 @@ set(HEADERS
   include/about_dialog.h
   include/general_config_file.h
   include/helper.h
-  include/signal_dispatcher.h
+  include/signal_controller.h
 )
 
 set(SOURCES
@@ -82,7 +82,7 @@ set(SOURCES
   src/about_dialog.cc
   src/general_config_file.cc
   src/helper.cc
-  src/signal_dispatcher.cc
+  src/signal_controller.cc
   ${HEADERS}
 )
 
