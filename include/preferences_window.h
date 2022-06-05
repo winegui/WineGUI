@@ -51,11 +51,14 @@ protected:
   Gtk::Entry default_folder_entry;              /*!< default folder input field */
   Gtk::CheckButton prefer_wine64_check;         /*!< prefer wine 64-bit checkbox */
   Gtk::CheckButton enable_logging_stderr_check; /*!< debug logging checkbox */
+  Gtk::Button select_folder_button;             /*!< select folder button */
   Gtk::Button save_button;                      /*!< save button */
   Gtk::Button cancel_button;                    /*!< cancel button */
 
 private:
   // Signal handlers
+  void on_select_folder();
+  void on_select_dialog_response(int response_id, Gtk::FileChooserDialog* dialog);
   void on_cancel_button_clicked();
   void on_save_button_clicked();
 };
