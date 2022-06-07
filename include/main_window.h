@@ -20,6 +20,7 @@
  */
 #pragma once
 
+#include "app_list_model_column.h"
 #include "bottle_item.h"
 #include "bottle_new_assistant.h"
 #include "busy_dialog.h"
@@ -85,6 +86,8 @@ protected:
   bool delete_window(GdkEventAny* any_event);
   Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
 
+  AppListModelColumns app_list_columns; /*!< Application list model columns for app tree view */
+
   // Child widgets
   Gtk::Box vbox;    /*!< The main vertical box */
   Gtk::Paned paned; /*!< The main paned panel (horizontal) */
@@ -92,11 +95,22 @@ protected:
   Gtk::ScrolledWindow scrolled_window_listbox; /*!< Scrolled Window container, which contains the listbox */
   Gtk::ListBox listbox;                        /*!< Listbox in the left panel */
   // Right widgets
-  Gtk::ScrolledWindow scrolled_window_grid; /*!< Scrolled Window container for grid */
-  Gtk::Box right_box;                       /*!< Right panel horizontal box */
-  Gtk::Toolbar toolbar;                     /*!< Toolbar at top */
-  Gtk::Separator separator1;                /*!< Seperator */
-  Gtk::Grid detail_grid;                    /*!< Grid layout container to have multiple rows & columns below the toolbar */
+  Gtk::ScrolledWindow detail_grid_scrolled_window_detail; /*!< Scrolled Window container for the detail grid */
+  Gtk::ScrolledWindow app_list_scrolled_window;           /*!< Scrolled Window container for app list */
+  Gtk::Box right_vbox;                                    /*!< Right panel vertical box */
+  Gtk::Box app_list_vbox;                                 /*!< Application list vertical box */
+  Gtk::SearchEntry app_list_search_entry;                 /*!< Application list search entry */
+  Gtk::Paned container_paned;                             /*!< Main container horizontal paned panel */
+  Glib::RefPtr<Gtk::ListStore> app_list_tree_model;       /*!< Application list tree model (using a liststore)  */
+  Gtk::Toolbar toolbar;                                   /*!< Toolbar at top */
+  Gtk::Separator separator1;                              /*!< Seperator */
+  Gtk::Grid detail_grid;                                  /*!< Grid layout container to have multiple rows & columns below the toolbar */
+  Gtk::TreeView application_list_treeview;                /*!< List of applications put inside a tree view */
+
+  // Test
+  Gtk::CellRendererText name_desc_renderer_text;
+  Gtk::TreeView::Column name_desc_column;
+
   // Detailed info labels on the right panel
   Gtk::Label name;              /*!< Bottle name */
   Gtk::Label folder_name;       /*!< Folder name */
@@ -137,5 +151,6 @@ private:
   void create_left_panel();
   void create_right_panel();
   void set_sensitive_toolbar_buttons(bool sensitive);
-  static void cc_list_box_update_header_func(Gtk::ListBoxRow* row, Gtk::ListBoxRow* before);
+  static void cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, Gtk::ListBoxRow* before);
+  void treeview_set_cell_data_name_desc(Gtk::CellRenderer* renderer, const Gtk::TreeModel::iterator& iter);
 };

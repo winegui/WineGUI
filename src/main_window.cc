@@ -34,7 +34,9 @@ MainWindow::MainWindow(Menu& menu)
     : window_settings(),
       vbox(Gtk::ORIENTATION_VERTICAL),
       paned(Gtk::ORIENTATION_HORIZONTAL),
-      right_box(Gtk::Orientation::ORIENTATION_VERTICAL),
+      right_vbox(Gtk::Orientation::ORIENTATION_VERTICAL),
+      app_list_vbox(Gtk::Orientation::ORIENTATION_VERTICAL),
+      container_paned(Gtk::ORIENTATION_HORIZONTAL),
       separator1(Gtk::ORIENTATION_HORIZONTAL),
       busy_dialog_(*this)
 {
@@ -556,7 +558,10 @@ void MainWindow::create_left_panel()
  */
 void MainWindow::create_right_panel()
 {
-  // TODO: Make it configurable to only show icons, text or both using preferences
+  /***
+   * Toolbar section
+   * TODO: Make it configurable to only show icons, text or both using preferences
+   */
   toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
 
   // Buttons in toolbar
@@ -635,10 +640,12 @@ void MainWindow::create_right_panel()
   toolbar.insert(kill_processes_button, 8);
 
   // Add toolbar to right box
-  right_box.add(toolbar);
-  right_box.add(separator1);
+  right_vbox.add(toolbar);
+  right_vbox.add(separator1);
 
-  // Add detail section below toolbar
+  /**
+   * Detail section (below toolbar)
+   */
   detail_grid.set_margin_top(5);
   detail_grid.set_margin_end(5);
   detail_grid.set_margin_bottom(8);
@@ -771,13 +778,82 @@ void MainWindow::create_right_panel()
   detail_grid.attach(description, 0, 21, 3, 1);
   // End Description
 
-  scrolled_window_grid.add(detail_grid);
+  // Place inside a scrolled window
+  detail_grid_scrolled_window_detail.add(detail_grid);
 
-  // Add detail grid window to box
-  right_box.pack_start(scrolled_window_grid, true, true);
+  // Add to container
+  container_paned.pack1(detail_grid_scrolled_window_detail);
 
-  // Add box to paned
-  paned.add2(right_box);
+  /**
+   * Application list section
+   */
+
+  app_list_tree_model = Gtk::ListStore::create(app_list_columns);
+  application_list_treeview.set_model(app_list_tree_model);
+
+  // Fill the TreeView's model
+  Gtk::TreeRow row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "WineCfg";
+  row[app_list_columns.description] = "Wine configuration program";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Notepad";
+  row[app_list_columns.description] = "Text editor";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Wordpad";               // cppcheck-suppress unreadVariable
+  row[app_list_columns.description] = "Word processor"; // cppcheck-suppress unreadVariable
+
+  name_desc_column.pack_start(name_desc_renderer_text);
+  application_list_treeview.append_column("icon", app_list_columns.icon); // TODO: Add spacing, maybe also use a custom method like below
+  application_list_treeview.append_column(name_desc_column);
+  name_desc_column.set_cell_data_func(name_desc_renderer_text, sigc::mem_fun(*this, &MainWindow::treeview_set_cell_data_name_desc));
+
+  application_list_treeview.set_headers_visible(false);
+  application_list_treeview.set_hover_selection(true);
+  application_list_treeview.set_show_expanders(false);
+  application_list_treeview.get_selection()->set_mode(Gtk::SELECTION_SINGLE);
+
+  app_list_scrolled_window.set_margin_start(6);
+  app_list_scrolled_window.set_margin_end(6);
+  app_list_scrolled_window.set_margin_bottom(6);
+  app_list_scrolled_window.set_border_width(2);
+  // TODO: Add also a pixel border around the window
+  app_list_scrolled_window.add(application_list_treeview);
+
+  app_list_search_entry.set_margin_start(6);
+  app_list_search_entry.set_margin_end(6);
+  app_list_search_entry.set_margin_top(6);
+  app_list_search_entry.set_margin_bottom(6);
+
+  // Add application header text
+  Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
+  application_icon->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  Gtk::Label* application_label = Gtk::manage(new Gtk::Label());
+  application_label->set_markup("<b>Applications</b>");
+  Gtk::Box* application_box = Gtk::manage(new Gtk::Box());
+  application_box->pack_start(*application_icon, false, false, 8);
+  application_box->pack_start(*application_label, false, false, 20);
+
+  app_list_vbox.pack_start(*application_box, false, true, 5);
+  // Add app search entry above the list
+  app_list_vbox.pack_start(app_list_search_entry, false, true);
+  // Add application list to bottom
+  app_list_vbox.pack_end(app_list_scrolled_window);
+  // Add to container
+  container_paned.pack2(app_list_vbox, false, false);
+
+  // Add container to right box
+  right_vbox.pack_start(container_paned, true, true);
+
+  // TODO: Set/get from gsettings schema (also for the overall 'paned' panel)
+  container_paned.set_position(480);
+
+  // Add right box to paned
+  paned.pack2(right_vbox);
 }
 
 /**
@@ -801,10 +877,10 @@ void MainWindow::set_sensitive_toolbar_buttons(bool sensitive)
  * \param[in] row
  * \param[in] before
  */
-void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::ListBoxRow* before)
+void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, Gtk::ListBoxRow* before)
 {
   GtkWidget* current;
-  GtkListBoxRow* row = m_row->gobj();
+  GtkListBoxRow* row = list_box_row->gobj();
   if (before == NULL)
   {
     gtk_list_box_row_set_header(row, NULL);
@@ -817,4 +893,15 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* m_row, Gtk::Lis
     gtk_widget_show(current);
     gtk_list_box_row_set_header(row, current);
   }
+}
+
+/**
+ * \brief Render name + description text
+ */
+void MainWindow::treeview_set_cell_data_name_desc(Gtk::CellRenderer* renderer, const Gtk::TreeModel::iterator& iter)
+{
+  Gtk::CellRendererText* text_renderer = (Gtk::CellRendererText*)renderer;
+  Glib::ustring name = "<b>" + (*iter)[app_list_columns.name] + "</b>\n";
+  name += (*iter)[app_list_columns.description];
+  text_renderer->property_markup().set_value(name);
 }

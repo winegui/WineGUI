@@ -52,6 +52,7 @@ configure_file(src/project_config.h.in ${CMAKE_BINARY_DIR}/project_config.h)
 
 set(HEADERS
   include/menu.h
+  include/app_list_model_column.h
   include/main_window.h
   include/preferences_window.h
   include/bottle_edit_window.h
