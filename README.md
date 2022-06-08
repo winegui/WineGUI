@@ -56,7 +56,7 @@ Optionally:
 - doxygen
 - graphviz
 - rpm
-- cppcheck (v2.7 or later)
+- cppcheck
 
 **Hint:** You could execute `./scripts/deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
 
