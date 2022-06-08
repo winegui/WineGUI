@@ -8,11 +8,14 @@ stages:
 static_code_analysis:
   stage: test
   script:
+    - cppcheck --version
     - ./scripts/cpp_check.sh
 
 code_style_guidelines:
   stage: test
-  script: ./scripts/check_format.sh
+  script: 
+    - clang-format --version
+    - ./scripts/check_format.sh
 
 # Build WineGUI + Doxygen
 build:
