@@ -21,6 +21,7 @@
 #include "helper.h"
 #include "wine_defaults.h"
 #include <array>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -59,6 +60,7 @@ static const string RegKeyAudio = "[Software\\\\Wine\\\\Drivers]";
 static const string RegKeyVirtualDesktop = "[Software\\\\Wine\\\\Explorer]";
 static const string RegKeyVirtualDesktopResolution = "[Software\\\\Wine\\\\Explorer\\\\Desktops]";
 static const string RegKeyDllOverrides = "[Software\\\\Wine\\\\DllOverrides]";
+static const string RegKeyMenuFiles = "[Software\\\\Wine\\\\MenuFiles]";
 
 // Reg names
 static const string RegNameNTVersion = "CurrentVersion";
@@ -503,6 +505,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
 {
   // Trying user registery first
   string user_reg_file_path = Glib::build_filename(prefix_path, UserReg);
+
   string win_version = Helper::get_reg_value(user_reg_file_path, RegKeyWine, RegNameWindowsVersion);
   if (!win_version.empty())
   {
@@ -687,10 +690,6 @@ BottleTypes::AudioDriver Helper::get_audio_driver(const string& prefix_path)
 string Helper::get_virtual_desktop(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
-  // TODO: Check if virtual desktop is enabled or disabled first! By looking if this value name is set:
-  // If the user.reg key: "Software\\Wine\\Explorer" Value name: "Desktop" is NOT set, its disabled.
-  // If this value name is set (store the value of "Desktop"...), virtual desktop is enabled.
-  //
   // Check if emulate desktop is enabled. Eg. "Desktop"="Default"
   string emulate_desktop_value = Helper::get_reg_value(file_path, RegKeyVirtualDesktop, RegNameVirtualDesktop);
   string resolution;
@@ -717,11 +716,11 @@ string Helper::get_last_wine_updated(const string& prefix_path)
   string file_path = Glib::build_filename(prefix_path, UpdateTimestamp);
   if (Helper::file_exists(file_path))
   {
-    std::vector<string> epoch_time = read_file_lines(file_path);
-    if (epoch_time.size() >= 1)
+    string epoch_time = read_file(file_path);
+    epoch_time.erase(std::remove(epoch_time.begin(), epoch_time.end(), '\n'), epoch_time.end());
+    if (!epoch_time.empty())
     {
-      string time = epoch_time.at(0);
-      time_t secsSinceEpoch = strtoul(time.c_str(), NULL, 0);
+      time_t secsSinceEpoch = strtoul(epoch_time.c_str(), NULL, 0);
       std::stringstream stringStream;
       stringStream << std::put_time(localtime(&secsSinceEpoch), "%c");
       return stringStream.str();
@@ -1001,6 +1000,25 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
 }
 
 /**
+ * \brief Get menu items/links from Wine bottle
+ * \param prefix_path Bottle prefix
+ * \return vector array of menu items (links)
+ */
+std::vector<string> Helper::get_menu_items(const string& prefix_path)
+{
+  std::vector<string> items;
+  string file_path = Glib::build_filename(prefix_path, UserReg);
+
+  // TODO: Retrieve all the values/data from RegKeyMenuFiles
+  // string menu_links = Helper::get_reg_value(file_path, RegKeyMenuFiles);
+  // if (!menu_links.empty())
+  // {
+  //    items.push_back();
+  // }
+  return items;
+}
+
+/**
  * \brief Retrieve WINEDEBUG string from debug log level
  * \param[in] log_level Log level
  * \return Wine Debug string (can be used in WINEDEBUG)
@@ -1147,6 +1165,22 @@ string Helper::get_image_location(const string& filename)
  ****************************************************************************/
 
 /**
+ * \brief Small function that is used to determine which characters to be removed from a string
+ * \return true (will be removed), false (will stay)
+ */
+bool RemoveChars(char c)
+{
+  switch (c)
+  {
+  case '\"':
+  case '\n':
+    return true;
+  default:
+    return false;
+  }
+}
+
+/**
  * \brief Execute command on terminal. Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] cmd The command to be executed
  * \return Terminal stdout output
@@ -1262,69 +1296,47 @@ string Helper::get_winetricks_version()
 }
 
 /**
- * \brief Get a value from the registery from disk
- * \param[in] file_path  File of registery
+ * \brief Get a specific value from the Wine registery from disk
+ * \param[in] file_path  File path of registery
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \param[in] value_name Specifies the registery value name (eg. Desktop)
  * \return Data of value name
  */
 string Helper::get_reg_value(const string& file_path, const string& key_name, const string& value_name)
 {
-  // We add double quotes around plus equal sign to the value name
-  string valuePattern = '"' + value_name + "\"=";
-  char* match_pch = NULL;
-  if (Helper::file_exists(file_path))
+  string output;
+  string value_pattern = '"' + value_name + "\"=";
+  std::ifstream reg_file(file_path);
+  bool match = false;
+  if (reg_file.is_open())
   {
-    FILE* f;
-    char buffer[100];
-    if ((f = fopen(file_path.c_str(), "r")) == NULL)
+    std::string line;
+    line.reserve(128);
+    while (std::getline(reg_file, line))
     {
-      throw std::runtime_error("File could not be opened");
-    }
-    bool match = false;
-    // TODO: Change to fstream, since the buffer has a limit (therefor the strstr as well), causing issues with
-    // longer strings
-    while (fgets(buffer, sizeof(buffer), f))
-    {
-      // It returns the pointer to the first occurrence until the null character (end of line)
       if (!match)
       {
-        // Search first for the applicable subkey
-        if ((strstr(buffer, key_name.c_str())) != NULL)
-        {
-          match = true;
-          // Continue to search for the key now
-        }
+        match = line.starts_with(key_name);
       }
       else
       {
-        // As long as there is no empty line (meaning end of the subkey section),
-        // continue to search for the key
-        if (strlen(buffer) == 0)
+        std::size_t pos = line.find(value_pattern);
+        if (pos != std::string::npos)
         {
-          // Too late, nothing found within this subkey
+          output = line.substr(pos + value_pattern.size());
+          // Remove quotes and new lines
+          output.erase(std::remove_if(output.begin(), output.end(), &RemoveChars), output.end());
           break;
-        }
-        else
-        {
-          // Search for the first occurence of the value name,
-          // and put the strstr match char point in 'match_pch'
-          match_pch = strstr(buffer, valuePattern.c_str());
-          if (match_pch != NULL)
-          {
-            break;
-          }
         }
       }
     }
-
-    fclose(f);
-    return char_pointer_value_to_string(match_pch);
+    reg_file.close();
   }
   else
   {
-    throw std::runtime_error("Registery file does not exists. Can not determ Windows settings.");
+    throw std::runtime_error("Could not open registry file!");
   }
+  return output;
 }
 
 /**
@@ -1335,34 +1347,31 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
  */
 string Helper::get_reg_meta_data(const string& file_path, const string& meta_value_name)
 {
-  string metaPattern = "#" + meta_value_name + "=";
-  char* match_pch = NULL;
-  if (Helper::file_exists(file_path))
+  string output;
+  string meta_pattern = "#" + meta_value_name + "=";
+  std::ifstream reg_file(file_path);
+  if (reg_file.is_open())
   {
-    FILE* f;
-    char buffer[100];
-    if ((f = fopen(file_path.c_str(), "r")) == NULL)
+    std::string line;
+    line.reserve(80);
+    while (std::getline(reg_file, line))
     {
-      throw std::runtime_error("File could not be opened");
-    }
-    while (fgets(buffer, sizeof(buffer), f))
-    {
-      // Put the strstr match char point in 'match_pch'
-      // It returns the pointer to the first occurrence until the null character (end of line)
-      match_pch = strstr(buffer, metaPattern.c_str());
-      if (match_pch != NULL)
+      std::size_t pos = line.find(meta_pattern);
+      if (pos != std::string::npos)
       {
-        // Match!
+        output = line.substr(pos + meta_pattern.size());
+        // Remove quotes and new lines
+        output.erase(std::remove_if(output.begin(), output.end(), &RemoveChars), output.end());
         break;
       }
     }
-    fclose(f);
-    return char_pointer_value_to_string(match_pch);
+    reg_file.close();
   }
   else
   {
-    throw std::runtime_error("Registery file does not exists. Can not determ Windows settings.");
+    throw std::runtime_error("Could not open registry file!");
   }
+  return output;
 }
 
 /**
@@ -1391,35 +1400,6 @@ string Helper::get_bottle_dir_from_prefix(const string& prefix_path)
 }
 
 /**
- * \brief Create a string from a value name char pointer
- * \param charp Character pointer registery raw data value
- * \return string with the data
- */
-string Helper::char_pointer_value_to_string(char* charp)
-{
-  if (charp != NULL)
-  {
-    string ret = string(charp);
-
-    std::vector<string> results = Helper::split(ret, '=');
-    if (results.size() >= 2)
-    {
-      ret = results.at(1);
-      // TODO: Combine the removals in a single iteration?
-      // Remove double-quote chars
-      ret.erase(std::remove(ret.begin(), ret.end(), '\"'), ret.end());
-      // Remove new lines
-      ret.erase(std::remove(ret.begin(), ret.end(), '\n'), ret.end());
-    }
-    return ret;
-  }
-  else
-  {
-    return "";
-  }
-}
-
-/**
  * \brief Read data from file and returns it.
  * \param[in] file_path File location to be read
  * \return Data from file
@@ -1431,6 +1411,7 @@ std::vector<string> Helper::read_file_lines(const string& file_path)
   if (myfile.is_open())
   {
     std::string line;
+    line.reserve(100);
     while (std::getline(myfile, line))
     {
       output.push_back(line);
@@ -1466,6 +1447,7 @@ std::vector<string> Helper::split(const string& s, char delimiter)
 {
   std::vector<string> tokens;
   std::string token;
+  token.reserve(100);
   std::istringstream tokenStream(s);
   while (getline(tokenStream, token, delimiter))
   {

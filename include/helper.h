@@ -76,6 +76,7 @@ public:
   static void set_virtual_desktop(const string& prefix_path, string resolution);
   static void disable_virtual_desktop(const string& prefix_path);
   static void set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver);
+  static std::vector<string> get_menu_items(const string& prefix_path);
   static string log_level_to_winedebug_string(int log_level);
   static string get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name);
   static bool get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
@@ -98,7 +99,6 @@ private:
   static string get_reg_value(const string& filename, const string& key_name, const string& value_name);
   static string get_reg_meta_data(const string& filename, const string& meta_value_name);
   static string get_bottle_dir_from_prefix(const string& prefix_path);
-  static string char_pointer_value_to_string(char* charp);
   static std::vector<string> read_file_lines(const string& file_path);
   static unsigned long get_modified_time(const string& file_path);
   static std::vector<string> split(const string& s, char delimiter);
