@@ -831,7 +831,7 @@ void MainWindow::create_right_panel()
 
   // Add application header text
   Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
-  application_icon->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  application_icon->set_from_icon_name("application-x-executable", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
   Gtk::Label* application_label = Gtk::manage(new Gtk::Label());
   application_label->set_markup("<b>Applications</b>");
   Gtk::Box* application_box = Gtk::manage(new Gtk::Box());

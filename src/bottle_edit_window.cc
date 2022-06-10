@@ -339,10 +339,10 @@ void BottleEditWindow::on_save_button_clicked()
   catch (const std::runtime_error& error)
   {
   }
-  catch (std::invalid_argument& e)
+  catch (const std::invalid_argument& e)
   {
   }
-  catch (std::out_of_range& e)
+  catch (const std::out_of_range& e)
   {
   }
   // Ignore the catches
@@ -355,10 +355,10 @@ void BottleEditWindow::on_save_button_clicked()
   catch (const std::runtime_error& error)
   {
   }
-  catch (std::invalid_argument& e)
+  catch (const std::invalid_argument& e)
   {
   }
-  catch (std::out_of_range& e)
+  catch (const std::out_of_range& e)
   {
   }
   // Ignore the catches
@@ -370,10 +370,10 @@ void BottleEditWindow::on_save_button_clicked()
   catch (const std::runtime_error& error)
   {
   }
-  catch (std::invalid_argument& e)
+  catch (const std::invalid_argument& e)
   {
   }
-  catch (std::out_of_range& e)
+  catch (const std::out_of_range& e)
   {
   }
   // Ignore the catches
