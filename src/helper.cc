@@ -1007,7 +1007,7 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
 std::vector<string> Helper::get_menu_items(const string& prefix_path)
 {
   std::vector<string> items;
-  string file_path = Glib::build_filename(prefix_path, UserReg);
+  // string file_path = Glib::build_filename(prefix_path, UserReg);
 
   // TODO: Retrieve all the values/data from RegKeyMenuFiles
   // string menu_links = Helper::get_reg_value(file_path, RegKeyMenuFiles);
@@ -1307,11 +1307,11 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
   string output;
   string value_pattern = '"' + value_name + "\"=";
   std::ifstream reg_file(file_path);
-  bool match = false;
   if (reg_file.is_open())
   {
     std::string line;
     line.reserve(128);
+    bool match = false;
     while (std::getline(reg_file, line))
     {
       if (!match)
