@@ -172,6 +172,50 @@ void MainWindow::set_detailed_info(BottleItem& bottle)
 }
 
 /**
+ * \brief Set application list
+ * \param prefix_path Wine bottle prefix
+ */
+void MainWindow::set_application_list(const string& prefix_path)
+{
+  // First clear list
+  reset_application_list();
+
+  auto menu_items = Helper::get_menu_items(prefix_path);
+  // Fill the application list (TreeView model)
+  // First the start menu apps/games (if present)
+  for (string item : menu_items)
+  {
+    string name;
+    size_t found = item.find_last_of('\\');
+    if (found != string::npos)
+    {
+      // TODO: Add boundary/safety checks to avoid crashes!
+      name = item.substr(found + 1, item.length() - found - 5); // Only get the name (remove .lnk as well)
+    }
+    Gtk::TreeRow row = *(app_list_tree_model->append());
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+    row[app_list_columns.name] = name;
+    row[app_list_columns.description] = "";
+  }
+
+  // Secondly, additional programs
+  Gtk::TreeRow row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "WineCfg";
+  row[app_list_columns.description] = "Wine configuration program";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Notepad";
+  row[app_list_columns.description] = "Text editor";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Wordpad";               // cppcheck-suppress unreadVariable
+  row[app_list_columns.description] = "Word processor"; // cppcheck-suppress unreadVariable
+}
+
+/**
  * \brief Reset the detailed info panel
  */
 void MainWindow::reset_detailed_info()
@@ -189,6 +233,14 @@ void MainWindow::reset_detailed_info()
   description.set_text("");
   // Disable toolbar buttons
   set_sensitive_toolbar_buttons(false);
+}
+
+/**
+ * \brief Reset/clear application list
+ */
+void MainWindow::reset_application_list()
+{
+  app_list_tree_model->clear();
 }
 
 /**
@@ -422,10 +474,15 @@ void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 {
   if (row != nullptr)
   {
-    set_detailed_info(*dynamic_cast<BottleItem*>(row));
+    auto current_bottle = dynamic_cast<BottleItem*>(row);
+    // Set bottle details
+    set_detailed_info(*current_bottle);
+    // Set application list
+    set_application_list(current_bottle->wine_location());
+
     // Signal activate Bottle with current BottleItem as parameter to the dispatcher
     // Which updates the connected modules accordingly.
-    active_bottle.emit(dynamic_cast<BottleItem*>(row));
+    active_bottle.emit(current_bottle);
   }
 }
 
@@ -790,22 +847,6 @@ void MainWindow::create_right_panel()
 
   app_list_tree_model = Gtk::ListStore::create(app_list_columns);
   application_list_treeview.set_model(app_list_tree_model);
-
-  // Fill the TreeView's model
-  Gtk::TreeRow row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-  row[app_list_columns.name] = "WineCfg";
-  row[app_list_columns.description] = "Wine configuration program";
-
-  row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-  row[app_list_columns.name] = "Notepad";
-  row[app_list_columns.description] = "Text editor";
-
-  row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-  row[app_list_columns.name] = "Wordpad";               // cppcheck-suppress unreadVariable
-  row[app_list_columns.description] = "Word processor"; // cppcheck-suppress unreadVariable
 
   name_desc_column.pack_start(name_desc_renderer_text);
   application_list_treeview.append_column("icon", app_list_columns.icon); // TODO: Add spacing, maybe also use a custom method like below

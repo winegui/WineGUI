@@ -21,7 +21,6 @@
 #include "helper.h"
 #include "wine_defaults.h"
 #include <array>
-#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -1007,7 +1006,8 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
 std::vector<string> Helper::get_menu_items(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
-  return Helper::get_reg_keys(file_path, RegKeyMenuFiles);
+  // Key menu items from registery, only get the data keys containing "Start Menu" and ignore key values containing "applications-merged"
+  return Helper::get_reg_keys_data_filter_ignore(file_path, RegKeyMenuFiles, "Start Menu", "applications-merged");
 }
 
 /**
@@ -1157,22 +1157,6 @@ string Helper::get_image_location(const string& filename)
  ****************************************************************************/
 
 /**
- * \brief Small function that is used to determine which characters to be removed from a string
- * \return true (will be removed), false (will stay)
- */
-bool RemoveChars(char c)
-{
-  switch (c)
-  {
-  case '\"':
-  case '\n':
-    return true;
-  default:
-    return false;
-  }
-}
-
-/**
  * \brief Execute command on terminal. Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] cmd The command to be executed
  * \return Terminal stdout output
@@ -1316,8 +1300,8 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
         if (pos != std::string::npos)
         {
           output = line.substr(pos + value_pattern.size());
-          // Remove quotes and new lines
-          output.erase(std::remove_if(output.begin(), output.end(), &RemoveChars), output.end());
+          // Remove quotes
+          output.erase(std::remove(output.begin(), output.end(), '\"'), output.end());
           break;
         }
       }
@@ -1354,9 +1338,86 @@ std::vector<string> Helper::get_reg_keys(const string& file_path, const string& 
       }
       else
       {
-        keys.push_back(line);
         if (line.empty() || reg_file.eof())
-          break;
+          break; // End of key section in registry
+        if (!line.starts_with('#'))
+          keys.push_back(line);
+      }
+    }
+    reg_file.close();
+  }
+  else
+  {
+    throw std::runtime_error("Could not open registry file!");
+  }
+  return keys;
+}
+
+/**
+ * \brief Get subkeys data from a specific key from the Wine registery from disk
+ * \param[in] file_path  File path of registery
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \return List all the sub keys data (so everything after the = sign)
+ */
+std::vector<string> Helper::get_reg_keys_data(const string& file_path, const string& key_name)
+{
+  return get_reg_keys_data_filter(file_path, key_name, "");
+}
+
+/**
+ * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registery from disk
+ * \param[in] file_path  File path of registery
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no filtering)
+ * \return List all the sub keys data (so everything after the = sign)
+ */
+std::vector<string> Helper::get_reg_keys_data_filter(const string& file_path, const string& key_name, const string& key_value_filter)
+{
+  return get_reg_keys_data_filter_ignore(file_path, key_name, key_value_filter, "");
+}
+
+/**
+ * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registery from disk
+ * \param[in] file_path  File path of registery
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no additional filtering)
+ * \param[in] key_name_ignore_filter (Optionally) Filter-out the key names that contains the ignore filter (default: "", meaning everything will be
+ * returned) \return List all the sub keys data (so everything after the = sign)
+ */
+std::vector<string> Helper::get_reg_keys_data_filter_ignore(const string& file_path,
+                                                            const string& key_name,
+                                                            const string& key_value_filter,
+                                                            const string& key_name_ignore_filter)
+{
+  std::vector<string> keys;
+  std::ifstream reg_file(file_path);
+  if (reg_file.is_open())
+  {
+    std::string line;
+    line.reserve(128);
+    bool match = false;
+    while (std::getline(reg_file, line))
+    {
+      if (!match)
+      {
+        match = line.starts_with(key_name);
+      }
+      else
+      {
+        if (line.empty() || reg_file.eof())
+          break; // End of key section in registry
+        // Skip '#' elements and if filter is not empty it will only continue if the line contains the filter string
+        if (!line.starts_with('#') && (key_value_filter.empty() || line.find(key_value_filter) != string::npos) &&
+            (key_name_ignore_filter.empty() || line.find(key_name_ignore_filter) == string::npos))
+        {
+          auto results = split(line, '=');
+          if (results.size() > 1)
+          {
+            line = results.at(1);
+            line.erase(std::remove(line.begin(), line.end(), '\"'), line.end());
+            keys.push_back(line);
+          }
+        }
       }
     }
     reg_file.close();
@@ -1389,8 +1450,8 @@ string Helper::get_reg_meta_data(const string& file_path, const string& meta_val
       if (pos != std::string::npos)
       {
         output = line.substr(pos + meta_pattern.size());
-        // Remove quotes and new lines
-        output.erase(std::remove_if(output.begin(), output.end(), &RemoveChars), output.end());
+        // Remove quotes
+        output.erase(std::remove(output.begin(), output.end(), '\"'), output.end());
         break;
       }
     }

@@ -98,6 +98,12 @@ private:
   static string get_winetricks_version();
   static string get_reg_value(const string& filename, const string& key_name, const string& value_name);
   static std::vector<string> get_reg_keys(const string& file_path, const string& key_name);
+  static std::vector<string> get_reg_keys_data(const string& file_path, const string& key_name);
+  static std::vector<string> get_reg_keys_data_filter(const string& file_path, const string& key_name, const string& key_value_filter = "");
+  static std::vector<string> get_reg_keys_data_filter_ignore(const string& file_path,
+                                                             const string& key_name,
+                                                             const string& key_value_filter = "",
+                                                             const string& key_name_ignore_filter = "");
   static string get_reg_meta_data(const string& filename, const string& meta_value_name);
   static string get_bottle_dir_from_prefix(const string& prefix_path);
   static std::vector<string> read_file_lines(const string& file_path);
