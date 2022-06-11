@@ -185,12 +185,13 @@ void MainWindow::set_application_list(const string& prefix_path)
   // First the start menu apps/games (if present)
   for (string item : menu_items)
   {
-    string name;
+    string name = "- Unknown -";
     size_t found = item.find_last_of('\\');
-    if (found != string::npos)
+    size_t subtract = found + 5; // Remove the .lnk part as well using substr
+    if (found != string::npos && item.length() >= subtract)
     {
-      // TODO: Add boundary/safety checks to avoid crashes!
-      name = item.substr(found + 1, item.length() - found - 5); // Only get the name (remove .lnk as well)
+      // Get the name only
+      name = item.substr(found + 1, item.length() - subtract);
     }
     Gtk::TreeRow row = *(app_list_tree_model->append());
     row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
