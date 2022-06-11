@@ -1006,16 +1006,8 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
  */
 std::vector<string> Helper::get_menu_items(const string& prefix_path)
 {
-  std::vector<string> items;
-  // string file_path = Glib::build_filename(prefix_path, UserReg);
-
-  // TODO: Retrieve all the values/data from RegKeyMenuFiles
-  // string menu_links = Helper::get_reg_value(file_path, RegKeyMenuFiles);
-  // if (!menu_links.empty())
-  // {
-  //    items.push_back();
-  // }
-  return items;
+  string file_path = Glib::build_filename(prefix_path, UserReg);
+  return Helper::get_reg_keys(file_path, RegKeyMenuFiles);
 }
 
 /**
@@ -1340,6 +1332,43 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
 }
 
 /**
+ * \brief Get subkeys from a specific key from the Wine registery from disk
+ * \param[in] file_path  File path of registery
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \return List all the sub keys
+ */
+std::vector<string> Helper::get_reg_keys(const string& file_path, const string& key_name)
+{
+  std::vector<string> keys;
+  std::ifstream reg_file(file_path);
+  if (reg_file.is_open())
+  {
+    std::string line;
+    line.reserve(128);
+    bool match = false;
+    while (std::getline(reg_file, line))
+    {
+      if (!match)
+      {
+        match = line.starts_with(key_name);
+      }
+      else
+      {
+        keys.push_back(line);
+        if (line.empty() || reg_file.eof())
+          break;
+      }
+    }
+    reg_file.close();
+  }
+  else
+  {
+    throw std::runtime_error("Could not open registry file!");
+  }
+  return keys;
+}
+
+/**
  * \brief Get a meta value from the registery from disk
  * \param[in] file_path      File of registery
  * \param[in] meta_value_name Specifies the registery value name (eg. arch)
@@ -1441,17 +1470,20 @@ unsigned long Helper::get_modified_time(const string& file_path)
  * \brief Split string by delimiter
  * \param[in] s         String to be splitted
  * \param[in] delimiter Delimiter character
- * \return Array of strings
+ * \return Array/vector of strings
  */
-std::vector<string> Helper::split(const string& s, char delimiter)
+std::vector<string> Helper::split(const string& s, const char delimiter)
 {
-  std::vector<string> tokens;
-  std::string token;
-  token.reserve(100);
-  std::istringstream tokenStream(s);
-  while (getline(tokenStream, token, delimiter))
+  size_t start = 0;
+  size_t end = s.find_first_of(delimiter);
+  std::vector<string> output;
+  while (end <= string::npos)
   {
-    tokens.push_back(token);
+    output.emplace_back(s.substr(start, end - start));
+    if (end == string::npos)
+      break;
+    start = end + 1;
+    end = s.find_first_of(delimiter, start);
   }
-  return tokens;
+  return output;
 }

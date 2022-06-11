@@ -97,9 +97,10 @@ private:
   static string read_file(const string& filename);
   static string get_winetricks_version();
   static string get_reg_value(const string& filename, const string& key_name, const string& value_name);
+  static std::vector<string> get_reg_keys(const string& file_path, const string& key_name);
   static string get_reg_meta_data(const string& filename, const string& meta_value_name);
   static string get_bottle_dir_from_prefix(const string& prefix_path);
   static std::vector<string> read_file_lines(const string& file_path);
   static unsigned long get_modified_time(const string& file_path);
-  static std::vector<string> split(const string& s, char delimiter);
+  static std::vector<string> split(const string& s, const char delimiter);
 };
