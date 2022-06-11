@@ -175,6 +175,8 @@ void BottleManager::update_config_and_bottles()
         std::advance(front, previous_active_bottle_index_);
         // Set the previous element as current
         main_window_.set_detailed_info(*front);
+        // Set application list based on wine bottle path
+        main_window_.set_application_list(front->wine_location());
         // Set active bottle at the previous index
         active_bottle_ = &(*front);
       }
@@ -184,6 +186,8 @@ void BottleManager::update_config_and_bottles()
         // begin() gives us an iterator with the first element
         auto first = bottles_.begin();
         main_window_.set_detailed_info(*first);
+        // Set application list based on wine bottle path
+        main_window_.set_application_list(first->wine_location());
         // Set active bottle at the first
         active_bottle_ = &(*first);
       }

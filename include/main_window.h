@@ -61,7 +61,9 @@ public:
 
   void set_wine_bottles(std::list<BottleItem>& bottles);
   void set_detailed_info(BottleItem& bottle);
+  void set_application_list(const string& prefix_path);
   void reset_detailed_info();
+  void reset_application_list();
   void set_general_config(const GeneralConfigData& config_data);
   void show_info_message(const Glib::ustring& message, bool markup = false);
   void show_warning_message(const Glib::ustring& message, bool markup = false);
