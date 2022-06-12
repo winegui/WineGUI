@@ -1,2 +1,3 @@
 missingIncludeSystem
-unusedFunction:src/helper.cc
+# Should most likely be enabled, when all is also checking for unusedFunctions again
+#unusedFunction:src/helper.cc

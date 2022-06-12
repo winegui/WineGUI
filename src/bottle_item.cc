@@ -126,18 +126,19 @@ BottleItem::BottleItem(Glib::ustring name,
 void BottleItem::CreateUI()
 {
   // To lower case
-  std::string windows = BottleItem::str_tolower(BottleTypes::to_string(this->windows()));
+  std::string windows_str = BottleItem::str_tolower(BottleTypes::to_string(this->windows()));
   // Remove spaces
-  windows.erase(std::remove_if(std::begin(windows), std::end(windows), [l = std::locale{}](auto ch) { return std::isspace(ch, l); }), end(windows));
-  Glib::ustring bit = BottleTypes::to_string(this->bit());
-  Glib::ustring filename = windows + "_" + bit + ".png";
-  Glib::ustring name = this->name();
-  Glib::ustring folder_name = this->folder_name();
-  Glib::ustring name_label_text = (!name.empty()) ? name : folder_name; // Fallback to folder name
-  bool status = this->status();
+  windows_str.erase(std::remove_if(std::begin(windows_str), std::end(windows_str), [l = std::locale{}](auto ch) { return std::isspace(ch, l); }),
+                    end(windows_str));
+  Glib::ustring bit_str = BottleTypes::to_string(this->bit());
+  Glib::ustring filename_str = windows_str + "_" + bit_str + ".png";
+  Glib::ustring name_str = this->name();
+  Glib::ustring folder_name_str = this->folder_name();
+  Glib::ustring name_label_text = (!name_str.empty()) ? name_str : folder_name_str; // Fallback to folder name
+  bool is_status = this->status();
 
   // Set left side of the GUI
-  image.set(Helper::get_image_location("windows/" + filename));
+  image.set(Helper::get_image_location("windows/" + filename_str));
   image.set_margin_top(8);
   image.set_margin_end(8);
   image.set_margin_bottom(8);
@@ -147,7 +148,7 @@ void BottleItem::CreateUI()
   name_label.set_markup("<span size=\"medium\"><b>" + Glib::Markup::escape_text(name_label_text) + "</b></span>");
 
   Glib::ustring status_text = "Ready";
-  if (status)
+  if (is_status)
   {
     status_icon.set(Helper::get_image_location("ready.png"));
   }
