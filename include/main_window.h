@@ -114,17 +114,17 @@ protected:
   Gtk::TreeView::Column name_desc_column;
 
   // Detailed info labels on the right panel
-  Gtk::Label name;              /*!< Bottle name */
-  Gtk::Label folder_name;       /*!< Folder name */
-  Gtk::Label window_version;    /*!< Windows version text */
-  Gtk::Label c_drive_location;  /*!< C:\ drive location text */
-  Gtk::Label wine_version;      /*!< Wine version text */
-  Gtk::Label wine_location;     /*!< Wine location text */
-  Gtk::Label debug_log_level;   /*!< Debug log level text */
-  Gtk::Label wine_last_changed; /*!< Last changed text */
-  Gtk::Label audio_driver;      /*!< Audio driver text */
-  Gtk::Label virtual_desktop;   /*!< Virtual desktop text */
-  Gtk::Label description;       /*!< description text */
+  Gtk::Label name_label;              /*!< Bottle name */
+  Gtk::Label folder_name_label;       /*!< Folder name */
+  Gtk::Label window_version_label;    /*!< Windows version text */
+  Gtk::Label c_drive_location_label;  /*!< C:\ drive location text */
+  Gtk::Label wine_version_label;      /*!< Wine version text */
+  Gtk::Label wine_location_label;     /*!< Wine location text */
+  Gtk::Label debug_log_level_label;   /*!< Debug log level text */
+  Gtk::Label wine_last_changed_label; /*!< Last changed text */
+  Gtk::Label audio_driver_label;      /*!< Audio driver text */
+  Gtk::Label virtual_desktop_label;   /*!< Virtual desktop text */
+  Gtk::Label description_label;       /*!< description text */
 
   // Toolbar buttons
   Gtk::ToolButton new_button;            /*!< New toolbar button */
