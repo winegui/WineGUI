@@ -78,7 +78,7 @@ MainWindow::MainWindow(Menu& menu)
   set_sensitive_toolbar_buttons(false);
 
   // Left side (listbox)
-  listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_row_clicked));
+  listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_bottle_row_clicked));
   // Disabled right-click menu for now, since it doesn't activate the right-clicked bottle as active
   // listbox.signal_button_press_event().connect(right_click_menu);
 
@@ -89,6 +89,10 @@ MainWindow::MainWindow(Menu& menu)
   new_bottle_assistant_.signal_apply().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_apply));
   // Connect the new bottle assistant signal to the mainWindow signal
   new_bottle_assistant_.new_bottle_finished.connect(finished_new_bottle);
+
+  // Trigger row activated signal on a single click
+  application_list_treeview.set_activate_on_single_click(true);
+  application_list_treeview.signal_row_activated().connect(sigc::mem_fun(*this, &MainWindow::on_application_row_activated));
 
   run_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
   edit_button.signal_clicked().connect(show_edit_window);
@@ -330,17 +334,17 @@ void MainWindow::on_run_button_clicked()
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
     if (ext == "exe")
     {
-      run_program.emit(filename, false);
+      run_executable.emit(filename, false);
     }
     else if (ext == "msi")
     {
       // Run as MSI (true=MSI)
-      run_program.emit(filename, true);
+      run_executable.emit(filename, true);
     }
     else
     {
       // fall-back: try run as Exe
-      run_program.emit(filename, false);
+      run_executable.emit(filename, false);
     }
     break;
   }
@@ -403,7 +407,7 @@ void MainWindow::on_exec_failure()
  * \brief Change detailed window on listbox row clicked event
  * \param row Row that is selected/clicked
  */
-void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
+void MainWindow::on_bottle_row_clicked(Gtk::ListBoxRow* row)
 {
   if (row != nullptr)
   {
@@ -416,6 +420,17 @@ void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
     // Signal activate Bottle with current BottleItem as parameter to the dispatcher
     // Which updates the connected modules accordingly.
     active_bottle.emit(current_bottle);
+  }
+}
+
+void MainWindow::on_application_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* /* column */)
+{
+  const auto iter = app_list_tree_model->get_iter(path);
+  if (iter)
+  {
+    const auto row = *iter;
+    // Run the command
+    run_program.emit(row[app_list_columns.command]);
   }
 }
 
@@ -520,23 +535,57 @@ void MainWindow::set_application_list(const string& prefix_path)
     row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
     row[app_list_columns.name] = name;
     row[app_list_columns.description] = "";
+    row[app_list_columns.command] = item;
   }
 
   // Secondly, additional programs
   Gtk::TreeRow row = *(app_list_tree_model->append());
   row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-  row[app_list_columns.name] = "WineCfg";
+  row[app_list_columns.name] = "Wine Config";
   row[app_list_columns.description] = "Wine configuration program";
+  row[app_list_columns.command] = "winecfg";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Uninstaller";
+  row[app_list_columns.description] = "Remove programs";
+  row[app_list_columns.command] = "uninstaller";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Minesweeper";
+  row[app_list_columns.description] = "Minesweeper single-player game";
+  row[app_list_columns.command] = "winemine";
 
   row = *(app_list_tree_model->append());
   row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
   row[app_list_columns.name] = "Notepad";
   row[app_list_columns.description] = "Text editor";
+  row[app_list_columns.command] = "notepad";
 
   row = *(app_list_tree_model->append());
   row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-  row[app_list_columns.name] = "Wordpad";               // cppcheck-suppress unreadVariable
-  row[app_list_columns.description] = "Word processor"; // cppcheck-suppress unreadVariable
+  row[app_list_columns.name] = "Internet Explorer";
+  row[app_list_columns.description] = "Wine Internet Explorer";
+  row[app_list_columns.command] = "iexplore";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Task Manager";
+  row[app_list_columns.description] = "Task manager";
+  row[app_list_columns.command] = "taskmgr";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Command Prompt";
+  row[app_list_columns.description] = "Command-line interpreter";
+  row[app_list_columns.command] = "wineconsole";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Registry editor";
+  row[app_list_columns.description] = "Windows registry";
+  row[app_list_columns.command] = "regedit";
 }
 
 /**

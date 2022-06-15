@@ -75,7 +75,8 @@ public:
   const Glib::ustring& get_error_message() const;
 
   // Signal handlers
-  void run_program(string filename, bool is_msi_file);
+  void run_executable(string filename, bool is_msi_file);
+  void run_program(string program);
   void open_c_drive();
   void reboot();
   void update();

@@ -567,11 +567,11 @@ const Glib::ustring& BottleManager::get_error_message() const
 }
 
 /**
- * \brief Run a program in Wine (using the active selected bottle)
- * \param[in] filename - Filename location of the program, selected by user
- * \param[in] is_msi_file - Is the program you try to run a Windows Installer (MSI)? False is EXE.
+ * \brief Run an executable (exe) or MSI file in Wine (using the current active bottle)
+ * \param[in] filename Filename location of the program (selected by the user)
+ * \param[in] is_msi_file True, if you running a Windows Installer (MSI), otherwise False for EXE
  */
-void BottleManager::run_program(string filename, bool is_msi_file = false)
+void BottleManager::run_executable(string filename, bool is_msi_file = false)
 {
   if (is_bottle_not_null())
   {
@@ -579,8 +579,40 @@ void BottleManager::run_program(string filename, bool is_msi_file = false)
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program_prefix = is_msi_file ? "msiexec /i" : "start /unix";
-    // Be-sure to execute the filename also between brackets (in case of spaces)
+    // Be-sure to execute the filename also between quotes (due to spaces)
     string program = program_prefix + " \"" + filename + "\"";
+    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
+                   debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
+                   logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
+                   write_log_dispatcher = &write_log_dispatcher_] {
+      string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, true, logging_stderr);
+      if (debug_logging && !output.empty())
+      {
+        {
+          std::lock_guard<std::mutex> lock(output_logging_mutex);
+          logging_bottle_prefix.get() = wine_prefix;
+          output_logging.get() = output;
+        }
+        write_log_dispatcher->emit();
+      }
+    });
+    t.detach();
+  }
+}
+
+/**
+ * \brief Run a program in Wine (using the active selected bottle)
+ * \param[in] program Program name you want to run/start
+ */
+void BottleManager::run_program(string program)
+{
+  if (is_bottle_not_null())
+  {
+    string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
+    int debug_log_level = active_bottle_->debug_log_level();
+    // Between quotes (due to spaces)
+    program = "\"" + program + "\"";
     std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
                    debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
                    logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),

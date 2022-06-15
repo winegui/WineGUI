@@ -25,6 +25,7 @@
 #include <glibmm/ustring.h>
 #include <gtkmm/treemodel.h>
 #include <gtkmm/treemodelcolumn.h>
+#include <string>
 
 class AppListModelColumns : public Gtk::TreeModel::ColumnRecord
 {
@@ -34,9 +35,11 @@ public:
     add(icon);
     add(name);
     add(description);
+    add(command);
   }
 
   Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf>> icon;
   Gtk::TreeModelColumn<Glib::ustring> name;
   Gtk::TreeModelColumn<Glib::ustring> description;
+  Gtk::TreeModelColumn<std::string> command;
 };

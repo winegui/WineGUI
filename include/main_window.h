@@ -48,7 +48,8 @@ public:
   sigc::signal<void> show_settings_window;       /*!< show Settings window signal */
   sigc::signal<void, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, Glib::ustring&, bool&, BottleTypes::AudioDriver>
       new_bottle;                                       /*!< Create new Wine Bottle Signal */
-  sigc::signal<void, string, bool> run_program;         /*!< Run an EXE or MSI application in Wine with provided filename */
+  sigc::signal<void, string, bool> run_executable;      /*!< Run an EXE or MSI application in Wine with provided filename */
+  sigc::signal<void, string> run_program;               /*!< Run program in Wine */
   sigc::signal<void> open_c_drive;                      /*!< Open C: drive signal */
   sigc::signal<void> reboot_bottle;                     /*!< Emulate reboot signal */
   sigc::signal<void> update_bottle;                     /*!< Update Wine bottle signal */
@@ -143,7 +144,8 @@ private:
   GeneralConfigData general_config_data_;
 
   // Signal handlers
-  virtual void on_row_clicked(Gtk::ListBoxRow* row);
+  virtual void on_bottle_row_clicked(Gtk::ListBoxRow* row);
+  virtual void on_application_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* /* column */);
   virtual void on_new_bottle_apply();
 
   // Private methods

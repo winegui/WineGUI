@@ -117,6 +117,7 @@ void SignalController::dispatch_signals()
   // Menu / Toolbar actions
   main_window_->new_bottle.connect(sigc::mem_fun(this, &SignalController::on_new_bottle));
   main_window_->finished_new_bottle.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
+  main_window_->run_executable.connect(sigc::mem_fun(manager_, &BottleManager::run_executable));
   main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
   main_window_->show_edit_window.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
   main_window_->show_settings_window.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::show));
