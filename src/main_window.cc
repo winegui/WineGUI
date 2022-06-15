@@ -466,7 +466,7 @@ bool MainWindow::delete_window(GdkEventAny* any_event __attribute__((unused)))
  * \brief set the detailed info panel on the right
  * \param[in] bottle - Wine Bottle item object
  */
-void MainWindow::set_detailed_info(BottleItem& bottle)
+void MainWindow::set_detailed_info(const BottleItem& bottle)
 {
   // Set right side of the GUI
   name_label.set_text(bottle.name());

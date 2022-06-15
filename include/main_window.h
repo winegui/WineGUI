@@ -147,8 +147,7 @@ private:
   virtual void on_new_bottle_apply();
 
   // Private methods
-
-  void set_detailed_info(BottleItem& bottle);
+  void set_detailed_info(const BottleItem& bottle);
   void set_application_list(const string& prefix_path);
   void check_version_update(bool show_equal = false);
   void load_stored_window_settings();
