@@ -60,8 +60,7 @@ public:
   virtual ~MainWindow();
 
   void set_wine_bottles(std::list<BottleItem>& bottles);
-  void set_detailed_info(BottleItem& bottle);
-  void set_application_list(const string& prefix_path);
+  void select_row_bottle(BottleItem& bottle);
   void reset_detailed_info();
   void reset_application_list();
   void set_general_config(const GeneralConfigData& config_data);
@@ -148,6 +147,9 @@ private:
   virtual void on_new_bottle_apply();
 
   // Private methods
+
+  void set_detailed_info(BottleItem& bottle);
+  void set_application_list(const string& prefix_path);
   void check_version_update(bool show_equal = false);
   void load_stored_window_settings();
   void create_left_panel();

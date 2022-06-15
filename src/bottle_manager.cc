@@ -48,7 +48,7 @@ BottleManager::BottleManager(MainWindow& main_window)
       error_message_()
 {
   // Connect internal dispatcher(s)
-  update_bottles_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::update_config_and_bottles));
+  update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(this, &BottleManager::update_config_and_bottles), false));
   write_log_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::write_log_to_file));
 }
 
@@ -95,7 +95,8 @@ void BottleManager::prepare()
   }
 
   // Start the initial read from disk to fetch the bottles & update GUI
-  update_config_and_bottles();
+  // true - during startup
+  update_config_and_bottles(true);
 }
 
 /**
@@ -115,8 +116,9 @@ void BottleManager::write_log_to_file()
 
 /**
  * \brief Update WineGUI Config and update bottles by reading the Wine Bottles from disk and update GUI
+ * \param is_startup Set to true if this function is called during start-up, otherwise false
  */
-void BottleManager::update_config_and_bottles()
+void BottleManager::update_config_and_bottles(bool is_startup)
 {
   // Read general & save config in bottle manager
   GeneralConfigData config_data = load_and_save_general_config();
@@ -170,13 +172,10 @@ void BottleManager::update_config_and_bottles()
       // And: Is the previous index not bigger than the list size?
       if (try_to_restore && (bottles_.size() == previous_bottles_list_size_) && ((size_t)previous_active_bottle_index_ < bottles_.size()))
       {
-        // Let's reeset the previous state!
+        // Let's reset the previous state!
         auto front = bottles_.begin();
         std::advance(front, previous_active_bottle_index_);
-        // Set the previous element as current
-        main_window_.set_detailed_info(*front);
-        // Set application list based on wine bottle path
-        main_window_.set_application_list(front->wine_location());
+        main_window_.select_row_bottle(*front);
         // Set active bottle at the previous index
         active_bottle_ = &(*front);
       }
@@ -185,9 +184,9 @@ void BottleManager::update_config_and_bottles()
         // Bottle list is changed, let's set the first bottle in the detailed info panel.
         // begin() gives us an iterator with the first element
         auto first = bottles_.begin();
-        main_window_.set_detailed_info(*first);
-        // Set application list based on wine bottle path
-        main_window_.set_application_list(first->wine_location());
+        // Trigger select row, except during start-up (show_all will auto-select the first listbox item in GTK)
+        if (!is_startup)
+          main_window_.select_row_bottle(*first);
         // Set active bottle at the first
         active_bottle_ = &(*first);
       }
@@ -527,7 +526,7 @@ void BottleManager::delete_bottle()
         // Signal that bottle is removed
         bottle_removed.emit();
         Helper::remove_wine_bottle(prefix_path);
-        this->update_config_and_bottles();
+        this->update_config_and_bottles(false);
       }
       else
       {
