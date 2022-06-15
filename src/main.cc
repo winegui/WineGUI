@@ -70,11 +70,11 @@ static MainWindow& setupApplication()
   // Constructing the top level objects:
   static Menu menu;
   static MainWindow main_window(menu);
+  static BottleManager manager(main_window);
   static PreferencesWindow preferences_window(main_window);
   static AboutDialog about_dialog(main_window);
   static BottleEditWindow edit_window(main_window);
   static BottleSettingsWindow settings_window(main_window);
-  static BottleManager manager(main_window);
   static SignalController signal_controller(manager, menu, preferences_window, about_dialog, edit_window, settings_window);
 
   signal_controller.set_main_window(&main_window);

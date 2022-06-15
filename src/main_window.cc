@@ -138,82 +138,13 @@ void MainWindow::set_wine_bottles(std::list<BottleItem>& bottles)
 }
 
 /**
- * \brief set the detailed info panel on the right
+ * \brief Set provided bottle as current selected row (if nothing was selected yet)
  * \param[in] bottle - Wine Bottle item object
  */
-void MainWindow::set_detailed_info(BottleItem& bottle)
+void MainWindow::select_row_bottle(BottleItem& bottle)
 {
   if (!bottle.is_selected())
     this->listbox.select_row(bottle);
-
-  // Set right side of the GUI
-  name_label.set_text(bottle.name());
-  folder_name_label.set_text(bottle.folder_name());
-  Glib::ustring windows = BottleTypes::to_string(bottle.windows());
-  windows += " (" + BottleTypes::to_string(bottle.bit()) + ')';
-  window_version_label.set_text(windows);
-  c_drive_location_label.set_text(bottle.wine_c_drive());
-  Glib::ustring wine_bitness = (bottle.is_wine64_bit()) ? "64-bit" : "32-bit";
-  wine_version_label.set_text(bottle.wine_version() + " (" + wine_bitness + ")");
-  wine_location_label.set_text(bottle.wine_location());
-
-  Glib::ustring debug_log_level_str = BottleTypes::debug_log_level_to_string(bottle.debug_log_level());
-  if (!bottle.is_debug_logging())
-    debug_log_level_str = "<s>" + debug_log_level_str + "</s>"; // Strikethrough when logging is disabled
-
-  Glib::ustring log_level_prefix_str = (!bottle.is_debug_logging()) ? "Logging is disabled - " : "";
-  debug_log_level_label.set_markup(log_level_prefix_str + debug_log_level_str);
-  wine_last_changed_label.set_text(bottle.wine_last_changed());
-  audio_driver_label.set_text(BottleTypes::to_string(bottle.audio_driver()));
-  Glib::ustring virtual_desktop_text = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
-  virtual_desktop_label.set_text(virtual_desktop_text);
-  Glib::ustring description_text = (bottle.description().empty()) ? "None" : bottle.description();
-  description_label.set_text(description_text);
-}
-
-/**
- * \brief Set application list
- * \param prefix_path Wine bottle prefix
- */
-void MainWindow::set_application_list(const string& prefix_path)
-{
-  // First clear list
-  reset_application_list();
-
-  auto menu_items = Helper::get_menu_items(prefix_path);
-  // Fill the application list (TreeView model)
-  // First the start menu apps/games (if present)
-  for (string item : menu_items)
-  {
-    string name = "- Unknown -";
-    size_t found = item.find_last_of('\\');
-    size_t subtract = found + 5; // Remove the .lnk part as well using substr
-    if (found != string::npos && item.length() >= subtract)
-    {
-      // Get the name only
-      name = item.substr(found + 1, item.length() - subtract);
-    }
-    Gtk::TreeRow row = *(app_list_tree_model->append());
-    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-    row[app_list_columns.name] = name;
-    row[app_list_columns.description] = "";
-  }
-
-  // Secondly, additional programs
-  Gtk::TreeRow row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-  row[app_list_columns.name] = "WineCfg";
-  row[app_list_columns.description] = "Wine configuration program";
-
-  row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-  row[app_list_columns.name] = "Notepad";
-  row[app_list_columns.description] = "Text editor";
-
-  row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-  row[app_list_columns.name] = "Wordpad";               // cppcheck-suppress unreadVariable
-  row[app_list_columns.description] = "Word processor"; // cppcheck-suppress unreadVariable
 }
 
 /**
@@ -470,6 +401,7 @@ void MainWindow::on_exec_failure()
 
 /**
  * \brief Change detailed window on listbox row clicked event
+ * \param row Row that is selected/clicked
  */
 void MainWindow::on_row_clicked(Gtk::ListBoxRow* row)
 {
@@ -528,6 +460,83 @@ bool MainWindow::delete_window(GdkEventAny* any_event __attribute__((unused)))
     window_settings->set_boolean("maximized", is_maximized());
   }
   return false;
+}
+
+/**
+ * \brief set the detailed info panel on the right
+ * \param[in] bottle - Wine Bottle item object
+ */
+void MainWindow::set_detailed_info(BottleItem& bottle)
+{
+  // Set right side of the GUI
+  name_label.set_text(bottle.name());
+  folder_name_label.set_text(bottle.folder_name());
+  Glib::ustring windows = BottleTypes::to_string(bottle.windows());
+  windows += " (" + BottleTypes::to_string(bottle.bit()) + ')';
+  window_version_label.set_text(windows);
+  c_drive_location_label.set_text(bottle.wine_c_drive());
+  Glib::ustring wine_bitness = (bottle.is_wine64_bit()) ? "64-bit" : "32-bit";
+  wine_version_label.set_text(bottle.wine_version() + " (" + wine_bitness + ")");
+  wine_location_label.set_text(bottle.wine_location());
+
+  Glib::ustring debug_log_level_str = BottleTypes::debug_log_level_to_string(bottle.debug_log_level());
+  if (!bottle.is_debug_logging())
+    debug_log_level_str = "<s>" + debug_log_level_str + "</s>"; // Strikethrough when logging is disabled
+
+  Glib::ustring log_level_prefix_str = (!bottle.is_debug_logging()) ? "Logging is disabled - " : "";
+  debug_log_level_label.set_markup(log_level_prefix_str + debug_log_level_str);
+  wine_last_changed_label.set_text(bottle.wine_last_changed());
+  audio_driver_label.set_text(BottleTypes::to_string(bottle.audio_driver()));
+  Glib::ustring virtual_desktop_text = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
+  virtual_desktop_label.set_text(virtual_desktop_text);
+  Glib::ustring description_text = (bottle.description().empty()) ? "None" : bottle.description();
+  description_label.set_text(description_text);
+}
+
+/**
+ * \brief Set application list
+ * \param prefix_path Wine bottle prefix
+ */
+void MainWindow::set_application_list(const string& prefix_path)
+{
+  // First clear list
+  reset_application_list();
+
+  auto menu_items = Helper::get_menu_items(prefix_path);
+  // Fill the application list (TreeView model)
+  // First the start menu apps/games (if present)
+  for (string item : menu_items)
+  {
+    // For debugging: std::cout << "Item: " << item << std::endl;
+    string name = "- Unknown -";
+    size_t found = item.find_last_of('\\');
+    size_t subtract = found + 5; // Remove the .lnk part as well using substr
+    if (found != string::npos && item.length() >= subtract)
+    {
+      // Get the name only
+      name = item.substr(found + 1, item.length() - subtract);
+    }
+    Gtk::TreeRow row = *(app_list_tree_model->append());
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+    row[app_list_columns.name] = name;
+    row[app_list_columns.description] = "";
+  }
+
+  // Secondly, additional programs
+  Gtk::TreeRow row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "WineCfg";
+  row[app_list_columns.description] = "Wine configuration program";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Notepad";
+  row[app_list_columns.description] = "Text editor";
+
+  row = *(app_list_tree_model->append());
+  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  row[app_list_columns.name] = "Wordpad";               // cppcheck-suppress unreadVariable
+  row[app_list_columns.description] = "Word processor"; // cppcheck-suppress unreadVariable
 }
 
 /**
