@@ -29,6 +29,7 @@
 #include <gtkmm.h>
 #include <iostream>
 #include <list>
+#include <string>
 
 using std::cout;
 using std::endl;

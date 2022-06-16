@@ -82,16 +82,6 @@ public:
   void update();
   void open_log_file();
   void kill_processes();
-  void open_explorer();
-  void open_console();
-  void open_winecfg();
-  void open_winetricks();
-  void open_uninstaller();
-  void open_task_manager();
-  void open_registery_editor();
-  void open_notepad();
-  void open_wordpad();
-  void open_iexplorer();
   void install_d3dx9(Gtk::Window& parent, const string& version);
   void install_dxvk(Gtk::Window& parent, const string& version);
   void install_visual_cpp_package(Gtk::Window& parent, const string& version);

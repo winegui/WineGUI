@@ -21,6 +21,8 @@
 #include "main_window.h"
 #include "helper.h"
 #include "project_config.h"
+#include <algorithm>
+#include <cctype>
 #include <locale>
 
 /************************
@@ -532,7 +534,78 @@ void MainWindow::set_application_list(const string& prefix_path)
       name = item.substr(found + 1, item.length() - subtract);
     }
     Gtk::TreeRow row = *(app_list_tree_model->append());
-    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+    string icon;
+    try
+    {
+      icon = Helper::get_program_icon_path(item);
+    }
+    catch (const Glib::FileError& error)
+    {
+      std::cerr << "WARN: Linux desktop file couldn't be found for menu item." << std::endl;
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cerr << "WARN: Could not retrieve menu icon: " << error.what() << std::endl;
+    }
+    if (!icon.empty())
+    {
+      row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(icon);
+    }
+    else
+    {
+      // Get file extenstion
+      string ext;
+      size_t dot_pos = item.find_last_of('.');
+      if (dot_pos != string::npos)
+      {
+        ext = item.substr(dot_pos + 1);
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+      }
+      try
+      {
+        if (ext == "url")
+        {
+          row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/url.png"));
+        }
+        else if (ext == "htm" || ext == "html")
+        {
+          row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/html_document.png"));
+        }
+        else if (ext == "png")
+        {
+          row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/png_file.png"));
+        }
+        else if (ext == "tiff")
+        {
+          row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/tiff_file.png"));
+        }
+        else if (ext == "jpg" || ext == "jpeg")
+        {
+          row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/jpg_file.png"));
+        }
+        else if (ext == "pdf")
+        {
+          row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/pdf_file.png"));
+        }
+        else if (ext == "doc" || ext == "docx")
+        {
+          row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/word_document.png"));
+        }
+        else if (ext == "txt")
+        {
+          row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/text_file.png"));
+        }
+        else
+        {
+          // Default icon
+          row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/default.png"));
+        }
+      }
+      catch (const Glib::Error& error)
+      {
+        std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+      }
+    }
     row[app_list_columns.name] = name;
     row[app_list_columns.description] = "";
     row[app_list_columns.command] = item;
@@ -540,49 +613,131 @@ void MainWindow::set_application_list(const string& prefix_path)
 
   // Secondly, additional programs
   Gtk::TreeRow row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/winecfg.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
   row[app_list_columns.name] = "Wine Config";
   row[app_list_columns.description] = "Wine configuration program";
   row[app_list_columns.command] = "winecfg";
 
   row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/winetricks.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
+  row[app_list_columns.name] = "Winetricks";
+  row[app_list_columns.description] = "Wine helper script to download and install various libraries";
+  row[app_list_columns.command] = Helper::get_winetricks_location() + " --gui";
+
+  row = *(app_list_tree_model->append());
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/uninstaller.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
   row[app_list_columns.name] = "Uninstaller";
   row[app_list_columns.description] = "Remove programs";
   row[app_list_columns.command] = "uninstaller";
 
   row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
-  row[app_list_columns.name] = "Minesweeper";
-  row[app_list_columns.description] = "Minesweeper single-player game";
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/minesweeper.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
+  row[app_list_columns.name] = "WineMine";
+  row[app_list_columns.description] = "Wine Minesweeper single-player game";
   row[app_list_columns.command] = "winemine";
 
   row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/notepad.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
   row[app_list_columns.name] = "Notepad";
   row[app_list_columns.description] = "Text editor";
   row[app_list_columns.command] = "notepad";
 
   row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/internet_explorer.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
   row[app_list_columns.name] = "Internet Explorer";
   row[app_list_columns.description] = "Wine Internet Explorer";
   row[app_list_columns.command] = "iexplore";
 
   row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/task_manager.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
   row[app_list_columns.name] = "Task Manager";
   row[app_list_columns.description] = "Task manager";
   row[app_list_columns.command] = "taskmgr";
 
   row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/file_explorer.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
+  row[app_list_columns.name] = "File Explorer";
+  row[app_list_columns.description] = "Windows file explorer";
+  row[app_list_columns.command] = "explorer";
+
+  row = *(app_list_tree_model->append());
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/command_prompt.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
   row[app_list_columns.name] = "Command Prompt";
   row[app_list_columns.description] = "Command-line interpreter";
   row[app_list_columns.command] = "wineconsole";
 
   row = *(app_list_tree_model->append());
-  row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("ready.png"));
+  try
+  {
+    row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/regedit.png"));
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not find icon: " << error.what() << std::endl;
+  }
   row[app_list_columns.name] = "Registry editor";
   row[app_list_columns.description] = "Windows registry";
   row[app_list_columns.command] = "regedit";
