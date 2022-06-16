@@ -26,21 +26,10 @@
  * \brief Constructor
  * \param parent Reference to parent GTK Window
  */
-BottleSettingsWindow::BottleSettingsWindow(Gtk::Window& parent)
-    : wine_uninstall_button("Uninstaller"),
-      open_notepad_button("Notepad"),
-      open_wordpad_button("Open Wordpad"),
-      open_iexplore_button("Open IE"),
-      wine_task_manager_button("Task manager"),
-      wine_regedit_button("Windows Registery Editor"),
-      explorer_button("Explorer"),
-      wine_console_button("Console"),
-      wine_config_button("Wine Config"),
-      winetricks_button("Winetricks"),
-      active_bottle_(nullptr)
+BottleSettingsWindow::BottleSettingsWindow(Gtk::Window& parent) : active_bottle_(nullptr)
 {
   set_transient_for(parent);
-  set_default_size(900, 540);
+  set_default_size(900, 350);
   set_modal(true);
 
   add(settings_grid);
@@ -63,17 +52,11 @@ BottleSettingsWindow::BottleSettingsWindow(Gtk::Window& parent)
   second_toolbar.set_hexpand(true);
   second_toolbar.set_vexpand(true);
 
-  third_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  third_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  third_toolbar.set_valign(Gtk::ALIGN_CENTER);
-  third_toolbar.set_hexpand(true);
-  third_toolbar.set_vexpand(true);
-
-  fourth_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  fourth_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  fourth_toolbar.set_valign(Gtk::ALIGN_CENTER);
-  fourth_toolbar.set_hexpand(true);
-  fourth_toolbar.set_vexpand(true);
+  // third_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
+  // third_toolbar.set_halign(Gtk::ALIGN_CENTER);
+  // third_toolbar.set_valign(Gtk::ALIGN_CENTER);
+  // third_toolbar.set_hexpand(true);
+  // third_toolbar.set_vexpand(true);
 
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
@@ -91,22 +74,15 @@ BottleSettingsWindow::BottleSettingsWindow(Gtk::Window& parent)
   second_row_label.set_text("Additional packages");
   second_row_label.set_attributes(attr_list_label);
   second_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
-  third_row_label.set_text("Supporting Tools");
-  third_row_label.set_attributes(attr_list_label);
-  third_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
-  fourth_row_label.set_text("Fallback Tools");
-  fourth_row_label.set_attributes(attr_list_label);
-  fourth_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
+  // third_row_label.set_text("Other tools..");
+  // third_row_label.set_attributes(attr_list_label);
+  // third_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
 
   settings_grid.attach(first_row_label, 0, 0);
   settings_grid.attach(first_toolbar, 0, 1);
   settings_grid.attach(hint_label, 0, 2);
   settings_grid.attach(second_row_label, 0, 3);
   settings_grid.attach(second_toolbar, 0, 4);
-  settings_grid.attach(third_row_label, 0, 5);
-  settings_grid.attach(third_toolbar, 0, 6);
-  settings_grid.attach(fourth_row_label, 0, 7);
-  settings_grid.attach(fourth_toolbar, 0, 8);
 
   // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
@@ -139,78 +115,6 @@ BottleSettingsWindow::BottleSettingsWindow(Gtk::Window& parent)
   install_dotnet4_5_2_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
   install_dotnet4_5_2_button.set_tooltip_text("Installs .NET 4.0 and .NET 4.5.2");
   second_toolbar.insert(install_dotnet4_5_2_button, 5);
-
-  // Third row buttons, supporting tools
-  Gtk::Image* uninstaller_image = Gtk::manage(new Gtk::Image());
-  uninstaller_image->set_from_icon_name("applications-system-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  wine_uninstall_button.signal_clicked().connect(uninstaller);
-  wine_uninstall_button.set_tooltip_text("Open Wine uninstaller");
-  wine_uninstall_button.set_icon_widget(*uninstaller_image);
-  third_toolbar.insert(wine_uninstall_button, 0);
-
-  Gtk::Image* notepad_image = Gtk::manage(new Gtk::Image());
-  notepad_image->set_from_icon_name("accessories-text-editor", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  open_notepad_button.signal_clicked().connect(notepad);
-  open_notepad_button.set_tooltip_text("Open Notepad Editor");
-  open_notepad_button.set_icon_widget(*notepad_image);
-  third_toolbar.insert(open_notepad_button, 1);
-
-  Gtk::Image* wordpad_image = Gtk::manage(new Gtk::Image());
-  wordpad_image->set_from_icon_name("accessories-text-editor", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  open_wordpad_button.signal_clicked().connect(wordpad);
-  open_wordpad_button.set_tooltip_text("Open Wordpad");
-  open_wordpad_button.set_icon_widget(*wordpad_image);
-  third_toolbar.insert(open_wordpad_button, 2);
-
-  Gtk::Image* ie_explore = Gtk::manage(new Gtk::Image());
-  ie_explore->set_from_icon_name("emblem-web", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  open_iexplore_button.signal_clicked().connect(iexplore);
-  open_iexplore_button.set_tooltip_text("Open Internet Explorer");
-  open_iexplore_button.set_icon_widget(*ie_explore);
-  third_toolbar.insert(open_iexplore_button, 3);
-
-  Gtk::Image* task_manager_image = Gtk::manage(new Gtk::Image());
-  task_manager_image->set_from_icon_name("open-menu", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  wine_task_manager_button.signal_clicked().connect(task_manager);
-  wine_task_manager_button.set_tooltip_text("Open Wine task manager");
-  wine_task_manager_button.set_icon_widget(*task_manager_image);
-  third_toolbar.insert(wine_task_manager_button, 4);
-
-  Gtk::Image* regedit_image = Gtk::manage(new Gtk::Image());
-  regedit_image->set_from_icon_name("applications-system-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  wine_regedit_button.signal_clicked().connect(regedit);
-  wine_regedit_button.set_tooltip_text("Open Windows Registry editor (For advanced users!)");
-  wine_regedit_button.set_icon_widget(*regedit_image);
-  third_toolbar.insert(wine_regedit_button, 5);
-
-  // Fourth row buttons, fallback tools
-  Gtk::Image* explorer_image = Gtk::manage(new Gtk::Image());
-  explorer_image->set_from_icon_name("system-file-manager", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  explorer_button.signal_clicked().connect(explorer);
-  explorer_button.set_tooltip_text("Open Explorer");
-  explorer_button.set_icon_widget(*explorer_image);
-  fourth_toolbar.insert(explorer_button, 0);
-
-  Gtk::Image* wine_console_image = Gtk::manage(new Gtk::Image());
-  wine_console_image->set_from_icon_name("utilities-terminal", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  wine_console_button.signal_clicked().connect(console);
-  wine_console_button.set_tooltip_text("Open Windows cmd");
-  wine_console_button.set_icon_widget(*wine_console_image);
-  fourth_toolbar.insert(wine_console_button, 1);
-
-  Gtk::Image* winecfg_image = Gtk::manage(new Gtk::Image());
-  winecfg_image->set_from_icon_name("preferences-system", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  wine_config_button.signal_clicked().connect(winecfg);
-  wine_config_button.set_tooltip_text("FALLBACK: Open wine configuration GUI");
-  wine_config_button.set_icon_widget(*winecfg_image);
-  fourth_toolbar.insert(wine_config_button, 2);
-
-  Gtk::Image* winetricks_image = Gtk::manage(new Gtk::Image());
-  winetricks_image->set_from_icon_name("preferences-other-symbolic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  winetricks_button.signal_clicked().connect(winetricks);
-  winetricks_button.set_tooltip_text("FALLBACK: Winetricks GUI");
-  winetricks_button.set_icon_widget(*winetricks_image);
-  fourth_toolbar.insert(winetricks_button, 3);
 
   show_all_children();
 }

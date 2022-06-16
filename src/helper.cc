@@ -33,8 +33,12 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <pwd.h>
+#include <regex>
 #include <stdexcept>
+#include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui config/storage directory path */
 static string WineGuiDir = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
@@ -765,6 +769,56 @@ bool Helper::get_bottle_status(const string& prefix_path)
   {
     return false;
   }
+}
+
+/**
+ * \brief Retrieve Linux icon path from Windows lnk path.
+ * Trying to find desktop file in: ~/.local/share/applications/wine. And then search for the icon in: ~/.local/share/icons.
+ * \param shortcut_path Path of lnk file under Windows
+ * \return Icon path under Linux (empty string is possible)
+ */
+string Helper::get_program_icon_path(const string& shortcut_path)
+{
+  string icon;
+  std::size_t pos = shortcut_path.find("Start Menu");
+  if (pos != std::string::npos)
+  {
+    const char* homedir;
+    string path = shortcut_path.substr(pos + 12); // 12 is "Start Menu\\" length
+    // Get home directory under Linux
+    if ((homedir = getenv("HOME")) == NULL)
+    {
+      homedir = getpwuid(getuid())->pw_dir;
+    }
+    string home_dir = std::string(homedir);
+    // Convert double backslash to single forward slash + add prefix
+    path = home_dir + "/.local/share/applications/wine/" + std::regex_replace(path, std::regex(R"(\\\\)"), R"(/)");
+    // Change .lnk to .desktop extenstion
+    std::size_t dot_pos = path.find_last_of(".");
+    if (dot_pos != std::string::npos)
+    {
+      path = path.substr(0, dot_pos + 1) + "desktop";
+      string file_content = Helper::read_file(path);
+      // Get icon
+      std::size_t icon_pos = file_content.find("Icon=");
+      if (icon_pos != std::string::npos)
+      {
+        file_content = file_content.substr(icon_pos + 5);
+        file_content = file_content.substr(0, file_content.find_first_of('\n'));
+        // Use the 32x32 png image
+        icon = home_dir + "/.local/share/icons/hicolor/32x32/apps/" + file_content + ".png";
+      }
+    }
+    else
+    {
+      throw std::runtime_error("Could not find extension in application menu item: " + shortcut_path);
+    }
+  }
+  else
+  {
+    throw std::runtime_error("Application menu item is not part of the start menu: " + shortcut_path);
+  }
+  return icon;
 }
 
 /**

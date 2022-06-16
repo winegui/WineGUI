@@ -59,6 +59,9 @@
     "cinttypes": "cpp",
     "typeinfo": "cpp",
     "queue": "cpp",
-    "stack": "cpp"
+    "stack": "cpp",
+    "bitset": "cpp",
+    "regex": "cpp",
+    "shared_mutex": "cpp"
 }
 }

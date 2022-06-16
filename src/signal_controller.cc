@@ -155,20 +155,6 @@ void SignalController::dispatch_signals()
   settings_window_.dotnet.connect(sigc::mem_fun(manager_, &BottleManager::install_dot_net));
   settings_window_.visual_cpp_package.connect(sigc::mem_fun(manager_, &BottleManager::install_visual_cpp_package));
 
-  // Settings additional tool buttons
-  settings_window_.uninstaller.connect(sigc::mem_fun(manager_, &BottleManager::open_uninstaller));
-  settings_window_.notepad.connect(sigc::mem_fun(manager_, &BottleManager::open_notepad));
-  settings_window_.wordpad.connect(sigc::mem_fun(manager_, &BottleManager::open_wordpad));
-  settings_window_.iexplore.connect(sigc::mem_fun(manager_, &BottleManager::open_iexplorer));
-  settings_window_.task_manager.connect(sigc::mem_fun(manager_, &BottleManager::open_task_manager));
-  settings_window_.regedit.connect(sigc::mem_fun(manager_, &BottleManager::open_registery_editor));
-
-  // Settings fallback tool buttons
-  settings_window_.explorer.connect(sigc::mem_fun(manager_, &BottleManager::open_explorer));
-  settings_window_.console.connect(sigc::mem_fun(manager_, &BottleManager::open_console));
-  settings_window_.winetricks.connect(sigc::mem_fun(manager_, &BottleManager::open_winetricks));
-  settings_window_.winecfg.connect(sigc::mem_fun(manager_, &BottleManager::open_winecfg));
-
   // WineGUI Preference Window
   preferences_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
 }
