@@ -19,12 +19,12 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 
 ## Features
 
-- Graphical user-interface on top of [Wine](https://www.winehq.org/)
+- **Graphical user-interface** on top of [Wine](https://www.winehq.org/)
 - Creating a new machine using an **easy step-by-step wizard**
-- Application list per machine (with _search feature_)
+- **Application list** per machine (with _search feature_)
 - Editing and removing Windows machines in a _breeze_
-- One-button click for configuring and changing settings (like installing DirectX **has never been so easy**)
-- One-button click to open the `C:\` drive, simulate a reboot or kill all Windows processes (in case you need it)
+- Configure window **installing additional software** with just a single click (like installing DirectX)
+- **One-button click** to run a program, open the `C:` drive, simulate a reboot or kill all processes
 
 ## Development
 
