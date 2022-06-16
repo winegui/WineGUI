@@ -611,24 +611,48 @@ void BottleManager::run_program(string program)
     string wine_prefix = active_bottle_->wine_location();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    // Between quotes (due to spaces)
-    program = "\"" + program + "\"";
-    std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
-                   debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
-                   logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-                   write_log_dispatcher = &write_log_dispatcher_] {
-      string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, true, logging_stderr);
-      if (debug_logging && !output.empty())
-      {
+    // For all programs (except winetricks)
+    if (!program.ends_with("winetricks --gui"))
+    {
+      // Between quotes (due to spaces)
+      program = "\"" + program + "\"";
+      std::thread t([wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
+                     debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
+                     logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
+                     write_log_dispatcher = &write_log_dispatcher_] {
+        string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, true, logging_stderr);
+        if (debug_logging && !output.empty())
         {
-          std::lock_guard<std::mutex> lock(output_logging_mutex);
-          logging_bottle_prefix.get() = wine_prefix;
-          output_logging.get() = output;
+          {
+            std::lock_guard<std::mutex> lock(output_logging_mutex);
+            logging_bottle_prefix.get() = wine_prefix;
+            output_logging.get() = output;
+          }
+          write_log_dispatcher->emit();
         }
-        write_log_dispatcher->emit();
-      }
-    });
-    t.detach();
+      });
+      t.detach();
+    }
+    else
+    {
+      // We have an exception for winetricks, since that doesn't need the wine command
+      std::thread t([wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
+                     debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
+                     logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
+                     write_log_dispatcher = &write_log_dispatcher_] {
+        string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+        if (debug_logging && !output.empty())
+        {
+          {
+            std::lock_guard<std::mutex> lock(output_logging_mutex);
+            logging_bottle_prefix.get() = wine_prefix;
+            output_logging.get() = output;
+          }
+          write_log_dispatcher->emit();
+        }
+      });
+      t.detach();
+    }
   }
 }
 
