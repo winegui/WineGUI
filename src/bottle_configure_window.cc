@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2020-2022 WineGUI
  *
- * \file    bottle_settings_window.cc
- * \brief   Wine bottle setting window
+ * \file    bottle_configure_window.cc
+ * \brief   Wine bottle configure window
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "bottle_settings_window.h"
+#include "bottle_configure_window.h"
 #include "bottle_item.h"
 #include "helper.h"
 
@@ -26,19 +26,19 @@
  * \brief Constructor
  * \param parent Reference to parent GTK Window
  */
-BottleSettingsWindow::BottleSettingsWindow(Gtk::Window& parent) : active_bottle_(nullptr)
+BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottle_(nullptr)
 {
   set_transient_for(parent);
   set_default_size(900, 350);
   set_modal(true);
 
-  add(settings_grid);
-  settings_grid.set_margin_top(5);
-  settings_grid.set_margin_end(5);
-  settings_grid.set_margin_bottom(6);
-  settings_grid.set_margin_start(6);
-  settings_grid.set_column_spacing(6);
-  settings_grid.set_row_spacing(8);
+  add(configure_grid);
+  configure_grid.set_margin_top(5);
+  configure_grid.set_margin_end(5);
+  configure_grid.set_margin_bottom(6);
+  configure_grid.set_margin_start(6);
+  configure_grid.set_column_spacing(6);
+  configure_grid.set_row_spacing(8);
 
   first_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
   first_toolbar.set_halign(Gtk::ALIGN_CENTER);
@@ -78,11 +78,11 @@ BottleSettingsWindow::BottleSettingsWindow(Gtk::Window& parent) : active_bottle_
   // third_row_label.set_attributes(attr_list_label);
   // third_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
 
-  settings_grid.attach(first_row_label, 0, 0);
-  settings_grid.attach(first_toolbar, 0, 1);
-  settings_grid.attach(hint_label, 0, 2);
-  settings_grid.attach(second_row_label, 0, 3);
-  settings_grid.attach(second_toolbar, 0, 4);
+  configure_grid.attach(first_row_label, 0, 0);
+  configure_grid.attach(first_toolbar, 0, 1);
+  configure_grid.attach(hint_label, 0, 2);
+  configure_grid.attach(second_row_label, 0, 3);
+  configure_grid.attach(second_toolbar, 0, 4);
 
   // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
@@ -122,22 +122,22 @@ BottleSettingsWindow::BottleSettingsWindow(Gtk::Window& parent) : active_bottle_
 /**
  * \brief Destructor
  */
-BottleSettingsWindow::~BottleSettingsWindow()
+BottleConfigureWindow::~BottleConfigureWindow()
 {
 }
 
 /**
  * \brief Same as show() but will also update the Window title
  */
-void BottleSettingsWindow::show()
+void BottleConfigureWindow::show()
 {
   this->update_installed();
 
   if (active_bottle_ != nullptr)
-    set_title("Settings of machine - " +
+    set_title("Configure machine - " +
               ((!active_bottle_->name().empty()) ? active_bottle_->name() : active_bottle_->folder_name())); // Fall-back to folder name
   else
-    set_title("Settings for machine (Unknown machine)");
+    set_title("Configure machine (Unknown machine)");
   // Call parent show
   Gtk::Widget::show();
 }
@@ -146,7 +146,7 @@ void BottleSettingsWindow::show()
  * \brief Signal handler when a new bottle is set in the main window
  * \param[in] bottle - New bottle
  */
-void BottleSettingsWindow::set_active_bottle(BottleItem* bottle)
+void BottleConfigureWindow::set_active_bottle(BottleItem* bottle)
 {
   active_bottle_ = bottle;
 }
@@ -154,7 +154,7 @@ void BottleSettingsWindow::set_active_bottle(BottleItem* bottle)
 /**
  * \brief Signal handler for resetting the active bottle to null
  */
-void BottleSettingsWindow::reset_active_bottle()
+void BottleConfigureWindow::reset_active_bottle()
 {
   active_bottle_ = nullptr;
 }
@@ -162,7 +162,7 @@ void BottleSettingsWindow::reset_active_bottle()
 /**
  * \brief Update GUI state depending on the packages installed
  */
-void BottleSettingsWindow::update_installed()
+void BottleConfigureWindow::update_installed()
 {
   if (is_d3dx9_installed())
   {
@@ -276,7 +276,7 @@ void BottleSettingsWindow::update_installed()
  * \brief Check is D3DX9 (DirectX 9 OpenGL) is installed
  * \return True if installed otherwise False
  */
-bool BottleSettingsWindow::is_d3dx9_installed()
+bool BottleConfigureWindow::is_d3dx9_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -292,7 +292,7 @@ bool BottleSettingsWindow::is_d3dx9_installed()
  * \brief Check is DXVK (Vulkan based DirectX 9/10/11) is installed
  * \return True if installed otherwise False
  */
-bool BottleSettingsWindow::is_dxvk_installed()
+bool BottleConfigureWindow::is_dxvk_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -309,7 +309,7 @@ bool BottleSettingsWindow::is_dxvk_installed()
  * As fallback: Wine is looking for the liberation font on the local unix system (in the /usr/share/fonts/.. directory)
  * \return True if installed otherwise False
  */
-bool BottleSettingsWindow::is_liberation_installed()
+bool BottleConfigureWindow::is_liberation_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -326,7 +326,7 @@ bool BottleSettingsWindow::is_liberation_installed()
  * \brief Check if MS Core fonts are installed
  * \return True if installed otherwise False
  */
-bool BottleSettingsWindow::is_core_fonts_installed()
+bool BottleConfigureWindow::is_core_fonts_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -343,7 +343,7 @@ bool BottleSettingsWindow::is_core_fonts_installed()
  * \brief Check if MS Visual C++ installed
  * \return True if installed otherwise False
  */
-bool BottleSettingsWindow::is_visual_cpp_installed()
+bool BottleConfigureWindow::is_visual_cpp_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -377,7 +377,7 @@ bool BottleSettingsWindow::is_visual_cpp_installed()
  * \brief Check if MS .NET v4.0 is installed
  * \return True if installed otherwise False
  */
-bool BottleSettingsWindow::is_dotnet_4_0_installed()
+bool BottleConfigureWindow::is_dotnet_4_0_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -403,7 +403,7 @@ bool BottleSettingsWindow::is_dotnet_4_0_installed()
  * \brief Check ife MS .NET v4.5.2 is installed
  * \return True if installed otherwise False
  */
-bool BottleSettingsWindow::is_dotnet_4_5_2_installed()
+bool BottleConfigureWindow::is_dotnet_4_5_2_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)

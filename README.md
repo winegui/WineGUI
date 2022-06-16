@@ -21,7 +21,8 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 
 - Graphical user-interface on top of [Wine](https://www.winehq.org/)
 - Creating a new machine using an **easy step-by-step wizard**
-- Editing and removing Windows machines in a *breeze*
+- Application list per machine (with _search feature_)
+- Editing and removing Windows machines in a _breeze_
 - One-button click for configuring and changing settings (like installing DirectX **has never been so easy**)
 - One-button click to open the `C:\` drive, simulate a reboot or kill all Windows processes (in case you need it)
 
@@ -84,7 +85,7 @@ Cmake is only needed once, after that you can often use:
 
 Clean the build via: `ninja clean`
 
-*Hint:* Run `ninja help` for all available targets.
+_Hint:_ Run `ninja help` for all available targets.
 
 ### Debug
 
@@ -99,7 +100,7 @@ gdb -ex=run bin/winegui
 
 ### Memory check
 
-First **build** the (Linux) target including *debug symbols*. Binary should be present in the `build/bin` folder.
+First **build** the (Linux) target including _debug symbols_. Binary should be present in the `build/bin` folder.
 
 Next, check for memory leaks using `valgrind` by executing:
 
@@ -138,7 +139,7 @@ ninja
 Before you can make a new release, align the version number in WineGUI with the version you want to release.
 Then create a new tagged version in Gitlab with the same version name.
 
-*Note:* Only a `release tag` on the `master` branch will trigger the publish task.
+_Note:_ Only a `release tag` on the `master` branch will trigger the publish task.
 
 ### Automated Clang Format
 

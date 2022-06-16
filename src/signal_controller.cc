@@ -22,9 +22,9 @@
 #include "signal_controller.h"
 
 #include "about_dialog.h"
+#include "bottle_configure_window.h"
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
-#include "bottle_settings_window.h"
 #include "helper.h"
 #include "main_window.h"
 #include "menu.h"
@@ -38,14 +38,14 @@ SignalController::SignalController(BottleManager& manager,
                                    PreferencesWindow& preferences_window,
                                    AboutDialog& about_dialog,
                                    BottleEditWindow& edit_window,
-                                   BottleSettingsWindow& settings_window)
+                                   BottleConfigureWindow& configure_window)
     : main_window_(nullptr),
       manager_(manager),
       menu_(menu),
       preferences_window_(preferences_window),
       about_dialog_(about_dialog),
       edit_window_(edit_window),
-      settings_window_(settings_window),
+      configure_window_(configure_window),
       bottle_created_dispatcher_(),
       error_message_created_dispatcher_(),
       thread_bottle_manager_(nullptr)
@@ -90,7 +90,7 @@ void SignalController::dispatch_signals()
   menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
   menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
   menu_.edit_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
-  menu_.settings_bottle.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::show));
+  menu_.settings_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::show));
   menu_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
   menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
   menu_.open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
@@ -102,17 +102,17 @@ void SignalController::dispatch_signals()
   // Distribute the active bottle signal from Main Window
   main_window_->active_bottle.connect(sigc::mem_fun(manager_, &BottleManager::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::set_active_bottle));
-  main_window_->active_bottle.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::set_active_bottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::set_active_bottle));
   // Distribute the reset bottle signal from the manager
   manager_.reset_active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::reset_active_bottle));
-  manager_.reset_active_bottle.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::reset_active_bottle));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_detailed_info));
   manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_application_list));
   // Removed bottle signal from the manager
   manager_.bottle_removed.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::bottle_removed));
   // Package install finished (in settings window), close the busy dialog & refresh the settings window
   manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(*main_window_, &MainWindow::close_busy_dialog));
-  manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::update_installed));
+  manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::update_installed));
 
   // Menu / Toolbar actions
   main_window_->new_bottle.connect(sigc::mem_fun(this, &SignalController::on_new_bottle));
@@ -120,7 +120,7 @@ void SignalController::dispatch_signals()
   main_window_->run_executable.connect(sigc::mem_fun(manager_, &BottleManager::run_executable));
   main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
   main_window_->show_edit_window.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
-  main_window_->show_settings_window.connect(sigc::mem_fun(settings_window_, &BottleSettingsWindow::show));
+  main_window_->show_configure_window.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::show));
   main_window_->open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
   main_window_->reboot_bottle.connect(sigc::mem_fun(manager_, &BottleManager::reboot));
   main_window_->update_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update));
@@ -146,14 +146,14 @@ void SignalController::dispatch_signals()
   helper.failure_on_exec.connect(sigc::mem_fun(*main_window_, &MainWindow::on_exec_failure));
 
   // Settings gaming package buttons
-  settings_window_.directx9.connect(sigc::mem_fun(manager_, &BottleManager::install_d3dx9));
-  settings_window_.vulkan.connect(sigc::mem_fun(manager_, &BottleManager::install_dxvk));
+  configure_window_.directx9.connect(sigc::mem_fun(manager_, &BottleManager::install_d3dx9));
+  configure_window_.vulkan.connect(sigc::mem_fun(manager_, &BottleManager::install_dxvk));
 
   // Settings additional package buttons
-  settings_window_.liberation_fonts.connect(sigc::mem_fun(manager_, &BottleManager::install_liberation));
-  settings_window_.corefonts.connect(sigc::mem_fun(manager_, &BottleManager::install_core_fonts));
-  settings_window_.dotnet.connect(sigc::mem_fun(manager_, &BottleManager::install_dot_net));
-  settings_window_.visual_cpp_package.connect(sigc::mem_fun(manager_, &BottleManager::install_visual_cpp_package));
+  configure_window_.liberation_fonts.connect(sigc::mem_fun(manager_, &BottleManager::install_liberation));
+  configure_window_.corefonts.connect(sigc::mem_fun(manager_, &BottleManager::install_core_fonts));
+  configure_window_.dotnet.connect(sigc::mem_fun(manager_, &BottleManager::install_dot_net));
+  configure_window_.visual_cpp_package.connect(sigc::mem_fun(manager_, &BottleManager::install_visual_cpp_package));
 
   // WineGUI Preference Window
   preferences_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
