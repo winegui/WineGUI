@@ -46,7 +46,7 @@ public:
   sigc::signal<void> finished_new_bottle;        /*!< Finished signal */
   sigc::signal<void, BottleItem*> active_bottle; /*!< Set the active bottle in manager, based on the selected bottle */
   sigc::signal<void> show_edit_window;           /*!< show Edit window signal */
-  sigc::signal<void> show_settings_window;       /*!< show Settings window signal */
+  sigc::signal<void> show_configure_window;      /*!< show Settings window signal */
   sigc::signal<void, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, Glib::ustring&, bool&, BottleTypes::AudioDriver>
       new_bottle;                                       /*!< Create new Wine Bottle Signal */
   sigc::signal<void, string, bool> run_executable;      /*!< Run an EXE or MSI application in Wine with provided filename */
@@ -105,6 +105,7 @@ protected:
   Gtk::SearchEntry app_list_search_entry;                 /*!< Application list search entry */
   Gtk::Paned container_paned;                             /*!< Main container horizontal paned panel */
   Glib::RefPtr<Gtk::ListStore> app_list_tree_model;       /*!< Application list tree model (using a liststore)  */
+  Glib::RefPtr<Gtk::TreeModelFilter> app_list_filter;     /*!< Tree model filter for app list  */
   Gtk::Toolbar toolbar;                                   /*!< Toolbar at top */
   Gtk::Separator separator1;                              /*!< Seperator */
   Gtk::Grid detail_grid;                                  /*!< Grid layout container to have multiple rows & columns below the toolbar */
@@ -130,7 +131,7 @@ protected:
   // Toolbar buttons
   Gtk::ToolButton new_button;            /*!< New toolbar button */
   Gtk::ToolButton edit_button;           /*!< Edit toolbar button */
-  Gtk::ToolButton settings_button;       /*!< Settings toolbar button */
+  Gtk::ToolButton configure_button;      /*!< Configure toolbar button */
   Gtk::ToolButton run_button;            /*!< Run... toolbar button */
   Gtk::ToolButton open_c_driver_button;  /*!< Open C:\ drive toolbar button */
   Gtk::ToolButton reboot_button;         /*!< Reboot toolbar button */
@@ -146,17 +147,20 @@ private:
 
   // Signal handlers
   virtual void on_bottle_row_clicked(Gtk::ListBoxRow* row);
+  virtual void on_app_list_changed();
   virtual void on_application_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* /* column */);
   virtual void on_new_bottle_apply();
 
   // Private methods
   void set_detailed_info(const BottleItem& bottle);
   void set_application_list(const string& prefix_path);
+  void add_application(const string& name, const string& icon_name, const string& description, const string& command, bool is_icon_full_path = false);
   void check_version_update(bool show_equal = false);
   void load_stored_window_settings();
   void create_left_panel();
   void create_right_panel();
   void set_sensitive_toolbar_buttons(bool sensitive);
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, Gtk::ListBoxRow* before);
+  bool app_list_visible_func(const Gtk::TreeModel::const_iterator& iter);
   void treeview_set_cell_data_name_desc(Gtk::CellRenderer* renderer, const Gtk::TreeModel::iterator& iter);
 };

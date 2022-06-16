@@ -56,7 +56,7 @@ set(HEADERS
   include/main_window.h
   include/preferences_window.h
   include/bottle_edit_window.h
-  include/bottle_settings_window.h
+  include/bottle_configure_window.h
   include/busy_dialog.h
   include/bottle_manager.h
   include/bottle_config_file.h
@@ -74,7 +74,7 @@ set(SOURCES
   src/main_window.cc
   src/preferences_window.cc
   src/bottle_edit_window.cc
-  src/bottle_settings_window.cc
+  src/bottle_configure_window.cc
   src/busy_dialog.cc
   src/bottle_manager.cc
   src/bottle_config_file.cc

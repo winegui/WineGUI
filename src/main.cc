@@ -19,9 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "about_dialog.h"
+#include "bottle_configure_window.h"
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
-#include "bottle_settings_window.h"
 #include "main_window.h"
 #include "menu.h"
 #include "preferences_window.h"
@@ -74,7 +74,7 @@ static MainWindow& setupApplication()
   static PreferencesWindow preferences_window(main_window);
   static AboutDialog about_dialog(main_window);
   static BottleEditWindow edit_window(main_window);
-  static BottleSettingsWindow settings_window(main_window);
+  static BottleConfigureWindow settings_window(main_window);
   static SignalController signal_controller(manager, menu, preferences_window, about_dialog, edit_window, settings_window);
 
   signal_controller.set_main_window(&main_window);

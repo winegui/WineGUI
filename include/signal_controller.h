@@ -31,7 +31,7 @@ class Menu;
 class PreferencesWindow;
 class AboutDialog;
 class BottleEditWindow;
-class BottleSettingsWindow;
+class BottleConfigureWindow;
 struct UpdateBottleStruct;
 
 /**
@@ -43,20 +43,17 @@ class SignalController : public Gtk::Window
   friend class MainWindow;
 
 public:
-  // Signals
-  sigc::signal<void> signal_show_edit_window;     /*!< show Edit window signal */
-  sigc::signal<void> signal_show_settings_window; /*!< show Settings window signal */
-
   SignalController(BottleManager& manager,
                    Menu& menu,
                    PreferencesWindow& preferences_window,
                    AboutDialog& about_dialog,
                    BottleEditWindow& edit_window,
-                   BottleSettingsWindow& settings_window);
+                   BottleConfigureWindow& configure_window);
   virtual ~SignalController();
   void set_main_window(MainWindow* main_window);
   void dispatch_signals();
 
+  // Signal handlers
   // signal_bottle_created() and signal_bottle_updated() are called from the thread bottle manager,
   // it's executed in the that thread. And can trigger the dispatcher (=thread safe), which gets executed in the GUI
   // thread.
@@ -89,7 +86,7 @@ private:
   PreferencesWindow& preferences_window_;
   AboutDialog& about_dialog_;
   BottleEditWindow& edit_window_;
-  BottleSettingsWindow& settings_window_;
+  BottleConfigureWindow& configure_window_;
 
   // Dispatcher for handling signals from the thread towards a GUI thread
   Glib::Dispatcher bottle_created_dispatcher_;

@@ -1,8 +1,8 @@
 /**
  * Copyright (c) 2019-2022 WineGUI
  *
- * \file    bottle_settings_window.h
- * \brief   Wine bottle settings window
+ * \file    bottle_configure_window.h
+ * \brief   Wine bottle configure window
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,10 +28,10 @@ using std::string;
 class BottleItem;
 
 /**
- * \class BottleSettingsWindow
- * \brief Wine Bottle settings GTK Window class
+ * \class BottleConfigureWindow
+ * \brief Wine Bottle Configure GTK Window class
  */
-class BottleSettingsWindow : public Gtk::Window
+class BottleConfigureWindow : public Gtk::Window
 {
 public:
   // Signals
@@ -42,8 +42,8 @@ public:
   sigc::signal<void, Gtk::Window&, Glib::ustring&> visual_cpp_package; /*!< Install Visual C++ package signal */
   sigc::signal<void, Gtk::Window&, Glib::ustring&> dotnet;             /*!< Install .NET signal */
 
-  explicit BottleSettingsWindow(Gtk::Window& parent);
-  virtual ~BottleSettingsWindow();
+  explicit BottleConfigureWindow(Gtk::Window& parent);
+  virtual ~BottleConfigureWindow();
 
   void show();
   void set_active_bottle(BottleItem* bottle);
@@ -52,7 +52,7 @@ public:
 
 protected:
   // Child widgets
-  Gtk::Grid settings_grid; /*!< The overall settings GTK grid */
+  Gtk::Grid configure_grid; /*!< The overall grid */
 
   Gtk::Toolbar first_toolbar;  /*!< 1st row toolbar */
   Gtk::Toolbar second_toolbar; /*!< 2nd row toolbar */
