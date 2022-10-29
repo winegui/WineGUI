@@ -25,6 +25,7 @@
 struct GeneralConfigData
 {
   std::string default_folder;
+  bool display_default_wine_machine;
   bool prefer_wine64;
   bool enable_logging_stderr;
 };

@@ -52,6 +52,7 @@ bool GeneralConfigFile::write_config_file(const GeneralConfigData& general_confi
   try
   {
     keyfile.set_string("General", "DefaultFolder", general_config.default_folder);
+    keyfile.set_boolean("General", "DisplayDefaultWineMachine", general_config.display_default_wine_machine);
     keyfile.set_boolean("General", "PreferWine64", general_config.prefer_wine64);
     keyfile.set_boolean("General", "EnableLoggingStderr", general_config.enable_logging_stderr);
     success = keyfile.save_to_file(file_path);
@@ -81,6 +82,7 @@ GeneralConfigData GeneralConfigFile::read_config_file()
   struct GeneralConfigData general_config;
   // Defaults config values
   general_config.default_folder = default_prefix_folder;
+  general_config.display_default_wine_machine = true;
   general_config.prefer_wine64 = false;
   general_config.enable_logging_stderr = true;
 
@@ -97,6 +99,7 @@ GeneralConfigData GeneralConfigFile::read_config_file()
     {
       keyfile.load_from_file(file_path);
       general_config.default_folder = keyfile.get_string("General", "DefaultFolder");
+      general_config.display_default_wine_machine = keyfile.get_boolean("General", "DisplayDefaultWineMachine");
       general_config.prefer_wine64 = keyfile.get_boolean("General", "PreferWine64");
       general_config.enable_logging_stderr = keyfile.get_boolean("General", "EnableLoggingStderr");
     }

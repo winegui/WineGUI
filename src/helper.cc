@@ -20,6 +20,7 @@
  */
 #include "helper.h"
 #include "wine_defaults.h"
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <cstring>
@@ -40,8 +41,11 @@
 #include <time.h>
 #include <unistd.h>
 
-std::vector<std::string> dirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui config/storage directory path */
-static string WineGuiDir = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
+std::vector<std::string> wineGuiDirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui config/storage directory path */
+static string WineGuiDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDirs);
+
+std::vector<std::string> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
+static string DefaultBottleWineDir = Glib::build_path(G_DIR_SEPARATOR_S, defaultWineDir);
 
 // Wine & Winetricks exec
 static const string WineExecutable = "wine";     /*!< Currently expect to be installed globally */
@@ -132,25 +136,38 @@ Helper& Helper::get_instance()
  ****************************************************************************/
 
 /**
- * \brief Get the bottle directories within the given path
- * \param[in] dir_path Path to search in
- * \return map of path names (strings) and modification time (in ms) of found directories (*full paths*)
+ * \brief Get the bottle directories within the given path. Depending on the input parameter also add the default Wine bottle (at: ~/.wine).
+ * Bottles are sorted alphabetically.
+ * \param[in] dir_path Path in which we look for the bottles sub-directories
+ * \param[in] display_default_wine_machine If set to true, also add the default Wine bottle to the list of bottle paths
+ * \return List of full path (string) of the found directories plus ~/.wine
  */
-std::map<std::string, unsigned long> Helper::get_bottles_paths(const string& dir_path) // , sort = DEFAULT, NAME, DATE>
+std::vector<std::string> Helper::get_bottles_paths(const string& dir_path, bool display_default_wine_machine)
 {
-  std::map<std::string, unsigned long> r;
+  std::vector<std::string> list;
+  list.reserve(5);
   Glib::Dir dir(dir_path);
   auto name = dir.read_name();
+
   while (!name.empty())
   {
     auto path = Glib::build_filename(dir_path, name);
     if (Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR))
     {
-      r.insert(std::pair<string, unsigned long>(path, get_modified_time(path)));
+      list.push_back(path);
     }
     name = dir.read_name();
   }
-  return r;
+  // Sort alphabetically (case insensitive)
+  std::sort(list.begin(), list.end(), Helper::case_insensitive_compare);
+
+  // Add default wine bottle to the end, if enabled by settings and if directory is present
+  if (display_default_wine_machine && dir_exists(DefaultBottleWineDir))
+  {
+    list.push_back(DefaultBottleWineDir);
+  }
+
+  return list;
 }
 
 /**
@@ -1206,6 +1223,15 @@ string Helper::get_image_location(const string& filename)
   }
 }
 
+/**
+ * \brief Check if the prefix is equal to the default wine bottle path (~/.wine)
+ * \return True if it's the default wine bottle path, otherwise false
+ */
+bool Helper::is_default_wine_bottle(const string& prefix_path)
+{
+  return (prefix_path.compare(DefaultBottleWineDir) == 0);
+}
+
 /****************************************************************************
  *  Private methods                                                         *
  ****************************************************************************/
@@ -1570,18 +1596,6 @@ std::vector<string> Helper::read_file_lines(const string& file_path)
 }
 
 /**
- * \brief Get the last modified date of a file and/or folder
- * \param[in] file_path File/Folder location
- * \return Last modifiction time in milliseconds (ms)
- */
-unsigned long Helper::get_modified_time(const string& file_path)
-{
-  auto time_info = Gio::File::create_for_path(file_path)->query_info("time");
-  auto time = time_info->modification_time();
-  return (time.tv_sec * 1000) + (time.tv_usec / 1000);
-}
-
-/**
  * \brief Split string by delimiter
  * \param[in] s         String to be splitted
  * \param[in] delimiter Delimiter character
@@ -1601,4 +1615,19 @@ std::vector<string> Helper::split(const string& s, const char delimiter)
     end = s.find_first_of(delimiter, start);
   }
   return output;
+}
+
+/**
+ * \brief Case-insensitive compare method, use together with sort()
+ */
+bool Helper::case_insensitive_compare(const std::string& a, const std::string& b)
+{
+  struct case_insensitive_less : public std::binary_function<char, char, bool>
+  {
+    bool operator()(char x, char y) const
+    {
+      return toupper(static_cast<unsigned char>(x)) < toupper(static_cast<unsigned char>(y));
+    }
+  };
+  return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), case_insensitive_less());
 }

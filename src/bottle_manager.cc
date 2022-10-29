@@ -138,7 +138,7 @@ void BottleManager::update_config_and_bottles(bool is_startup)
     bottles_.clear();
 
   // Get the bottle directories
-  std::map<string, unsigned long> bottle_dirs;
+  std::vector<string> bottle_dirs;
   try
   {
     bottle_dirs = get_bottle_paths();
@@ -1061,6 +1061,7 @@ GeneralConfigData BottleManager::load_and_save_general_config()
 {
   GeneralConfigData general_config = GeneralConfigFile::read_config_file();
   bottle_location_ = general_config.default_folder;
+  is_display_default_wine_machine_ = general_config.display_default_wine_machine;
   is_wine64_bit_ = ((Helper::determine_wine_executable() == 1) || general_config.prefer_wine64);
   is_logging_stderr_ = general_config.enable_logging_stderr;
   return general_config;
@@ -1130,7 +1131,7 @@ string BottleManager::get_wine_version()
  * \brief Get Bottle Paths
  * \return Return a map of bottle paths (string) and modification time (in ms)
  */
-std::map<string, unsigned long> BottleManager::get_bottle_paths()
+std::vector<string> BottleManager::get_bottle_paths()
 {
   if (!Helper::dir_exists(bottle_location_))
   {
@@ -1143,29 +1144,29 @@ std::map<string, unsigned long> BottleManager::get_bottle_paths()
   if (Helper::dir_exists(bottle_location_))
   {
     // Continue
-    return Helper::get_bottles_paths(bottle_location_);
+    return Helper::get_bottles_paths(bottle_location_, is_display_default_wine_machine_);
   }
   else
   {
     throw std::runtime_error("Configuration directory still not found (probably no permissions):\n" + bottle_location_);
   }
   // Otherwise empty
-  return std::map<string, unsigned long>();
+  return std::vector<string>();
 }
 
 /**
- * \brief Create wine bottle classes and add them to the private bottles variable
+ * \brief Create wine BottleItem objects and add them to a list.
  * \param[in] bottle_dirs  The list of bottle directories
+ * \returns Array of Bottle Items
  */
-std::list<BottleItem> BottleManager::create_wine_bottles(std::map<string, unsigned long> bottle_dirs)
+std::list<BottleItem> BottleManager::create_wine_bottles(std::vector<string> bottle_dirs)
 {
   std::list<BottleItem> bottles;
   string wine_version = get_wine_version();
 
   // Retrieve detailed info for each wine bottle prefix
-  for (const auto& [prefix, _] : bottle_dirs)
+  for (auto prefix : bottle_dirs)
   {
-    std::ignore = _;
     // Reset variables
     string name = "";
     string folder_name = "";
