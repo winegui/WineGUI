@@ -13,7 +13,7 @@ static_code_analysis:
 
 code_style_guidelines:
   stage: test
-  script: 
+  script:
     - clang-format --version
     - ./scripts/check_format.sh
 
@@ -30,10 +30,10 @@ build:
       - build_prod/WineGUI-*.rpm
       - build_prod/WineGUI-*.tar.gz
   cache:
-      key: "$CI_PIPELINE_ID"
-      paths:
-        - build_prod/bin
-      policy: push
+    key: "$CI_PIPELINE_ID"
+    paths:
+      - build_prod/bin
+    policy: push
 
 # Upload the artifacts / release
 release:
@@ -41,16 +41,16 @@ release:
   rules:
     - if: $CI_COMMIT_TAG
   script:
+    - echo "$PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa
     - export APP_VERSION=${CI_COMMIT_TAG}
     - ./scripts/upload_release.sh
     - ./scripts/create_latest_release_file.sh
     - ./scripts/create_release_links.sh
   cache:
-      key: "$CI_PIPELINE_ID"
-      paths:
-        - build_prod/bin
-      policy: pull
-
+    key: "$CI_PIPELINE_ID"
+    paths:
+      - build_prod/bin
+    policy: pull
 #unit_test:
 #  stage: test
 #  script: ./build_prod/bin/runTests
