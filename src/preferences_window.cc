@@ -30,18 +30,20 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
     : vbox(Gtk::ORIENTATION_VERTICAL, 4),
       hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
       header_preferences_label("Preferences"),
-      default_folder_label("Default Machine folder: "),
+      default_folder_label("Machine folder location: "),
+      display_default_wine_machine_label("Show default Wine machine: "),
       prefer_wine64_label("Prefer Wine 64-bit:"),
       logging_stderr_label("Log standard error:"),
-      prefer_wine64_check("Prefer Wine 64-bit executable (over 32-bit)"),
-      enable_logging_stderr_check("Also log standard error to logging (if logging is enabled)"),
+      display_default_wine_machine_check("Display default Wine prefix bottle (at: ~/.wine)"),
+      prefer_wine64_check("Prefer Wine 64-bit executable over 32-bit"),
+      enable_logging_stderr_check("Also log standard error (if logging is enabled)"),
       select_folder_button("Select folder..."),
       save_button("Save"),
       cancel_button("Cancel")
 {
   set_transient_for(parent);
   set_title("WineGUI Preferences");
-  set_default_size(550, 300);
+  set_default_size(560, 300);
   set_modal(true);
 
   settings_grid.set_margin_top(5);
@@ -63,6 +65,7 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
 
   logging_label_heading.set_markup("<big><b>Logging</b></big>");
   default_folder_label.set_halign(Gtk::Align::ALIGN_END);
+  display_default_wine_machine_label.set_halign(Gtk::Align::ALIGN_END);
   prefer_wine64_label.set_halign(Gtk::Align::ALIGN_END);
   logging_stderr_label.set_halign(Gtk::Align::ALIGN_END);
   default_folder_entry.set_hexpand(true);
@@ -71,13 +74,14 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
   settings_grid.attach(default_folder_entry, 1, 0);
   settings_grid.attach(select_folder_button, 2, 0);
   settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 1, 3);
-
-  settings_grid.attach(prefer_wine64_label, 0, 2);
-  settings_grid.attach(prefer_wine64_check, 1, 2, 2);
-  settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 3, 3);
-  settings_grid.attach(logging_label_heading, 0, 4, 3);
-  settings_grid.attach(logging_stderr_label, 0, 5);
-  settings_grid.attach(enable_logging_stderr_check, 1, 5, 2);
+  settings_grid.attach(display_default_wine_machine_label, 0, 2);
+  settings_grid.attach(display_default_wine_machine_check, 1, 2, 2);
+  settings_grid.attach(prefer_wine64_label, 0, 3);
+  settings_grid.attach(prefer_wine64_check, 1, 3, 2);
+  settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 4, 3);
+  settings_grid.attach(logging_label_heading, 0, 5, 3);
+  settings_grid.attach(logging_stderr_label, 0, 6);
+  settings_grid.attach(enable_logging_stderr_check, 1, 6, 2);
 
   hbox_buttons.pack_end(save_button, false, false, 4);
   hbox_buttons.pack_end(cancel_button, false, false, 4);
@@ -109,6 +113,7 @@ void PreferencesWindow::show()
 {
   GeneralConfigData general_config = GeneralConfigFile::read_config_file();
   default_folder_entry.set_text(general_config.default_folder);
+  display_default_wine_machine_check.set_active(general_config.display_default_wine_machine);
   prefer_wine64_check.set_active(general_config.prefer_wine64);
   enable_logging_stderr_check.set_active(general_config.enable_logging_stderr);
   // Call parent show
@@ -173,6 +178,7 @@ void PreferencesWindow::on_save_button_clicked()
   // Save preferences to disk
   GeneralConfigData general_config;
   general_config.default_folder = default_folder_entry.get_text();
+  general_config.display_default_wine_machine = display_default_wine_machine_check.get_active();
   general_config.prefer_wine64 = prefer_wine64_check.get_active();
   general_config.enable_logging_stderr = enable_logging_stderr_check.get_active();
   if (!GeneralConfigFile::write_config_file(general_config))
