@@ -14,4 +14,4 @@ VERSION="${APP_VERSION:1}"
 echo "$VERSION" >latest_release.txt
 
 echo "Upload latest_release.txt file..."
-scp -o stricthostkeychecking=no ./latest_release.txt melroy@gitlab.melroy.org:/var/www/winegui.melroy.org/html
+scp -i ./id_gitlab_rsa -o stricthostkeychecking=no ./latest_release.txt melroy@gitlab.melroy.org:/var/www/winegui.melroy.org/html
