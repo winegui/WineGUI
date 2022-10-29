@@ -100,6 +100,7 @@ private:
   string bottle_location_;
   std::list<BottleItem> bottles_;
   BottleItem* active_bottle_;
+  bool is_display_default_wine_machine_;
   bool is_wine64_bit_;
   bool is_logging_stderr_;
   int previous_active_bottle_index_;
@@ -117,6 +118,6 @@ private:
   bool is_bottle_not_null();
   string get_deinstall_mono_command();
   string get_wine_version();
-  std::map<string, unsigned long> get_bottle_paths();
-  std::list<BottleItem> create_wine_bottles(std::map<string, unsigned long> bottle_dirs);
+  std::vector<string> get_bottle_paths();
+  std::list<BottleItem> create_wine_bottles(std::vector<string> bottle_dirs);
 };

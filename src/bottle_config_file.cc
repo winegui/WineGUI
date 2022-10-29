@@ -76,11 +76,19 @@ BottleConfigData BottleConfigFile::read_config_file(const std::string& prefix_pa
   std::string file_path = Glib::build_filename(prefix_path, "winegui.ini");
 
   struct BottleConfigData bottle_config;
-  // Defaults config values
-  bottle_config.name = Helper::get_folder_name(prefix_path); // Name from wine prefix
-  bottle_config.description = "";                            // Empty description
-  bottle_config.logging_enabled = false;                     // Disable logging by default
-  bottle_config.debug_log_level = 1;                         // 1 (default)= Normal Wine debug logging: https://wiki.winehq.org/Debug_Channels
+  /// Defaults config values ///
+  // Name from wine prefix
+  if (Helper::is_default_wine_bottle(prefix_path))
+  {
+    bottle_config.name = "Default Wine machine"; // In case of the default Wine bottle path (~/.wine)
+  }
+  else
+  {
+    bottle_config.name = Helper::get_folder_name(prefix_path); // Using the folder name as default name
+  }
+  bottle_config.description = "";        // Empty description
+  bottle_config.logging_enabled = false; // Disable logging by default
+  bottle_config.debug_log_level = 1;     // 1 (default)= Normal Wine debug logging: https://wiki.winehq.org/Debug_Channels
 
   // Check if config file exists
   if (!Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR))

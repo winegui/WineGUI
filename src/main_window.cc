@@ -507,7 +507,14 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
   c_drive_location_label.set_text(bottle.wine_c_drive());
   Glib::ustring wine_bitness = (bottle.is_wine64_bit()) ? "64-bit" : "32-bit";
   wine_version_label.set_text(bottle.wine_version() + " (" + wine_bitness + ")");
-  wine_location_label.set_text(bottle.wine_location());
+  if (Helper::is_default_wine_bottle(bottle.wine_location()))
+  {
+    wine_location_label.set_text(bottle.wine_location() + " - ⚠ Default Wine prefix");
+  }
+  else
+  {
+    wine_location_label.set_text(bottle.wine_location());
+  }
 
   Glib::ustring debug_log_level_str = BottleTypes::debug_log_level_to_string(bottle.debug_log_level());
   if (!bottle.is_debug_logging())
