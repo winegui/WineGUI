@@ -11,7 +11,7 @@ fi
 # Remove the first char ('v') from APP_VERSION
 VERSION="${APP_VERSION:1}"
 # Create text file
-echo "$VERSION" > latest_release.txt
+echo "$VERSION" >latest_release.txt
 
 echo "Upload latest_release.txt file..."
-sshpass -e scp -o stricthostkeychecking=no ./latest_release.txt melroy@gitlab.melroy.org:/var/www/winegui.melroy.org/html
+scp -o stricthostkeychecking=no ./latest_release.txt melroy@gitlab.melroy.org:/var/www/winegui.melroy.org/html
