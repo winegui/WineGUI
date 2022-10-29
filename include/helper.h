@@ -20,8 +20,7 @@
  */
 #pragma once
 
-#include <gtkmm.h>
-#include <map>
+#include <glibmm/dispatcher.h>
 #include <string>
 #include <vector>
 
@@ -44,7 +43,7 @@ public:
   // Singleton
   static Helper& get_instance();
 
-  static std::map<string, unsigned long> get_bottles_paths(const string& dir_path);
+  static std::vector<string> get_bottles_paths(const string& dir_path, bool display_default_wine_machine);
   static string run_program(const string& prefix_path, int debug_log_level, const string& program, bool give_error = true, bool stderr_output = true);
   static string run_program_under_wine(
       bool wine_64_bit, const string& prefix_path, int debug_log_level, const string& program, bool give_error = true, bool stderr_output = true);
@@ -84,6 +83,7 @@ public:
   static string get_uninstaller(const string& prefix_path, const string& uninstallerKey);
   static string get_font_filename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName);
   static string get_image_location(const string& filename);
+  static bool is_default_wine_bottle(const string& prefix_path);
 
 private:
   Helper();
@@ -108,6 +108,6 @@ private:
   static string get_reg_meta_data(const string& filename, const string& meta_value_name);
   static string get_bottle_dir_from_prefix(const string& prefix_path);
   static std::vector<string> read_file_lines(const string& file_path);
-  static unsigned long get_modified_time(const string& file_path);
   static std::vector<string> split(const string& s, const char delimiter);
+  static bool case_insensitive_compare(const std::string& a, const std::string& b);
 };
