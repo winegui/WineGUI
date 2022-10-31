@@ -1,0 +1,8 @@
+WineGUI is a friendly interface for Wine. Allowing you to easily manage your Wine machines/bottles.
+
+WineGUI contains many features and conveniences, including but not limited to: 
+easy step-by-step wizard for creating a new machine, built-in application list, editing machines and configure your machine with a single click. 
+
+Plus so much more!
+
+Code archive at: https://gitlab.melroy.org/melroy/winegui.
