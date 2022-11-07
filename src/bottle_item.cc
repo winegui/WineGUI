@@ -25,15 +25,15 @@
 #include "wine_defaults.h"
 
 /**
- * \brief Default contructor
+ * \brief Default Constructor
  */
 BottleItem::BottleItem()
 {
-  // Gui will be created during the copy contructor called by GTK
+  // Gui will be created during the copy constructor called by GTK
 }
 
 /**
- * \brief Copy contructor, used by GTK
+ * \brief Copy constructor, used by GTK
  */
 BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
 {
@@ -60,7 +60,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
 }
 
 /**
- * \brief Contruct a new Wine Bottle Item with limited inputs
+ * \brief Construct a new Wine Bottle Item with limited inputs
  */
 BottleItem::BottleItem(Glib::ustring name,
                        Glib::ustring folder_name,
@@ -84,11 +84,11 @@ BottleItem::BottleItem(Glib::ustring name,
       virtual_desktop_(""),
       is_debug_logging_(false),
       debug_log_level_(1){
-          // Gui will be created during the copy contructor called by Gtk
+          // Gui will be created during the copy constructor called by Gtk
       };
 
 /**
- * \brief Contruct a new Wine Bottle Item
+ * \brief Construct a new Wine Bottle Item
  */
 BottleItem::BottleItem(Glib::ustring name,
                        Glib::ustring folder_name,
@@ -120,7 +120,7 @@ BottleItem::BottleItem(Glib::ustring name,
       virtual_desktop_(virtual_desktop),
       is_debug_logging_(is_debug_logging),
       debug_log_level_(debug_log_level){
-          // Gui will be created during the copy contructor called by Gtk
+          // Gui will be created during the copy constructor called by Gtk
       };
 
 void BottleItem::CreateUI()

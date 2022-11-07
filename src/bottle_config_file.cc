@@ -42,7 +42,7 @@ BottleConfigFile& BottleConfigFile::get_instance()
  * \brief Write config file to disk
  * \param prefix_path Wine prefix path
  * \param bottle_config Configuration data struct
- * \return true if succesfully written, otherwise false
+ * \return true if successfully written, otherwise false
  */
 bool BottleConfigFile::write_config_file(const std::string& prefix_path, const BottleConfigData& bottle_config)
 {
@@ -93,7 +93,7 @@ BottleConfigData BottleConfigFile::read_config_file(const std::string& prefix_pa
   // Check if config file exists
   if (!Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR))
   {
-    // Config file doesn't exist, make a new file with default configs, retun default config data below
+    // Config file doesn't exist, make a new file with default configs, return default config data below
     BottleConfigFile::write_config_file(prefix_path, bottle_config);
   }
   else

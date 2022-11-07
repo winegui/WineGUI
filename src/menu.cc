@@ -21,7 +21,7 @@
 #include "menu.h"
 
 /**
- * \brief Contructor
+ * \brief Constructor
  */
 Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", true), help("_Help", true)
 {
