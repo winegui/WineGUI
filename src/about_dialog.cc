@@ -23,7 +23,7 @@
 #include "project_config.h"
 
 /**
- * \brief Contructor
+ * \brief Constructor
  */
 AboutDialog::AboutDialog(Gtk::Window& parent) : visit_project_link_button("https://gitlab.melroy.org/melroy/winegui", "Visit the GitLab Project")
 {

@@ -26,7 +26,7 @@
 #define LOADING_PAGE_INDEX 2 /*!< The loading page, 3rd page (2 when start counting from zero) */
 
 /**
- * \brief Contructor
+ * \brief Constructor
  */
 BottleNewAssistant::BottleNewAssistant()
     : vbox(Gtk::ORIENTATION_VERTICAL, 4),
@@ -345,7 +345,7 @@ void BottleNewAssistant::on_assistant_close()
 }
 
 /**
- * \brief Prepare handler for each page, is emitted before making the page visable.
+ * \brief Prepare handler for each page, is emitted before making the page visible.
  */
 void BottleNewAssistant::on_assistant_prepare(Gtk::Widget* /* widget*/)
 {

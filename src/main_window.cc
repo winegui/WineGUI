@@ -30,7 +30,7 @@
  ************************/
 
 /**
- * \brief Contructor
+ * \brief Constructor
  */
 MainWindow::MainWindow(Menu& menu)
     : window_settings(),
@@ -335,7 +335,7 @@ void MainWindow::on_run_button_clicked()
   case (Gtk::RESPONSE_OK):
   {
     string filename = dialog.get_filename();
-    // Just guess based on extenstion
+    // Just guess based on extension
     string ext = filename.substr(filename.find_last_of(".") + 1);
     // To lower case
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
@@ -569,7 +569,7 @@ void MainWindow::set_application_list(const string& prefix_path)
     full_icon_path = !icon.empty();
     if (icon.empty())
     {
-      // Get file extenstion
+      // Get file extension
       string ext;
       size_t dot_pos = item.find_last_of('.');
       if (dot_pos != string::npos)
@@ -733,7 +733,7 @@ void MainWindow::create_left_panel()
   paned.pack1(scrolled_window_listbox, false, true);
   scrolled_window_listbox.set_size_request(240, -1);
 
-  // Set function that will add seperators between each item
+  // Set function that will add separators between each item
   listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
 
   // Add list box to scrolled window
@@ -1067,9 +1067,9 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
 }
 
 /**
- * \brief Fitler application list
+ * \brief Filter application list
  * \param iter Tree model iterator
- * \return true if application should be visable, otherwise false
+ * \return true if application should be visible, otherwise false
  */
 bool MainWindow::app_list_visible_func(const Gtk::TreeModel::const_iterator& iter)
 {

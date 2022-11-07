@@ -40,7 +40,7 @@ GeneralConfigFile& GeneralConfigFile::get_instance()
 /**
  * \brief Write generic config file to disk
  * \param general_config Generic configuration data struct
- * \return true if succesfully written, otherwise false
+ * \return true if successfully written, otherwise false
  */
 bool GeneralConfigFile::write_config_file(const GeneralConfigData& general_config)
 {
@@ -89,7 +89,7 @@ GeneralConfigData GeneralConfigFile::read_config_file()
   // Check if config file exists
   if (!Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR))
   {
-    // Config file doesn't exist, make a new file with default configs, retun default config data below
+    // Config file doesn't exist, make a new file with default configs, return default config data below
     GeneralConfigFile::write_config_file(general_config);
   }
   else

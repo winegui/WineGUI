@@ -85,7 +85,7 @@ static const string WineGuiMetaFile = ".winegui.conf";
 static const string UpdateTimestamp = ".update-timestamp";
 
 /**
- * \brief Windows version table to convert Windows version in registery to BottleType Windows enum value.
+ * \brief Windows version table to convert Windows version in registry to BottleType Windows enum value.
  *  Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L51
  * \note Don't forget to update the hardcoded WindowsEnumSize in bottle_types.h!
  */
@@ -219,7 +219,7 @@ string Helper::run_program_under_wine(
 }
 
 /**
- * \brief Write/apend logging to WineGUI log file
+ * \brief Write/append logging to WineGUI log file
  * \param logging_bottle_prefix Wine Bottle prefix location
  * \param logging Logging data
  */
@@ -523,7 +523,7 @@ string Helper::get_folder_name(const string& prefix_path)
  */
 BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
 {
-  // Trying user registery first
+  // Trying user registry first
   string user_reg_file_path = Glib::build_filename(prefix_path, UserReg);
 
   string win_version = Helper::get_reg_value(user_reg_file_path, RegKeyWine, RegNameWindowsVersion);
@@ -539,7 +539,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
     }
   }
 
-  // Trying system registery
+  // Trying system registry
   string system_reg_file_path = Glib::build_filename(prefix_path, SystemReg);
   string version = "";
   if (!(version = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTVersion)).empty())
@@ -766,7 +766,7 @@ string Helper::get_last_wine_updated(const string& prefix_path)
  */
 bool Helper::get_bottle_status(const string& prefix_path)
 {
-  // Check if some directories exists, and system registery file,
+  // Check if some directories exists, and system registry file,
   // and finally, if we can read-out the Windows OS version without errors
   if (Helper::dir_exists(prefix_path) && Helper::dir_exists(Glib::build_filename(prefix_path, "dosdevices")) &&
       Helper::file_exists(Glib::build_filename(prefix_path, SystemReg)))
@@ -810,7 +810,7 @@ string Helper::get_program_icon_path(const string& shortcut_path)
     string home_dir = std::string(homedir);
     // Convert double backslash to single forward slash + add prefix
     path = home_dir + "/.local/share/applications/wine/" + std::regex_replace(path, std::regex(R"(\\\\)"), R"(/)");
-    // Change .lnk to .desktop extenstion
+    // Change .lnk to .desktop extension
     std::size_t dot_pos = path.find_last_of(".");
     if (dot_pos != std::string::npos)
     {
@@ -1077,7 +1077,7 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
 std::vector<string> Helper::get_menu_items(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
-  // Key menu items from registery, only get the data keys containing "Start Menu" and ignore key values containing "applications-merged"
+  // Key menu items from registry, only get the data keys containing "Start Menu" and ignore key values containing "applications-merged"
   return Helper::get_reg_keys_data_filter_ignore(file_path, RegKeyMenuFiles, "Start Menu", "applications-merged");
 }
 
@@ -1139,7 +1139,7 @@ string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const 
  * \param[in] prefix_path Bottle prefix
  * \param[in] dll_name DLL Name
  * \param[in] load_order (Optional) DLL load order enum value (Default 'native')
- * \return True if specified load order matches the DLL overrides registery value
+ * \return True if specified load order matches the DLL overrides registry value
  */
 bool Helper::get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order)
 {
@@ -1164,7 +1164,7 @@ string Helper::get_uninstaller(const string& prefix_path, const string& uninstal
 }
 
 /**
- * \brief Retrieve a font file_path from the system registery
+ * \brief Retrieve a font file_path from the system registry
  * \param[in] prefix_path Bottle prefix
  * \param[in] bit Bottle bit (32 or 64) enum
  * \param[in] fontName Font name
@@ -1352,10 +1352,10 @@ string Helper::get_winetricks_version()
 }
 
 /**
- * \brief Get a specific value from the Wine registery from disk
- * \param[in] file_path  File path of registery
+ * \brief Get a specific value from the Wine registry from disk
+ * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
- * \param[in] value_name Specifies the registery value name (eg. Desktop)
+ * \param[in] value_name Specifies the registry value name (eg. Desktop)
  * \return Data of value name
  */
 string Helper::get_reg_value(const string& file_path, const string& key_name, const string& value_name)
@@ -1396,8 +1396,8 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
 }
 
 /**
- * \brief Get subkeys from a specific key from the Wine registery from disk
- * \param[in] file_path  File path of registery
+ * \brief Get subkeys from a specific key from the Wine registry from disk
+ * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \return List all the sub keys
  */
@@ -1434,8 +1434,8 @@ std::vector<string> Helper::get_reg_keys(const string& file_path, const string& 
 }
 
 /**
- * \brief Get subkeys data from a specific key from the Wine registery from disk
- * \param[in] file_path  File path of registery
+ * \brief Get subkeys data from a specific key from the Wine registry from disk
+ * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \return List all the sub keys data (so everything after the = sign)
  */
@@ -1445,8 +1445,8 @@ std::vector<string> Helper::get_reg_keys_data(const string& file_path, const str
 }
 
 /**
- * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registery from disk
- * \param[in] file_path  File path of registery
+ * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registry from disk
+ * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no filtering)
  * \return List all the sub keys data (so everything after the = sign)
@@ -1457,8 +1457,8 @@ std::vector<string> Helper::get_reg_keys_data_filter(const string& file_path, co
 }
 
 /**
- * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registery from disk
- * \param[in] file_path  File path of registery
+ * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registry from disk
+ * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no additional filtering)
  * \param[in] key_name_ignore_filter (Optionally) Filter-out the key names that contains the ignore filter (default: "", meaning everything will be
@@ -1510,9 +1510,9 @@ std::vector<string> Helper::get_reg_keys_data_filter_ignore(const string& file_p
 }
 
 /**
- * \brief Get a meta value from the registery from disk
- * \param[in] file_path      File of registery
- * \param[in] meta_value_name Specifies the registery value name (eg. arch)
+ * \brief Get a meta value from the registry from disk
+ * \param[in] file_path      File of registry
+ * \param[in] meta_value_name Specifies the registry value name (eg. arch)
  * \return Data of value name
  */
 string Helper::get_reg_meta_data(const string& file_path, const string& meta_value_name)

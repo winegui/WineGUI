@@ -85,7 +85,7 @@ void SignalController::dispatch_signals()
   // Menu buttons
   menu_.preferences.connect(sigc::mem_fun(preferences_window_, &PreferencesWindow::show));
   menu_.quit.connect(
-      sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefor closes the app */
+      sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefore closes the app */
   menu_.refresh_view.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
   menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
   menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
@@ -253,9 +253,9 @@ void SignalController::on_new_bottle(Glib::ustring& name,
   else
   {
     // Start a new manager thread (executing NewBottle())
-    thread_bottle_manager_ = new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio] {
-      manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio);
-    });
+    thread_bottle_manager_ =
+        new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio]
+                        { manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio); });
   }
 }
 
@@ -273,11 +273,13 @@ void SignalController::on_update_bottle(const UpdateBottleStruct& update_bottle_
   else
   {
     // Start a new manager thread (executing NewBottle())
-    thread_bottle_manager_ = new std::thread([this, update_bottle_struct] {
-      manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.description,
-                             update_bottle_struct.windows_version, update_bottle_struct.virtual_desktop_resolution, update_bottle_struct.audio,
-                             update_bottle_struct.is_debug_logging, update_bottle_struct.debug_log_level);
-    });
+    thread_bottle_manager_ = new std::thread(
+        [this, update_bottle_struct]
+        {
+          manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.description,
+                                 update_bottle_struct.windows_version, update_bottle_struct.virtual_desktop_resolution, update_bottle_struct.audio,
+                                 update_bottle_struct.is_debug_logging, update_bottle_struct.debug_log_level);
+        });
   }
 }
 
