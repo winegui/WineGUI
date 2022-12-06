@@ -26,6 +26,10 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 - Configure window **installing additional software** with just a single click (like installing DirectX)
 - **One-button click** to run a program, open the `C:` drive, simulate a reboot or kill all processes
 
+## GitHub Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=winegui/WineGUI&type=Date)](https://star-history.com/#winegui/WineGUI&Date)
+
 ## Development
 
 WineGUI is created by using [GTK3 toolkit](https://www.gtk.org/) (Gtkmm C++-interface) and C++ code.
