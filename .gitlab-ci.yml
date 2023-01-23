@@ -18,15 +18,37 @@ code_style_guidelines:
     - ./scripts/check_format.sh
 
 # Build WineGUI + Doxygen
-build:
+test-build:
   stage: build
+  rules:
+    - if: '$CI_COMMIT_TAG == null && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
+  script: ./scripts/build_prod.sh
+  artifacts:
+    name: "Packages + Documentation"
+    expire_in: 1 month
+    paths:
+      - doc/doxygen/
+      - build_prod/WineGUI-*.deb
+      - build_prod/WineGUI-*.rpm
+      - build_prod/WineGUI-*.tar.gz
+  # TODO: Do we really need this cache path still??
+  cache:
+    key: "$CI_PIPELINE_ID"
+    paths:
+      - build_prod/bin
+    policy: push
+
+build-and-deploy:
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script: ./scripts/build_prod.sh
   environment:
     name: production
     url: https://winegui.melroy.org/downloads  
   artifacts:
     name: "Packages + Documentation"
-    expire_in: 2 months
+    expire_in: 3 months
     paths:
       - doc/doxygen/
       - build_prod/WineGUI-*.deb
