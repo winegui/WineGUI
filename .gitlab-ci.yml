@@ -1,4 +1,4 @@
-image: danger89/gtk3-docker-cmake-ninja:3.2
+image: danger89/gtk3-docker-cmake-ninja:3.3
 
 stages:
   - test
@@ -21,14 +21,18 @@ code_style_guidelines:
 build:
   stage: build
   script: ./scripts/build_prod.sh
+  environment:
+    name: production
+    url: https://winegui.melroy.org/downloads  
   artifacts:
     name: "Packages + Documentation"
-    expire_in: 1 week
+    expire_in: 2 months
     paths:
       - doc/doxygen/
       - build_prod/WineGUI-*.deb
       - build_prod/WineGUI-*.rpm
       - build_prod/WineGUI-*.tar.gz
+  # TODO: Do we really need this cache path still??
   cache:
     key: "$CI_PIPELINE_ID"
     paths:
@@ -39,20 +43,19 @@ build:
 release:
   stage: release
   rules:
-    - if: $CI_COMMIT_TAG
+    - if: '$CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script:
-    - echo "$PRIVATE_KEY" | base64 -d > id_gitlab_rsa
-    - chmod 600 id_gitlab_rsa
     - export APP_VERSION=${CI_COMMIT_TAG}
+    # TODO: Update upload scripts & create script, we don't have access anymore from Docker runner
     - ./scripts/upload_release.sh
     - ./scripts/create_latest_release_file.sh
     - ./scripts/create_release_links.sh
-    - rm -rf id_gitlab_rsa
   cache:
     key: "$CI_PIPELINE_ID"
     paths:
       - build_prod/bin
     policy: pull
+
 #unit_test:
 #  stage: test
 #  script: ./build_prod/bin/runTests
