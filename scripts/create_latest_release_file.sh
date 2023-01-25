@@ -13,5 +13,3 @@ VERSION="${APP_VERSION:1}"
 # Create text file
 echo "$VERSION" >latest_release.txt
 
-echo "Upload latest_release.txt file..."
-scp -i ./id_gitlab_rsa -o stricthostkeychecking=no ./latest_release.txt melroy@gitlab.melroy.org:/var/www/winegui.melroy.org/html
