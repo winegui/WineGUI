@@ -6,7 +6,7 @@ build/
 build_debug/
 build_prod/
 build_docs/
-latest_release.txt
+release/
 
 # winetricks script
 winetricks
