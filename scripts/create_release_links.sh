@@ -25,19 +25,19 @@ echo "INFO: Creating new release links for WineGUI $APP_VERSION!"
 curl --request POST \
     --header "JOB-TOKEN: $CI_JOB_TOKEN" \
     --data name="WineGUI Compressed binary (tar) - test" \
-    --data url="$webpage_prefix/WineGUI-$APP_VERSION.tar.gz" \
+    --data url="$webpage_prefix/WineGUI-$APP_VERSION-test.tar.gz" \
     "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
 curl --request POST \
     --header "JOB-TOKEN: $CI_JOB_TOKEN" \
     --data name="WineGUI RPM Package (rpm) - test" \
-    --data url="$webpage_prefix/WineGUI-$APP_VERSION.rpm" \
+    --data url="$webpage_prefix/WineGUI-$APP_VERSION-test.rpm" \
     "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
 curl --request POST \
     --header "JOB-TOKEN: $CI_JOB_TOKEN" \
     --data name="WineGUI Debian package (deb) - test" \
-    --data url="$webpage_prefix/WineGUI-$APP_VERSION.deb" \
+    --data url="$webpage_prefix/WineGUI-$APP_VERSION-test.deb" \
     "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
 #elif [[ "$output" == "{\"message\":\"404 Not found\"}" ]]; then
