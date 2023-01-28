@@ -4,7 +4,7 @@
 # Depends on one environment variable: $APP_VERSION
 
 # Location where you can find the WineGUI binaries
-webpage_prefix="https://winegui.melroy.org/downloads"
+URL_PREFIX_LOCATION="https://winegui.melroy.org/downloads"
 
 if [ -z ${APP_VERSION} ]; then
     echo "ERROR: App_version env. variable is not set! Exit"
@@ -24,19 +24,19 @@ if [[ "$output" == "[]" ]]; then
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data name="WineGUI Compressed binary (tar)" \
-        --data url="$webpage_prefix/WineGUI-$APP_VERSION.tar.gz" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.tar.gz" \
         "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data name="WineGUI RPM Package (rpm)" \
-        --data url="$webpage_prefix/WineGUI-$APP_VERSION.rpm" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.rpm" \
         "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data name="WineGUI Debian package (deb)" \
-        --data url="$webpage_prefix/WineGUI-$APP_VERSION.deb" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.deb" \
         "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 elif [[ "$output" == "{\"message\":\"404 Not found\"}" ]]; then
     echo "WARN: Release doesn't yet exist yet/can't be found yet in Gitlab: $APP_VERSION..."
