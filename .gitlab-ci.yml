@@ -32,7 +32,9 @@ test-build:
       - build_prod/WineGUI-*.rpm
       - build_prod/WineGUI-*.tar.gz
 
-# Build Prd & Deploy new release (deployment job)
+# Build Prd & Deploy new release (deployment job),
+# which includes the deb, rpm and tar.gz file as well as the latest release txt file.
+# And will automatically create asset links to the existing GitLab release towards the deployment URL target files.
 build-and-deploy:
   stage: build
   rules:
@@ -40,6 +42,7 @@ build-and-deploy:
   script:
     - ./scripts/build_prod.sh
     - export APP_VERSION=${CI_COMMIT_TAG}
+    - ./scripts/create_release_links.sh
     - ./scripts/create_latest_release_file.sh
   environment:
     name: production
@@ -53,17 +56,6 @@ build-and-deploy:
       - build_prod/WineGUI-*.deb
       - build_prod/WineGUI-*.rpm
       - build_prod/WineGUI-*.tar.gz
-
-# Create release links
-release:
-  stage: release
-  # Let's test this step now
-  #rules:
-  #  - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-  script:
-    #- export APP_VERSION=${CI_COMMIT_TAG}
-    - export APP_VERSION='v1.9.1'
-    - ./scripts/create_release_links.sh
 
 #unit_test:
 #  stage: test
