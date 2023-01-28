@@ -3,7 +3,6 @@ image: danger89/gtk3-docker-cmake-ninja:3.3
 stages:
   - test
   - build
-  - release
 
 static_code_analysis:
   stage: test
