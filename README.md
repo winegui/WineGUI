@@ -2,7 +2,7 @@
 
 At last, a user-interface friendly [Wine](https://www.winehq.org/) (A compatibility layer capable of running Windows applications under Linux) Manager.
 
-[![Pipeline](https://gitlab.melroy.org/melroy/winegui/badges/master/pipeline.svg)](https://gitlab.melroy.org/melroy/winegui/-/pipelines/latest)
+[![Pipeline](https://gitlab.melroy.org/melroy/winegui/badges/main/pipeline.svg)](https://gitlab.melroy.org/melroy/winegui/-/pipelines/latest)
 [![Telegram](https://img.shields.io/badge/chat-on%20telegram-brightgreen)](https://t.me/winegui)
 [![Matrix](https://img.shields.io/badge/chat-on%20matrix-brightgreen)](https://matrix.to/#/#winegui:melroy.org)
 [![Release](https://img.shields.io/badge/release-latest-orange)](https://gitlab.melroy.org/melroy/winegui/-/releases)
