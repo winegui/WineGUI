@@ -43,7 +43,7 @@ Development has been done in VSCcodium, using the following extensions:
 
 ### Documentation
 
-See latest [WineGUI Developer Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/master/file/doc/doxygen/index.html?job=build).
+See latest [WineGUI Developer Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/main/file/doc/doxygen/index.html?job=build).
 
 ### Requirements
 
@@ -143,7 +143,7 @@ ninja
 Before you can make a new release, align the version number in WineGUI with the version you want to release.
 Then create a new tagged version in Gitlab with the same version name.
 
-_Note:_ Only a `release tag` on the `master` branch will trigger the publish task.
+_Note:_ Only a `release tag` on the `main` branch will trigger the publish task.
 
 ### Automated Clang Format
 
