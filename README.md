@@ -43,7 +43,7 @@ Development has been done in VSCcodium, using the following extensions:
 
 ### Documentation
 
-See latest [WineGUI Developer Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/main/file/doc/doxygen/index.html?job=build).
+See latest [WineGUI Developer Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/main/file/doc/doxygen/index.html?job=test-build).
 
 ### Requirements
 
