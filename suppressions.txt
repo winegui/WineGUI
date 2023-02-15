@@ -1,3 +1,2 @@
 missingIncludeSystem
-# Should most likely be enabled, when all is also checking for unusedFunctions again
-#unusedFunction:src/helper.cc
+unusedFunction:src/helper.cc

@@ -814,15 +814,15 @@ string Helper::get_program_icon_path(const string& shortcut_path)
     std::size_t dot_pos = path.find_last_of(".");
     if (dot_pos != std::string::npos)
     {
-      path = path.substr(0, dot_pos + 1) + "desktop";
+      path.replace(dot_pos + 1, std::string::npos, "desktop");
       string file_content = Helper::read_file(path);
       // Get icon
       std::size_t icon_pos = file_content.find("Icon=");
       if (icon_pos != std::string::npos)
       {
         file_content = file_content.substr(icon_pos + 5);
-        file_content = file_content.substr(0, file_content.find_first_of('\n'));
-        // Use the 32x32 png image
+        file_content.resize(file_content.find_first_of('\n'));
+        //  Use the 32x32 png image
         icon = home_dir + "/.local/share/icons/hicolor/32x32/apps/" + file_content + ".png";
       }
     }
