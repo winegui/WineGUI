@@ -1,4 +1,4 @@
-image: danger89/gtk3-docker-cmake-ninja:3.3
+image: danger89/gtk3-docker-cmake-ninja:3.4
 
 stages:
   - test
@@ -55,7 +55,6 @@ build-and-deploy:
       - build_prod/WineGUI-*.deb
       - build_prod/WineGUI-*.rpm
       - build_prod/WineGUI-*.tar.gz
-
 #unit_test:
 #  stage: test
 #  script: ./build_prod/bin/runTests
