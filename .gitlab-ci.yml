@@ -31,13 +31,13 @@ test-build:
       - build_prod/WineGUI-*.rpm
       - build_prod/WineGUI-*.tar.gz
 
-# Build Prd & Deploy new release (deployment job),
+# Build Prd & Deploy new release on a new tag (deployment job),
 # which includes the deb, rpm and tar.gz file as well as the latest release txt file.
 # And will automatically create asset links to the existing GitLab release towards the deployment URL target files.
 build-and-deploy:
   stage: build
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy"'
   script:
     - ./scripts/build_prod.sh
     - export APP_VERSION=${CI_COMMIT_TAG}
