@@ -110,4 +110,5 @@ private:
   static std::vector<string> read_file_lines(const string& file_path);
   static std::vector<string> split(const string& s, const char delimiter);
   static bool case_insensitive_compare(const std::string& a, const std::string& b);
+  static string unescape_reg_key_data(const string& src);
 };
