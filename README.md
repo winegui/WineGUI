@@ -153,10 +153,10 @@ We use our [own Clang LLVM C++ Programming Style Format](.clang-format), using [
 To automatically comply to our style format execute following script (inplace edits are performed for you):
 
 ```sh
-./scripts/fix-format.sh
+./scripts/fix_format.sh
 ```
 
-Check only for errors, run: `./scripts/check-format.sh`
+Check only for errors, run: `./scripts/check_format.sh`
 
 ### Guidelines
 

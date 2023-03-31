@@ -801,15 +801,17 @@ string Helper::get_program_icon_path(const string& shortcut_path)
   if (pos != std::string::npos)
   {
     const char* homedir;
-    string path = shortcut_path.substr(pos + 12); // 12 is "Start Menu\\" length
+    string path = shortcut_path.substr(pos + 11); // 11 is "Start Menu\" length
     // Get home directory under Linux
     if ((homedir = getenv("HOME")) == NULL)
     {
       homedir = getpwuid(getuid())->pw_dir;
     }
     string home_dir = std::string(homedir);
-    // Convert double backslash to single forward slash + add prefix
-    path = home_dir + "/.local/share/applications/wine/" + std::regex_replace(path, std::regex(R"(\\\\)"), R"(/)");
+    // Convert backslash to single forward slash
+    std::replace(path.begin(), path.end(), '\\', '/');
+    // Add prefix
+    path = home_dir + "/.local/share/applications/wine/" + path;
     // Change .lnk to .desktop extension
     std::size_t dot_pos = path.find_last_of(".");
     if (dot_pos != std::string::npos)
@@ -1486,6 +1488,8 @@ std::vector<string> Helper::get_reg_keys_data_filter_ignore(const string& file_p
       {
         if (line.empty() || reg_file.eof())
           break; // End of key section in registry
+
+        line = unescape_reg_key_data(line);
         // Skip '#' elements and if filter is not empty it will only continue if the line contains the filter string
         if (!line.starts_with('#') && (key_value_filter.empty() || line.find(key_value_filter) != string::npos) &&
             (key_name_ignore_filter.empty() || line.find(key_name_ignore_filter) == string::npos))
@@ -1630,4 +1634,153 @@ bool Helper::case_insensitive_compare(const std::string& a, const std::string& b
     }
   };
   return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), case_insensitive_less());
+}
+
+/**
+ * \brief Parse an escaped Wine registry key data back into an UTF-8 string
+ * The code is adopted from the parse_strW() method:
+ * https://source.winehq.org/git/wine.git/blob/refs/heads/master:/server/unicode.c#l101
+ *
+ * \param[in] src Key data to be unescaped
+ * \return UTF-8 string
+ */
+string Helper::unescape_reg_key_data(const string& src)
+{
+  auto to_hex = [](char ch) -> char { return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10; };
+
+  auto wchar_to_utf8 = [](wchar_t wc) -> string
+  {
+    string s;
+    if (0 <= wc && wc <= 0x7f)
+    {
+      s += (char)wc;
+    }
+    else if (0x80 <= wc && wc <= 0x7ff)
+    {
+      s += (0xc0 | (wc >> 6));
+      s += (0x80 | (wc & 0x3f));
+    }
+    else if (0x800 <= wc && wc <= 0xffff)
+    {
+      s += (0xe0 | (wc >> 12));
+      s += (0x80 | ((wc >> 6) & 0x3f));
+      s += (0x80 | (wc & 0x3f));
+    }
+    else if (0x10000 <= wc && wc <= 0x1fffff)
+    {
+      s += (0xf0 | (wc >> 18));
+      s += (0x80 | ((wc >> 12) & 0x3f));
+      s += (0x80 | ((wc >> 6) & 0x3f));
+      s += (0x80 | (wc & 0x3f));
+    }
+    else if (0x200000 <= wc && wc <= 0x3ffffff)
+    {
+      s += (0xf8 | (wc >> 24));
+      s += (0x80 | ((wc >> 18) & 0x3f));
+      s += (0x80 | ((wc >> 12) & 0x3f));
+      s += (0x80 | ((wc >> 6) & 0x3f));
+      s += (0x80 | (wc & 0x3f));
+    }
+    else if (0x4000000 <= wc && wc <= 0x7fffffff)
+    {
+      s += (0xfc | (wc >> 30));
+      s += (0x80 | ((wc >> 24) & 0x3f));
+      s += (0x80 | ((wc >> 18) & 0x3f));
+      s += (0x80 | ((wc >> 12) & 0x3f));
+      s += (0x80 | ((wc >> 6) & 0x3f));
+      s += (0x80 | (wc & 0x3f));
+    }
+    return s;
+  };
+
+  string dest;
+  dest.reserve(src.length());
+
+  const char* p = src.c_str();
+  while (*p)
+  {
+    if (*p == '\\')
+    {
+      p++;
+      if (!*p)
+        break;
+
+      switch (*p)
+      {
+      case 'a':
+        dest += '\a';
+        p++;
+        continue;
+      case 'b':
+        dest += '\b';
+        p++;
+        continue;
+      case 'e':
+        dest += '\e';
+        p++;
+        continue;
+      case 'f':
+        dest += '\f';
+        p++;
+        continue;
+      case 'n':
+        dest += '\n';
+        p++;
+        continue;
+      case 'r':
+        dest += '\r';
+        p++;
+        continue;
+      case 't':
+        dest += '\t';
+        p++;
+        continue;
+      case 'v':
+        dest += '\v';
+        p++;
+        continue;
+
+      // hex escape
+      case 'x':
+        p++;
+        if (!std::isxdigit(*p))
+          dest += 'x';
+        else
+        {
+          wchar_t wch = to_hex(*p++);
+          if (std::isxdigit(*p))
+            wch = (wch * 16) + to_hex(*p++);
+          if (std::isxdigit(*p))
+            wch = (wch * 16) + to_hex(*p++);
+          if (std::isxdigit(*p))
+            wch = (wch * 16) + to_hex(*p++);
+          dest += wchar_to_utf8(wch);
+        }
+        continue;
+
+      // octal escape
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      {
+        wchar_t wch = *p++ - '0';
+        if (*p >= '0' && *p <= '7')
+          wch = (wch * 8) + (*p++ - '0');
+        if (*p >= '0' && *p <= '7')
+          wch = (wch * 8) + (*p++ - '0');
+        dest += wchar_to_utf8(wch);
+        continue;
+      }
+      }
+      // unrecognized escape: fall through to normal char handling
+    }
+
+    dest += *p++;
+  }
+  return dest;
 }
