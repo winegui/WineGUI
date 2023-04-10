@@ -107,7 +107,7 @@ protected:
   Glib::RefPtr<Gtk::ListStore> app_list_tree_model;       /*!< Application list tree model (using a liststore)  */
   Glib::RefPtr<Gtk::TreeModelFilter> app_list_filter;     /*!< Tree model filter for app list  */
   Gtk::Toolbar toolbar;                                   /*!< Toolbar at top */
-  Gtk::Separator separator1;                              /*!< Seperator */
+  Gtk::Separator separator1;                              /*!< Separator */
   Gtk::Grid detail_grid;                                  /*!< Grid layout container to have multiple rows & columns below the toolbar */
   Gtk::TreeView application_list_treeview;                /*!< List of applications put inside a tree view */
 
