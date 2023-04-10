@@ -337,6 +337,7 @@ string Helper::get_winetricks_location()
 /**
  * \brief Get Wine version from CLI
  * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
+ * \throws runtime_error we could not determine Wine version
  * \return Return the wine version
  */
 string Helper::get_wine_version(bool wine_64_bit)
@@ -358,17 +359,17 @@ string Helper::get_wine_version(bool wine_64_bit)
       }
       else
       {
-        throw std::runtime_error("Could not determ wine version?\nSomething went wrong.");
+        throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
       }
     }
     else
     {
-      throw std::runtime_error("Could not determ wine version?\nSomething went wrong.");
+      throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
     }
   }
   else
   {
-    throw std::runtime_error("Could not receive Wine version!\n\nIs wine installed?");
+    throw std::runtime_error("Could not receive Wine version!\n\nIs Wine installed?");
   }
 }
 
@@ -405,6 +406,7 @@ string Helper::open_file_from_uri(const string& uri)
  * \param[in] prefix_path The path to create a Wine bottle from
  * \param[in] bit Create 32-bit Wine of 64-bit Wine bottle
  * \param[in] disable_gecko_mono Do NOT install Mono & Gecko (by default should be false)
+ * \throws runtime_error when we could not not create a new Wine bottle
  */
 void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
 {
@@ -443,6 +445,7 @@ void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, Bot
 /**
  * \brief Remove existing Wine bottle using prefix
  * \param[in] prefix_path - The wine bottle path which will be removed
+ * \throws runtime_error when we could not remove the Wine bottle
  */
 void Helper::remove_wine_bottle(const string& prefix_path)
 {
@@ -473,9 +476,10 @@ void Helper::remove_wine_bottle(const string& prefix_path)
 }
 
 /**
- * \brief Rename wine bottle folder
+ * \brief Rename Wine bottle folder
  * \param[in] current_prefix_path - Current wine bottle path
  * \param[in] new_prefix_path - New wine bottle path
+ * \throws runtime_error when we could not rename the Wine Bottle
  */
 void Helper::rename_wine_bottle_folder(const string& current_prefix_path, const string& new_prefix_path)
 {
@@ -519,6 +523,7 @@ string Helper::get_folder_name(const string& prefix_path)
 /**
  * \brief Get current Windows OS version
  * \param[in] prefix_path Bottle prefix
+ * \throws runtime_error when Windows registery could not be openend or could not determine Windows version
  * \return Return the Windows OS version
  */
 BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
@@ -616,17 +621,18 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   }
   else
   {
-    throw std::runtime_error("Could not determ Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
+    throw std::runtime_error("Could not determine Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
                              ". Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
   }
   // Function didn't return before (meaning no match found)
-  throw std::runtime_error("Could not determ Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
+  throw std::runtime_error("Could not determine Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
                            ". Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
 }
 
 /**
  * \brief Get system processor bit (32/64). *Throw runtime_error* when not found.
  * \param[in] prefix_path Bottle prefix
+ * \throws runtime_error when Windows registery could not be openend or could not determine Windows version
  * \return 32-bit or 64-bit
  */
 BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
@@ -647,13 +653,13 @@ BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
     }
     else
     {
-      throw std::runtime_error("Could not determ Windows system bit (not win32 and not win64, value: " + value +
+      throw std::runtime_error("Could not determine Windows system bit (not win32 and not win64, value: " + value +
                                "), for Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Could not determ Windows system bit, for Wine machine: " + get_folder_name(prefix_path) +
+    throw std::runtime_error("Could not determine Windows system bit, for Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull location: " + prefix_path);
   }
 }
@@ -661,6 +667,7 @@ BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
 /**
  * \brief Get Audio driver
  * \param[in] prefix_path Bottle prefix
+ * \throws runtime_error when Windows registery could not be openend
  * \return Audio Driver (eg. alsa/coreaudio/oss/pulse)
  */
 BottleTypes::AudioDriver Helper::get_audio_driver(const string& prefix_path)
@@ -705,6 +712,7 @@ BottleTypes::AudioDriver Helper::get_audio_driver(const string& prefix_path)
 /**
  * \brief Get emulation resolution
  * \param[in] prefix_path Bottle prefix
+ * \throws runtime_error when Windows registery could not be openend
  * \return Return the virtual desktop resolution or empty string when disabled fully.
  */
 string Helper::get_virtual_desktop(const string& prefix_path)
@@ -729,6 +737,7 @@ string Helper::get_virtual_desktop(const string& prefix_path)
 /**
  * \brief Get the date/time of the last time the Wine Inf file was updated
  * \param[in] prefix_path Bottle prefix
+ * \throws runtime_error when we could not determine last wine update timestamp
  * \return Date/time of last update
  */
 string Helper::get_last_wine_updated(const string& prefix_path)
@@ -747,13 +756,13 @@ string Helper::get_last_wine_updated(const string& prefix_path)
     }
     else
     {
-      throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + get_folder_name(prefix_path) +
+      throw std::runtime_error("Could not determine last time wine update timestamp, for Wine machine: " + get_folder_name(prefix_path) +
                                "\n\nFull location: " + prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Could not determ last time wine update timestamp, for Wine machine: " + get_folder_name(prefix_path) +
+    throw std::runtime_error("Could not determine last time wine update timestamp, for Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull location: " + prefix_path);
   }
 }
@@ -792,6 +801,7 @@ bool Helper::get_bottle_status(const string& prefix_path)
  * \brief Retrieve Linux icon path from Windows lnk path.
  * Trying to find desktop file in: ~/.local/share/applications/wine. And then search for the icon in: ~/.local/share/icons.
  * \param shortcut_path Path of lnk file under Windows
+ * \throws runtime_error when we could not find the file extension or application menu item
  * \return Icon path under Linux (empty string is possible)
  */
 string Helper::get_program_icon_path(const string& shortcut_path)
@@ -843,6 +853,7 @@ string Helper::get_program_icon_path(const string& shortcut_path)
 /**
  * \brief Get C:\ Drive location
  * \param[in] prefix_path Bottle prefix
+ * \throws runtime_error when we could not determine C:\ drive location
  * \return Location of C:\ location under unix
  */
 string Helper::get_c_letter_drive(const string& prefix_path)
@@ -855,7 +866,7 @@ string Helper::get_c_letter_drive(const string& prefix_path)
   }
   else
   {
-    throw std::runtime_error("Could not determ C:\\ drive location, for Wine machine: " + get_folder_name(prefix_path) +
+    throw std::runtime_error("Could not determine C:\\ drive location, for Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull location: " + prefix_path);
   }
 }
@@ -893,6 +904,7 @@ bool Helper::file_exists(const string& file_path)
 /**
  * \brief Install or update Winetricks (eg. when not found locally yet)
  * Throws an error if the download and/or install was not successful.
+ * \throws runtime_error when we have incorrect file permissions or the winetrick script could not be found
  */
 void Helper::install_or_update_winetricks()
 {
@@ -919,6 +931,8 @@ void Helper::install_or_update_winetricks()
 
 /**
  * \brief Update an existing local Winetricks, only useful if winetricks is already deployed.
+ * \throws invalid_argument when we could not update the winetrick script
+ * \throws runtime_error when we could not update the winetrick script
  */
 void Helper::self_update_winetricks()
 {
@@ -948,6 +962,7 @@ void Helper::self_update_winetricks()
  * \brief Set Windows OS version by using Winetricks
  * \param[in] prefix_path Bottle prefix
  * \param[in] windows Windows version (enum)
+ * \throws runtime_error when we could not set the Windows OS version
  */
 void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows windows)
 {
@@ -974,6 +989,7 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
  * \brief Set custom virtual desktop resolution by using Winetricks
  * \param[in] prefix_path Bottle prefix
  * \param[in] resolution New screen resolution (eg. 1920x1080)
+ * \throws runtime_error when we could not set the virtual desktop resolution
  */
 void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
 {
@@ -1023,6 +1039,7 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
 /**
  * \brief Disable Virtual Desktop fully by using Winetricks
  * \param[in] prefix_path Bottle prefix
+ * \throws runtime_error when we could not disable the virtual desktop
  */
 void Helper::disable_virtual_desktop(const string& prefix_path)
 {
@@ -1048,6 +1065,7 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
  * \brief Set Audio Driver by using Winetricks
  * \param[in] prefix_path Bottle prefix
  * \param[in] audio_driver Audio driver to be set
+ * \throws runtime_error when we could not set the auditor driver
  */
 void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver)
 {
@@ -1074,6 +1092,7 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
 /**
  * \brief Get menu items/links from Wine bottle
  * \param prefix_path Bottle prefix
+ * \throws runtime_error when Windows registery could not be openend
  * \return vector array of menu items (links)
  */
 std::vector<string> Helper::get_menu_items(const string& prefix_path)
@@ -1156,6 +1175,7 @@ bool Helper::get_dll_override(const string& prefix_path, const string& dll_name,
  * \param[in] prefix_path Bottle prefix
  * \param[in] uninstallerKey GUID or application name of the uninstaller (can also be found by running: wine
  * uninstaller --list)
+ * \throws runtime_error when Windows registery could not be openend
  * \return Uninstaller display name or empty string if not found
  */
 string Helper::get_uninstaller(const string& prefix_path, const string& uninstallerKey)
@@ -1170,6 +1190,7 @@ string Helper::get_uninstaller(const string& prefix_path, const string& uninstal
  * \param[in] prefix_path Bottle prefix
  * \param[in] bit Bottle bit (32 or 64) enum
  * \param[in] fontName Font name
+ * \throws runtime_error when Windows registery could not be openend
  * \return Font file_path (or empty string if not found)
  */
 string Helper::get_font_filename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName)
@@ -1241,6 +1262,7 @@ bool Helper::is_default_wine_bottle(const string& prefix_path)
 /**
  * \brief Execute command on terminal. Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] cmd The command to be executed
+ * \throws runtime_error when popen failed (empty pipe pointer)
  * \return Terminal stdout output
  */
 string Helper::exec(const char* cmd)
@@ -1267,6 +1289,7 @@ string Helper::exec(const char* cmd)
  * \brief Execute command on terminal, give user an error message when exit code is non-zero.
  * Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] cmd The command to be executed
+ * \throws runtime_error when popen failed (empty pipe pointer)
  * \return Terminal stdout output
  */
 string Helper::exec_error_message(const char* cmd)
@@ -1358,6 +1381,7 @@ string Helper::get_winetricks_version()
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \param[in] value_name Specifies the registry value name (eg. Desktop)
+ * \throws runtime_error when we couldn't load the Windows registry
  * \return Data of value name
  */
 string Helper::get_reg_value(const string& file_path, const string& key_name, const string& value_name)
@@ -1401,6 +1425,7 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
  * \brief Get subkeys from a specific key from the Wine registry from disk
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \throws runtime_error when we couldn't load the Windows registry
  * \return List all the sub keys
  */
 std::vector<string> Helper::get_reg_keys(const string& file_path, const string& key_name)
@@ -1439,6 +1464,7 @@ std::vector<string> Helper::get_reg_keys(const string& file_path, const string& 
  * \brief Get subkeys data from a specific key from the Wine registry from disk
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \throws runtime_error when Windows registery could not be openend
  * \return List all the sub keys data (so everything after the = sign)
  */
 std::vector<string> Helper::get_reg_keys_data(const string& file_path, const string& key_name)
@@ -1451,6 +1477,7 @@ std::vector<string> Helper::get_reg_keys_data(const string& file_path, const str
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no filtering)
+ * \throws runtime_error when Windows registery could not be openend
  * \return List all the sub keys data (so everything after the = sign)
  */
 std::vector<string> Helper::get_reg_keys_data_filter(const string& file_path, const string& key_name, const string& key_value_filter)
@@ -1464,7 +1491,9 @@ std::vector<string> Helper::get_reg_keys_data_filter(const string& file_path, co
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no additional filtering)
  * \param[in] key_name_ignore_filter (Optionally) Filter-out the key names that contains the ignore filter (default: "", meaning everything will be
- * returned) \return List all the sub keys data (so everything after the = sign)
+ * returned)
+ * \throws runtime_error when we couldn't load the Windows registry
+ * \return List all the sub keys data (so everything after the = sign)
  */
 std::vector<string> Helper::get_reg_keys_data_filter_ignore(const string& file_path,
                                                             const string& key_name,
@@ -1517,6 +1546,7 @@ std::vector<string> Helper::get_reg_keys_data_filter_ignore(const string& file_p
  * \brief Get a meta value from the registry from disk
  * \param[in] file_path      File of registry
  * \param[in] meta_value_name Specifies the registry value name (eg. arch)
+ * \throws runtime_error when we couldn't load the Windows registry
  * \return Data of value name
  */
 string Helper::get_reg_meta_data(const string& file_path, const string& meta_value_name)
@@ -1576,6 +1606,7 @@ string Helper::get_bottle_dir_from_prefix(const string& prefix_path)
 /**
  * \brief Read data from file and returns it.
  * \param[in] file_path File location to be read
+ * \throws runtime_error when file could not be openend
  * \return Data from file
  */
 std::vector<string> Helper::read_file_lines(const string& file_path)
@@ -1648,7 +1679,8 @@ string Helper::unescape_reg_key_data(const string& src)
 {
   auto to_hex = [](char ch) -> char { return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10; };
 
-  auto wchar_to_utf8 = [](wchar_t wc) -> string {
+  auto wchar_to_utf8 = [](wchar_t wc) -> string
+  {
     string s;
     if (0 <= wc && wc <= 0x7f)
     {
