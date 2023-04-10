@@ -21,6 +21,7 @@
 #include "bottle_configure_window.h"
 #include "bottle_item.h"
 #include "helper.h"
+#include <iostream>
 
 /**
  * \brief Constructor
@@ -283,7 +284,14 @@ bool BottleConfigureWindow::is_d3dx9_installed()
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native' load order
-    is_installed = Helper::get_dll_override(wine_prefix, "*d3dx9_43");
+    try
+    {
+      is_installed = Helper::get_dll_override(wine_prefix, "*d3dx9_43");
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
   }
   return is_installed;
 }
@@ -299,7 +307,14 @@ bool BottleConfigureWindow::is_dxvk_installed()
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native' load order
-    is_installed = Helper::get_dll_override(wine_prefix, "*dxgi");
+    try
+    {
+      is_installed = Helper::get_dll_override(wine_prefix, "*dxgi");
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
   }
   return is_installed;
 }
@@ -316,8 +331,15 @@ bool BottleConfigureWindow::is_liberation_installed()
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
     BottleTypes::Bit bit = active_bottle_->bit();
-    string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Liberation Mono (TrueType)");
-    is_installed = (fontFilename == "liberationmono-regular.ttf");
+    try
+    {
+      string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Liberation Mono (TrueType)");
+      is_installed = (fontFilename == "liberationmono-regular.ttf");
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
   }
   return is_installed;
 }
@@ -333,8 +355,15 @@ bool BottleConfigureWindow::is_core_fonts_installed()
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
     BottleTypes::Bit bit = active_bottle_->bit();
-    string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Comic Sans MS (TrueType)");
-    is_installed = (fontFilename == "comic.ttf");
+    try
+    {
+      string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Comic Sans MS (TrueType)");
+      is_installed = (fontFilename == "comic.ttf");
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
   }
   return is_installed;
 }
@@ -350,24 +379,31 @@ bool BottleConfigureWindow::is_visual_cpp_installed()
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native, builtin' load order
-    bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp120", DLLOverride::LoadOrder::NativeBuiltin);
-    if (is_dll_override)
+    try
     {
-      // Next, check if package can be found to be uninstalled
-      string name = Helper::get_uninstaller(wine_prefix, "{61087a79-ac85-455c-934d-1fa22cc64f36}");
-      // String starts with
-      is_installed = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
-
-      // Try the 64-bit package (fallback)
-      if (!is_installed)
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp120", DLLOverride::LoadOrder::NativeBuiltin);
+      if (is_dll_override)
       {
-        name = Helper::get_uninstaller(wine_prefix, "{ef6b00ec-13e1-4c25-9064-b2f383cb8412}");
+        // Next, check if package can be found to be uninstalled
+        string name = Helper::get_uninstaller(wine_prefix, "{61087a79-ac85-455c-934d-1fa22cc64f36}");
+        // String starts with
         is_installed = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
+
+        // Try the 64-bit package (fallback)
+        if (!is_installed)
+        {
+          name = Helper::get_uninstaller(wine_prefix, "{ef6b00ec-13e1-4c25-9064-b2f383cb8412}");
+          is_installed = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
+        }
+      }
+      else
+      {
+        is_installed = false;
       }
     }
-    else
+    catch (const std::runtime_error& error)
     {
-      is_installed = false;
+      std::cout << "Error: " << error.what() << std::endl;
     }
   }
   return is_installed;
@@ -384,16 +420,23 @@ bool BottleConfigureWindow::is_dotnet_4_0_installed()
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native' load order
-    bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mscoree");
-    if (is_dll_override)
+    try
     {
-      // Next, check if package can be found to be uninstalled
-      string name = Helper::get_uninstaller(wine_prefix, "Microsoft .NET Framework 4 Extended");
-      is_installed = (name == "Microsoft .NET Framework 4 Extended");
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mscoree");
+      if (is_dll_override)
+      {
+        // Next, check if package can be found to be uninstalled
+        string name = Helper::get_uninstaller(wine_prefix, "Microsoft .NET Framework 4 Extended");
+        is_installed = (name == "Microsoft .NET Framework 4 Extended");
+      }
+      else
+      {
+        is_installed = false;
+      }
     }
-    else
+    catch (const std::runtime_error& error)
     {
-      is_installed = false;
+      std::cout << "Error: " << error.what() << std::endl;
     }
   }
   return is_installed;
@@ -410,16 +453,23 @@ bool BottleConfigureWindow::is_dotnet_4_5_2_installed()
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
     // Check if set to 'native' load order
-    bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mscoree");
-    if (is_dll_override)
+    try
     {
-      // Next, check if package can be found to be uninstalled
-      string name = Helper::get_uninstaller(wine_prefix, "{92FB6C44-E685-45AD-9B20-CADF4CABA132}");
-      is_installed = (name == "Microsoft .NET Framework 4.5.2");
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mscoree");
+      if (is_dll_override)
+      {
+        // Next, check if package can be found to be uninstalled
+        string name = Helper::get_uninstaller(wine_prefix, "{92FB6C44-E685-45AD-9B20-CADF4CABA132}");
+        is_installed = (name == "Microsoft .NET Framework 4.5.2");
+      }
+      else
+      {
+        is_installed = false;
+      }
     }
-    else
+    catch (const std::runtime_error& error)
     {
-      is_installed = false;
+      std::cout << "Error: " << error.what() << std::endl;
     }
   }
   return is_installed;

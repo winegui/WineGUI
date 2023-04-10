@@ -231,7 +231,7 @@ public:
   {
     is_debug_logging_ = is_debug_logging;
   };
-  /// get enable/dissable debug logging to disk
+  /// get enable/disable debug logging to disk
   bool is_debug_logging() const
   {
     return is_debug_logging_;
