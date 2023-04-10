@@ -523,7 +523,7 @@ string Helper::get_folder_name(const string& prefix_path)
 /**
  * \brief Get current Windows OS version
  * \param[in] prefix_path Bottle prefix
- * \throws runtime_error when Windows registery could not be openend or could not determine Windows version
+ * \throws runtime_error when Windows registry could not be opened or could not determine Windows version
  * \return Return the Windows OS version
  */
 BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
@@ -632,7 +632,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
 /**
  * \brief Get system processor bit (32/64). *Throw runtime_error* when not found.
  * \param[in] prefix_path Bottle prefix
- * \throws runtime_error when Windows registery could not be openend or could not determine Windows version
+ * \throws runtime_error when Windows registry could not be opened or could not determine Windows version
  * \return 32-bit or 64-bit
  */
 BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
@@ -667,7 +667,7 @@ BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
 /**
  * \brief Get Audio driver
  * \param[in] prefix_path Bottle prefix
- * \throws runtime_error when Windows registery could not be openend
+ * \throws runtime_error when Windows registry could not be opened
  * \return Audio Driver (eg. alsa/coreaudio/oss/pulse)
  */
 BottleTypes::AudioDriver Helper::get_audio_driver(const string& prefix_path)
@@ -712,7 +712,7 @@ BottleTypes::AudioDriver Helper::get_audio_driver(const string& prefix_path)
 /**
  * \brief Get emulation resolution
  * \param[in] prefix_path Bottle prefix
- * \throws runtime_error when Windows registery could not be openend
+ * \throws runtime_error when Windows registry could not be opened
  * \return Return the virtual desktop resolution or empty string when disabled fully.
  */
 string Helper::get_virtual_desktop(const string& prefix_path)
@@ -1092,7 +1092,7 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
 /**
  * \brief Get menu items/links from Wine bottle
  * \param prefix_path Bottle prefix
- * \throws runtime_error when Windows registery could not be openend
+ * \throws runtime_error when Windows registry could not be opened
  * \return vector array of menu items (links)
  */
 std::vector<string> Helper::get_menu_items(const string& prefix_path)
@@ -1160,7 +1160,7 @@ string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const 
  * \param[in] prefix_path Bottle prefix
  * \param[in] dll_name DLL Name
  * \param[in] load_order (Optional) DLL load order enum value (Default 'native')
- * \throws runtime_error when Windows registery could not be openend
+ * \throws runtime_error when Windows registry could not be opened
  * \return True if specified load order matches the DLL overrides registry value
  */
 bool Helper::get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order)
@@ -1176,7 +1176,7 @@ bool Helper::get_dll_override(const string& prefix_path, const string& dll_name,
  * \param[in] prefix_path Bottle prefix
  * \param[in] uninstallerKey GUID or application name of the uninstaller (can also be found by running: wine
  * uninstaller --list)
- * \throws runtime_error when Windows registery could not be openend
+ * \throws runtime_error when Windows registry could not be opened
  * \return Uninstaller display name or empty string if not found
  */
 string Helper::get_uninstaller(const string& prefix_path, const string& uninstallerKey)
@@ -1191,7 +1191,7 @@ string Helper::get_uninstaller(const string& prefix_path, const string& uninstal
  * \param[in] prefix_path Bottle prefix
  * \param[in] bit Bottle bit (32 or 64) enum
  * \param[in] fontName Font name
- * \throws runtime_error when Windows registery could not be openend
+ * \throws runtime_error when Windows registry could not be opened
  * \return Font file_path (or empty string if not found)
  */
 string Helper::get_font_filename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName)
@@ -1465,7 +1465,7 @@ std::vector<string> Helper::get_reg_keys(const string& file_path, const string& 
  * \brief Get subkeys data from a specific key from the Wine registry from disk
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
- * \throws runtime_error when Windows registery could not be openend
+ * \throws runtime_error when Windows registry could not be opened
  * \return List all the sub keys data (so everything after the = sign)
  */
 std::vector<string> Helper::get_reg_keys_data(const string& file_path, const string& key_name)
@@ -1478,7 +1478,7 @@ std::vector<string> Helper::get_reg_keys_data(const string& file_path, const str
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no filtering)
- * \throws runtime_error when Windows registery could not be openend
+ * \throws runtime_error when Windows registry could not be opened
  * \return List all the sub keys data (so everything after the = sign)
  */
 std::vector<string> Helper::get_reg_keys_data_filter(const string& file_path, const string& key_name, const string& key_value_filter)
@@ -1607,7 +1607,7 @@ string Helper::get_bottle_dir_from_prefix(const string& prefix_path)
 /**
  * \brief Read data from file and returns it.
  * \param[in] file_path File location to be read
- * \throws runtime_error when file could not be openend
+ * \throws runtime_error when file could not be opened
  * \return Data from file
  */
 std::vector<string> Helper::read_file_lines(const string& file_path)
@@ -1680,7 +1680,8 @@ string Helper::unescape_reg_key_data(const string& src)
 {
   auto to_hex = [](char ch) -> char { return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10; };
 
-  auto wchar_to_utf8 = [](wchar_t wc) -> string {
+  auto wchar_to_utf8 = [](wchar_t wc) -> string
+  {
     string s;
     if (0 <= wc && wc <= 0x7f)
     {

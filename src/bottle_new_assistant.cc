@@ -75,7 +75,7 @@ BottleNewAssistant::~BottleNewAssistant()
 
 /**
  * \brief Set default values of all input fields from the wizard,
- * so even after the second time, all values are correctly resetted.
+ * so even after the second time, all values are correctly reset.
  */
 void BottleNewAssistant::setDefaultValues()
 {
