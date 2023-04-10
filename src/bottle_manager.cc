@@ -1129,6 +1129,7 @@ string BottleManager::get_wine_version()
 
 /**
  * \brief Get Bottle Paths
+ * \throws runtime_error when we can not created a Wine bottle directory or configuration folder could not be found
  * \return Return a map of bottle paths (string) and modification time (in ms)
  */
 std::vector<string> BottleManager::get_bottle_paths()
@@ -1138,7 +1139,7 @@ std::vector<string> BottleManager::get_bottle_paths()
     // Create directory if not exist yet
     if (!Helper::create_dir(bottle_location_))
     {
-      throw std::runtime_error("Failed to create the Wine bottles directory: " + bottle_location_);
+      throw std::runtime_error("Failed to create the Wine bottle directory: " + bottle_location_);
     }
   }
   if (Helper::dir_exists(bottle_location_))

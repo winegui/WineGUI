@@ -539,83 +539,90 @@ void MainWindow::set_application_list(const string& prefix_path)
   // First clear list
   reset_application_list();
 
-  auto menu_items = Helper::get_menu_items(prefix_path);
-  // Fill the application list (TreeView model)
-  // First the start menu apps/games (if present)
-  for (string item : menu_items)
+  try
   {
-    string name = "- Unknown -";
-    size_t found = item.find_last_of('\\');
-    size_t subtract = found + 5; // Remove the .lnk part as well using substr
-    if (found != string::npos && item.length() >= subtract)
+    auto menu_items = Helper::get_menu_items(prefix_path);
+    // Fill the application list (TreeView model)
+    // First the start menu apps/games (if present)
+    for (string item : menu_items)
     {
-      // Get the name only
-      name = item.substr(found + 1, item.length() - subtract);
+      string name = "- Unknown -";
+      size_t found = item.find_last_of('\\');
+      size_t subtract = found + 5; // Remove the .lnk part as well using substr
+      if (found != string::npos && item.length() >= subtract)
+      {
+        // Get the name only
+        name = item.substr(found + 1, item.length() - subtract);
+      }
+      string icon;
+      bool full_icon_path;
+      try
+      {
+        icon = Helper::get_program_icon_path(item);
+      }
+      catch (const Glib::FileError& error)
+      {
+        std::cerr << "WARN: Linux desktop file couldn't be found for menu item." << std::endl;
+      }
+      catch (const std::runtime_error& error)
+      {
+        std::cerr << "WARN: Could not retrieve menu icon: " << error.what() << std::endl;
+      }
+      full_icon_path = !icon.empty();
+      if (icon.empty())
+      {
+        // Get file extension
+        string ext;
+        size_t dot_pos = item.find_last_of('.');
+        if (dot_pos != string::npos)
+        {
+          ext = item.substr(dot_pos + 1);
+          std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+        }
+        if (ext == "url")
+        {
+          icon = "url";
+        }
+        else if (ext == "htm" || ext == "html")
+        {
+          icon = "html_document.png";
+        }
+        else if (ext == "png")
+        {
+          icon = "png_file.png";
+        }
+        else if (ext == "tiff")
+        {
+          icon = "tiff_file.png";
+        }
+        else if (ext == "jpg" || ext == "jpeg")
+        {
+          icon = "jpg_file.png";
+        }
+        else if (ext == "pdf")
+        {
+          icon = "pdf_file.png";
+        }
+        else if (ext == "doc" || ext == "docx")
+        {
+          icon = "word_document.png";
+        }
+        else if (ext == "txt")
+        {
+          icon = "text_file.png";
+        }
+        else
+        {
+          // Default icon
+          icon = "default.png";
+        }
+      }
+      add_application(name, icon, "", item, full_icon_path);
     }
-    string icon;
-    bool full_icon_path;
-    try
-    {
-      icon = Helper::get_program_icon_path(item);
-    }
-    catch (const Glib::FileError& error)
-    {
-      std::cerr << "WARN: Linux desktop file couldn't be found for menu item." << std::endl;
-    }
-    catch (const std::runtime_error& error)
-    {
-      std::cerr << "WARN: Could not retrieve menu icon: " << error.what() << std::endl;
-    }
-    full_icon_path = !icon.empty();
-    if (icon.empty())
-    {
-      // Get file extension
-      string ext;
-      size_t dot_pos = item.find_last_of('.');
-      if (dot_pos != string::npos)
-      {
-        ext = item.substr(dot_pos + 1);
-        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
-      }
-      if (ext == "url")
-      {
-        icon = "url";
-      }
-      else if (ext == "htm" || ext == "html")
-      {
-        icon = "html_document.png";
-      }
-      else if (ext == "png")
-      {
-        icon = "png_file.png";
-      }
-      else if (ext == "tiff")
-      {
-        icon = "tiff_file.png";
-      }
-      else if (ext == "jpg" || ext == "jpeg")
-      {
-        icon = "jpg_file.png";
-      }
-      else if (ext == "pdf")
-      {
-        icon = "pdf_file.png";
-      }
-      else if (ext == "doc" || ext == "docx")
-      {
-        icon = "word_document.png";
-      }
-      else if (ext == "txt")
-      {
-        icon = "text_file.png";
-      }
-      else
-      {
-        // Default icon
-        icon = "default.png";
-      }
-    }
-    add_application(name, icon, "", item, full_icon_path);
+  }
+  catch (const std::runtime_error& error)
+  {
+    cout << "Error: " << error.what() << std::endl;
   }
 
   // Secondly, additional programs

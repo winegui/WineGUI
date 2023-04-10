@@ -58,9 +58,9 @@ protected:
   Gtk::Menu view_submenu;            /*!< View sub menu */
   Gtk::Menu machine_submenu;         /*!< Machine sub menu */
   Gtk::Menu help_submenu;            /*!< Help sub menu */
-  Gtk::SeparatorMenuItem separator1; /*!< Menu seperator */
-  Gtk::SeparatorMenuItem separator2; /*!< Menu seperator */
-  Gtk::SeparatorMenuItem separator3; /*!< Menu seperator */
+  Gtk::SeparatorMenuItem separator1; /*!< Menu separator */
+  Gtk::SeparatorMenuItem separator2; /*!< Menu separator */
+  Gtk::SeparatorMenuItem separator3; /*!< Menu separator */
 
 private:
   Gtk::MenuItem* create_image_menu_item(const Glib::ustring& label_text, const Glib::ustring& icon_name);

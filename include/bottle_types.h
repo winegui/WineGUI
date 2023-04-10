@@ -121,7 +121,7 @@ namespace BottleTypes
     case Bit::win64:
       return "64-bit";
     default:
-      return "- Unkown OS bit -";
+      return "- Unknown OS bit -";
     }
   }
 
