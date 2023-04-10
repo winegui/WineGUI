@@ -1160,6 +1160,7 @@ string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const 
  * \param[in] prefix_path Bottle prefix
  * \param[in] dll_name DLL Name
  * \param[in] load_order (Optional) DLL load order enum value (Default 'native')
+ * \throws runtime_error when Windows registery could not be openend
  * \return True if specified load order matches the DLL overrides registry value
  */
 bool Helper::get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order)
