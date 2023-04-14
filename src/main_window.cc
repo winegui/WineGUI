@@ -34,12 +34,13 @@
  */
 MainWindow::MainWindow(Menu& menu)
     : window_settings(),
-      vbox(Gtk::ORIENTATION_VERTICAL),
-      paned(Gtk::ORIENTATION_HORIZONTAL),
+      vbox(Gtk::Orientation::ORIENTATION_VERTICAL),
+      paned(Gtk::Orientation::ORIENTATION_HORIZONTAL),
       right_vbox(Gtk::Orientation::ORIENTATION_VERTICAL),
       app_list_vbox(Gtk::Orientation::ORIENTATION_VERTICAL),
-      container_paned(Gtk::ORIENTATION_HORIZONTAL),
-      separator1(Gtk::ORIENTATION_HORIZONTAL),
+      app_list_top_hbox(Gtk::Orientation::ORIENTATION_HORIZONTAL),
+      container_paned(Gtk::Orientation::ORIENTATION_HORIZONTAL),
+      separator1(Gtk::Orientation::ORIENTATION_HORIZONTAL),
       busy_dialog_(*this)
 {
   // Set some Window properties
@@ -99,6 +100,7 @@ MainWindow::MainWindow(Menu& menu)
   application_list_treeview.set_activate_on_single_click(true);
   application_list_treeview.signal_row_activated().connect(sigc::mem_fun(*this, &MainWindow::on_application_row_activated));
 
+  // Toolbar buttons
   run_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
   edit_button.signal_clicked().connect(show_edit_window);
   configure_button.signal_clicked().connect(show_configure_window);
@@ -107,6 +109,9 @@ MainWindow::MainWindow(Menu& menu)
   update_button.signal_clicked().connect(update_bottle);
   open_log_file_button.signal_clicked().connect(open_log_file);
   kill_processes_button.signal_clicked().connect(kill_running_processes);
+
+  // Other various buttons
+  refresh_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_refresh_app_list_button_clicked));
 
   // Check for update (when GTK is idle)
   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_startup_version_update), Glib::PRIORITY_DEFAULT_IDLE);
@@ -367,6 +372,19 @@ void MainWindow::on_run_button_clicked()
   }
   }
 }
+/**
+ * \brief Triggered when the user pressed the application refresh button
+ */
+void MainWindow::on_refresh_app_list_button_clicked()
+{
+  Gtk::ListBoxRow* selected_row = listbox.get_selected_row();
+  if (selected_row)
+  {
+    // Refresh the current app list
+    auto current_bottle = dynamic_cast<BottleItem*>(selected_row);
+    set_application_list(current_bottle->wine_location());
+  }
+}
 
 /**
  * \brief Just hide the main window
@@ -542,7 +560,7 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
  */
 void MainWindow::set_application_list(const string& prefix_path)
 {
-  // First clear list
+  // First clear list + clear search entry
   reset_application_list();
 
   try
@@ -719,8 +737,8 @@ void MainWindow::check_version_update(bool show_equal)
 void MainWindow::load_stored_window_settings()
 {
   // Load schema settings file
-  auto schemaSource = Gio::SettingsSchemaSource::get_default()->lookup("org.melroy.winegui", true);
-  if (schemaSource)
+  auto schema_source = Gio::SettingsSchemaSource::get_default()->lookup("org.melroy.winegui", true);
+  if (schema_source)
   {
     window_settings = Gio::Settings::create("org.melroy.winegui");
     // Apply global settings
@@ -1011,7 +1029,7 @@ void MainWindow::create_right_panel()
   app_list_scrolled_window.add(application_list_treeview);
 
   app_list_search_entry.set_margin_start(6);
-  app_list_search_entry.set_margin_end(6);
+  app_list_search_entry.set_margin_end(2);
   app_list_search_entry.set_margin_top(6);
   app_list_search_entry.set_margin_bottom(6);
 
@@ -1024,10 +1042,24 @@ void MainWindow::create_right_panel()
   application_box->pack_start(*application_icon, false, false, 8);
   application_box->pack_start(*application_label, false, false, 20);
 
+  // App list refresh button
+  Gtk::Image* refresh_app_list_image = Gtk::manage(new Gtk::Image());
+  refresh_app_list_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  refresh_app_list_button.set_tooltip_text("Refresh application list");
+  refresh_app_list_button.set_image(*refresh_app_list_image);
+  refresh_app_list_button.set_margin_top(6);
+  refresh_app_list_button.set_margin_bottom(6);
+  refresh_app_list_button.set_margin_end(6);
+
+  // Preparing the horizontal box above the app list (containing the search entry & refresh button)
+  app_list_top_hbox.pack_start(app_list_search_entry, true, true);
+  app_list_top_hbox.pack_end(refresh_app_list_button, false, false);
+
+  // Add heading (label + icon)
   app_list_vbox.pack_start(*application_box, false, true, 5);
-  // Add app search entry above the list
-  app_list_vbox.pack_start(app_list_search_entry, false, true);
-  // Add application list to bottom
+  // Add horizontal box (search entry + refresh button)
+  app_list_vbox.pack_start(app_list_top_hbox, false, true);
+  // Add application list (in scrolled window)
   app_list_vbox.pack_end(app_list_scrolled_window);
   // Add to container
   container_paned.pack2(app_list_vbox, false, false);
