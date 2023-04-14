@@ -78,6 +78,7 @@ public:
   virtual void on_new_bottle_button_clicked();
   virtual void on_new_bottle_created();
   virtual void on_run_button_clicked();
+  virtual void on_refresh_app_list_button_clicked();
   virtual void on_hide_window();
   virtual void on_give_feedback();
   virtual void on_check_version();
@@ -102,6 +103,7 @@ protected:
   Gtk::ScrolledWindow app_list_scrolled_window;           /*!< Scrolled Window container for app list */
   Gtk::Box right_vbox;                                    /*!< Right panel vertical box */
   Gtk::Box app_list_vbox;                                 /*!< Application list vertical box */
+  Gtk::Box app_list_top_hbox;                             /*!< Horizontal box above the app list */
   Gtk::SearchEntry app_list_search_entry;                 /*!< Application list search entry */
   Gtk::Paned container_paned;                             /*!< Main container horizontal paned panel */
   Glib::RefPtr<Gtk::ListStore> app_list_tree_model;       /*!< Application list tree model (using a liststore)  */
@@ -139,10 +141,13 @@ protected:
   Gtk::ToolButton open_log_file_button;  /*!< Open log file toolbar button */
   Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
 
+  // Other various buttons
+  Gtk::Button refresh_app_list_button; /*!< Button that refreshes the application list */
+
   // Busy dialog
   BusyDialog busy_dialog_; /*!< Busy dialog, when the user should wait until install is finished */
 private:
-  BottleNewAssistant new_bottle_assistant_; /*!< New bottle wizard (behind: new button toolbar) */
+  BottleNewAssistant new_bottle_assistant_; /*!< New bottle wizard (behind the "new" toolbar button) */
   GeneralConfigData general_config_data_;
 
   // Signal handlers
