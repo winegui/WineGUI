@@ -1035,12 +1035,8 @@ void MainWindow::create_right_panel()
   // Add container to right box
   right_vbox.pack_start(container_paned, true, true);
 
-  container_paned.set_position(480);
-
   // Add right box to paned
   paned.pack2(right_vbox);
-
-  paned.set_position(320);
 }
 
 /**
