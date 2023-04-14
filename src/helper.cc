@@ -96,7 +96,8 @@ static const struct
   const string versionNumber;
   const string buildNumber;
   const string productType;
-} WindowsVersions[] = {{BottleTypes::Windows::Windows10, "win10", "10.0", "18362", "WinNT"},
+} WindowsVersions[] = {{BottleTypes::Windows::Windows11, "win11", "11.0", "22000", "WinNT"},
+                       {BottleTypes::Windows::Windows10, "win10", "10.0", "18362", "WinNT"},
                        {BottleTypes::Windows::Windows81, "win81", "6.3", "9600", "WinNT"},
                        {BottleTypes::Windows::Windows8, "win8", "6.2", "9200", "WinNT"},
                        {BottleTypes::Windows::Windows2008R2, "win2008r2", "6.1", "7601", "ServerNT"},
@@ -1256,6 +1257,30 @@ bool Helper::is_default_wine_bottle(const string& prefix_path)
   return (prefix_path.compare(DefaultBottleWineDir) == 0);
 }
 
+/**
+ * \brief Encode text string for GTK (eg. ampersand-character)
+ * \param[in] string String that needs to be encoded
+ * \return Encoded string
+ */
+string Helper::encode_text(const std::string& string)
+{
+  std::string buffer;
+  buffer.reserve(string.size() + 5);
+  for (size_t pos = 0; pos != string.size(); ++pos)
+  {
+    switch (string[pos])
+    {
+    case '&':
+      buffer.append("&amp;");
+      break;
+    default:
+      buffer.append(&string[pos], 1);
+      break;
+    }
+  }
+  return buffer;
+}
+
 /****************************************************************************
  *  Private methods                                                         *
  ****************************************************************************/
@@ -1680,7 +1705,8 @@ string Helper::unescape_reg_key_data(const string& src)
 {
   auto to_hex = [](char ch) -> char { return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10; };
 
-  auto wchar_to_utf8 = [](wchar_t wc) -> string {
+  auto wchar_to_utf8 = [](wchar_t wc) -> string
+  {
     string s;
     if (0 <= wc && wc <= 0x7f)
     {
