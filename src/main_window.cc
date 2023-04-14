@@ -488,6 +488,12 @@ bool MainWindow::delete_window(GdkEventAny* any_event __attribute__((unused)))
     window_settings->set_int("width", get_width());
     window_settings->set_int("height", get_height());
     window_settings->set_boolean("maximized", is_maximized());
+    // Fullscreen will be available with gtkmm-4.0
+    // settings->set_boolean("fullscreen", is_fullscreen());
+    if (paned.get_position() > 0)
+      window_settings->set_int("position-divider-paned", paned.get_position());
+    if (container_paned.get_position() > 0)
+      window_settings->set_int("position-divider-container-paned", container_paned.get_position());
   }
   return false;
 }
@@ -721,10 +727,17 @@ void MainWindow::load_stored_window_settings()
     set_default_size(window_settings->get_int("width"), window_settings->get_int("height"));
     if (window_settings->get_boolean("maximized"))
       maximize();
+    int position_divider_paned = window_settings->get_int("position-divider-paned");
+    paned.set_position(position_divider_paned);
+    int position_divider_container_paned = window_settings->get_int("position-divider-container-paned");
+    container_paned.set_position(position_divider_container_paned);
   }
   else
   {
     std::cerr << "Error: Gsettings schema file could not be found." << std::endl;
+    // Fallback values
+    paned.set_position(320);
+    container_paned.set_position(480);
   }
 }
 
@@ -733,12 +746,8 @@ void MainWindow::load_stored_window_settings()
  */
 void MainWindow::create_left_panel()
 {
-  // Vertical scroll only
-  scrolled_window_listbox.set_policy(Gtk::PolicyType::POLICY_NEVER, Gtk::PolicyType::POLICY_AUTOMATIC);
-
   // Add scrolled window with listbox to paned
-  paned.pack1(scrolled_window_listbox, false, true);
-  scrolled_window_listbox.set_size_request(240, -1);
+  paned.pack1(scrolled_window_listbox);
 
   // Set function that will add separators between each item
   listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
@@ -999,7 +1008,6 @@ void MainWindow::create_right_panel()
   app_list_scrolled_window.set_margin_end(6);
   app_list_scrolled_window.set_margin_bottom(6);
   app_list_scrolled_window.set_border_width(2);
-  // TODO: Add also a pixel border around the window
   app_list_scrolled_window.add(application_list_treeview);
 
   app_list_search_entry.set_margin_start(6);
@@ -1027,11 +1035,12 @@ void MainWindow::create_right_panel()
   // Add container to right box
   right_vbox.pack_start(container_paned, true, true);
 
-  // TODO: Set/get from gsettings schema (also for the overall 'paned' panel)
   container_paned.set_position(480);
 
   // Add right box to paned
   paned.pack2(right_vbox);
+
+  paned.set_position(320);
 }
 
 /**

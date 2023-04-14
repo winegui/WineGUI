@@ -13,5 +13,13 @@
       <default>false</default>
       <summary>Is window maximized</summary>
     </key>
+    <key name="position-divider-paned" type="i">
+      <default>320</default>
+      <summary>The paned position</summary>
+    </key>
+    <key name="position-divider-container-paned" type="i">
+      <default>480</default>
+      <summary>Contained paned position</summary>
+    </key>
   </schema>
 </schemalist>
