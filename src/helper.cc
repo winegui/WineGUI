@@ -572,16 +572,16 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
       }
 
       // Fall-back - return the Windows version based on build NT number, even if the version number doesn't exactly match
-      for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
+      for (unsigned int x = 0; x < BottleTypes::WindowsEnumSize; x++)
       {
         // Check if build number matches
-        if ((WindowsVersions[i].buildNumber).compare(build_number_nt) == 0)
+        if ((WindowsVersions[x].buildNumber).compare(build_number_nt) == 0)
         {
           if (!type_nt.empty())
           {
-            if ((WindowsVersions[i].productType).compare(type_nt) == 0)
+            if ((WindowsVersions[x].productType).compare(type_nt) == 0)
             {
-              return WindowsVersions[i].windows;
+              return WindowsVersions[x].windows;
             }
           }
         }
@@ -589,21 +589,21 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
     }
 
     // Fall-back of fall-back - return the Windows version based on version number, even if the build NT number doesn't exactly match
-    for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
+    for (unsigned int y = 0; y < BottleTypes::WindowsEnumSize; y++)
     {
       // Check if version matches
-      if ((WindowsVersions[i].versionNumber).compare(version) == 0)
+      if ((WindowsVersions[y].versionNumber).compare(version) == 0)
       {
         if (!type_nt.empty())
         {
-          if ((WindowsVersions[i].productType).compare(type_nt) == 0)
+          if ((WindowsVersions[y].productType).compare(type_nt) == 0)
           {
-            return WindowsVersions[i].windows;
+            return WindowsVersions[y].windows;
           }
         }
         else
         {
-          return WindowsVersions[i].windows;
+          return WindowsVersions[y].windows;
         }
       }
     }
