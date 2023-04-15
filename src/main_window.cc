@@ -685,8 +685,9 @@ void MainWindow::add_application(const string& name, const string& icon, const s
   {
     std::cerr << "ERROR: Could not find icon for app " << name << ": " << error.what() << std::endl;
   }
-  row[app_list_columns.name] = name;
-  row[app_list_columns.description] = description;
+
+  row[app_list_columns.name] = Helper::encode_text(name);
+  row[app_list_columns.description] = Helper::encode_text(description);
   row[app_list_columns.command] = command;
 }
 
