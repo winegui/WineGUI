@@ -552,7 +552,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   {
     string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
     string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);
-    // Find the correct Windows version, comparing the version, build number as well as NT type (if present)
+    // Find the correct Windows version, comparing the version, build number and NT type (if present)
     for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
     {
       // Check if version + build number matches
@@ -570,12 +570,28 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
           return WindowsVersions[i].windows;
         }
       }
+
+      // Fall-back - return the Windows version based on build NT number, even if the version number doesn't exactly match
+      for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
+      {
+        // Check if build number matches
+        if ((WindowsVersions[i].buildNumber).compare(build_number_nt) == 0)
+        {
+          if (!type_nt.empty())
+          {
+            if ((WindowsVersions[i].productType).compare(type_nt) == 0)
+            {
+              return WindowsVersions[i].windows;
+            }
+          }
+        }
+      }
     }
 
-    // Fall-back - return the Windows version; even if the build NT number doesn't exactly match
+    // Fall-back of fall-back - return the Windows version based on version number, even if the build NT number doesn't exactly match
     for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
     {
-      // Check if version + build number matches
+      // Check if version matches
       if ((WindowsVersions[i].versionNumber).compare(version) == 0)
       {
         if (!type_nt.empty())
@@ -617,6 +633,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
         return WindowsVersions[i].windows;
       }
     }
+
     // Fall-back to default Windows version, even if the build number doesn't match
     return WineDefaults::WindowsOs;
   }
