@@ -96,7 +96,8 @@ static const struct
   const string versionNumber;
   const string buildNumber;
   const string productType;
-} WindowsVersions[] = {{BottleTypes::Windows::Windows10, "win10", "10.0", "18362", "WinNT"},
+} WindowsVersions[] = {{BottleTypes::Windows::Windows11, "win11", "11.0", "22000", "WinNT"},
+                       {BottleTypes::Windows::Windows10, "win10", "10.0", "18362", "WinNT"},
                        {BottleTypes::Windows::Windows81, "win81", "6.3", "9600", "WinNT"},
                        {BottleTypes::Windows::Windows8, "win8", "6.2", "9200", "WinNT"},
                        {BottleTypes::Windows::Windows2008R2, "win2008r2", "6.1", "7601", "ServerNT"},
@@ -551,7 +552,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   {
     string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
     string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);
-    // Find the correct Windows version, comparing the version, build number as well as NT type (if present)
+    // Find the correct Windows version, comparing the version, build number and NT type (if present)
     for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
     {
       // Check if version + build number matches
@@ -569,24 +570,40 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
           return WindowsVersions[i].windows;
         }
       }
+
+      // Fall-back - return the Windows version based on build NT number, even if the version number doesn't exactly match
+      for (unsigned int x = 0; x < BottleTypes::WindowsEnumSize; x++)
+      {
+        // Check if build number matches
+        if ((WindowsVersions[x].buildNumber).compare(build_number_nt) == 0)
+        {
+          if (!type_nt.empty())
+          {
+            if ((WindowsVersions[x].productType).compare(type_nt) == 0)
+            {
+              return WindowsVersions[x].windows;
+            }
+          }
+        }
+      }
     }
 
-    // Fall-back - return the Windows version; even if the build NT number doesn't exactly match
-    for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
+    // Fall-back of fall-back - return the Windows version based on version number, even if the build NT number doesn't exactly match
+    for (unsigned int y = 0; y < BottleTypes::WindowsEnumSize; y++)
     {
-      // Check if version + build number matches
-      if ((WindowsVersions[i].versionNumber).compare(version) == 0)
+      // Check if version matches
+      if ((WindowsVersions[y].versionNumber).compare(version) == 0)
       {
         if (!type_nt.empty())
         {
-          if ((WindowsVersions[i].productType).compare(type_nt) == 0)
+          if ((WindowsVersions[y].productType).compare(type_nt) == 0)
           {
-            return WindowsVersions[i].windows;
+            return WindowsVersions[y].windows;
           }
         }
         else
         {
-          return WindowsVersions[i].windows;
+          return WindowsVersions[y].windows;
         }
       }
     }
@@ -616,6 +633,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
         return WindowsVersions[i].windows;
       }
     }
+
     // Fall-back to default Windows version, even if the build number doesn't match
     return WineDefaults::WindowsOs;
   }
@@ -1254,6 +1272,30 @@ string Helper::get_image_location(const string& filename)
 bool Helper::is_default_wine_bottle(const string& prefix_path)
 {
   return (prefix_path.compare(DefaultBottleWineDir) == 0);
+}
+
+/**
+ * \brief Encode text string for GTK (eg. ampersand-character)
+ * \param[in] string String that needs to be encoded
+ * \return Encoded string
+ */
+string Helper::encode_text(const std::string& string)
+{
+  std::string buffer;
+  buffer.reserve(string.size() + 5);
+  for (size_t pos = 0; pos != string.size(); ++pos)
+  {
+    switch (string[pos])
+    {
+    case '&':
+      buffer.append("&amp;");
+      break;
+    default:
+      buffer.append(&string[pos], 1);
+      break;
+    }
+  }
+  return buffer;
 }
 
 /****************************************************************************

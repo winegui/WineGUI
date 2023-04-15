@@ -54,7 +54,8 @@ namespace BottleTypes
     Windows2008R2,
     Windows8,
     Windows81,
-    Windows10
+    Windows10,
+    Windows11
   };
 
   //// Size of Windows enum class
@@ -85,10 +86,11 @@ namespace BottleTypes
       std::pair(Windows::Windows7, Bit::win64),     std::pair(Windows::Windows2008R2, Bit::win32), std::pair(Windows::Windows2008R2, Bit::win64),
       std::pair(Windows::Windows8, Bit::win32),     std::pair(Windows::Windows8, Bit::win64),      std::pair(Windows::Windows81, Bit::win32),
       std::pair(Windows::Windows81, Bit::win64),    std::pair(Windows::Windows10, Bit::win32),     std::pair(Windows::Windows10, Bit::win64),
+      std::pair(Windows::Windows11, Bit::win32),    std::pair(Windows::Windows11, Bit::win64),
   };
 
-  //// Default Windows version (Windows 7 32-bit) as WineGUI Bottle
-  static const int DefaultBottleIndex = 17;
+  //// Default Windows version (Windows 10 32-bit) as WineGUI Bottle
+  static const int DefaultBottleIndex = 25;
 
   /**
    * \enum AudioDriver
@@ -168,6 +170,8 @@ namespace BottleTypes
       return "Windows 8.1";
     case Windows::Windows10:
       return "Windows 10";
+    case Windows::Windows11:
+      return "Windows 11";
     default:
       return "- Unknown Windows OS -";
     }
@@ -247,8 +251,10 @@ namespace BottleTypes
       return "win81";
     case Windows::Windows10:
       return "win10";
+    case Windows::Windows11:
+      return "win11";
     default:
-      return "winxp";
+      return "win7";
     }
   }
 

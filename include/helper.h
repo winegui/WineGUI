@@ -84,6 +84,7 @@ public:
   static string get_font_filename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName);
   static string get_image_location(const string& filename);
   static bool is_default_wine_bottle(const string& prefix_path);
+  static string encode_text(const std::string& string);
 
 private:
   Helper();
