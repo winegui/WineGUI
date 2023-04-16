@@ -65,7 +65,7 @@ public:
   static string get_virtual_desktop(const string& prefix_path);
   static string get_last_wine_updated(const string& prefix_path);
   static bool get_bottle_status(const string& prefix_path);
-  static string get_program_icon_path(const string& shortcut_path);
+  static string get_menu_program_icon_path(const string& shortcut_path);
   static string get_c_letter_drive(const string& prefix_path);
   static bool dir_exists(const string& dir_path);
   static bool create_dir(const string& dir_path);
