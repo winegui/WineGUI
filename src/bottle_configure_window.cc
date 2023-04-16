@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020-2022 WineGUI
+ * Copyright (c) 2020-2023 WineGUI
  *
  * \file    bottle_configure_window.cc
  * \brief   Wine bottle configure window

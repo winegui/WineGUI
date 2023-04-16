@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022 WineGUI
+ * Copyright (c) 2022-2023 WineGUI
  *
  * \file    bottle_config_file.h
  * \brief   Wine bottle config file helper class

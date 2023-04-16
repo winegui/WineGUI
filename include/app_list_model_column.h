@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022 WineGUI
+ * Copyright (c) 2022-2023 WineGUI
  *
  * \file    app_list_model_column.h
  * \brief   Application list columns for treeview

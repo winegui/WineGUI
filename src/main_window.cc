@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2022 WineGUI
+ * Copyright (c) 2019-2023 WineGUI
  *
  * \file    main_window.cc
  * \brief   Main WineGUI window
@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <cctype>
 #include <locale>
+#include <set>
+#include <utility>
 
 /************************
  * Public methods       *
@@ -563,14 +565,17 @@ void MainWindow::set_application_list(const string& prefix_path)
   // First clear list + clear search entry
   reset_application_list();
 
+  // Temperoally store the list of menu item names,
+  // used for checking for duplicates when adding desktop items
+  std::set<std::string> menu_item_names;
+  // Fill the application list (TreeView model)
+  // First the start menu apps/games (if present)
   try
   {
     auto menu_items = Helper::get_menu_items(prefix_path);
-    // Fill the application list (TreeView model)
-    // First the start menu apps/games (if present)
     for (string item : menu_items)
     {
-      string name = "- Unknown -";
+      string name = "- Unknown menu item -";
       size_t found = item.find_last_of('\\');
       size_t subtract = found + 5; // Remove the .lnk part as well using substr
       if (found != string::npos && item.length() >= subtract)
@@ -578,70 +583,27 @@ void MainWindow::set_application_list(const string& prefix_path)
         // Get the name only
         name = item.substr(found + 1, item.length() - subtract);
       }
-      string icon;
-      bool full_icon_path;
+      bool is_icon_full_path;
+      string icon, comment;
       try
       {
-        icon = Helper::get_program_icon_path(item);
+        std::tie(icon, comment) = Helper::get_menu_program_icon_path_and_comment(item);
       }
       catch (const Glib::FileError& error)
       {
-        std::cerr << "WARN: Linux desktop file couldn't be found for menu item." << std::endl;
+        std::cerr << "WARN: Linux desktop file couldn't be found for menu item: " << item << std::endl;
       }
       catch (const std::runtime_error& error)
       {
         std::cerr << "WARN: Could not retrieve menu icon: " << error.what() << std::endl;
       }
-      full_icon_path = !icon.empty();
+      is_icon_full_path = !icon.empty();
       if (icon.empty())
-      {
-        // Get file extension
-        string ext;
-        size_t dot_pos = item.find_last_of('.');
-        if (dot_pos != string::npos)
-        {
-          ext = item.substr(dot_pos + 1);
-          std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
-        }
-        if (ext == "url")
-        {
-          icon = "url";
-        }
-        else if (ext == "htm" || ext == "html")
-        {
-          icon = "html_document.png";
-        }
-        else if (ext == "png")
-        {
-          icon = "png_file.png";
-        }
-        else if (ext == "tiff")
-        {
-          icon = "tiff_file.png";
-        }
-        else if (ext == "jpg" || ext == "jpeg")
-        {
-          icon = "jpg_file.png";
-        }
-        else if (ext == "pdf")
-        {
-          icon = "pdf_file.png";
-        }
-        else if (ext == "doc" || ext == "docx")
-        {
-          icon = "word_document.png";
-        }
-        else if (ext == "txt")
-        {
-          icon = "text_file.png";
-        }
-        else
-        {
-          // Default icon
-          icon = "default.png";
-        }
-      }
-      add_application(name, icon, "", item, full_icon_path);
+        icon = Helper::string_to_icon(item);
+      add_application(name, icon, comment, item, is_icon_full_path);
+      // Also add the name to your list, used for finding duplicates when adding desktop files
+      if (name != "-Unknown menu item -")
+        menu_item_names.insert(name);
     }
   }
   catch (const std::runtime_error& error)
@@ -649,9 +611,53 @@ void MainWindow::set_application_list(const string& prefix_path)
     cout << "Error: " << error.what() << std::endl;
   }
 
-  // Secondly, additional programs
+  // Secondly, the desktop items
+  try
+  {
+    auto desktop_items = Helper::get_desktop_items(prefix_path);
+    for (std::pair<string, string> item : desktop_items)
+    {
+      string value_name = item.first;
+      string value_data = item.second;
+
+      string name = "- Unknown desktop item -";
+      size_t found = value_data.find_last_of('\\');
+      size_t subtract = found + 5; // Remove the .lnk part as well using substr
+      if (found != string::npos && value_data.length() >= subtract)
+      {
+        // Get the name only
+        name = value_data.substr(found + 1, value_data.length() - subtract);
+      }
+
+      // Only add the desktop item if the item is not found in the list of menu items
+      if (name != "- Unknown desktop item -" && menu_item_names.find(name) == menu_item_names.end())
+      {
+        string icon;
+        bool is_icon_full_path;
+        try
+        {
+          icon = Helper::get_desktop_program_icon_path(prefix_path, value_name);
+        }
+        catch (const Glib::FileError& error)
+        {
+          std::cerr << "WARN: Linux desktop file couldn't be found for desktop item: " << value_name << std::endl;
+        }
+        is_icon_full_path = !icon.empty();
+        if (icon.empty())
+          icon = Helper::string_to_icon(value_name);
+        add_application(name, icon, "", value_data, is_icon_full_path);
+      }
+    }
+  }
+  catch (const std::runtime_error& error)
+  {
+    cout << "Error: " << error.what() << std::endl;
+  }
+
+  // Lastly, the additional programs
   add_application("Wine Config", "winecfg", "Wine configuration program", "winecfg");
   add_application("Uninstaller", "uninstaller", "Remove programs", "uninstaller");
+  add_application("Control Panel", "winecontrol", "Wine control panel", "control");
   add_application("WineMine", "minesweeper", "Wine Minesweeper single-player game", "winemine");
   add_application("Winetricks", "winetricks", "Wine helper script to download and install various libraries",
                   Helper::get_winetricks_location() + " --gui");
@@ -683,7 +689,7 @@ void MainWindow::add_application(const string& name, const string& icon, const s
   }
   catch (const Glib::Error& error)
   {
-    std::cerr << "ERROR: Could not find icon for app " << name << ": " << error.what() << std::endl;
+    std::cerr << "ERROR: Could not find icon (" << icon << ") for app " << name << ": " << error.what() << std::endl;
   }
 
   row[app_list_columns.name] = Helper::encode_text(name);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2022 WineGUI
+ * Copyright (c) 2019-2023 WineGUI
  *
  * \file    bottle_new_assistant.h
  * \brief   New Wine bottle assistant (Wizard with steps)
