@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2022 WineGUI
+ * Copyright (c) 2019-2023 WineGUI
  *
  * \file    signal_controller.cc
  * \brief   Manager and connect different signals and dispatchers

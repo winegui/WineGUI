@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2022 WineGUI
+ * Copyright (c) 2019-2023 WineGUI
  *
  * \file    wine_defaults.h
  * \brief   Wine default Windows and Audio driver settings
