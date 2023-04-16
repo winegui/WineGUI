@@ -77,6 +77,7 @@ public:
   static void disable_virtual_desktop(const string& prefix_path);
   static void set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver);
   static std::vector<string> get_menu_items(const string& prefix_path);
+  static std::vector<string> get_desktop_items(const string& prefix_path);
   static string log_level_to_winedebug_string(int log_level);
   static string get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name);
   static bool get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
