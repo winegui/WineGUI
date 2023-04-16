@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cctype>
 #include <locale>
+#include <set>
 #include <utility>
 
 /************************
@@ -564,6 +565,9 @@ void MainWindow::set_application_list(const string& prefix_path)
   // First clear list + clear search entry
   reset_application_list();
 
+  // Temperoally store the list of menu item names,
+  // used for checking for duplicates when adding desktop items
+  std::set<std::string> menu_item_names;
   // Fill the application list (TreeView model)
   // First the start menu apps/games (if present)
   try
@@ -580,69 +584,26 @@ void MainWindow::set_application_list(const string& prefix_path)
         name = item.substr(found + 1, item.length() - subtract);
       }
       string icon;
-      bool full_icon_path;
+      bool is_icon_full_path;
       try
       {
         icon = Helper::get_menu_program_icon_path(item);
       }
       catch (const Glib::FileError& error)
       {
-        std::cerr << "WARN: Linux desktop file couldn't be found for menu item." << std::endl;
+        std::cerr << "WARN: Linux desktop file couldn't be found for menu item: " << item << std::endl;
       }
       catch (const std::runtime_error& error)
       {
         std::cerr << "WARN: Could not retrieve menu icon: " << error.what() << std::endl;
       }
-      full_icon_path = !icon.empty();
+      is_icon_full_path = !icon.empty();
       if (icon.empty())
-      {
-        // Get file extension
-        string ext;
-        size_t dot_pos = item.find_last_of('.');
-        if (dot_pos != string::npos)
-        {
-          ext = item.substr(dot_pos + 1);
-          std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
-        }
-        if (ext == "url")
-        {
-          icon = "url";
-        }
-        else if (ext == "htm" || ext == "html")
-        {
-          icon = "html_document.png";
-        }
-        else if (ext == "png")
-        {
-          icon = "png_file.png";
-        }
-        else if (ext == "tiff")
-        {
-          icon = "tiff_file.png";
-        }
-        else if (ext == "jpg" || ext == "jpeg")
-        {
-          icon = "jpg_file.png";
-        }
-        else if (ext == "pdf")
-        {
-          icon = "pdf_file.png";
-        }
-        else if (ext == "doc" || ext == "docx")
-        {
-          icon = "word_document.png";
-        }
-        else if (ext == "txt")
-        {
-          icon = "text_file.png";
-        }
-        else
-        {
-          // Default icon
-          icon = "default.png";
-        }
-      }
-      add_application(name, icon, "", item, full_icon_path);
+        icon = Helper::string_to_icon(item);
+      add_application(name, icon, "", item, is_icon_full_path);
+      // Also add the name to your list, used for finding duplicates when adding desktop files
+      if (name != "-Unknown menu item -")
+        menu_item_names.insert(name);
     }
   }
   catch (const std::runtime_error& error)
@@ -668,12 +629,24 @@ void MainWindow::set_application_list(const string& prefix_path)
         name = value_data.substr(found + 1, value_data.length() - subtract);
       }
 
-      std::cout << "Value: " << item.first << std::endl;
-      std::cout << "Data: " << item.second << std::endl;
-
-      // string icon = Helper::get_desktop_program_icon_path(item); // TODO: try to also find the home/Desktop folder? Depends on language..
-      // Maybe convert the value "C:\\users\\melroy\\Desktop" to a Linux location? Retrieving the symbolic link?
-      // std::cout << "Desktop item: " << name << " icon: " << icon << std::endl;
+      // Only add the desktop item if the item is not found in the list of menu items
+      if (name != "- Unknown desktop item -" && menu_item_names.find(name) == menu_item_names.end())
+      {
+        string icon;
+        bool is_icon_full_path;
+        try
+        {
+          icon = Helper::get_desktop_program_icon_path(prefix_path, value_name);
+        }
+        catch (const Glib::FileError& error)
+        {
+          std::cerr << "WARN: Linux desktop file couldn't be found for desktop item: " << value_name << std::endl;
+        }
+        is_icon_full_path = !icon.empty();
+        if (icon.empty())
+          icon = Helper::string_to_icon(value_name);
+        add_application(name, icon, "", value_data, is_icon_full_path);
+      }
     }
   }
   catch (const std::runtime_error& error)
@@ -716,7 +689,7 @@ void MainWindow::add_application(const string& name, const string& icon, const s
   }
   catch (const Glib::Error& error)
   {
-    std::cerr << "ERROR: Could not find icon for app " << name << ": " << error.what() << std::endl;
+    std::cerr << "ERROR: Could not find icon (" << icon << ") for app " << name << ": " << error.what() << std::endl;
   }
 
   row[app_list_columns.name] = Helper::encode_text(name);
