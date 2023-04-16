@@ -652,6 +652,7 @@ void MainWindow::set_application_list(const string& prefix_path)
   // Secondly, additional programs
   add_application("Wine Config", "winecfg", "Wine configuration program", "winecfg");
   add_application("Uninstaller", "uninstaller", "Remove programs", "uninstaller");
+  add_application("Control Panel", "winecontrol", "Wine control panel", "control");
   add_application("WineMine", "minesweeper", "Wine Minesweeper single-player game", "winemine");
   add_application("Winetricks", "winetricks", "Wine helper script to download and install various libraries",
                   Helper::get_winetricks_location() + " --gui");
