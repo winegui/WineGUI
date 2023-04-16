@@ -66,7 +66,7 @@ public:
   static string get_virtual_desktop(const string& prefix_path);
   static string get_last_wine_updated(const string& prefix_path);
   static bool get_bottle_status(const string& prefix_path);
-  static string get_menu_program_icon_path(const string& shortcut_path);
+  static std::tuple<string, string> get_menu_program_icon_path_and_comment(const string& shortcut_path);
   static string get_desktop_program_icon_path(const string& prefix_path, const string& shortcut_path);
   static string get_c_letter_drive(const string& prefix_path);
   static bool dir_exists(const string& dir_path);
