@@ -1401,13 +1401,13 @@ string Helper::string_to_icon(const std::string& string)
     icon = "powerpoint_document";
   }
   else if (ext == "xls" || ext == "xlt" || ext == "xlsm" || ext == "xlsx" || ext == "csv" || ext == "xla" || ext == "xlsb" || ext == "xltx" ||
-           ext == "xlsb" || ext == "ods")
+           ext == "ods")
   {
     icon = "excel_document";
   }
   else if (ext == "txt" || ext == "h" || ext == "c" || ext == "cc" || ext == "cpp" || ext == "cgi" || ext == "py" || ext == "class" || ext == "pl" ||
-           ext == "cs" || ext == "java" || ext == "php" || ext == "sh" || ext == "swift" || ext == "vb" || ext == "text" || ext == "md" ||
-           ext == "vb" || ext == "vbe" || ext == "vbs" || ext == "vbscript" || ext == "ws" || ext == "wsf" || ext == "wsh")
+           ext == "cs" || ext == "java" || ext == "php" || ext == "sh" || ext == "swift" || ext == "text" || ext == "md" || ext == "vb" ||
+           ext == "vbe" || ext == "vbs" || ext == "vbscript" || ext == "ws" || ext == "wsf" || ext == "wsh")
   {
     icon = "text_file";
   }
