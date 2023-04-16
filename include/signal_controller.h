@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2022 WineGUI
+ * Copyright (c) 2019-2023 WineGUI
  *
  * \file    signal_controller.h
  * \brief   Handles different GTK signals and dispatch or connect them to other methods/handlers within WineGUI
