@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cctype>
 #include <locale>
+#include <utility>
 
 /************************
  * Public methods       *
@@ -653,16 +654,22 @@ void MainWindow::set_application_list(const string& prefix_path)
   try
   {
     auto desktop_items = Helper::get_desktop_items(prefix_path);
-    for (string item : desktop_items)
+    for (std::pair<string, string> item : desktop_items)
     {
+      string value_name = item.first;
+      string value_data = item.second;
+
       string name = "- Unknown desktop item -";
-      size_t found = item.find_last_of('\\');
+      size_t found = value_data.find_last_of('\\');
       size_t subtract = found + 5; // Remove the .lnk part as well using substr
-      if (found != string::npos && item.length() >= subtract)
+      if (found != string::npos && value_data.length() >= subtract)
       {
         // Get the name only
-        name = item.substr(found + 1, item.length() - subtract);
+        name = value_data.substr(found + 1, value_data.length() - subtract);
       }
+
+      std::cout << "Value: " << item.first << std::endl;
+      std::cout << "Data: " << item.second << std::endl;
 
       // string icon = Helper::get_desktop_program_icon_path(item); // TODO: try to also find the home/Desktop folder? Depends on language..
       // Maybe convert the value "C:\\users\\melroy\\Desktop" to a Linux location? Retrieving the symbolic link?
