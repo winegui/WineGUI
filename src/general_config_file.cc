@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022 WineGUI
+ * Copyright (c) 2022-2023 WineGUI
  *
  * \file    general_config_file.cc
  * \brief   WineGUI Configuration file supporting methods

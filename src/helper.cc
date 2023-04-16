@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2022 WineGUI
+ * Copyright (c) 2019-2023 WineGUI
  *
  * \file    helper.cc
  * \brief   Provide some helper methods for Bottle Manager and CLI interaction
@@ -39,6 +39,7 @@
 #include <stdexcept>
 #include <sys/types.h>
 #include <time.h>
+#include <tuple>
 #include <unistd.h>
 
 std::vector<std::string> wineGuiDirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui config/storage directory path */
@@ -79,6 +80,10 @@ static const string RegNameWindowsVersion = "Version";
 static const string RegNameAudio = "Audio";
 static const string RegNameVirtualDesktop = "Desktop";
 static const string RegNameVirtualDesktopDefault = "Default";
+
+// Reg (sub-)values
+static const string RegValueMenu = "\\Start Menu\\";
+static const string RegValueDesktop = "\\Desktop\\";
 
 // Other files
 static const string WineGuiMetaFile = ".winegui.conf";
@@ -816,44 +821,50 @@ bool Helper::get_bottle_status(const string& prefix_path)
 }
 
 /**
- * \brief Retrieve Linux icon path from Windows lnk path.
+ * \brief Retrieve the Linux icon path and comment from Windows menu lnk item path.
  * Trying to find desktop file in: ~/.local/share/applications/wine. And then search for the icon in: ~/.local/share/icons.
- * \param shortcut_path Path of lnk file under Windows
- * \throws runtime_error when we could not find the file extension or application menu item
- * \return Icon path under Linux (empty string is possible)
+ * \param shortcut_path Path of the lnk file under Windows
+ * \throws runtime_error when we could not find the file extension or application menu item. Or Glib::FileError when desktop file could not be opened.
+ * \return Icon path under Linux + Comment tuple (in both cases an empty string is possible)
  */
-string Helper::get_program_icon_path(const string& shortcut_path)
+std::tuple<string, string> Helper::get_menu_program_icon_path_and_comment(const string& shortcut_path)
 {
   string icon;
-  std::size_t pos = shortcut_path.find("Start Menu");
+  string comment;
+  int strip_length = RegValueMenu.length();
+  std::size_t pos = shortcut_path.find(RegValueMenu);
   if (pos != std::string::npos)
   {
-    const char* homedir;
-    string path = shortcut_path.substr(pos + 11); // 11 is "Start Menu\" length
-    // Get home directory under Linux
-    if ((homedir = getenv("HOME")) == NULL)
-    {
-      homedir = getpwuid(getuid())->pw_dir;
-    }
-    string home_dir = std::string(homedir);
-    // Convert backslash to single forward slash
+    string path = shortcut_path.substr(pos + strip_length); // Strip the path until "\Start Menu\"
+    // Convert backslash to single forward slash (for Unix style)
     std::replace(path.begin(), path.end(), '\\', '/');
-    // Add prefix
+
+    string home_dir = Glib::get_home_dir();
+    // Add prefix to path
     path = home_dir + "/.local/share/applications/wine/" + path;
     // Change .lnk to .desktop extension
     std::size_t dot_pos = path.find_last_of(".");
     if (dot_pos != std::string::npos)
     {
       path.replace(dot_pos + 1, std::string::npos, "desktop");
+      // Read desktop file from disk
       string file_content = Helper::read_file(path);
       // Get icon
       std::size_t icon_pos = file_content.find("Icon=");
       if (icon_pos != std::string::npos)
       {
-        file_content = file_content.substr(icon_pos + 5);
-        file_content.resize(file_content.find_first_of('\n'));
+        string icon_content = file_content.substr(icon_pos + 5); // 5 is the length of 'Icon='
+        icon_content.resize(icon_content.find_first_of('\n'));
         //  Use the 32x32 png image
-        icon = home_dir + "/.local/share/icons/hicolor/32x32/apps/" + file_content + ".png";
+        icon = home_dir + "/.local/share/icons/hicolor/32x32/apps/" + icon_content + ".png";
+      }
+      // Get comment
+      std::size_t comment_pos = file_content.find("Comment=");
+      if (comment_pos != std::string::npos)
+      {
+        string comment_content = file_content.substr(comment_pos + 8); // 8 is the length of 'Comment='
+        comment_content.resize(comment_content.find_first_of('\n'));
+        comment = comment_content;
       }
     }
     else
@@ -864,6 +875,36 @@ string Helper::get_program_icon_path(const string& shortcut_path)
   else
   {
     throw std::runtime_error("Application menu item is not part of the start menu: " + shortcut_path);
+  }
+  return std::make_tuple(icon, comment);
+}
+
+/**
+ * \brief Retrieve the Linux app icon path from desktop file under Linux.
+ * Trying to find the same desktop file under Linux, using the syntax: <prefix_path>/drive_c/<desktop_file_path>. And then search for the icon in:
+ * ~/.local/share/icons.
+ * \param desktop_file_path Path of the desktop file under Windows
+ * \throws Glib::FileError when desktop file could not be opened
+ * \return Icon path under Linux (empty string is possible)
+ */
+string Helper::get_desktop_program_icon_path(const string& prefix_path, const string& desktop_file_path)
+{
+  string icon;
+  string desktop_path = desktop_file_path.substr(3); // Strip C:\ prefix
+  // Convert backslash to single forward slash (for Unix style)
+  std::replace(desktop_path.begin(), desktop_path.end(), '\\', '/');
+  // Add prefix and /drive_c/ folder to path
+  desktop_path = prefix_path + "/drive_c/" + desktop_path;
+  // Read desktop file from disk
+  string file_content = Helper::read_file(desktop_path);
+  // Get icon
+  std::size_t icon_pos = file_content.find("Icon=");
+  if (icon_pos != std::string::npos)
+  {
+    file_content = file_content.substr(icon_pos + 5);
+    file_content.resize(file_content.find_first_of('\n'));
+    // Use the 32x32 png image
+    icon = Glib::get_home_dir() + "/.local/share/icons/hicolor/32x32/apps/" + file_content + ".png";
   }
   return icon;
 }
@@ -1111,13 +1152,26 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
  * \brief Get menu items/links from Wine bottle
  * \param prefix_path Bottle prefix
  * \throws runtime_error when Windows registry could not be opened
- * \return vector array of menu items (links)
+ * \return vector array of menu items/links (value data only)
  */
 std::vector<string> Helper::get_menu_items(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
-  // Key menu items from registry, only get the data keys containing "Start Menu" and ignore key values containing "applications-merged"
-  return Helper::get_reg_keys_data_filter_ignore(file_path, RegKeyMenuFiles, "Start Menu", "applications-merged");
+  // Key menu items from registry, only get the data keys containing "\\Start Menu\\" and ignore key values containing "applications-merged"
+  return Helper::get_reg_keys_value_data_filter_ignore(file_path, RegKeyMenuFiles, RegValueMenu, "applications-merged");
+}
+
+/**
+ * \brief Get desktop items/links from Wine bottle
+ * \param prefix_path Bottle prefix
+ * \throws runtime_error when Windows registry could not be opened
+ * \return vector array of pairs of desktop items (value name + value data)
+ */
+std::vector<std::pair<string, string>> Helper::get_desktop_items(const string& prefix_path)
+{
+  string file_path = Glib::build_filename(prefix_path, UserReg);
+  // Key desktop items from registry, only get the data keys containing "\\Desktop\\"
+  return Helper::get_reg_keys_name_data_pair_filter(file_path, RegKeyMenuFiles, RegValueDesktop);
 }
 
 /**
@@ -1296,6 +1350,89 @@ string Helper::encode_text(const std::string& string)
     }
   }
   return buffer;
+}
+
+/**
+ * \brief Try to guess the file type/MIME type based on the file extension. Then return the corresponding icon for it.
+ * \param[in] string Filename or full path including the file extension
+ * \return File icon
+ */
+string Helper::string_to_icon(const std::string& string)
+{
+  std::string icon;
+  // Get file extension
+  std::string ext;
+  size_t dot_pos = string.find_last_of('.');
+  if (dot_pos != string::npos)
+  {
+    ext = string.substr(dot_pos + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+  }
+  if (ext == "url")
+  {
+    icon = "url";
+  }
+  else if (ext == "htm" || ext == "html" || ext == "xhtml" || ext == "css" || ext == "js")
+  {
+    icon = "html_document";
+  }
+  else if (ext == "mp3" || ext == "mp4" || ext == "flact" || ext == "mpg" || ext == "mpeg" || ext == "ogg" || ext == "mov" || ext == "webm" ||
+           ext == "wav" || ext == "mpa" || ext == "wma" || ext == "wpl" || ext == "mid" || ext == "midi" || ext == "aif" || ext == "cda" ||
+           ext == "avi" || ext == "h264" || ext == "m4v" || ext == "mkv" || ext == "rm")
+  {
+    icon = "multimedia_file";
+  }
+  else if (ext == "png" || ext == "tif" || ext == "tiff" || ext == "jpg" || ext == "jpeg" || ext == "ai" || ext == "bmp" || ext == "gif" ||
+           ext == "ps" || ext == "psd" || ext == "svg" || ext == "webp")
+  {
+    icon = "image_file";
+  }
+  else if (ext == "pdf" || ext == "ps" || ext == "eps")
+  {
+    icon = "pdf_file";
+  }
+  else if (ext == "doc" || ext == "docx" || ext == "docm" || ext == "dotx" || ext == "dotm" || ext == "docb" || ext == "dot" || ext == "odt")
+  {
+    icon = "word_document";
+  }
+  else if (ext == "ppt" || ext == "pptx" || ext == "potx" || ext == "ppsx" || ext == "ppsm" || ext == "ppa" || ext == "pptm" || ext == "pps" ||
+           ext == "odp")
+  {
+    icon = "powerpoint_document";
+  }
+  else if (ext == "xls" || ext == "xlt" || ext == "xlsm" || ext == "xlsx" || ext == "csv" || ext == "xla" || ext == "xlsb" || ext == "xltx" ||
+           ext == "ods")
+  {
+    icon = "excel_document";
+  }
+  else if (ext == "txt" || ext == "h" || ext == "c" || ext == "cc" || ext == "cpp" || ext == "cgi" || ext == "py" || ext == "class" || ext == "pl" ||
+           ext == "cs" || ext == "java" || ext == "php" || ext == "sh" || ext == "swift" || ext == "text" || ext == "md" || ext == "vb" ||
+           ext == "vbe" || ext == "vbs" || ext == "vbscript" || ext == "ws" || ext == "wsf" || ext == "wsh")
+  {
+    icon = "text_file";
+  }
+  else if (ext == "rtf")
+  {
+    icon = "wordpad";
+  }
+  else if (ext == "msi" || ext == "msp" || ext == "mst" || ext == "inf1" || ext == "paf")
+  {
+    icon = "installer_file";
+  }
+  else if (ext == "lnk")
+  {
+    icon = "link_file";
+  }
+  else if (ext == "desktop" || ext == "exe" || ext == "bat" || ext == "bin" || ext == "cmd" || ext == "com")
+  {
+    icon = "default_app_file";
+  }
+  else
+  {
+    // Unknown icon
+    icon = "unknown_file";
+  }
+  return icon;
 }
 
 /****************************************************************************
@@ -1504,44 +1641,127 @@ std::vector<string> Helper::get_reg_keys(const string& file_path, const string& 
 }
 
 /**
- * \brief Get subkeys data from a specific key from the Wine registry from disk
+ * \brief Get subkeys name + data pairs from a specific key from the Wine registry from disk
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \throws runtime_error when Windows registry could not be opened
- * \return List all the sub keys data (so everything after the = sign)
+ * \return List all the sub keys pairs (that is the value name + value data)
  */
-std::vector<string> Helper::get_reg_keys_data(const string& file_path, const string& key_name)
+std::vector<std::pair<string, string>> Helper::get_reg_keys_name_data_pair(const string& file_path, const string& key_name)
 {
-  return get_reg_keys_data_filter(file_path, key_name, "");
+  return get_reg_keys_name_data_pair_filter(file_path, key_name);
 }
 
 /**
- * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registry from disk
+ * \brief Get subkeys name + data pairs from a specific key and filter on a specific value from the Wine registry from disk
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
- * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no filtering)
+ * \param[in] key_value_filter (Optionally) Return only key name + data pairs that matches the filter (default: "", meaning no filtering)
  * \throws runtime_error when Windows registry could not be opened
- * \return List all the sub keys data (so everything after the = sign)
+ * \return List all the sub keys pairs (that is the value name + value data))
  */
-std::vector<string> Helper::get_reg_keys_data_filter(const string& file_path, const string& key_name, const string& key_value_filter)
+std::vector<std::pair<string, string>>
+Helper::get_reg_keys_name_data_pair_filter(const string& file_path, const string& key_name, const string& key_value_filter)
 {
-  return get_reg_keys_data_filter_ignore(file_path, key_name, key_value_filter, "");
+  return get_reg_keys_name_data_pair_filter_ignore(file_path, key_name, key_value_filter);
 }
 
 /**
- * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registry from disk
+ * \brief Get subkeys name + data pairs from a specific key and filter on a specific value from the Wine registry from disk
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
- * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no additional filtering)
+ * \param[in] key_value_filter (Optionally) Return only key name + data pairs that matches the filter (default: "", meaning no additional
+ * filtering)
  * \param[in] key_name_ignore_filter (Optionally) Filter-out the key names that contains the ignore filter (default: "", meaning everything will be
  * returned)
  * \throws runtime_error when we couldn't load the Windows registry
- * \return List all the sub keys data (so everything after the = sign)
+ * \return List all the sub keys pairs (that is the value name + value data)
  */
-std::vector<string> Helper::get_reg_keys_data_filter_ignore(const string& file_path,
-                                                            const string& key_name,
-                                                            const string& key_value_filter,
-                                                            const string& key_name_ignore_filter)
+std::vector<std::pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(const string& file_path,
+                                                                                         const string& key_name,
+                                                                                         const string& key_value_filter,
+                                                                                         const string& key_name_ignore_filter)
+{
+  std::vector<std::pair<string, string>> pairs;
+  std::ifstream reg_file(file_path);
+  if (reg_file.is_open())
+  {
+    std::string line;
+    line.reserve(128);
+    bool match = false;
+    while (std::getline(reg_file, line))
+    {
+      if (!match)
+      {
+        match = line.starts_with(key_name);
+      }
+      else
+      {
+        if (line.empty() || reg_file.eof())
+          break; // End of key section in registry
+
+        line = unescape_reg_key_data(line);
+        // Skip '#' elements and if filter is not empty it will only continue if the line contains the filter string
+        if (!line.starts_with('#') && (key_value_filter.empty() || line.find(key_value_filter) != string::npos) &&
+            (key_name_ignore_filter.empty() || line.find(key_name_ignore_filter) == string::npos))
+        {
+          line.erase(std::remove(line.begin(), line.end(), '\"'), line.end());
+          auto results = split(line, '=');
+          if (results.size() > 1)
+          {
+            pairs.push_back(std::make_pair(results.at(0), results.at(1)));
+          }
+        }
+      }
+    }
+    reg_file.close();
+  }
+  else
+  {
+    throw std::runtime_error("Could not open registry file!");
+  }
+  return pairs;
+}
+
+/**
+ * \brief Get subkeys value data from a specific key from the Wine registry from disk
+ * \param[in] file_path  File path of registry
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \throws runtime_error when Windows registry could not be opened
+ * \return List all the sub keys value data (so everything after the = sign only)
+ */
+std::vector<string> Helper::get_reg_keys_value_data(const string& file_path, const string& key_name)
+{
+  return get_reg_keys_value_data_filter(file_path, key_name);
+}
+
+/**
+ * \brief Get subkeys value data from a specific key and filter on a specific value from the Wine registry from disk
+ * \param[in] file_path  File path of registry
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \param[in] key_value_filter (Optionally) Return only key value data that matches the filter (default: "", meaning no filtering)
+ * \throws runtime_error when Windows registry could not be opened
+ * \return List all the sub keys value data (so everything after the = sign only)
+ */
+std::vector<string> Helper::get_reg_keys_value_data_filter(const string& file_path, const string& key_name, const string& key_value_filter)
+{
+  return get_reg_keys_value_data_filter_ignore(file_path, key_name, key_value_filter);
+}
+
+/**
+ * \brief Get subkeys value data from a specific key and filter on a specific value from the Wine registry from disk
+ * \param[in] file_path  File path of registry
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \param[in] key_value_filter (Optionally) Return only key value data that matches the filter (default: "", meaning no additional filtering)
+ * \param[in] key_name_ignore_filter (Optionally) Filter-out the key names that contains the ignore filter (default: "", meaning everything will be
+ * returned)
+ * \throws runtime_error when we couldn't load the Windows registry
+ * \return List all the sub keys value data (so everything after the = sign only)
+ */
+std::vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_path,
+                                                                  const string& key_name,
+                                                                  const string& key_value_filter,
+                                                                  const string& key_name_ignore_filter)
 {
   std::vector<string> keys;
   std::ifstream reg_file(file_path);

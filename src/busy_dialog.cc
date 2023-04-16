@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020-2022 WineGUI
+ * Copyright (c) 2020-2023 WineGUI
  *
  * \file    busy_dialog.cc
  * \brief   Busy Dialog (showing a loading process bar)

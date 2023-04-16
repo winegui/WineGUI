@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2022 WineGUI
+ * Copyright (c) 2019-2023 WineGUI
  *
  * \file    helper.h
  * \brief   Helper class for Bottle Manager and CLI
@@ -22,6 +22,7 @@
 
 #include <glibmm/dispatcher.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "bottle_types.h"
@@ -65,7 +66,8 @@ public:
   static string get_virtual_desktop(const string& prefix_path);
   static string get_last_wine_updated(const string& prefix_path);
   static bool get_bottle_status(const string& prefix_path);
-  static string get_program_icon_path(const string& shortcut_path);
+  static std::tuple<string, string> get_menu_program_icon_path_and_comment(const string& shortcut_path);
+  static string get_desktop_program_icon_path(const string& prefix_path, const string& shortcut_path);
   static string get_c_letter_drive(const string& prefix_path);
   static bool dir_exists(const string& dir_path);
   static bool create_dir(const string& dir_path);
@@ -77,6 +79,7 @@ public:
   static void disable_virtual_desktop(const string& prefix_path);
   static void set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver);
   static std::vector<string> get_menu_items(const string& prefix_path);
+  static std::vector<std::pair<string, string>> get_desktop_items(const string& prefix_path);
   static string log_level_to_winedebug_string(int log_level);
   static string get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name);
   static bool get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
@@ -85,6 +88,7 @@ public:
   static string get_image_location(const string& filename);
   static bool is_default_wine_bottle(const string& prefix_path);
   static string encode_text(const std::string& string);
+  static string string_to_icon(const std::string& string);
 
 private:
   Helper();
@@ -100,12 +104,19 @@ private:
   static string get_winetricks_version();
   static string get_reg_value(const string& filename, const string& key_name, const string& value_name);
   static std::vector<string> get_reg_keys(const string& file_path, const string& key_name);
-  static std::vector<string> get_reg_keys_data(const string& file_path, const string& key_name);
-  static std::vector<string> get_reg_keys_data_filter(const string& file_path, const string& key_name, const string& key_value_filter = "");
-  static std::vector<string> get_reg_keys_data_filter_ignore(const string& file_path,
-                                                             const string& key_name,
-                                                             const string& key_value_filter = "",
-                                                             const string& key_name_ignore_filter = "");
+  static std::vector<std::pair<string, string>> get_reg_keys_name_data_pair(const string& file_path, const string& key_name);
+  static std::vector<std::pair<string, string>>
+  get_reg_keys_name_data_pair_filter(const string& file_path, const string& key_name, const string& key_value_filter = "");
+  static std::vector<std::pair<string, string>> get_reg_keys_name_data_pair_filter_ignore(const string& file_path,
+                                                                                          const string& key_name,
+                                                                                          const string& key_value_filter = "",
+                                                                                          const string& key_name_ignore_filter = "");
+  static std::vector<string> get_reg_keys_value_data(const string& file_path, const string& key_name);
+  static std::vector<string> get_reg_keys_value_data_filter(const string& file_path, const string& key_name, const string& key_value_filter = "");
+  static std::vector<string> get_reg_keys_value_data_filter_ignore(const string& file_path,
+                                                                   const string& key_name,
+                                                                   const string& key_value_filter = "",
+                                                                   const string& key_name_ignore_filter = "");
   static string get_reg_meta_data(const string& filename, const string& meta_value_name);
   static string get_bottle_dir_from_prefix(const string& prefix_path);
   static std::vector<string> read_file_lines(const string& file_path);
