@@ -582,7 +582,7 @@ void MainWindow::set_application_list(const string& prefix_path)
       bool full_icon_path;
       try
       {
-        icon = Helper::get_program_icon_path(item);
+        icon = Helper::get_menu_program_icon_path(item);
       }
       catch (const Glib::FileError& error)
       {
@@ -664,7 +664,8 @@ void MainWindow::set_application_list(const string& prefix_path)
         name = item.substr(found + 1, item.length() - subtract);
       }
 
-      // string icon = Helper::get_program_icon_path(item);
+      // string icon = Helper::get_desktop_program_icon_path(item); // TODO: try to also find the home/Desktop folder? Depends on language..
+      // Maybe convert the value "C:\\users\\melroy\\Desktop" to a Linux location? Retrieving the symbolic link?
       // std::cout << "Desktop item: " << name << " icon: " << icon << std::endl;
     }
   }

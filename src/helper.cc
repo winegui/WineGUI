@@ -820,13 +820,13 @@ bool Helper::get_bottle_status(const string& prefix_path)
 }
 
 /**
- * \brief Retrieve Linux icon path from Windows lnk path.
+ * \brief Retrieve Linux icon path from Windows menu lnk item path.
  * Trying to find desktop file in: ~/.local/share/applications/wine. And then search for the icon in: ~/.local/share/icons.
  * \param shortcut_path Path of lnk file under Windows
  * \throws runtime_error when we could not find the file extension or application menu item
  * \return Icon path under Linux (empty string is possible)
  */
-string Helper::get_program_icon_path(const string& shortcut_path)
+string Helper::get_menu_program_icon_path(const string& shortcut_path)
 {
   string icon;
   int strip_length = RegValueMenu.length();
