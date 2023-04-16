@@ -1117,26 +1117,26 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
  * \brief Get menu items/links from Wine bottle
  * \param prefix_path Bottle prefix
  * \throws runtime_error when Windows registry could not be opened
- * \return vector array of menu items (links)
+ * \return vector array of menu items/links (value data only)
  */
 std::vector<string> Helper::get_menu_items(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
   // Key menu items from registry, only get the data keys containing "\\Start Menu\\" and ignore key values containing "applications-merged"
-  return Helper::get_reg_keys_data_filter_ignore(file_path, RegKeyMenuFiles, "\\Start Menu\\", "applications-merged");
+  return Helper::get_reg_keys_value_data_filter_ignore(file_path, RegKeyMenuFiles, RegValueMenu, "applications-merged");
 }
 
 /**
  * \brief Get desktop items/links from Wine bottle
  * \param prefix_path Bottle prefix
  * \throws runtime_error when Windows registry could not be opened
- * \return vector array of desktop items (links)
+ * \return vector array of pairs of desktop items (value name + value data)
  */
-std::vector<string> Helper::get_desktop_items(const string& prefix_path)
+std::vector<std::pair<string, string>> Helper::get_desktop_items(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
   // Key desktop items from registry, only get the data keys containing "\\Desktop\\"
-  return Helper::get_reg_keys_data_filter_ignore(file_path, RegKeyMenuFiles, "\\Desktop\\");
+  return Helper::get_reg_keys_name_data_pair_filter(file_path, RegKeyMenuFiles, RegValueDesktop);
 }
 
 /**
@@ -1523,44 +1523,127 @@ std::vector<string> Helper::get_reg_keys(const string& file_path, const string& 
 }
 
 /**
- * \brief Get subkeys data from a specific key from the Wine registry from disk
+ * \brief Get subkeys name + data pairs from a specific key from the Wine registry from disk
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
  * \throws runtime_error when Windows registry could not be opened
- * \return List all the sub keys data (so everything after the = sign)
+ * \return List all the sub keys pairs (that is the value name + value data)
  */
-std::vector<string> Helper::get_reg_keys_data(const string& file_path, const string& key_name)
+std::vector<std::pair<string, string>> Helper::get_reg_keys_name_data_pair(const string& file_path, const string& key_name)
 {
-  return get_reg_keys_data_filter(file_path, key_name, "");
+  return get_reg_keys_name_data_pair_filter(file_path, key_name);
 }
 
 /**
- * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registry from disk
+ * \brief Get subkeys name + data pairs from a specific key and filter on a specific value from the Wine registry from disk
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
- * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no filtering)
+ * \param[in] key_value_filter (Optionally) Return only key name + data pairs that matches the filter (default: "", meaning no filtering)
  * \throws runtime_error when Windows registry could not be opened
- * \return List all the sub keys data (so everything after the = sign)
+ * \return List all the sub keys pairs (that is the value name + value data))
  */
-std::vector<string> Helper::get_reg_keys_data_filter(const string& file_path, const string& key_name, const string& key_value_filter)
+std::vector<std::pair<string, string>>
+Helper::get_reg_keys_name_data_pair_filter(const string& file_path, const string& key_name, const string& key_value_filter)
 {
-  return get_reg_keys_data_filter_ignore(file_path, key_name, key_value_filter, "");
+  return get_reg_keys_name_data_pair_filter_ignore(file_path, key_name, key_value_filter);
 }
 
 /**
- * \brief Get subkeys data from a specific key and filter on a specific value from the Wine registry from disk
+ * \brief Get subkeys name + data pairs from a specific key and filter on a specific value from the Wine registry from disk
  * \param[in] file_path  File path of registry
  * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
- * \param[in] key_value_filter (Optionally) Return only key value data that contains the filter (default: "", meaning no additional filtering)
+ * \param[in] key_value_filter (Optionally) Return only key name + data pairs that matches the filter (default: "", meaning no additional
+ * filtering)
  * \param[in] key_name_ignore_filter (Optionally) Filter-out the key names that contains the ignore filter (default: "", meaning everything will be
  * returned)
  * \throws runtime_error when we couldn't load the Windows registry
- * \return List all the sub keys data (so everything after the = sign)
+ * \return List all the sub keys pairs (that is the value name + value data)
  */
-std::vector<string> Helper::get_reg_keys_data_filter_ignore(const string& file_path,
-                                                            const string& key_name,
-                                                            const string& key_value_filter,
-                                                            const string& key_name_ignore_filter)
+std::vector<std::pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(const string& file_path,
+                                                                                         const string& key_name,
+                                                                                         const string& key_value_filter,
+                                                                                         const string& key_name_ignore_filter)
+{
+  std::vector<std::pair<string, string>> pairs;
+  std::ifstream reg_file(file_path);
+  if (reg_file.is_open())
+  {
+    std::string line;
+    line.reserve(128);
+    bool match = false;
+    while (std::getline(reg_file, line))
+    {
+      if (!match)
+      {
+        match = line.starts_with(key_name);
+      }
+      else
+      {
+        if (line.empty() || reg_file.eof())
+          break; // End of key section in registry
+
+        line = unescape_reg_key_data(line);
+        // Skip '#' elements and if filter is not empty it will only continue if the line contains the filter string
+        if (!line.starts_with('#') && (key_value_filter.empty() || line.find(key_value_filter) != string::npos) &&
+            (key_name_ignore_filter.empty() || line.find(key_name_ignore_filter) == string::npos))
+        {
+          line.erase(std::remove(line.begin(), line.end(), '\"'), line.end());
+          auto results = split(line, '=');
+          if (results.size() > 1)
+          {
+            pairs.push_back(std::make_pair(results.at(0), results.at(1)));
+          }
+        }
+      }
+    }
+    reg_file.close();
+  }
+  else
+  {
+    throw std::runtime_error("Could not open registry file!");
+  }
+  return pairs;
+}
+
+/**
+ * \brief Get subkeys value data from a specific key from the Wine registry from disk
+ * \param[in] file_path  File path of registry
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \throws runtime_error when Windows registry could not be opened
+ * \return List all the sub keys value data (so everything after the = sign only)
+ */
+std::vector<string> Helper::get_reg_keys_value_data(const string& file_path, const string& key_name)
+{
+  return get_reg_keys_value_data_filter(file_path, key_name);
+}
+
+/**
+ * \brief Get subkeys value data from a specific key and filter on a specific value from the Wine registry from disk
+ * \param[in] file_path  File path of registry
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \param[in] key_value_filter (Optionally) Return only key value data that matches the filter (default: "", meaning no filtering)
+ * \throws runtime_error when Windows registry could not be opened
+ * \return List all the sub keys value data (so everything after the = sign only)
+ */
+std::vector<string> Helper::get_reg_keys_value_data_filter(const string& file_path, const string& key_name, const string& key_value_filter)
+{
+  return get_reg_keys_value_data_filter_ignore(file_path, key_name, key_value_filter);
+}
+
+/**
+ * \brief Get subkeys value data from a specific key and filter on a specific value from the Wine registry from disk
+ * \param[in] file_path  File path of registry
+ * \param[in] key_name   Full or part of the path of the key, always starting with '[' (eg. [Software\\\\Wine\\\\Explorer])
+ * \param[in] key_value_filter (Optionally) Return only key value data that matches the filter (default: "", meaning no additional filtering)
+ * \param[in] key_name_ignore_filter (Optionally) Filter-out the key names that contains the ignore filter (default: "", meaning everything will be
+ * returned)
+ * \throws runtime_error when we couldn't load the Windows registry
+ * \return List all the sub keys value data (so everything after the = sign only)
+ */
+std::vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_path,
+                                                                  const string& key_name,
+                                                                  const string& key_value_filter,
+                                                                  const string& key_name_ignore_filter)
 {
   std::vector<string> keys;
   std::ifstream reg_file(file_path);
@@ -1741,7 +1824,8 @@ string Helper::unescape_reg_key_data(const string& src)
 {
   auto to_hex = [](char ch) -> char { return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10; };
 
-  auto wchar_to_utf8 = [](wchar_t wc) -> string {
+  auto wchar_to_utf8 = [](wchar_t wc) -> string
+  {
     string s;
     if (0 <= wc && wc <= 0x7f)
     {

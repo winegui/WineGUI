@@ -22,6 +22,7 @@
 
 #include <glibmm/dispatcher.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "bottle_types.h"
@@ -77,7 +78,7 @@ public:
   static void disable_virtual_desktop(const string& prefix_path);
   static void set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver);
   static std::vector<string> get_menu_items(const string& prefix_path);
-  static std::vector<string> get_desktop_items(const string& prefix_path);
+  static std::vector<std::pair<string, string>> get_desktop_items(const string& prefix_path);
   static string log_level_to_winedebug_string(int log_level);
   static string get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name);
   static bool get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
@@ -101,12 +102,19 @@ private:
   static string get_winetricks_version();
   static string get_reg_value(const string& filename, const string& key_name, const string& value_name);
   static std::vector<string> get_reg_keys(const string& file_path, const string& key_name);
-  static std::vector<string> get_reg_keys_data(const string& file_path, const string& key_name);
-  static std::vector<string> get_reg_keys_data_filter(const string& file_path, const string& key_name, const string& key_value_filter = "");
-  static std::vector<string> get_reg_keys_data_filter_ignore(const string& file_path,
-                                                             const string& key_name,
-                                                             const string& key_value_filter = "",
-                                                             const string& key_name_ignore_filter = "");
+  static std::vector<std::pair<string, string>> get_reg_keys_name_data_pair(const string& file_path, const string& key_name);
+  static std::vector<std::pair<string, string>>
+  get_reg_keys_name_data_pair_filter(const string& file_path, const string& key_name, const string& key_value_filter = "");
+  static std::vector<std::pair<string, string>> get_reg_keys_name_data_pair_filter_ignore(const string& file_path,
+                                                                                          const string& key_name,
+                                                                                          const string& key_value_filter = "",
+                                                                                          const string& key_name_ignore_filter = "");
+  static std::vector<string> get_reg_keys_value_data(const string& file_path, const string& key_name);
+  static std::vector<string> get_reg_keys_value_data_filter(const string& file_path, const string& key_name, const string& key_value_filter = "");
+  static std::vector<string> get_reg_keys_value_data_filter_ignore(const string& file_path,
+                                                                   const string& key_name,
+                                                                   const string& key_value_filter = "",
+                                                                   const string& key_name_ignore_filter = "");
   static string get_reg_meta_data(const string& filename, const string& meta_value_name);
   static string get_bottle_dir_from_prefix(const string& prefix_path);
   static std::vector<string> read_file_lines(const string& file_path);
