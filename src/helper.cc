@@ -820,10 +820,10 @@ bool Helper::get_bottle_status(const string& prefix_path)
 }
 
 /**
- * \brief Retrieve Linux icon path from Windows menu lnk item path.
+ * \brief Retrieve the Linux icon path from Windows menu lnk item path.
  * Trying to find desktop file in: ~/.local/share/applications/wine. And then search for the icon in: ~/.local/share/icons.
- * \param shortcut_path Path of lnk file under Windows
- * \throws runtime_error when we could not find the file extension or application menu item
+ * \param shortcut_path Path of the lnk file under Windows
+ * \throws runtime_error when we could not find the file extension or application menu item. Or Glib::FileError when desktop file could not be opened.
  * \return Icon path under Linux (empty string is possible)
  */
 string Helper::get_menu_program_icon_path(const string& shortcut_path)
@@ -837,26 +837,21 @@ string Helper::get_menu_program_icon_path(const string& shortcut_path)
     // Convert backslash to single forward slash (for Unix style)
     std::replace(path.begin(), path.end(), '\\', '/');
 
-    const char* homedir;
-    // Get home directory under Linux
-    if ((homedir = getenv("HOME")) == NULL)
-    {
-      homedir = getpwuid(getuid())->pw_dir;
-    }
-    string home_dir = std::string(homedir);
-    // Add prefix
+    string home_dir = Glib::get_home_dir();
+    // Add prefix to path
     path = home_dir + "/.local/share/applications/wine/" + path;
     // Change .lnk to .desktop extension
     std::size_t dot_pos = path.find_last_of(".");
     if (dot_pos != std::string::npos)
     {
       path.replace(dot_pos + 1, std::string::npos, "desktop");
+      // Read desktop file from disk
       string file_content = Helper::read_file(path);
       // Get icon
       std::size_t icon_pos = file_content.find("Icon=");
       if (icon_pos != std::string::npos)
       {
-        file_content = file_content.substr(icon_pos + 5);
+        file_content = file_content.substr(icon_pos + 5); // 5 is the length of 'Icon='
         file_content.resize(file_content.find_first_of('\n'));
         //  Use the 32x32 png image
         icon = home_dir + "/.local/share/icons/hicolor/32x32/apps/" + file_content + ".png";
@@ -870,6 +865,36 @@ string Helper::get_menu_program_icon_path(const string& shortcut_path)
   else
   {
     throw std::runtime_error("Application menu item is not part of the start menu: " + shortcut_path);
+  }
+  return icon;
+}
+
+/**
+ * \brief Retrieve the Linux app icon path from desktop file under Linux.
+ * Trying to find the same desktop file under Linux, using the syntax: <prefix_path>/drive_c/<desktop_file_path>. And then search for the icon in:
+ * ~/.local/share/icons.
+ * \param desktop_file_path Path of the desktop file under Windows
+ * \throws Glib::FileError when desktop file could not be opened
+ * \return Icon path under Linux (empty string is possible)
+ */
+string Helper::get_desktop_program_icon_path(const string& prefix_path, const string& desktop_file_path)
+{
+  string icon;
+  string desktop_path = desktop_file_path.substr(3); // Strip C:\ prefix
+  // Convert backslash to single forward slash (for Unix style)
+  std::replace(desktop_path.begin(), desktop_path.end(), '\\', '/');
+  // Add prefix and /drive_c/ folder to path
+  desktop_path = prefix_path + "/drive_c/" + desktop_path;
+  // Read desktop file from disk
+  string file_content = Helper::read_file(desktop_path);
+  // Get icon
+  std::size_t icon_pos = file_content.find("Icon=");
+  if (icon_pos != std::string::npos)
+  {
+    file_content = file_content.substr(icon_pos + 5);
+    file_content.resize(file_content.find_first_of('\n'));
+    // Use the 32x32 png image
+    icon = Glib::get_home_dir() + "/.local/share/icons/hicolor/32x32/apps/" + file_content + ".png";
   }
   return icon;
 }
@@ -1315,6 +1340,89 @@ string Helper::encode_text(const std::string& string)
     }
   }
   return buffer;
+}
+
+/**
+ * \brief Try to guess the file type/MIME type based on the file extension. Then return the corresponding icon for it.
+ * \param[in] string Filename or full path including the file extension
+ * \return File icon
+ */
+string Helper::string_to_icon(const std::string& string)
+{
+  std::string icon;
+  // Get file extension
+  std::string ext;
+  size_t dot_pos = string.find_last_of('.');
+  if (dot_pos != string::npos)
+  {
+    ext = string.substr(dot_pos + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+  }
+  if (ext == "url")
+  {
+    icon = "url";
+  }
+  else if (ext == "htm" || ext == "html" || ext == "xhtml" || ext == "css" || ext == "js")
+  {
+    icon = "html_document";
+  }
+  else if (ext == "mp3" || ext == "mp4" || ext == "flact" || ext == "mpg" || ext == "mpeg" || ext == "ogg" || ext == "mov" || ext == "webm" ||
+           ext == "wav" || ext == "mpa" || ext == "wma" || ext == "wpl" || ext == "mid" || ext == "midi" || ext == "aif" || ext == "cda" ||
+           ext == "avi" || ext == "h264" || ext == "m4v" || ext == "mkv" || ext == "rm")
+  {
+    icon = "multimedia_file";
+  }
+  else if (ext == "png" || ext == "tif" || ext == "tiff" || ext == "jpg" || ext == "jpeg" || ext == "ai" || ext == "bmp" || ext == "gif" ||
+           ext == "ps" || ext == "psd" || ext == "svg" || ext == "webp")
+  {
+    icon = "image_file";
+  }
+  else if (ext == "pdf" || ext == "ps" || ext == "eps")
+  {
+    icon = "pdf_file";
+  }
+  else if (ext == "doc" || ext == "docx" || ext == "docm" || ext == "dotx" || ext == "dotm" || ext == "docb" || ext == "dot" || ext == "odt")
+  {
+    icon = "word_document";
+  }
+  else if (ext == "ppt" || ext == "pptx" || ext == "potx" || ext == "ppsx" || ext == "ppsm" || ext == "ppa" || ext == "pptm" || ext == "pps" ||
+           ext == "odp")
+  {
+    icon = "powerpoint_document";
+  }
+  else if (ext == "xls" || ext == "xlt" || ext == "xlsm" || ext == "xlsx" || ext == "csv" || ext == "xla" || ext == "xlsb" || ext == "xltx" ||
+           ext == "xlsb" || ext == "ods")
+  {
+    icon = "excel_document";
+  }
+  else if (ext == "txt" || ext == "h" || ext == "c" || ext == "cc" || ext == "cpp" || ext == "cgi" || ext == "py" || ext == "class" || ext == "pl" ||
+           ext == "cs" || ext == "java" || ext == "php" || ext == "sh" || ext == "swift" || ext == "vb" || ext == "text" || ext == "md" ||
+           ext == "vb" || ext == "vbe" || ext == "vbs" || ext == "vbscript" || ext == "ws" || ext == "wsf" || ext == "wsh")
+  {
+    icon = "text_file";
+  }
+  else if (ext == "rtf")
+  {
+    icon = "wordpad";
+  }
+  else if (ext == "msi" || ext == "msp" || ext == "mst" || ext == "inf1" || ext == "paf")
+  {
+    icon = "installer_file";
+  }
+  else if (ext == "lnk")
+  {
+    icon = "link_file";
+  }
+  else if (ext == "desktop" || ext == "exe" || ext == "bat" || ext == "bin" || ext == "cmd" || ext == "com")
+  {
+    icon = "default_app_file";
+  }
+  else
+  {
+    // Unknown icon
+    icon = "unknown_file";
+  }
+  return icon;
 }
 
 /****************************************************************************

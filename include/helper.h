@@ -67,6 +67,7 @@ public:
   static string get_last_wine_updated(const string& prefix_path);
   static bool get_bottle_status(const string& prefix_path);
   static string get_menu_program_icon_path(const string& shortcut_path);
+  static string get_desktop_program_icon_path(const string& prefix_path, const string& shortcut_path);
   static string get_c_letter_drive(const string& prefix_path);
   static bool dir_exists(const string& dir_path);
   static bool create_dir(const string& dir_path);
@@ -87,6 +88,7 @@ public:
   static string get_image_location(const string& filename);
   static bool is_default_wine_bottle(const string& prefix_path);
   static string encode_text(const std::string& string);
+  static string string_to_icon(const std::string& string);
 
 private:
   Helper();
