@@ -80,6 +80,10 @@ static const string RegNameAudio = "Audio";
 static const string RegNameVirtualDesktop = "Desktop";
 static const string RegNameVirtualDesktopDefault = "Default";
 
+// Reg (sub-)values
+static const string RegValueMenu = "\\Start Menu\\";
+static const string RegValueDesktop = "\\Desktop\\";
+
 // Other files
 static const string WineGuiMetaFile = ".winegui.conf";
 static const string UpdateTimestamp = ".update-timestamp";
@@ -825,19 +829,21 @@ bool Helper::get_bottle_status(const string& prefix_path)
 string Helper::get_program_icon_path(const string& shortcut_path)
 {
   string icon;
-  std::size_t pos = shortcut_path.find("Start Menu");
+  int strip_length = RegValueMenu.length();
+  std::size_t pos = shortcut_path.find(RegValueMenu);
   if (pos != std::string::npos)
   {
+    string path = shortcut_path.substr(pos + strip_length); // Strip the path until "\Start Menu\"
+    // Convert backslash to single forward slash (for Unix style)
+    std::replace(path.begin(), path.end(), '\\', '/');
+
     const char* homedir;
-    string path = shortcut_path.substr(pos + 11); // 11 is "Start Menu\" length
     // Get home directory under Linux
     if ((homedir = getenv("HOME")) == NULL)
     {
       homedir = getpwuid(getuid())->pw_dir;
     }
     string home_dir = std::string(homedir);
-    // Convert backslash to single forward slash
-    std::replace(path.begin(), path.end(), '\\', '/');
     // Add prefix
     path = home_dir + "/.local/share/applications/wine/" + path;
     // Change .lnk to .desktop extension
@@ -1116,8 +1122,21 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
 std::vector<string> Helper::get_menu_items(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
-  // Key menu items from registry, only get the data keys containing "Start Menu" and ignore key values containing "applications-merged"
-  return Helper::get_reg_keys_data_filter_ignore(file_path, RegKeyMenuFiles, "Start Menu", "applications-merged");
+  // Key menu items from registry, only get the data keys containing "\\Start Menu\\" and ignore key values containing "applications-merged"
+  return Helper::get_reg_keys_data_filter_ignore(file_path, RegKeyMenuFiles, "\\Start Menu\\", "applications-merged");
+}
+
+/**
+ * \brief Get desktop items/links from Wine bottle
+ * \param prefix_path Bottle prefix
+ * \throws runtime_error when Windows registry could not be opened
+ * \return vector array of desktop items (links)
+ */
+std::vector<string> Helper::get_desktop_items(const string& prefix_path)
+{
+  string file_path = Glib::build_filename(prefix_path, UserReg);
+  // Key desktop items from registry, only get the data keys containing "\\Desktop\\"
+  return Helper::get_reg_keys_data_filter_ignore(file_path, RegKeyMenuFiles, "\\Desktop\\");
 }
 
 /**
@@ -1722,7 +1741,8 @@ string Helper::unescape_reg_key_data(const string& src)
 {
   auto to_hex = [](char ch) -> char { return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10; };
 
-  auto wchar_to_utf8 = [](wchar_t wc) -> string {
+  auto wchar_to_utf8 = [](wchar_t wc) -> string
+  {
     string s;
     if (0 <= wc && wc <= 0x7f)
     {

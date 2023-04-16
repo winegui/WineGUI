@@ -563,14 +563,14 @@ void MainWindow::set_application_list(const string& prefix_path)
   // First clear list + clear search entry
   reset_application_list();
 
+  // Fill the application list (TreeView model)
+  // First the start menu apps/games (if present)
   try
   {
     auto menu_items = Helper::get_menu_items(prefix_path);
-    // Fill the application list (TreeView model)
-    // First the start menu apps/games (if present)
     for (string item : menu_items)
     {
-      string name = "- Unknown -";
+      string name = "- Unknown menu item -";
       size_t found = item.find_last_of('\\');
       size_t subtract = found + 5; // Remove the .lnk part as well using substr
       if (found != string::npos && item.length() >= subtract)
@@ -649,7 +649,31 @@ void MainWindow::set_application_list(const string& prefix_path)
     cout << "Error: " << error.what() << std::endl;
   }
 
-  // Secondly, additional programs
+  // Secondly, the desktop items
+  try
+  {
+    auto desktop_items = Helper::get_desktop_items(prefix_path);
+    for (string item : desktop_items)
+    {
+      string name = "- Unknown desktop item -";
+      size_t found = item.find_last_of('\\');
+      size_t subtract = found + 5; // Remove the .lnk part as well using substr
+      if (found != string::npos && item.length() >= subtract)
+      {
+        // Get the name only
+        name = item.substr(found + 1, item.length() - subtract);
+      }
+
+      // string icon = Helper::get_program_icon_path(item);
+      // std::cout << "Desktop item: " << name << " icon: " << icon << std::endl;
+    }
+  }
+  catch (const std::runtime_error& error)
+  {
+    cout << "Error: " << error.what() << std::endl;
+  }
+
+  // Lastly, the additional programs
   add_application("Wine Config", "winecfg", "Wine configuration program", "winecfg");
   add_application("Uninstaller", "uninstaller", "Remove programs", "uninstaller");
   add_application("Control Panel", "winecontrol", "Wine control panel", "control");
