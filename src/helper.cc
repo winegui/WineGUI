@@ -39,6 +39,7 @@
 #include <stdexcept>
 #include <sys/types.h>
 #include <time.h>
+#include <tuple>
 #include <unistd.h>
 
 std::vector<std::string> wineGuiDirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui config/storage directory path */
@@ -820,15 +821,16 @@ bool Helper::get_bottle_status(const string& prefix_path)
 }
 
 /**
- * \brief Retrieve the Linux icon path from Windows menu lnk item path.
+ * \brief Retrieve the Linux icon path and comment from Windows menu lnk item path.
  * Trying to find desktop file in: ~/.local/share/applications/wine. And then search for the icon in: ~/.local/share/icons.
  * \param shortcut_path Path of the lnk file under Windows
  * \throws runtime_error when we could not find the file extension or application menu item. Or Glib::FileError when desktop file could not be opened.
- * \return Icon path under Linux (empty string is possible)
+ * \return Icon path under Linux + Comment tuple (in both cases an empty string is possible)
  */
-string Helper::get_menu_program_icon_path(const string& shortcut_path)
+std::tuple<string, string> Helper::get_menu_program_icon_path_and_comment(const string& shortcut_path)
 {
   string icon;
+  string comment;
   int strip_length = RegValueMenu.length();
   std::size_t pos = shortcut_path.find(RegValueMenu);
   if (pos != std::string::npos)
@@ -851,10 +853,18 @@ string Helper::get_menu_program_icon_path(const string& shortcut_path)
       std::size_t icon_pos = file_content.find("Icon=");
       if (icon_pos != std::string::npos)
       {
-        file_content = file_content.substr(icon_pos + 5); // 5 is the length of 'Icon='
-        file_content.resize(file_content.find_first_of('\n'));
+        string icon_content = file_content.substr(icon_pos + 5); // 5 is the length of 'Icon='
+        icon_content.resize(icon_content.find_first_of('\n'));
         //  Use the 32x32 png image
-        icon = home_dir + "/.local/share/icons/hicolor/32x32/apps/" + file_content + ".png";
+        icon = home_dir + "/.local/share/icons/hicolor/32x32/apps/" + icon_content + ".png";
+      }
+      // Get comment
+      std::size_t comment_pos = file_content.find("Comment=");
+      if (comment_pos != std::string::npos)
+      {
+        string comment_content = file_content.substr(comment_pos + 8); // 8 is the length of 'Comment='
+        comment_content.resize(comment_content.find_first_of('\n'));
+        comment = comment_content;
       }
     }
     else
@@ -866,7 +876,7 @@ string Helper::get_menu_program_icon_path(const string& shortcut_path)
   {
     throw std::runtime_error("Application menu item is not part of the start menu: " + shortcut_path);
   }
-  return icon;
+  return std::make_tuple(icon, comment);
 }
 
 /**

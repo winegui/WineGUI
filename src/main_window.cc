@@ -583,11 +583,11 @@ void MainWindow::set_application_list(const string& prefix_path)
         // Get the name only
         name = item.substr(found + 1, item.length() - subtract);
       }
-      string icon;
       bool is_icon_full_path;
+      string icon, comment;
       try
       {
-        icon = Helper::get_menu_program_icon_path(item);
+        std::tie(icon, comment) = Helper::get_menu_program_icon_path_and_comment(item);
       }
       catch (const Glib::FileError& error)
       {
@@ -600,7 +600,7 @@ void MainWindow::set_application_list(const string& prefix_path)
       is_icon_full_path = !icon.empty();
       if (icon.empty())
         icon = Helper::string_to_icon(item);
-      add_application(name, icon, "", item, is_icon_full_path);
+      add_application(name, icon, comment, item, is_icon_full_path);
       // Also add the name to your list, used for finding duplicates when adding desktop files
       if (name != "-Unknown menu item -")
         menu_item_names.insert(name);
