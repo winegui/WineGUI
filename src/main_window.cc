@@ -630,7 +630,7 @@ void MainWindow::set_application_list(const string& prefix_path)
       }
 
       // Only add the desktop item if the item is not found in the list of menu items
-      if (name != "- Unknown desktop item -" && menu_item_names.find(name) == menu_item_names.end())
+      if (menu_item_names.find(name) == menu_item_names.end())
       {
         string icon;
         bool is_icon_full_path;
