@@ -605,16 +605,23 @@ void MainWindow::set_application_list(const string& prefix_path)
         try
         {
           icon = Helper::get_program_icon_from_shortcut_file(prefix_path, item);
-          is_icon_full_path = false; // just to be sure
+          is_icon_full_path = false;
         }
         catch (const Glib::FileError& error)
         {
           std::cerr << "WARN: Windows shortcut file couldn't be found for menu item: " << item << std::endl;
         }
+        catch (const std::runtime_error& error)
+        {
+          // Ignore if Windows target path could not be found
+        }
       }
       // Fall-back (keep in mind, menu item has basically always a .lnk file extension)
       if (icon.empty())
+      {
         icon = Helper::string_to_icon(item);
+        is_icon_full_path = false;
+      }
       add_application(name, icon, comment, item, is_icon_full_path);
       // Also add the name to your list, used for finding duplicates when adding desktop files
       if (name != "-Unknown menu item -")
@@ -671,10 +678,17 @@ void MainWindow::set_application_list(const string& prefix_path)
           {
             std::cerr << "WARN: Windows shortcut file couldn't be found for desktop item: " << value_name << std::endl;
           }
+          catch (const std::runtime_error& error)
+          {
+            // Ignore if Windows target path could not be found
+          }
         }
-        // Fall-back (keep in mind, menu item has basically always a .lnk file extension)
+        // Fall-back (keep in mind, desktop item has basically always a .desktop file extension)
         if (icon.empty())
+        {
           icon = Helper::string_to_icon(value_name);
+          is_icon_full_path = false;
+        }
         add_application(name, icon, "", value_data, is_icon_full_path);
       }
     }
