@@ -1996,8 +1996,7 @@ string Helper::unescape_reg_key_data(const string& src)
 {
   auto to_hex = [](char ch) -> char { return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10; };
 
-  auto wchar_to_utf8 = [](wchar_t wc) -> string
-  {
+  auto wchar_to_utf8 = [](wchar_t wc) -> string {
     string s;
     if (0 <= wc && wc <= 0x7f)
     {
