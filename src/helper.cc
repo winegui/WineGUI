@@ -821,9 +821,9 @@ bool Helper::get_bottle_status(const string& prefix_path)
 }
 
 /**
- * \brief Retrieve the Linux icon path and comment from Windows menu lnk item path.
- * Trying to find desktop file in: ~/.local/share/applications/wine. And then search for the icon in: ~/.local/share/icons.
- * \param shortcut_path Path of the lnk file under Windows
+ * \brief Retrieve the Linux icon path and comment from Linux .desktop file using the Windows shortcut path (.lnk file).
+ * Searching for the desktop file at: ~/.local/share/applications/wine. And then search for the icon image at: ~/.local/share/icons.
+ * \param[in] shortcut_path Path of Windows shortcut (*.lnk file)
  * \throws runtime_error when we could not find the file extension or application menu item. Or Glib::FileError when desktop file could not be opened.
  * \return Icon path under Linux + Comment tuple (in both cases an empty string is possible)
  */
@@ -883,7 +883,8 @@ std::tuple<string, string> Helper::get_menu_program_icon_path_and_comment(const 
  * \brief Retrieve the Linux app icon path from desktop file under Linux.
  * Trying to find the same desktop file under Linux, using the syntax: <prefix_path>/drive_c/<desktop_file_path>. And then search for the icon in:
  * ~/.local/share/icons.
- * \param desktop_file_path Path of the desktop file under Windows
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] desktop_file_path Path of the desktop file under Windows
  * \throws Glib::FileError when desktop file could not be opened
  * \return Icon path under Linux (empty string is possible)
  */
@@ -907,6 +908,49 @@ string Helper::get_desktop_program_icon_path(const string& prefix_path, const st
     icon = Glib::get_home_dir() + "/.local/share/icons/hicolor/32x32/apps/" + file_content + ".png";
   }
   return icon;
+}
+
+/**
+ * \brief Retrieve target path from Windows shortcut (*.lnk) file.
+ * Which could be used to guess the icon based on the file extenstion.
+ * (in the future we might also read the comment from the lnk file)
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] shortcut_path Windows shortcut file path
+ * \throws Glib::FileError when Windows shortcut file could not be opened
+ * \return Icon path
+ */
+string Helper::get_program_icon_from_shortcut_file(const string& prefix_path, const string& shortcut_path)
+{
+  string target_path;
+  string shortcut_path_linux = shortcut_path.substr(3); // Strip C:\ prefix
+  // Convert backslash to single forward slash (for Unix style)
+  std::replace(shortcut_path_linux.begin(), shortcut_path_linux.end(), '\\', '/');
+  // Add prefix and /drive_c/ folder to path
+  shortcut_path_linux = prefix_path + "/drive_c/" + shortcut_path_linux;
+  // Read Shortcut file from disk
+  string file_content = Helper::read_file(shortcut_path_linux);
+  // Convert content to hex value string
+  std::string hex_content = Helper::string2hex(file_content);
+  std::size_t target_path_starts = hex_content.find("431000000000"); // Searching for x43x10x00x00x00x00 hex pattern (C:\ drive)
+  if (target_path_starts == std::string::npos)
+  {
+    // Fallback, try to search on D:\ drive
+    target_path_starts = hex_content.find("441000000000");
+  }
+  if (target_path_starts == std::string::npos)
+  {
+    // Fallback, try to search on Z:\ drive
+    target_path_starts = hex_content.find("5A1000000000");
+  }
+  if (target_path_starts != std::string::npos)
+  {
+    hex_content = hex_content.substr(target_path_starts + 12); // Remove all content incl. hex search string
+    hex_content.resize(hex_content.find("00"));                // Until the first x00 hex value
+    // Convert hex string back to normal string
+    target_path = Helper::hex2string(hex_content);
+    std::cout << target_path << std::endl;
+  }
+  return string_to_icon(target_path);
 }
 
 /**
@@ -1418,6 +1462,10 @@ string Helper::string_to_icon(const std::string& string)
   else if (ext == "msi" || ext == "msp" || ext == "mst" || ext == "inf1" || ext == "paf")
   {
     icon = "installer_file";
+  }
+  else if (ext == "hlp")
+  {
+    icon = "help_file";
   }
   else if (ext == "lnk")
   {
@@ -1942,7 +1990,8 @@ string Helper::unescape_reg_key_data(const string& src)
 {
   auto to_hex = [](char ch) -> char { return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10; };
 
-  auto wchar_to_utf8 = [](wchar_t wc) -> string {
+  auto wchar_to_utf8 = [](wchar_t wc) -> string
+  {
     string s;
     if (0 <= wc && wc <= 0x7f)
     {
@@ -2076,4 +2125,39 @@ string Helper::unescape_reg_key_data(const string& src)
     dest += *p++;
   }
   return dest;
+}
+
+/**
+ * Convert string (chars) to hex
+ * \param[in] str Source string
+ * \param[in] capital Captical hex values? (default: false, so lower cases)
+ * \return Hex numbers of the string
+ */
+string Helper::string2hex(const std::string& str, bool capital)
+{
+  string hexstr;
+  hexstr.resize(str.size() * 2);
+  const size_t a = capital ? 'A' - 1 : 'a' - 1;
+  for (size_t i = 0, c = str[0] & 0xFF; i < hexstr.size(); c = str[i / 2] & 0xFF)
+  {
+    hexstr[i++] = c > 0x9F ? (c / 16 - 9) | a : c / 16 | '0';
+    hexstr[i++] = (c & 0xF) > 9 ? (c % 16 - 9) | a : c % 16 | '0';
+  }
+  return hexstr;
+}
+
+/**
+ * \brief Convert hex to string (chars)
+ * \return string (chars) of the hex string
+ */
+string Helper::hex2string(const std::string& hexstr)
+{
+  string str;
+  str.resize((hexstr.size() + 1) / 2);
+  for (size_t i = 0, j = 0; i < str.size(); i++, j++)
+  {
+    str[i] = (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) << 4, j++;
+    str[i] |= (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) & 0xF;
+  }
+  return str;
 }
