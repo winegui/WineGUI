@@ -916,7 +916,7 @@ string Helper::get_desktop_program_icon_path(const string& prefix_path, const st
  * (in the future we might also read the comment from the lnk file)
  * \param[in] prefix_path Bottle prefix
  * \param[in] shortcut_path Windows shortcut file path
- * \throws Glib::FileError when Windows shortcut file could not be opened
+ * \throws runtime_error when target path could not be found or Glib::FileError when Windows shortcut file could not be opened
  * \return Icon path
  */
 string Helper::get_program_icon_from_shortcut_file(const string& prefix_path, const string& shortcut_path)
@@ -948,9 +948,15 @@ string Helper::get_program_icon_from_shortcut_file(const string& prefix_path, co
     hex_content.resize(hex_content.find("00"));                // Until the first x00 hex value
     // Convert hex string back to normal string
     target_path = Helper::hex2string(hex_content);
-    std::cout << target_path << std::endl;
   }
-  return string_to_icon(target_path);
+  if (!target_path.empty())
+  {
+    return string_to_icon(target_path);
+  }
+  else
+  {
+    throw std::runtime_error("No target path found in Windows shortcut: " + shortcut_path);
+  }
 }
 
 /**
@@ -2156,8 +2162,8 @@ string Helper::hex2string(const std::string& hexstr)
   str.resize((hexstr.size() + 1) / 2);
   for (size_t i = 0, j = 0; i < str.size(); i++, j++)
   {
-    str[i] = (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) << 4, j++;
-    str[i] |= (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) & 0xF;
+    str[i] = ((hexstr[j] & '@') ? hexstr[j] + 9 : hexstr[j]) << 4, j++;
+    str[i] |= ((hexstr[j] & '@') ? hexstr[j] + 9 : hexstr[j]) & 0xF;
   }
   return str;
 }
