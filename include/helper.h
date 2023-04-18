@@ -68,6 +68,7 @@ public:
   static bool get_bottle_status(const string& prefix_path);
   static std::tuple<string, string> get_menu_program_icon_path_and_comment(const string& shortcut_path);
   static string get_desktop_program_icon_path(const string& prefix_path, const string& shortcut_path);
+  static string get_program_icon_from_shortcut_file(const string& prefix_path, const string& shortcut_path);
   static string get_c_letter_drive(const string& prefix_path);
   static bool dir_exists(const string& dir_path);
   static bool create_dir(const string& dir_path);
@@ -123,4 +124,6 @@ private:
   static std::vector<string> split(const string& s, const char delimiter);
   static bool case_insensitive_compare(const std::string& a, const std::string& b);
   static string unescape_reg_key_data(const string& src);
+  static string string2hex(const std::string& str, bool capital = false);
+  static string hex2string(const std::string& hexstr);
 };
