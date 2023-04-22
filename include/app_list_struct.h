@@ -1,8 +1,8 @@
 /**
- * Copyright (c) 2022-2023 WineGUI
+ * Copyright (c) 2023 WineGUI
  *
- * \file    generic_config_file.h
- * \brief   WineGUI Configuration file supporting methods
+ * \file    app_list_struct.h
+ * \brief   Custom application data struct for bottle app list
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,24 +20,11 @@
  */
 #pragma once
 
-#include "general_config_struct.h"
+#include <string>
 
-/**
- * \class GeneralConfigFile
- * \brief Generic Config file helper methods
- */
-class GeneralConfigFile
+struct ApplicationData
 {
-public:
-  // Singleton
-  static GeneralConfigFile& get_instance();
-
-  static bool write_config_file(const GeneralConfigData& generic_config);
-  static GeneralConfigData read_config_file();
-
-private:
-  GeneralConfigFile();
-  ~GeneralConfigFile();
-  GeneralConfigFile(const GeneralConfigFile&) = delete;
-  GeneralConfigFile& operator=(const GeneralConfigFile&) = delete;
+  std::string name;
+  std::string description;
+  std::string command;
 };

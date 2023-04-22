@@ -22,6 +22,7 @@
 #include "bottle_config_file.h"
 #include "bottle_item.h"
 #include "dll_override_types.h"
+#include "general_config_file.h"
 #include "helper.h"
 #include "main_window.h"
 #include "signal_controller.h"
@@ -240,13 +241,6 @@ void BottleManager::new_bottle(SignalController* caller,
     return; // Stop thread prematurely
   }
 
-  // Create Bottle config data struct
-  BottleConfigData bottle_config;
-  bottle_config.name = name;
-  bottle_config.description = "";        // By default empty description
-  bottle_config.logging_enabled = false; // By default disable logging
-  bottle_config.debug_log_level = 1;     // 1 (default) = Normal debug log level
-
   // Build prefix
   // Name of the bottle we be used as folder name as well
   std::vector<string> dirs{bottle_location_, name};
@@ -256,8 +250,16 @@ void BottleManager::new_bottle(SignalController* caller,
   {
     // Now create a new Wine Bottle
     Helper::create_wine_bottle(is_wine64_bit_, prefix_path, bit, disable_gecko_mono);
+    // Create default Bottle config data struct
+    BottleConfigData bottle_config;
+    bottle_config.name = name;
+    bottle_config.description = "";        // By default empty description
+    bottle_config.logging_enabled = false; // By default disable logging
+    bottle_config.debug_log_level = 1;     // 1 (default) = Normal debug log level
+    // Create empty custom app list
+    std::vector<ApplicationData> app_list;
     // Next, write the WineGUI bottle config file
-    if (!BottleConfigFile::write_config_file(prefix_path, bottle_config))
+    if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
     {
       // TODO: Maybe a warning message to the user?
       // No critical failure, only log an error to console.
@@ -367,7 +369,11 @@ void BottleManager::update_bottle(SignalController* caller,
     string prefix_path = active_bottle_->wine_location();
 
     bool need_update_bottle_config_file = false;
-    BottleConfigData bottle_config = BottleConfigFile::read_config_file(prefix_path);
+    BottleConfigData bottle_config;
+    // Todo: Compare the app_list size with the app_list size from disk..
+    // And make the dirty flag true if needed...
+    std::vector<ApplicationData> app_list;
+    std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
     if (active_bottle_->name() != name)
     {
       bottle_config.name = name;
@@ -391,7 +397,7 @@ void BottleManager::update_bottle(SignalController* caller,
 
     if (need_update_bottle_config_file)
     {
-      if (!BottleConfigFile::write_config_file(prefix_path, bottle_config))
+      if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
       {
         // Silent error
         std::cout << "Error: Could not update bottle config file." << std::endl;
@@ -1163,27 +1169,29 @@ std::vector<string> BottleManager::get_bottle_paths()
 std::list<BottleItem> BottleManager::create_wine_bottles(std::vector<string> bottle_dirs)
 {
   std::list<BottleItem> bottles;
-  string wine_version = get_wine_version();
+  Glib::ustring wine_version = get_wine_version();
 
   // Retrieve detailed info for each wine bottle prefix
-  for (auto prefix : bottle_dirs)
+  for (string prefix : bottle_dirs)
   {
     // Reset variables
-    string name = "";
-    string folder_name = "";
-    string description = "";
-    string virtual_desktop = "";
+    Glib::ustring name = "";
+    Glib::ustring folder_name = "";
+    Glib::ustring description = "";
+    Glib::ustring virtual_desktop = "";
     BottleTypes::Bit bit = BottleTypes::Bit::win32;
-    string c_drive_location = "- Unknown -";
-    string last_time_wine_updated = "- Unknown -";
+    Glib::ustring c_drive_location = "- Unknown -";
+    Glib::ustring last_time_wine_updated = "- Unknown -";
     BottleTypes::AudioDriver audio_driver = BottleTypes::AudioDriver::pulseaudio;
     BottleTypes::Windows windows = WineDefaults::WindowsOs;
     bool debug_logging_enabled = false;
     int debug_log_level = 1;
     bool status = false;
 
-    // Retrieve bottle config data
-    BottleConfigData bottle_config = BottleConfigFile::read_config_file(prefix);
+    // Retrieve bottle config data & custom app list
+    BottleConfigData bottle_config;
+    std::vector<ApplicationData> bottle_app_list;
+    std::tie(bottle_config, bottle_app_list) = BottleConfigFile::read_config_file(prefix);
     name = bottle_config.name;
     description = bottle_config.description;
     debug_logging_enabled = bottle_config.logging_enabled;
@@ -1248,8 +1256,10 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::vector<string> bot
       main_window_.show_error_message(error.what());
     }
 
-    BottleItem* bottle = new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix, c_drive_location,
-                                        last_time_wine_updated, audio_driver, virtual_desktop, debug_logging_enabled, debug_log_level);
+    Glib::ustring prefix_path(prefix); // Convert to Glib ustring
+    BottleItem* bottle =
+        new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix_path, c_drive_location,
+                       last_time_wine_updated, audio_driver, virtual_desktop, debug_logging_enabled, debug_log_level, bottle_app_list);
     bottles.push_back(*bottle);
   }
   return bottles;

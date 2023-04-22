@@ -21,10 +21,11 @@
 #pragma once
 
 #include "app_list_model_column.h"
+#include "app_list_struct.h"
 #include "bottle_item.h"
 #include "bottle_new_assistant.h"
 #include "busy_dialog.h"
-#include "general_config_file.h"
+#include "general_config_struct.h"
 #include "menu.h"
 #include <gtkmm.h>
 #include <iostream>
@@ -78,6 +79,7 @@ public:
   virtual void on_new_bottle_button_clicked();
   virtual void on_new_bottle_created();
   virtual void on_run_button_clicked();
+  virtual void on_add_app_list_button_clicked();
   virtual void on_refresh_app_list_button_clicked();
   virtual void on_hide_window();
   virtual void on_give_feedback();
@@ -142,6 +144,7 @@ protected:
   Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
 
   // Other various buttons
+  Gtk::Button add_app_list_button;     /*!< Button that add custom shortcut item to application list */
   Gtk::Button refresh_app_list_button; /*!< Button that refreshes the application list */
 
   // Busy dialog
@@ -158,8 +161,8 @@ private:
 
   // Private methods
   void set_detailed_info(const BottleItem& bottle);
-  void set_application_list(const string& prefix_path);
-  void add_application(const string& name, const string& icon_name, const string& description, const string& command, bool is_icon_full_path = false);
+  void set_application_list(const string& prefix_path, const std::vector<ApplicationData>& app_List);
+  void add_application(const string& name, const string& description, const string& command, const string& icon_name, bool is_icon_full_path = false);
   void check_version_update(bool show_equal = false);
   void load_stored_window_settings();
   void create_left_panel();
