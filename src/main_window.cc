@@ -113,6 +113,7 @@ MainWindow::MainWindow(Menu& menu)
   kill_processes_button.signal_clicked().connect(kill_running_processes);
 
   // Other various buttons
+  add_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_add_app_list_button_clicked));
   refresh_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_refresh_app_list_button_clicked));
 
   // Check for update (when GTK is idle)
@@ -374,8 +375,16 @@ void MainWindow::on_run_button_clicked()
   }
   }
 }
+
 /**
- * \brief Triggered when the user pressed the application refresh button
+ * \brief Add custom shortcut to application list
+ */
+void MainWindow::on_add_app_list_button_clicked()
+{
+}
+
+/**
+ * \brief Triggered when the user pressed the application list refresh button
  */
 void MainWindow::on_refresh_app_list_button_clicked()
 {
@@ -384,7 +393,7 @@ void MainWindow::on_refresh_app_list_button_clicked()
   {
     // Refresh the current app list
     auto current_bottle = dynamic_cast<BottleItem*>(selected_row);
-    set_application_list(current_bottle->wine_location());
+    set_application_list(current_bottle->wine_location(), current_bottle->app_list());
   }
 }
 
@@ -442,7 +451,7 @@ void MainWindow::on_bottle_row_clicked(Gtk::ListBoxRow* row)
     // Set bottle details
     set_detailed_info(*current_bottle);
     // Set application list
-    set_application_list(current_bottle->wine_location());
+    set_application_list(current_bottle->wine_location(), current_bottle->app_list());
     // Clear the application filter
     app_list_search_entry.set_text("");
 
@@ -559,13 +568,22 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
 /**
  * \brief Set application list
  * \param prefix_path Wine bottle prefix
+ * \param app_List Custom application list for this bottle
  */
-void MainWindow::set_application_list(const string& prefix_path)
+void MainWindow::set_application_list(const string& prefix_path, const std::vector<ApplicationData>& app_list)
 {
   // First clear list + clear search entry
   reset_application_list();
 
-  // Temperoally store the list of menu item names,
+  // First add the custom application items
+  for (auto app : app_list)
+  {
+    string command = app.command;
+    string icon = Helper::string_to_icon(command);
+    add_application(app.name, app.description, command, icon);
+  }
+
+  // Temporally store the list of menu item names,
   // used for checking for duplicates when adding desktop items
   std::set<std::string> menu_item_names;
   // Fill the application list (TreeView model)
@@ -622,7 +640,7 @@ void MainWindow::set_application_list(const string& prefix_path)
         icon = Helper::string_to_icon(item);
         is_icon_full_path = false;
       }
-      add_application(name, icon, comment, item, is_icon_full_path);
+      add_application(name, comment, item, icon, is_icon_full_path);
       // Also add the name to your list, used for finding duplicates when adding desktop files
       if (name != "-Unknown menu item -")
         menu_item_names.insert(name);
@@ -689,7 +707,7 @@ void MainWindow::set_application_list(const string& prefix_path)
           icon = Helper::string_to_icon(value_name);
           is_icon_full_path = false;
         }
-        add_application(name, icon, "", value_data, is_icon_full_path);
+        add_application(name, "", value_data, icon, is_icon_full_path);
       }
     }
   }
@@ -699,31 +717,34 @@ void MainWindow::set_application_list(const string& prefix_path)
   }
 
   // Lastly, the additional programs
-  add_application("Wine Config", "winecfg", "Wine configuration program", "winecfg");
-  add_application("Uninstaller", "uninstaller", "Remove programs", "uninstaller");
-  add_application("Control Panel", "winecontrol", "Wine control panel", "control");
-  add_application("WineMine", "minesweeper", "Wine Minesweeper single-player game", "winemine");
-  add_application("Winetricks", "winetricks", "Wine helper script to download and install various libraries",
-                  Helper::get_winetricks_location() + " --gui");
-  add_application("Notepad", "notepad", "Text editor", "notepad");
-  add_application("Internet Explorer", "internet_explorer", "Wine Internet Explorer", "iexplore");
-  add_application("Task Manager", "task_manager", "Task Manager", "taskmgr");
-  add_application("File Explorer", "file_explorer", "Windows file explorer", "explorer");
-  add_application("Command Prompt", "command_prompt", "Command-line interpreter", "wineconsole");
-  add_application("Registry editor", "regedit", "Windows registry editor", "regedit");
+  add_application("Wine Config", "Wine configuration program", "winecfg", "winecfg");
+  add_application("Uninstaller", "Remove programs", "uninstaller", "uninstaller");
+  add_application("Control Panel", "Wine control panel", "control", "winecontrol");
+  add_application("WineMine", "Wine Minesweeper single-player game", "winemine", "minesweeper");
+  add_application("Winetricks", "Wine helper script to download and install various libraries", Helper::get_winetricks_location() + " --gui",
+                  "winetricks");
+  add_application("Notepad", "Text editor", "notepad", "notepad");
+  add_application("Internet Explorer", "Wine Internet Explorer", "iexplore", "internet_explorer");
+  add_application("Task Manager", "Task Manager", "taskmgr", "task_manager");
+  add_application("File Explorer", "Windows file explorer", "explorer", "file_explorer");
+  add_application("Command Prompt", "Command-line interpreter", "wineconsole", "command_prompt");
+  add_application("Registry editor", "Windows registry editor", "regedit", "regedit");
 }
 
 /**
  * \brief Add application to tree model list
  * \param name Application name
- * \param icon Application icon (icon name or full path to icon)
  * \param description Application description
  * \param command Application command
+ * \param icon Application icon (icon name or full path to icon)
  * \param is_icon_full_path (Optionally) Use icon as full path (default: false, meaning icon is only the icon file name)
  */
-void MainWindow::add_application(const string& name, const string& icon, const string& description, const string& command, bool is_icon_full_path)
+void MainWindow::add_application(const string& name, const string& description, const string& command, const string& icon, bool is_icon_full_path)
 {
   auto row = *(app_list_tree_model->append());
+  row[app_list_columns.name] = Helper::encode_text(name);
+  row[app_list_columns.description] = Helper::encode_text(description);
+  row[app_list_columns.command] = command;
   try
   {
     if (!is_icon_full_path)
@@ -735,10 +756,6 @@ void MainWindow::add_application(const string& name, const string& icon, const s
   {
     std::cerr << "ERROR: Could not find icon (" << icon << ") for app " << name << ": " << error.what() << std::endl;
   }
-
-  row[app_list_columns.name] = Helper::encode_text(name);
-  row[app_list_columns.description] = Helper::encode_text(description);
-  row[app_list_columns.command] = command;
 }
 
 /**
@@ -1093,6 +1110,15 @@ void MainWindow::create_right_panel()
   application_box->pack_start(*application_icon, false, false, 8);
   application_box->pack_start(*application_label, false, false, 20);
 
+  // App list add shortcut button
+  Gtk::Image* add_app_list_image = Gtk::manage(new Gtk::Image());
+  add_app_list_image->set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  add_app_list_button.set_tooltip_text("Add shortcut to application list");
+  add_app_list_button.set_image(*add_app_list_image);
+  add_app_list_button.set_margin_top(6);
+  add_app_list_button.set_margin_bottom(6);
+  add_app_list_button.set_margin_end(6);
+
   // App list refresh button
   Gtk::Image* refresh_app_list_image = Gtk::manage(new Gtk::Image());
   refresh_app_list_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -1105,6 +1131,7 @@ void MainWindow::create_right_panel()
   // Preparing the horizontal box above the app list (containing the search entry & refresh button)
   app_list_top_hbox.pack_start(app_list_search_entry, true, true);
   app_list_top_hbox.pack_end(refresh_app_list_button, false, false);
+  app_list_top_hbox.pack_end(add_app_list_button, false, false);
 
   // Add heading (label + icon)
   app_list_vbox.pack_start(*application_box, false, true, 5);

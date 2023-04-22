@@ -28,7 +28,7 @@
 #include <thread>
 
 #include "bottle_types.h"
-#include "general_config_file.h"
+#include "general_config_struct.h"
 
 using std::string;
 

@@ -20,9 +20,15 @@
  */
 #pragma once
 
+#include "app_list_struct.h"
 #include "bottle_types.h"
-#include <gtkmm.h>
+#include <glibmm/ustring.h>
+#include <gtkmm/grid.h>
+#include <gtkmm/image.h>
+#include <gtkmm/label.h>
+#include <gtkmm/listboxrow.h>
 #include <string>
+#include <vector>
 
 /**
  * \class BottleItem
@@ -61,31 +67,33 @@ public:
     swap(a.virtual_desktop_, b.virtual_desktop_);
     swap(a.is_debug_logging_, b.is_debug_logging_);
     swap(a.debug_log_level_, b.debug_log_level_);
+    swap(a.app_list_, b.app_list_);
   }
 
-  BottleItem(Glib::ustring name,
-             Glib::ustring folder_name,
-             Glib::ustring wine_version,
+  BottleItem(Glib::ustring& name,
+             Glib::ustring& folder_name,
+             Glib::ustring& wine_version,
              bool is_wine64_bit,
-             Glib::ustring wine_location,
-             Glib::ustring wine_c_drive,
-             Glib::ustring wine_last_changed);
+             Glib::ustring& wine_location,
+             Glib::ustring& wine_c_drive,
+             Glib::ustring& wine_last_changed);
 
-  BottleItem(Glib::ustring name,
-             Glib::ustring folder_name,
-             Glib::ustring description,
+  BottleItem(Glib::ustring& name,
+             Glib::ustring& folder_name,
+             Glib::ustring& description,
              bool status,
              BottleTypes::Windows win,
              BottleTypes::Bit bit,
-             Glib::ustring wine_version,
+             Glib::ustring& wine_version,
              bool is_wine64_bit,
-             Glib::ustring wine_location,
-             Glib::ustring wine_c_drive,
-             Glib::ustring wine_last_changed,
+             Glib::ustring& wine_location,
+             Glib::ustring& wine_c_drive,
+             Glib::ustring& wine_last_changed,
              BottleTypes::AudioDriver audio_driver,
-             Glib::ustring virtual_desktop,
+             Glib::ustring& virtual_desktop,
              bool is_debug_logging,
-             int debug_log_level);
+             int debug_log_level,
+             std::vector<ApplicationData>& app_list);
 
   /**
    * \brief Destruct
@@ -96,7 +104,7 @@ public:
    *  Getters & setters
    */
   /// set bottle name
-  void name(const Glib::ustring name)
+  void name(const Glib::ustring& name)
   {
     name_ = name;
   };
@@ -106,7 +114,7 @@ public:
     return name_;
   };
   /// set folder name
-  void folder_name(const Glib::ustring folder_name)
+  void folder_name(const Glib::ustring& folder_name)
   {
     folder_name_ = folder_name;
   };
@@ -116,7 +124,7 @@ public:
     return folder_name_;
   };
   /// set description
-  void description(const Glib::ustring description)
+  void description(const Glib::ustring& description)
   {
     description_ = description;
   };
@@ -156,7 +164,7 @@ public:
     return bit_;
   };
   /// set Wine version
-  void wine_version(const Glib::ustring wine_version)
+  void wine_version(const Glib::ustring& wine_version)
   {
     wine_version_ = wine_version;
   };
@@ -176,7 +184,7 @@ public:
     return is_wine64_bit_;
   };
   /// set Wine location
-  void wine_location(const Glib::ustring wine_location)
+  void wine_location(const Glib::ustring& wine_location)
   {
     wine_location_ = wine_location;
   };
@@ -186,7 +194,7 @@ public:
     return wine_location_;
   };
   /// set Wine c:\ drive location
-  void wine_c_drive(const Glib::ustring wine_c_drive)
+  void wine_c_drive(const Glib::ustring& wine_c_drive)
   {
     wine_c_drive_ = wine_c_drive;
   };
@@ -197,7 +205,7 @@ public:
   };
   // TODO: Changed to datetime iso Glib::ustring
   /// set Wine last changed date
-  void wine_last_changed(const Glib::ustring wine_last_changed)
+  void wine_last_changed(const Glib::ustring& wine_last_changed)
   {
     wine_last_changed_ = wine_last_changed;
   };
@@ -217,7 +225,7 @@ public:
     return audio_driver_;
   };
   /// set Wine emulate virtual desktop (set to empty string to disable)
-  void virtual_desktop(const Glib::ustring virtual_desktop)
+  void virtual_desktop(const Glib::ustring& virtual_desktop)
   {
     virtual_desktop_ = virtual_desktop;
   };
@@ -246,6 +254,16 @@ public:
   {
     return debug_log_level_;
   };
+  /// set app list
+  void app_list(const std::vector<ApplicationData>& app_list)
+  {
+    app_list_ = app_list;
+  };
+  /// get app list
+  const std::vector<ApplicationData>& app_list() const
+  {
+    return app_list_;
+  };
 
 protected:
   // Widgets
@@ -271,6 +289,7 @@ private:
   Glib::ustring virtual_desktop_;
   bool is_debug_logging_;
   int debug_log_level_;
+  std::vector<ApplicationData> app_list_;
 
   void CreateUI();
   static std::string str_tolower(std::string s);
