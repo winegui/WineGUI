@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2023 WineGUI
  *
  * \file    preferences_window.cc
- * \brief   Application preferences GTK+ window class
+ * \brief   Application preferences GTK3 window class
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -129,8 +129,8 @@ void PreferencesWindow::on_select_folder()
       new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER, Gtk::DialogFlags::DIALOG_MODAL);
   folder_chooser->set_modal(true);
   folder_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &PreferencesWindow::on_select_dialog_response), folder_chooser));
-  folder_chooser->add_button("Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
-  folder_chooser->add_button("Select folder", Gtk::ResponseType::RESPONSE_OK);
+  folder_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
+  folder_chooser->add_button("_Select folder", Gtk::ResponseType::RESPONSE_OK);
   folder_chooser->set_current_folder(default_folder_entry.get_text());
   folder_chooser->show();
 }

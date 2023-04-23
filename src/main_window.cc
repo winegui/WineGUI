@@ -112,8 +112,8 @@ MainWindow::MainWindow(Menu& menu)
   open_log_file_button.signal_clicked().connect(open_log_file);
   kill_processes_button.signal_clicked().connect(kill_running_processes);
 
-  // Other various buttons
-  add_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_add_app_list_button_clicked));
+  // App list buttons
+  add_app_list_button.signal_clicked().connect(show_add_app_window);
   refresh_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_refresh_app_list_button_clicked));
 
   // Check for update (when GTK is idle)
@@ -315,12 +315,12 @@ void MainWindow::on_new_bottle_created()
  */
 void MainWindow::on_run_button_clicked()
 {
-  Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FILE_CHOOSER_ACTION_OPEN);
+  Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_OPEN);
   dialog.set_transient_for(*this);
 
   // Add response buttons the the dialog:
-  dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-  dialog.add_button("_Open", Gtk::RESPONSE_OK);
+  dialog.add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
+  dialog.add_button("_Open", Gtk::ResponseType::RESPONSE_OK);
 
   auto filter_win = Gtk::FileFilter::create();
   filter_win->set_name("Windows Executable/MSI Installer");
@@ -332,7 +332,7 @@ void MainWindow::on_run_button_clicked()
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
   dialog.add_filter(filter_any);
-  dialog.set_filename(c_drive_location_label.get_text().c_str());
+  dialog.set_current_folder(c_drive_location_label.get_text().c_str());
 
   // Show the dialog and wait for a user response:
   int result = dialog.run();
@@ -340,7 +340,7 @@ void MainWindow::on_run_button_clicked()
   // Handle the response:
   switch (result)
   {
-  case (Gtk::RESPONSE_OK):
+  case (Gtk::ResponseType::RESPONSE_OK):
   {
     string filename = dialog.get_filename();
     // Just guess based on extension
@@ -363,7 +363,7 @@ void MainWindow::on_run_button_clicked()
     }
     break;
   }
-  case (Gtk::RESPONSE_CANCEL):
+  case (Gtk::ResponseType::RESPONSE_CANCEL):
   {
     // Cancelled, do nothing
     break;
@@ -374,13 +374,6 @@ void MainWindow::on_run_button_clicked()
     break;
   }
   }
-}
-
-/**
- * \brief Add custom shortcut to application list
- */
-void MainWindow::on_add_app_list_button_clicked()
-{
 }
 
 /**
