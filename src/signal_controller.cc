@@ -22,6 +22,7 @@
 #include "signal_controller.h"
 
 #include "about_dialog.h"
+#include "add_app_window.h"
 #include "bottle_configure_window.h"
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
@@ -38,7 +39,8 @@ SignalController::SignalController(BottleManager& manager,
                                    PreferencesWindow& preferences_window,
                                    AboutDialog& about_dialog,
                                    BottleEditWindow& edit_window,
-                                   BottleConfigureWindow& configure_window)
+                                   BottleConfigureWindow& configure_window,
+                                   AddAppWindow& add_app_window)
     : main_window_(nullptr),
       manager_(manager),
       menu_(menu),
@@ -46,6 +48,7 @@ SignalController::SignalController(BottleManager& manager,
       about_dialog_(about_dialog),
       edit_window_(edit_window),
       configure_window_(configure_window),
+      add_app_window_(add_app_window),
       bottle_created_dispatcher_(),
       error_message_created_dispatcher_(),
       thread_bottle_manager_(nullptr)
@@ -126,6 +129,8 @@ void SignalController::dispatch_signals()
   main_window_->update_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update));
   main_window_->open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
   main_window_->kill_running_processes.connect(sigc::mem_fun(manager_, &BottleManager::kill_processes));
+  // App list
+  main_window_->show_add_app_window.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::show));
 
   // Edit Window
   edit_window_.update_bottle.connect(sigc::mem_fun(this, &SignalController::on_update_bottle));
