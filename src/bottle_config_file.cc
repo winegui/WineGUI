@@ -22,6 +22,7 @@
 #include "helper.h"
 #include <glibmm.h>
 #include <iostream>
+#include <string>
 
 /// Meyers BottleConfigFile
 BottleConfigFile::BottleConfigFile() = default;
@@ -61,9 +62,10 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
     // Save custom application list (if present)
     for (int i = 0; auto app : app_list)
     {
-      keyfile.set_string("Application." + i, "Name", app.name);
-      keyfile.set_string("Application." + i, "Description", app.description);
-      keyfile.set_string("Application." + i, "Command", app.command);
+      std::string group_name = "Application." + std::to_string(i);
+      keyfile.set_string(group_name, "Name", app.name);
+      keyfile.set_string(group_name, "Description", app.description);
+      keyfile.set_string(group_name, "Command", app.command);
       i++;
     }
 
