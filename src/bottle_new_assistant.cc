@@ -48,12 +48,12 @@ BottleNewAssistant::BottleNewAssistant()
   set_modal(true);
 
   // Create pages
-  createFirstPage();
-  createSecondPage();
-  createThirdPage();
+  create_first_page();
+  create_second_page();
+  create_third_page();
 
   // Initial set defaults
-  setDefaultValues();
+  set_default_values();
 
   signal_apply().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_apply));
   signal_cancel().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_cancel));
@@ -77,7 +77,7 @@ BottleNewAssistant::~BottleNewAssistant()
  * \brief Set default values of all input fields from the wizard,
  * so even after the second time, all values are correctly reset.
  */
-void BottleNewAssistant::setDefaultValues()
+void BottleNewAssistant::set_default_values()
 {
   apply_label.set_text("Please wait, changes are getting applied.");
   name_entry.set_text("");
@@ -98,7 +98,7 @@ void BottleNewAssistant::setDefaultValues()
 /**
  * \brief First page of the wizard
  */
-void BottleNewAssistant::createFirstPage()
+void BottleNewAssistant::create_first_page()
 {
   // Intro page
   intro_label.set_markup("<big><b>Create a New Machine</b></big>\n"
@@ -133,7 +133,7 @@ void BottleNewAssistant::createFirstPage()
 /**
  * \brief Second page of the wizard
  */
-void BottleNewAssistant::createSecondPage()
+void BottleNewAssistant::create_second_page()
 {
   // Additional page
   additional_label.set_markup("<big><b>Additional Settings</b></big>\n"
@@ -171,7 +171,7 @@ void BottleNewAssistant::createSecondPage()
 /**
  * \brief Last page of the wizard
  */
-void BottleNewAssistant::createThirdPage()
+void BottleNewAssistant::create_third_page()
 {
   vbox3.set_halign(Gtk::Align::ALIGN_CENTER);
   vbox3.set_valign(Gtk::Align::ALIGN_CENTER);
@@ -264,7 +264,7 @@ void BottleNewAssistant::get_result(Glib::ustring& name,
 void BottleNewAssistant::bottle_created()
 {
   // Reset defaults (including timer_.disconnect())
-  setDefaultValues();
+  set_default_values();
 
   // Close Assistant
   this->hide();

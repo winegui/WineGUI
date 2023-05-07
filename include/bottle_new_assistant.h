@@ -70,6 +70,8 @@ public:
   Gtk::ProgressBar loading_bar;
 
 private:
+  sigc::connection timer_; /*!< Timer connection */
+
   // Signal handlers
   void on_assistant_apply();
   void on_assistant_cancel();
@@ -80,10 +82,8 @@ private:
   bool apply_changes_gradually();
 
   // Member functions
-  void setDefaultValues();
-  void createFirstPage();
-  void createSecondPage();
-  void createThirdPage();
-
-  sigc::connection timer_; /*!< Timer connection */
+  void set_default_values();
+  void create_first_page();
+  void create_second_page();
+  void create_third_page();
 };
