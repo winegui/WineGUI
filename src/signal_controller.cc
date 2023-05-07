@@ -263,9 +263,9 @@ void SignalController::on_new_bottle(Glib::ustring& name,
   else
   {
     // Start a new manager thread (executing NewBottle())
-    thread_bottle_manager_ =
-        new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio]
-                        { manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio); });
+    thread_bottle_manager_ = new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio] {
+      manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio);
+    });
   }
 }
 
@@ -283,13 +283,11 @@ void SignalController::on_update_bottle(const UpdateBottleStruct& update_bottle_
   else
   {
     // Start a new manager thread (executing NewBottle())
-    thread_bottle_manager_ = new std::thread(
-        [this, update_bottle_struct]
-        {
-          manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.description,
-                                 update_bottle_struct.windows_version, update_bottle_struct.virtual_desktop_resolution, update_bottle_struct.audio,
-                                 update_bottle_struct.is_debug_logging, update_bottle_struct.debug_log_level);
-        });
+    thread_bottle_manager_ = new std::thread([this, update_bottle_struct] {
+      manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.description,
+                             update_bottle_struct.windows_version, update_bottle_struct.virtual_desktop_resolution, update_bottle_struct.audio,
+                             update_bottle_struct.is_debug_logging, update_bottle_struct.debug_log_level);
+    });
   }
 }
 
