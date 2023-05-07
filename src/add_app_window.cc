@@ -20,6 +20,7 @@
  */
 #include "add_app_window.h"
 #include "bottle_config_file.h"
+#include "bottle_item.h"
 #include <iostream>
 
 /**
@@ -35,12 +36,15 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
       command_label("Command: "),
       select_executable_button("Select executable..."),
       save_button("Save"),
-      cancel_button("Cancel")
+      cancel_button("Cancel"),
+      active_bottle_(nullptr)
 {
   set_transient_for(parent);
   set_title("Add new Application shortcut");
   set_default_size(500, 200);
   set_modal(true);
+
+  set_default_values();
 
   add_app_grid.set_margin_top(5);
   add_app_grid.set_margin_end(5);
@@ -98,6 +102,30 @@ AddAppWindow::~AddAppWindow()
 }
 
 /**
+ * \brief Signal handler when a new bottle is set in the main window
+ * \param[in] bottle Current active bottle
+ */
+void AddAppWindow::set_active_bottle(BottleItem* bottle)
+{
+  active_bottle_ = bottle;
+}
+
+/**
+ * \brief Signal handler for resetting the active bottle to null
+ */
+void AddAppWindow::reset_active_bottle()
+{
+  active_bottle_ = nullptr;
+}
+
+void AddAppWindow::set_default_values()
+{
+  name_entry.set_text("");
+  description_entry.set_text("");
+  command_entry.set_text("");
+}
+
+/**
  * \brief Triggered when select file button is clicked
  */
 void AddAppWindow::on_select_file()
@@ -116,8 +144,10 @@ void AddAppWindow::on_select_file()
   file_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &AddAppWindow::on_select_dialog_response), file_chooser));
   file_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
   file_chooser->add_button("_Select file", Gtk::ResponseType::RESPONSE_OK);
-  // TODO: set current folder to prefix bottle location
-  // file_chooser->set_current_folder(bottle_prefix..);
+  if (active_bottle_ != nullptr)
+  {
+    file_chooser->set_current_folder(active_bottle_->wine_c_drive());
+  }
   file_chooser->add_filter(filter_win);
   file_chooser->add_filter(filter_any);
   file_chooser->show();
@@ -163,32 +193,58 @@ void AddAppWindow::on_cancel_button_clicked()
  */
 void AddAppWindow::on_save_button_clicked()
 {
-  // TODO: Check if name & command are filled-in?
-
-  // Save application to bottle config
-  ApplicationData app;
-  // Read app list vector.....?
-  app.name = name_entry.get_text();
-  app.description = description_entry.get_text();
-  app.command = command_entry.get_text();
-  // Add app to vector..?
-  // Write..
-  /*if (!BottleConfigFile::write_config_file(bottle_config))
+  if (active_bottle_ != nullptr)
   {
-    Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
-    dialog.set_title("An error has occurred!");
-    dialog.set_modal(true);
-    dialog.run();
+    // Check if all fields are filled-in
+    if (name_entry.get_text().empty() || command_entry.get_text().empty())
+    {
+      Gtk::MessageDialog dialog(*this, "You forgot to fill-in the name and command (only the description is optional).", false, Gtk::MESSAGE_ERROR,
+                                Gtk::BUTTONS_OK);
+      dialog.set_title("Error during new application saving");
+      dialog.set_modal(true);
+      dialog.run();
+    }
+    else
+    {
+      std::string prefix_path = active_bottle_->wine_location();
+      // Read existing config data
+      BottleConfigData bottle_config;
+      std::vector<ApplicationData> app_list;
+      std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
+
+      // Append new app
+      ApplicationData new_app;
+      new_app.name = name_entry.get_text();
+      new_app.description = description_entry.get_text();
+      new_app.command = command_entry.get_text();
+      app_list.push_back(new_app);
+
+      // Save application to bottle config
+      if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
+      {
+        Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+        dialog.set_title("An error has occurred!");
+        dialog.set_modal(true);
+        dialog.run();
+      }
+      else
+      {
+        // Hide new application window
+        hide();
+        // Reset entry fields
+        set_default_values();
+        // Trigger manager update & UI update
+        config_saved.emit();
+      }
+    }
   }
   else
   {
-    // Hide new application window
-    hide();
-    // Trigger manager update & UI update
-    config_saved.emit();
-  }*/
-
-  // Temp
-  hide();
-  config_saved.emit();
+    Gtk::MessageDialog dialog(*this, "Error occured during saving, because there is no active Windows machine set.", false, Gtk::MESSAGE_ERROR,
+                              Gtk::BUTTONS_OK);
+    dialog.set_title("Error during new application saving");
+    dialog.set_modal(true);
+    dialog.run();
+    std::cout << "Error: No current Windows machine is set. Change won't be saved." << std::endl;
+  }
 }

@@ -106,9 +106,11 @@ void SignalController::dispatch_signals()
   main_window_->active_bottle.connect(sigc::mem_fun(manager_, &BottleManager::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::set_active_bottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::set_active_bottle));
   // Distribute the reset bottle signal from the manager
   manager_.reset_active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::reset_active_bottle));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_detailed_info));
   manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_application_list));
   // Removed bottle signal from the manager
@@ -159,6 +161,9 @@ void SignalController::dispatch_signals()
   configure_window_.corefonts.connect(sigc::mem_fun(manager_, &BottleManager::install_core_fonts));
   configure_window_.dotnet.connect(sigc::mem_fun(manager_, &BottleManager::install_dot_net));
   configure_window_.visual_cpp_package.connect(sigc::mem_fun(manager_, &BottleManager::install_visual_cpp_package));
+
+  // Add new application Window
+  add_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
 
   // WineGUI Preference Window
   preferences_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
@@ -258,9 +263,9 @@ void SignalController::on_new_bottle(Glib::ustring& name,
   else
   {
     // Start a new manager thread (executing NewBottle())
-    thread_bottle_manager_ = new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio] {
-      manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio);
-    });
+    thread_bottle_manager_ =
+        new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio]
+                        { manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio); });
   }
 }
 
@@ -278,11 +283,13 @@ void SignalController::on_update_bottle(const UpdateBottleStruct& update_bottle_
   else
   {
     // Start a new manager thread (executing NewBottle())
-    thread_bottle_manager_ = new std::thread([this, update_bottle_struct] {
-      manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.description,
-                             update_bottle_struct.windows_version, update_bottle_struct.virtual_desktop_resolution, update_bottle_struct.audio,
-                             update_bottle_struct.is_debug_logging, update_bottle_struct.debug_log_level);
-    });
+    thread_bottle_manager_ = new std::thread(
+        [this, update_bottle_struct]
+        {
+          manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.description,
+                                 update_bottle_struct.windows_version, update_bottle_struct.virtual_desktop_resolution, update_bottle_struct.audio,
+                                 update_bottle_struct.is_debug_logging, update_bottle_struct.debug_log_level);
+        });
   }
 }
 

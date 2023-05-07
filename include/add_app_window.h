@@ -22,6 +22,9 @@
 
 #include <gtkmm.h>
 
+// Forward declaration
+class BottleItem;
+
 /**
  * \class AddAppWindow
  * \brief Add new application GTK Window class for the bottle app list
@@ -34,6 +37,9 @@ public:
 
   explicit AddAppWindow(Gtk::Window& parent);
   virtual ~AddAppWindow();
+
+  void set_active_bottle(BottleItem* bottle);
+  void reset_active_bottle();
 
 protected:
   // Child widgets
@@ -53,9 +59,14 @@ protected:
   Gtk::Button cancel_button;            /*!< cancel button */
 
 private:
+  BottleItem* active_bottle_; /*!< Current active bottle */
+
   // Signal handlers
   void on_select_file();
   void on_select_dialog_response(int response_id, Gtk::FileChooserDialog* dialog);
   void on_cancel_button_clicked();
   void on_save_button_clicked();
+
+  // Member functions
+  void set_default_values();
 };
