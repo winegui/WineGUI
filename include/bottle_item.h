@@ -27,6 +27,7 @@
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
 #include <gtkmm/listboxrow.h>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -93,7 +94,7 @@ public:
              Glib::ustring& virtual_desktop,
              bool is_debug_logging,
              int debug_log_level,
-             std::vector<ApplicationData>& app_list);
+             std::map<int, ApplicationData>& app_list);
 
   /**
    * \brief Destruct
@@ -255,12 +256,12 @@ public:
     return debug_log_level_;
   };
   /// set app list
-  void app_list(const std::vector<ApplicationData>& app_list)
+  void app_list(const std::map<int, ApplicationData>& app_list)
   {
     app_list_ = app_list;
   };
   /// get app list
-  const std::vector<ApplicationData>& app_list() const
+  const std::map<int, ApplicationData>& app_list() const
   {
     return app_list_;
   };
@@ -289,7 +290,7 @@ private:
   Glib::ustring virtual_desktop_;
   bool is_debug_logging_;
   int debug_log_level_;
-  std::vector<ApplicationData> app_list_;
+  std::map<int, ApplicationData> app_list_;
 
   void CreateUI();
   static std::string str_tolower(std::string s);

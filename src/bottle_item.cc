@@ -107,7 +107,7 @@ BottleItem::BottleItem(Glib::ustring& name,
                        Glib::ustring& virtual_desktop,
                        bool is_debug_logging,
                        int debug_log_level,
-                       std::vector<ApplicationData>& app_list)
+                       std::map<int, ApplicationData>& app_list)
     : name_(name),
       folder_name_(folder_name),
       description_(description),

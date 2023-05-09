@@ -114,6 +114,7 @@ MainWindow::MainWindow(Menu& menu)
 
   // App list buttons
   add_app_list_button.signal_clicked().connect(show_add_app_window);
+  remove_app_list_button.signal_clicked().connect(show_remove_app_window);
   refresh_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_refresh_app_list_button_clicked));
 
   // Check for update (when GTK is idle)
@@ -563,7 +564,7 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
  * \param prefix_path Wine bottle prefix
  * \param app_List Custom application list for this bottle
  */
-void MainWindow::set_application_list(const string& prefix_path, const std::vector<ApplicationData>& app_list)
+void MainWindow::set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_list)
 {
   // First clear list + clear search entry
   reset_application_list();
@@ -571,9 +572,9 @@ void MainWindow::set_application_list(const string& prefix_path, const std::vect
   // First add the custom application items
   for (auto app : app_list)
   {
-    string command = app.command;
+    string command = app.second.command;
     string icon = Helper::string_to_icon(command);
-    add_application(app.name, app.description, command, icon);
+    add_application(app.second.name, app.second.description, command, icon);
   }
 
   // Temporally store the list of menu item names,
@@ -1112,6 +1113,15 @@ void MainWindow::create_right_panel()
   add_app_list_button.set_margin_bottom(6);
   add_app_list_button.set_margin_end(6);
 
+  // App list remove shortcut button
+  Gtk::Image* remove_app_list_image = Gtk::manage(new Gtk::Image());
+  remove_app_list_image->set_from_icon_name("list-remove", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  remove_app_list_button.set_tooltip_text("Remove shortcut from application list");
+  remove_app_list_button.set_image(*remove_app_list_image);
+  remove_app_list_button.set_margin_top(6);
+  remove_app_list_button.set_margin_bottom(6);
+  remove_app_list_button.set_margin_end(6);
+
   // App list refresh button
   Gtk::Image* refresh_app_list_image = Gtk::manage(new Gtk::Image());
   refresh_app_list_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -1124,6 +1134,7 @@ void MainWindow::create_right_panel()
   // Preparing the horizontal box above the app list (containing the search entry & refresh button)
   app_list_top_hbox.pack_start(app_list_search_entry, true, true);
   app_list_top_hbox.pack_end(refresh_app_list_button, false, false);
+  app_list_top_hbox.pack_end(remove_app_list_button, false, false);
   app_list_top_hbox.pack_end(add_app_list_button, false, false);
 
   // Add heading (label + icon)

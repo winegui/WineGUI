@@ -257,7 +257,7 @@ void BottleManager::new_bottle(SignalController* caller,
     bottle_config.logging_enabled = false; // By default disable logging
     bottle_config.debug_log_level = 1;     // 1 (default) = Normal debug log level
     // Create empty custom app list
-    std::vector<ApplicationData> app_list;
+    std::map<int, ApplicationData> app_list;
     // Next, write the WineGUI bottle config file
     if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
     {
@@ -370,7 +370,7 @@ void BottleManager::update_bottle(SignalController* caller,
 
     bool need_update_bottle_config_file = false;
     BottleConfigData bottle_config;
-    std::vector<ApplicationData> app_list; // App list is never dirty, so no need to check
+    std::map<int, ApplicationData> app_list; // App list is never dirty, so no need to check
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
     if (active_bottle_->name() != name)
     {
@@ -1188,7 +1188,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::vector<string> bot
 
     // Retrieve bottle config data & custom app list
     BottleConfigData bottle_config;
-    std::vector<ApplicationData> bottle_app_list;
+    std::map<int, ApplicationData> bottle_app_list;
     std::tie(bottle_config, bottle_app_list) = BottleConfigFile::read_config_file(prefix);
     name = bottle_config.name;
     description = bottle_config.description;

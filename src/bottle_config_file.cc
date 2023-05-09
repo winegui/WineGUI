@@ -48,7 +48,7 @@ BottleConfigFile& BottleConfigFile::get_instance()
  */
 bool BottleConfigFile::write_config_file(const std::string& prefix_path,
                                          const BottleConfigData& bottle_config,
-                                         const std::vector<ApplicationData>& app_list)
+                                         const std::map<int, ApplicationData>& app_list)
 {
   bool success = false;
   Glib::KeyFile keyfile;
@@ -60,12 +60,13 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
     keyfile.set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
     keyfile.set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
     // Save custom application list (if present)
-    for (int i = 0; auto app : app_list)
+    for (int i = 0; std::pair<const int, ApplicationData> app : app_list)
     {
+      // Instead of reusing the key, we will reindex if needed (starting from 0)
       std::string group_name = "Application." + std::to_string(i);
-      keyfile.set_string(group_name, "Name", app.name);
-      keyfile.set_string(group_name, "Description", app.description);
-      keyfile.set_string(group_name, "Command", app.command);
+      keyfile.set_string(group_name, "Name", app.second.name);
+      keyfile.set_string(group_name, "Description", app.second.description);
+      keyfile.set_string(group_name, "Command", app.second.command);
       i++;
     }
 
@@ -84,13 +85,13 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
  * \param prefix_path Wine prefix path
  * \return Tuple of: 1. Wine Bottle Config data 2. Application list
  */
-std::tuple<BottleConfigData, std::vector<ApplicationData>> BottleConfigFile::read_config_file(const std::string& prefix_path)
+std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::read_config_file(const std::string& prefix_path)
 {
   Glib::KeyFile keyfile;
   std::string file_path = Glib::build_filename(prefix_path, "winegui.ini");
 
   struct BottleConfigData bottle_config;
-  std::vector<ApplicationData> app_list; // Empty array
+  std::map<int, ApplicationData> app_list; // Empty array
   /// Defaults config values ///
   // Name from wine prefix
   if (Helper::is_default_wine_bottle(prefix_path))
@@ -125,11 +126,13 @@ std::tuple<BottleConfigData, std::vector<ApplicationData>> BottleConfigFile::rea
 
       // Retrieve custom application list (if present)
       auto groups = keyfile.get_groups();
-      for (Glib::ustring group : groups)
+      for (int i = 0; Glib::ustring group : groups)
       {
         if (std::string(group).starts_with("Application"))
         {
-          app_list.push_back({keyfile.get_string(group, "Name"), keyfile.get_string(group, "Description"), keyfile.get_string(group, "Command")});
+          app_list.insert(std::pair<int, ApplicationData>(
+              i, {keyfile.get_string(group, "Name"), keyfile.get_string(group, "Description"), keyfile.get_string(group, "Command")}));
+          i++;
         }
       }
     }
