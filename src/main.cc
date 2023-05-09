@@ -26,6 +26,7 @@
 #include "main_window.h"
 #include "menu.h"
 #include "preferences_window.h"
+#include "remove_app_window.h"
 #include "signal_controller.h"
 
 #include <gtkmm/application.h>
@@ -77,7 +78,9 @@ static MainWindow& setupApplication()
   static BottleEditWindow edit_window(main_window);
   static BottleConfigureWindow settings_window(main_window);
   static AddAppWindow add_app_window(main_window);
-  static SignalController signal_controller(manager, menu, preferences_window, about_dialog, edit_window, settings_window, add_app_window);
+  static RemoveAppWindow remove_app_window(main_window);
+  static SignalController signal_controller(manager, menu, preferences_window, about_dialog, edit_window, settings_window, add_app_window,
+                                            remove_app_window);
 
   signal_controller.set_main_window(&main_window);
   // Do all the signal connections of the life-time of the app

@@ -209,15 +209,16 @@ void AddAppWindow::on_save_button_clicked()
       std::string prefix_path = active_bottle_->wine_location();
       // Read existing config data
       BottleConfigData bottle_config;
-      std::vector<ApplicationData> app_list;
+      std::map<int, ApplicationData> app_list;
       std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
 
+      int new_index = (!app_list.empty()) ? std::prev(app_list.end())->first + 1 : 0;
       // Append new app
       ApplicationData new_app;
       new_app.name = name_entry.get_text();
       new_app.description = description_entry.get_text();
       new_app.command = command_entry.get_text();
-      app_list.push_back(new_app);
+      app_list.insert(std::pair<int, ApplicationData>(new_index, new_app));
 
       // Save application to bottle config
       if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))

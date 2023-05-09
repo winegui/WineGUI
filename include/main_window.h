@@ -49,6 +49,7 @@ public:
   sigc::signal<void> show_edit_window;           /*!< show Edit window signal */
   sigc::signal<void> show_configure_window;      /*!< show Settings window signal */
   sigc::signal<void> show_add_app_window;        /*!< show add application window signal */
+  sigc::signal<void> show_remove_app_window;     /*!< show remove application window signal */
   sigc::signal<void, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, Glib::ustring&, bool&, BottleTypes::AudioDriver>
       new_bottle;                                       /*!< Create new Wine Bottle Signal */
   sigc::signal<void, string, bool> run_executable;      /*!< Run an EXE or MSI application in Wine with provided filename */
@@ -144,7 +145,8 @@ protected:
   Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
 
   // Other various buttons
-  Gtk::Button add_app_list_button;     /*!< Button that add custom shortcut item to application list */
+  Gtk::Button add_app_list_button;     /*!< Button that add shortcut item to application list */
+  Gtk::Button remove_app_list_button;  /*!< Button that remove shortcut item to application list */
   Gtk::Button refresh_app_list_button; /*!< Button that refreshes the application list */
 
   // Busy dialog
@@ -161,7 +163,7 @@ private:
 
   // Private methods
   void set_detailed_info(const BottleItem& bottle);
-  void set_application_list(const string& prefix_path, const std::vector<ApplicationData>& app_List);
+  void set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_List);
   void add_application(const string& name, const string& description, const string& command, const string& icon_name, bool is_icon_full_path = false);
   void check_version_update(bool show_equal = false);
   void load_stored_window_settings();

@@ -33,6 +33,7 @@ class AboutDialog;
 class BottleEditWindow;
 class BottleConfigureWindow;
 class AddAppWindow;
+class RemoveAppWindow;
 struct UpdateBottleStruct;
 
 /**
@@ -50,7 +51,8 @@ public:
                    AboutDialog& about_dialog,
                    BottleEditWindow& edit_window,
                    BottleConfigureWindow& configure_window,
-                   AddAppWindow& add_app_window);
+                   AddAppWindow& add_app_window,
+                   RemoveAppWindow& remove_app_window);
   virtual ~SignalController();
   void set_main_window(MainWindow* main_window);
   void dispatch_signals();
@@ -90,6 +92,7 @@ private:
   BottleEditWindow& edit_window_;
   BottleConfigureWindow& configure_window_;
   AddAppWindow& add_app_window_;
+  RemoveAppWindow& remove_app_window_;
 
   // Dispatcher for handling signals from the thread towards a GUI thread
   Glib::Dispatcher bottle_created_dispatcher_;
