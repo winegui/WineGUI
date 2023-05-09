@@ -99,7 +99,7 @@ RemoveAppWindow::~RemoveAppWindow()
 void RemoveAppWindow::show()
 {
   // Clean-up
-  for (auto app_item : app_list_box.get_children())
+  for (const auto& app_item : app_list_box.get_children())
   {
     delete app_item;
   }
@@ -111,7 +111,7 @@ void RemoveAppWindow::show()
     BottleConfigData bottle_config;
     std::map<int, ApplicationData> app_list;
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
-    for (auto app : app_list)
+    for (const auto& app : app_list)
     {
       std::string label_name = (!app.second.description.empty()) ? app.second.name + " - " + app.second.description : app.second.name;
       Gtk::Label* label = Gtk::manage(new Gtk::Label(label_name));
