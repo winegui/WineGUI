@@ -99,9 +99,9 @@ RemoveAppWindow::~RemoveAppWindow()
 void RemoveAppWindow::show()
 {
   // Clean-up
-  for (auto item : app_list_box.get_children())
+  for (auto app_item : app_list_box.get_children())
   {
-    delete item;
+    delete app_item;
   }
 
   if (active_bottle_ != nullptr)
@@ -162,19 +162,12 @@ void RemoveAppWindow::on_remove_selected_button_clicked()
     BottleConfigData bottle_config;
     std::map<int, ApplicationData> app_list;
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
-
-    std::vector<int> removal_list;
-    for (auto app : app_list_box.get_selected_rows())
+    std::vector<Gtk::ListBoxRow*> selected_for_removal = app_list_box.get_selected_rows();
+    if (selected_for_removal.size() > 0)
     {
-      removal_list.push_back(app->get_index());
-    }
-
-    if (!removal_list.empty())
-    {
-      // Remove app using the key
-      for (int remove_key : removal_list)
+      for (const auto& app : selected_for_removal)
       {
-        app_list.erase(remove_key);
+        app_list.erase(app->get_index());
       }
 
       // Save application to bottle config
