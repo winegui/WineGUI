@@ -20,6 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "bottle_item.h"
+#include <glibmm/markup.h>
 
 #include "helper.h"
 #include "wine_defaults.h"
@@ -54,6 +55,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
     virtual_desktop_ = bottle_item.virtual_desktop();
     is_debug_logging_ = bottle_item.is_debug_logging();
     debug_log_level_ = bottle_item.debug_log_level();
+    app_list_ = bottle_item.app_list();
   }
 
   CreateUI();
@@ -62,13 +64,13 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
 /**
  * \brief Construct a new Wine Bottle Item with limited inputs
  */
-BottleItem::BottleItem(Glib::ustring name,
-                       Glib::ustring folder_name,
-                       Glib::ustring wine_version,
+BottleItem::BottleItem(Glib::ustring& name,
+                       Glib::ustring& folder_name,
+                       Glib::ustring& wine_version,
                        bool is_wine64_bit,
-                       Glib::ustring wine_location,
-                       Glib::ustring wine_c_drive,
-                       Glib::ustring wine_last_changed)
+                       Glib::ustring& wine_location,
+                       Glib::ustring& wine_c_drive,
+                       Glib::ustring& wine_last_changed)
     : name_(name),
       folder_name_(folder_name),
       description_(""),
@@ -90,21 +92,22 @@ BottleItem::BottleItem(Glib::ustring name,
 /**
  * \brief Construct a new Wine Bottle Item
  */
-BottleItem::BottleItem(Glib::ustring name,
-                       Glib::ustring folder_name,
-                       Glib::ustring description,
+BottleItem::BottleItem(Glib::ustring& name,
+                       Glib::ustring& folder_name,
+                       Glib::ustring& description,
                        bool status,
                        BottleTypes::Windows win,
                        BottleTypes::Bit bit,
-                       Glib::ustring wine_version,
+                       Glib::ustring& wine_version,
                        bool is_wine64_bit,
-                       Glib::ustring wine_location,
-                       Glib::ustring wine_c_drive,
-                       Glib::ustring wine_last_changed,
+                       Glib::ustring& wine_location,
+                       Glib::ustring& wine_c_drive,
+                       Glib::ustring& wine_last_changed,
                        BottleTypes::AudioDriver audio_driver,
-                       Glib::ustring virtual_desktop,
+                       Glib::ustring& virtual_desktop,
                        bool is_debug_logging,
-                       int debug_log_level)
+                       int debug_log_level,
+                       std::map<int, ApplicationData>& app_list)
     : name_(name),
       folder_name_(folder_name),
       description_(description),
@@ -119,7 +122,8 @@ BottleItem::BottleItem(Glib::ustring name,
       audio_driver_(audio_driver),
       virtual_desktop_(virtual_desktop),
       is_debug_logging_(is_debug_logging),
-      debug_log_level_(debug_log_level){
+      debug_log_level_(debug_log_level),
+      app_list_(app_list){
           // Gui will be created during the copy constructor called by Gtk
       };
 

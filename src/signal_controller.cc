@@ -22,6 +22,7 @@
 #include "signal_controller.h"
 
 #include "about_dialog.h"
+#include "add_app_window.h"
 #include "bottle_configure_window.h"
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
@@ -29,6 +30,7 @@
 #include "main_window.h"
 #include "menu.h"
 #include "preferences_window.h"
+#include "remove_app_window.h"
 
 /**
  * \brief Signal Dispatcher Constructor
@@ -38,7 +40,9 @@ SignalController::SignalController(BottleManager& manager,
                                    PreferencesWindow& preferences_window,
                                    AboutDialog& about_dialog,
                                    BottleEditWindow& edit_window,
-                                   BottleConfigureWindow& configure_window)
+                                   BottleConfigureWindow& configure_window,
+                                   AddAppWindow& add_app_window,
+                                   RemoveAppWindow& remove_app_window)
     : main_window_(nullptr),
       manager_(manager),
       menu_(menu),
@@ -46,6 +50,8 @@ SignalController::SignalController(BottleManager& manager,
       about_dialog_(about_dialog),
       edit_window_(edit_window),
       configure_window_(configure_window),
+      add_app_window_(add_app_window),
+      remove_app_window_(remove_app_window),
       bottle_created_dispatcher_(),
       error_message_created_dispatcher_(),
       thread_bottle_manager_(nullptr)
@@ -103,9 +109,13 @@ void SignalController::dispatch_signals()
   main_window_->active_bottle.connect(sigc::mem_fun(manager_, &BottleManager::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::set_active_bottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::set_active_bottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::set_active_bottle));
   // Distribute the reset bottle signal from the manager
   manager_.reset_active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::reset_active_bottle));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::reset_active_bottle));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_detailed_info));
   manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_application_list));
   // Removed bottle signal from the manager
@@ -126,6 +136,9 @@ void SignalController::dispatch_signals()
   main_window_->update_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update));
   main_window_->open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
   main_window_->kill_running_processes.connect(sigc::mem_fun(manager_, &BottleManager::kill_processes));
+  // App list
+  main_window_->show_add_app_window.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::show));
+  main_window_->show_remove_app_window.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::show));
 
   // Edit Window
   edit_window_.update_bottle.connect(sigc::mem_fun(this, &SignalController::on_update_bottle));
@@ -154,6 +167,12 @@ void SignalController::dispatch_signals()
   configure_window_.corefonts.connect(sigc::mem_fun(manager_, &BottleManager::install_core_fonts));
   configure_window_.dotnet.connect(sigc::mem_fun(manager_, &BottleManager::install_dot_net));
   configure_window_.visual_cpp_package.connect(sigc::mem_fun(manager_, &BottleManager::install_visual_cpp_package));
+
+  // Add new application Window
+  add_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
+
+  // Remove application Window
+  remove_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
 
   // WineGUI Preference Window
   preferences_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));

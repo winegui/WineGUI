@@ -20,7 +20,10 @@
  */
 #pragma once
 
+#include "app_list_struct.h"
+#include <map>
 #include <string>
+#include <tuple>
 
 struct BottleConfigData
 {
@@ -39,9 +42,9 @@ class BottleConfigFile
 public:
   // Singleton
   static BottleConfigFile& get_instance();
-
-  static bool write_config_file(const std::string& prefix_path, const BottleConfigData& bottle_config);
-  static BottleConfigData read_config_file(const std::string& prefix_path);
+  static bool
+  write_config_file(const std::string& prefix_path, const BottleConfigData& bottle_config, const std::map<int, ApplicationData>& app_list);
+  static std::tuple<BottleConfigData, std::map<int, ApplicationData>> read_config_file(const std::string& prefix_path);
 
 private:
   BottleConfigFile();

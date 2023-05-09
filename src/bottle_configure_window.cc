@@ -145,7 +145,7 @@ void BottleConfigureWindow::show()
 
 /**
  * \brief Signal handler when a new bottle is set in the main window
- * \param[in] bottle - New bottle
+ * \param[in] bottle Current active bottle
  */
 void BottleConfigureWindow::set_active_bottle(BottleItem* bottle)
 {
