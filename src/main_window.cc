@@ -570,7 +570,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   reset_application_list();
 
   // First add the custom application items
-  for (auto app : app_list)
+  for (const auto& app : app_list)
   {
     string command = app.second.command;
     string icon = Helper::string_to_icon(command);

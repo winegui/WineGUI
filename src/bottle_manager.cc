@@ -1170,7 +1170,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(std::vector<string> bot
   Glib::ustring wine_version = get_wine_version();
 
   // Retrieve detailed info for each wine bottle prefix
-  for (string prefix : bottle_dirs)
+  for (const string& prefix : bottle_dirs)
   {
     // Reset variables
     Glib::ustring name = "";
