@@ -21,10 +21,11 @@
 #pragma once
 
 #include "app_list_model_column.h"
+#include "app_list_struct.h"
 #include "bottle_item.h"
 #include "bottle_new_assistant.h"
 #include "busy_dialog.h"
-#include "general_config_file.h"
+#include "general_config_struct.h"
 #include "menu.h"
 #include <gtkmm.h>
 #include <iostream>
@@ -47,6 +48,8 @@ public:
   sigc::signal<void, BottleItem*> active_bottle; /*!< Set the active bottle in manager, based on the selected bottle */
   sigc::signal<void> show_edit_window;           /*!< show Edit window signal */
   sigc::signal<void> show_configure_window;      /*!< show Settings window signal */
+  sigc::signal<void> show_add_app_window;        /*!< show add application window signal */
+  sigc::signal<void> show_remove_app_window;     /*!< show remove application window signal */
   sigc::signal<void, Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, Glib::ustring&, bool&, BottleTypes::AudioDriver>
       new_bottle;                                       /*!< Create new Wine Bottle Signal */
   sigc::signal<void, string, bool> run_executable;      /*!< Run an EXE or MSI application in Wine with provided filename */
@@ -142,6 +145,8 @@ protected:
   Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
 
   // Other various buttons
+  Gtk::Button add_app_list_button;     /*!< Button that add shortcut item to application list */
+  Gtk::Button remove_app_list_button;  /*!< Button that remove shortcut item to application list */
   Gtk::Button refresh_app_list_button; /*!< Button that refreshes the application list */
 
   // Busy dialog
@@ -158,8 +163,8 @@ private:
 
   // Private methods
   void set_detailed_info(const BottleItem& bottle);
-  void set_application_list(const string& prefix_path);
-  void add_application(const string& name, const string& icon_name, const string& description, const string& command, bool is_icon_full_path = false);
+  void set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_List);
+  void add_application(const string& name, const string& description, const string& command, const string& icon_name, bool is_icon_full_path = false);
   void check_version_update(bool show_equal = false);
   void load_stored_window_settings();
   void create_left_panel();

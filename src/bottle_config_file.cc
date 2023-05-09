@@ -22,6 +22,7 @@
 #include "helper.h"
 #include <glibmm.h>
 #include <iostream>
+#include <string>
 
 /// Meyers BottleConfigFile
 BottleConfigFile::BottleConfigFile() = default;
@@ -42,9 +43,12 @@ BottleConfigFile& BottleConfigFile::get_instance()
  * \brief Write config file to disk
  * \param prefix_path Wine prefix path
  * \param bottle_config Configuration data struct
+ * \param app_list Custom list of applications for this bottle
  * \return true if successfully written, otherwise false
  */
-bool BottleConfigFile::write_config_file(const std::string& prefix_path, const BottleConfigData& bottle_config)
+bool BottleConfigFile::write_config_file(const std::string& prefix_path,
+                                         const BottleConfigData& bottle_config,
+                                         const std::map<int, ApplicationData>& app_list)
 {
   bool success = false;
   Glib::KeyFile keyfile;
@@ -55,6 +59,17 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path, const B
     keyfile.set_string("General", "Description", bottle_config.description);
     keyfile.set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
     keyfile.set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
+    // Save custom application list (if present)
+    for (int i = 0; std::pair<const int, ApplicationData> app : app_list)
+    {
+      // Instead of reusing the key, we will reindex if needed (starting from 0)
+      std::string group_name = "Application." + std::to_string(i);
+      keyfile.set_string(group_name, "Name", app.second.name);
+      keyfile.set_string(group_name, "Description", app.second.description);
+      keyfile.set_string(group_name, "Command", app.second.command);
+      i++;
+    }
+
     success = keyfile.save_to_file(file_path);
   }
   catch (const Glib::Error& ex)
@@ -68,14 +83,15 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path, const B
 /**
  * \brief Read wine bottle config file from disk
  * \param prefix_path Wine prefix path
- * \return Wine Bottle Config data
+ * \return Tuple of: 1. Wine Bottle Config data 2. Application list
  */
-BottleConfigData BottleConfigFile::read_config_file(const std::string& prefix_path)
+std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::read_config_file(const std::string& prefix_path)
 {
   Glib::KeyFile keyfile;
   std::string file_path = Glib::build_filename(prefix_path, "winegui.ini");
 
   struct BottleConfigData bottle_config;
+  std::map<int, ApplicationData> app_list; // Empty array
   /// Defaults config values ///
   // Name from wine prefix
   if (Helper::is_default_wine_bottle(prefix_path))
@@ -94,7 +110,7 @@ BottleConfigData BottleConfigFile::read_config_file(const std::string& prefix_pa
   if (!Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR))
   {
     // Config file doesn't exist, make a new file with default configs, return default config data below
-    BottleConfigFile::write_config_file(prefix_path, bottle_config);
+    BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list);
   }
   else
   {
@@ -102,17 +118,31 @@ BottleConfigData BottleConfigFile::read_config_file(const std::string& prefix_pa
     try
     {
       keyfile.load_from_file(file_path);
+      // Retrieve bottle config
       bottle_config.name = keyfile.get_string("General", "Name");
       bottle_config.description = keyfile.get_string("General", "Description");
       bottle_config.logging_enabled = keyfile.get_boolean("Logging", "Enabled");
       bottle_config.debug_log_level = keyfile.get_integer("Logging", "DebugLevel");
+
+      // Retrieve custom application list (if present)
+      auto groups = keyfile.get_groups();
+      for (int i = 0; Glib::ustring group : groups)
+      {
+        if (std::string(group).starts_with("Application"))
+        {
+          app_list.insert(std::pair<int, ApplicationData>(
+              i, {keyfile.get_string(group, "Name"), keyfile.get_string(group, "Description"), keyfile.get_string(group, "Command")}));
+          i++;
+        }
+      }
     }
     catch (const Glib::Error& ex)
     {
       std::cerr << "Error: Exception while loading config file: " << ex.what() << std::endl;
       // Lets write a new config file and return the default values below
-      BottleConfigFile::write_config_file(prefix_path, bottle_config);
+      BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list);
     }
   }
-  return bottle_config;
+
+  return std::make_tuple(bottle_config, app_list);
 }

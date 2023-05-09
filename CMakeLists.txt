@@ -53,7 +53,10 @@ configure_file(src/project_config.h.in ${CMAKE_BINARY_DIR}/project_config.h)
 set(HEADERS
   include/menu.h
   include/app_list_model_column.h
+  include/app_list_struct.h
   include/main_window.h
+  include/add_app_window.h
+  include/remove_app_window.h
   include/preferences_window.h
   include/bottle_edit_window.h
   include/bottle_configure_window.h
@@ -72,6 +75,8 @@ set(SOURCES
   src/main.cc
   src/menu.cc
   src/main_window.cc
+  src/add_app_window.cc
+  src/remove_app_window.cc
   src/preferences_window.cc
   src/bottle_edit_window.cc
   src/bottle_configure_window.cc
