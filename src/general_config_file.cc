@@ -160,23 +160,36 @@ std::string GeneralConfigFile::config_and_folder_migration(const std::string& co
     // Check on old config.ini file
     if (Glib::file_test(config_file_path_old, Glib::FileTest::FILE_TEST_IS_REGULAR))
     {
+      bool has_error = false;
       try
       {
         // Move the existing config file to the new location
         Glib::RefPtr<Gio::File> file_to_move = Gio::File::create_for_path(config_file_path_old);
         if (!file_to_move)
-          std::cerr << "Gio::File::create_for_path() returned an empty pointer." << std::endl;
+          std::cerr << "Error: Gio::File::create_for_path() returned an empty pointer." << std::endl;
         else
           file_to_move->move(Gio::File::create_for_path(config_file_path_new));
         std::cout << "INFO: Config file is moved successfully!" << std::endl;
       }
       catch (const Gio::Error& ex)
       {
-        std::cerr << "Migration failed. Could not copy existing config file to new location, error: " << ex.what() << std::endl;
+        has_error = true;
+        std::cerr << "Error: Migration failed. Could not copy existing config file to new location, error: " << ex.what() << std::endl;
       }
       catch (const Glib::Error& ex)
       {
-        std::cerr << "Migration failed. Could not copy existing config file to new location, error: " << ex.what() << std::endl;
+        has_error = true;
+        std::cerr << "Error: Migration failed. Could not copy existing config file to new location, error: " << ex.what() << std::endl;
+      }
+      if (has_error)
+      {
+        // Maybe the config.ini file is already present in the new location?
+        if (Glib::file_test(config_file_path_new, Glib::FileTest::FILE_TEST_IS_REGULAR))
+        {
+          // In that case, remove the old config file, without migration (maybe it was migrated in the past?)
+          if (!Gio::File::create_for_path(config_file_path_old)->remove())
+            std::cerr << "Warn: Could not remove the old config.ini file." << std::endl;
+        }
       }
     }
 
@@ -185,13 +198,13 @@ std::string GeneralConfigFile::config_and_folder_migration(const std::string& co
     {
       // Remove winetricks binary
       if (!Gio::File::create_for_path(winetricks_file_path_old)->remove())
-        std::cerr << "Could not remove old winetrick file." << std::endl;
+        std::cerr << "Warn: Could not remove old winetrick file." << std::endl;
     }
     if (Glib::file_test(winetricks_file_path_bak_old, Glib::FileTest::FILE_TEST_IS_REGULAR))
     {
       // Remove winetricks.bak binary
       if (!Gio::File::create_for_path(winetricks_file_path_bak_old)->remove())
-        std::cerr << "Could not remove old winetrick.bak file." << std::endl;
+        std::cerr << "Warn: Could not remove old winetrick.bak file." << std::endl;
     }
 
     // TODO: Eventually warn users about the obsolete prefixes folder. And remove/clean-up the migration code in the future.
@@ -206,7 +219,7 @@ std::string GeneralConfigFile::config_and_folder_migration(const std::string& co
         Glib::RefPtr<Gio::File> old_folder = Gio::File::create_for_path(default_prefix_folder_old);
         if (!old_folder)
         {
-          std::cerr << "Gio::File::create_for_path() returned an empty pointer." << std::endl;
+          std::cerr << "Error: Gio::File::create_for_path() returned an empty pointer." << std::endl;
         }
         else
         {
@@ -214,7 +227,7 @@ std::string GeneralConfigFile::config_and_folder_migration(const std::string& co
           Glib::RefPtr<Gio::FileEnumerator> enumerator = old_folder->enumerate_children();
           if (!enumerator)
           {
-            std::cerr << "Gio::File::enumerate_children() returned an empty pointer." << std::endl;
+            std::cerr << "Error: Gio::File::enumerate_children() returned an empty pointer." << std::endl;
           }
           else
           {
@@ -233,11 +246,11 @@ std::string GeneralConfigFile::config_and_folder_migration(const std::string& co
       }
       catch (const Gio::Error& ex)
       {
-        std::cerr << "Migration check failed. Unable to inspect old prefix folder, error: " << ex.what() << std::endl;
+        std::cerr << "Error: Migration check failed. Unable to inspect old prefix folder, error: " << ex.what() << std::endl;
       }
       catch (const Glib::FileError& ex)
       {
-        std::cerr << "Migration check failed. Unable to inspect old prefix folder, error: " << ex.what() << std::endl;
+        std::cerr << "Error: Migration check failed. Unable to inspect old prefix folder, error: " << ex.what() << std::endl;
       }
     }
   }
