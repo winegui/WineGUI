@@ -40,4 +40,6 @@ private:
   ~GeneralConfigFile();
   GeneralConfigFile(const GeneralConfigFile&) = delete;
   GeneralConfigFile& operator=(const GeneralConfigFile&) = delete;
+
+  static std::string config_and_folder_migration(const std::string& config_file_path_new, const std::string& default_prefix_folder_new);
 };

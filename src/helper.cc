@@ -42,8 +42,8 @@
 #include <tuple>
 #include <unistd.h>
 
-std::vector<std::string> wineGuiDirs{Glib::get_home_dir(), ".winegui"}; /*!< WineGui config/storage directory path */
-static string WineGuiDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDirs);
+std::vector<std::string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
+static string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
 
 std::vector<std::string> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
 static string DefaultBottleWineDir = Glib::build_path(G_DIR_SEPARATOR_S, defaultWineDir);
@@ -52,7 +52,7 @@ static string DefaultBottleWineDir = Glib::build_path(G_DIR_SEPARATOR_S, default
 static const string WineExecutable = "wine";     /*!< Currently expect to be installed globally */
 static const string WineExecutable64 = "wine64"; /*!< Currently expect to be installed globally */
 static const string WinetricksExecutable =
-    Glib::build_filename(WineGuiDir, "winetricks"); /*!< winetricks shall be located within the .winegui folder */
+    Glib::build_filename(WineGuiDataDir, "winetricks"); /*!< winetricks shall be located within the WineGUI data directory */
 
 // Reg files
 static const string SystemReg = "system.reg";
@@ -991,13 +991,17 @@ bool Helper::dir_exists(const string& dir_path)
 }
 
 /**
- * \brief Create directory (and intermediate parent directories if needed)
+ * \brief Create directory (with parent directories if needed)
  * \param[in] dir_path The directory to be created
  * \return true if successfully created, otherwise false
  */
 bool Helper::create_dir(const string& dir_path)
 {
-  return (g_mkdir_with_parents(dir_path.c_str(), 0775) == 0);
+  Glib::RefPtr<Gio::File> directory = Gio::File::create_for_path(dir_path);
+  if (directory)
+    return directory->make_directory_with_parents();
+  else
+    return false;
 }
 
 /**
@@ -1017,13 +1021,13 @@ bool Helper::file_exists(const string& file_path)
  */
 void Helper::install_or_update_winetricks()
 {
-  // Check if ~/.winegui directory is created
-  if (!dir_exists(WineGuiDir))
+  // Check if ~/.local/share/winegui directory is created
+  if (!dir_exists(WineGuiDataDir))
   {
-    bool created = create_dir(WineGuiDir);
+    bool created = create_dir(WineGuiDataDir);
     if (!created)
     {
-      throw std::runtime_error("Incorrect permissions to create a .winegui configuration folder! Abort.");
+      throw std::runtime_error("Incorrect permissions to create a WineGUI data folder (" + WineGuiDataDir + ")! Abort.");
     }
   }
 
