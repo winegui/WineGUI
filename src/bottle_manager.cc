@@ -1140,7 +1140,7 @@ std::vector<string> BottleManager::get_bottle_paths()
 {
   if (!Helper::dir_exists(bottle_location_))
   {
-    // Create directory if not exist yet
+    // Create bottle prefix directory if not exist yet
     if (!Helper::create_dir(bottle_location_))
     {
       throw std::runtime_error("Failed to create the Wine bottle directory: " + bottle_location_);
