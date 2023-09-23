@@ -1057,6 +1057,8 @@ void Helper::self_update_winetricks()
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (output.compare("0") != 0)
       {
+        // TODO: This could be a bug as well, maybe fallback to redownloading the winetricks binary?
+        // Because the --self-update flag should be always present (ps. avoid a dead-loop).
         throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::get_winetricks_version());
       }
     }
