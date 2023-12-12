@@ -22,7 +22,7 @@
 #include "wine_defaults.h"
 #include <algorithm>
 #include <array>
-#include <cstdio>
+#include <stdio.h>
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
@@ -1553,14 +1553,14 @@ string Helper::exec_error_message(const char* cmd)
 }
 
 /**
- * Custom fclose method, which is executed during the stream closure of C popen command.
- * Check on fclose return value, signal a failure/pop-up to the user, when exit-code is non-zero.
+ * Custom pclose method, which is executed during the stream closure of C popen command.
+ * Check on pclose return value, signal a failure/pop-up to the user, when exit-code is non-zero.
  */
 int Helper::close_exec_stream(std::FILE* file)
 {
   if (file)
   {
-    if (std::fclose(file) != 0)
+    if (pclose(file) != 0)
     {
       // Dispatcher will run the connected slot in the main loop,
       // instead of the same context/thread in case of a signal.emit() call.
