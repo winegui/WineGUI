@@ -63,7 +63,7 @@ Optionally:
 - doxygen
 - graphviz
 - rpm
-- clang-format
+- clang-format (v14)
 - cppcheck (v2.10 or higher)
 
 **Hint:** You could execute `./scripts/deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
@@ -169,7 +169,13 @@ To automatically comply to our style format execute following script (inplace ed
 ./scripts/fix_format.sh
 ```
 
-Check only for errors, run: `./scripts/check_format.sh`
+Or depend on the docker image instead of your local `clang-format`:
+
+```sh
+./scripts/fix_format.sh docker
+```
+
+Check only for errors, run: `./scripts/check_format.sh` (same idea with Docker, run: `./scripts/check_format.sh docker` to not depend on your local `clang-format` tool)
 
 ### Guidelines
 
