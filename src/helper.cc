@@ -22,7 +22,6 @@
 #include "wine_defaults.h"
 #include <algorithm>
 #include <array>
-#include <stdio.h>
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
@@ -37,6 +36,7 @@
 #include <pwd.h>
 #include <regex>
 #include <stdexcept>
+#include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
 #include <tuple>
