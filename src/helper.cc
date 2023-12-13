@@ -22,7 +22,6 @@
 #include "wine_defaults.h"
 #include <algorithm>
 #include <array>
-#include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
@@ -37,6 +36,7 @@
 #include <pwd.h>
 #include <regex>
 #include <stdexcept>
+#include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
 #include <tuple>
@@ -164,8 +164,11 @@ std::vector<std::string> Helper::get_bottles_paths(const string& dir_path, bool 
     }
     name = dir.read_name();
   }
+
   // Sort alphabetically (case insensitive)
-  std::sort(list.begin(), list.end(), Helper::case_insensitive_compare);
+  std::sort(list.begin(), list.end(),
+            [](const std::string& a, const std::string& b)
+            { return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), [](char x, char y) { return toupper(x) < toupper(y); }); });
 
   // Add default wine bottle to the end, if enabled by settings and if directory is present
   if (display_default_wine_machine && dir_exists(DefaultBottleWineDir))
@@ -1553,14 +1556,14 @@ string Helper::exec_error_message(const char* cmd)
 }
 
 /**
- * Custom fclose method, which is executed during the stream closure of C popen command.
- * Check on fclose return value, signal a failure/pop-up to the user, when exit-code is non-zero.
+ * Custom pclose method, which is executed during the stream closure of C popen command.
+ * Check on pclose return value, signal a failure/pop-up to the user, when exit-code is non-zero.
  */
 int Helper::close_exec_stream(std::FILE* file)
 {
   if (file)
   {
-    if (std::fclose(file) != 0)
+    if (pclose(file) != 0)
     {
       // Dispatcher will run the connected slot in the main loop,
       // instead of the same context/thread in case of a signal.emit() call.
@@ -1976,21 +1979,6 @@ std::vector<string> Helper::split(const string& s, const char delimiter)
 }
 
 /**
- * \brief Case-insensitive compare method, use together with sort()
- */
-bool Helper::case_insensitive_compare(const std::string& a, const std::string& b)
-{
-  struct case_insensitive_less : public std::binary_function<char, char, bool>
-  {
-    bool operator()(char x, char y) const
-    {
-      return toupper(static_cast<unsigned char>(x)) < toupper(static_cast<unsigned char>(y));
-    }
-  };
-  return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), case_insensitive_less());
-}
-
-/**
  * \brief Parse an escaped Wine registry key data back into an UTF-8 string
  * The code is adopted from the parse_strW() method:
  * https://source.winehq.org/git/wine.git/blob/refs/heads/master:/server/unicode.c#l101
@@ -2002,7 +1990,8 @@ string Helper::unescape_reg_key_data(const string& src)
 {
   auto to_hex = [](char ch) -> char { return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10; };
 
-  auto wchar_to_utf8 = [](wchar_t wc) -> string {
+  auto wchar_to_utf8 = [](wchar_t wc) -> string
+  {
     string s;
     if (0 <= wc && wc <= 0x7f)
     {
