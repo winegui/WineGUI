@@ -48,7 +48,7 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
   first_toolbar.set_vexpand(true);
 
   second_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  second_toolbar.set_halign(Gtk::ALIGN_CENTER);
+  second_toolbar.set_halgn(Gtk::ALIGN_CENTER);
   second_toolbar.set_valign(Gtk::ALIGN_CENTER);
   second_toolbar.set_hexpand(true);
   second_toolbar.set_vexpand(true);
