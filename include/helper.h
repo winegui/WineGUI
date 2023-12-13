@@ -122,7 +122,6 @@ private:
   static string get_bottle_dir_from_prefix(const string& prefix_path);
   static std::vector<string> read_file_lines(const string& file_path);
   static std::vector<string> split(const string& s, const char delimiter);
-  static bool case_insensitive_compare(const std::string& a, const std::string& b);
   static string unescape_reg_key_data(const string& src);
   static string string2hex(const std::string& str, bool capital = false);
   static string hex2string(const std::string& hexstr);

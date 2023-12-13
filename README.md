@@ -63,7 +63,7 @@ Optionally:
 - doxygen
 - graphviz
 - rpm
-- clang-format
+- clang-format (v14)
 - cppcheck (v2.10 or higher)
 
 **Hint:** You could execute `./scripts/deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
@@ -72,13 +72,20 @@ Optionally:
 
 Run: `./scripts/build.sh`
 
-Or execute: `mkdir -p build && cd build && cmake -GNinja .. && ninja`
+Or execute:
+
+```bash
+# Prepare
+cmake -GNinja -B build
+# Build WineGUI
+cmake --build ./build
+```
 
 ### Run
 
-Execute within the build directory: `ninja run`
+Execute: `ninja -C build run`
 
-Or:
+Or execute the binary directly:
 
 ```sh
 ./build/bin/winegui
@@ -86,11 +93,14 @@ Or:
 
 ### Rebuild
 
-Cmake is only needed once, after that you can often use:
+Configuring the ninja build system via CMake is often only needed once (`cmake -GNinja -B build`), after that just execute:
 
-`ninja`
+```bash
+cmake --build ./build
+```
 
-Clean the build via: `ninja clean`
+Or just: `ninja` within the build directory.  
+Clean the build via: `ninja clean`.
 
 _Hint:_ Run `ninja help` for all available targets.
 
@@ -107,7 +117,7 @@ gdb -ex=run bin/winegui
 
 ### Memory check
 
-First **build** the (Linux) target including _debug symbols_. Binary should be present in the `build/bin` folder.
+First **build** the (Linux) target including _debug symbols_. Binary should be present in the `build/bin` directory.
 
 Next, check for memory leaks using `valgrind` by executing:
 
@@ -128,8 +138,9 @@ For production build and DEB file package, you can run: `./scripts/build_prod.sh
 Or use:
 
 ```sh
-cmake -DCMAKE_BUILD_TYPE=Release
-ninja
+cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=Release -B build_prod
+
+cmake --build ./build_prod --config Release
 ```
 
 ### Build Doxygen
@@ -137,8 +148,8 @@ ninja
 Or build with generated doxygen files locally:
 
 ```sh
-cmake -GNinja -Ddoc=ON
-ninja
+cmake -GNinja -Ddoc=ON -B build_docs
+cmake --build ./build_docs --target Doxygen
 ```
 
 ### Releasing
@@ -158,7 +169,13 @@ To automatically comply to our style format execute following script (inplace ed
 ./scripts/fix_format.sh
 ```
 
-Check only for errors, run: `./scripts/check_format.sh`
+Or depend on the docker image instead of your local `clang-format`:
+
+```sh
+./scripts/fix_format.sh docker
+```
+
+Check only for errors, run: `./scripts/check_format.sh` (same idea with Docker, run: `./scripts/check_format.sh docker` to not depend on your local `clang-format` tool)
 
 ### Guidelines
 
