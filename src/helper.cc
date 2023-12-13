@@ -164,8 +164,11 @@ std::vector<std::string> Helper::get_bottles_paths(const string& dir_path, bool 
     }
     name = dir.read_name();
   }
+
   // Sort alphabetically (case insensitive)
-  std::sort(list.begin(), list.end(), Helper::case_insensitive_compare);
+  std::sort(list.begin(), list.end(),
+            [](const std::string& a, const std::string& b)
+            { return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), [](char x, char y) { return toupper(x) < toupper(y); }); });
 
   // Add default wine bottle to the end, if enabled by settings and if directory is present
   if (display_default_wine_machine && dir_exists(DefaultBottleWineDir))
@@ -1973,21 +1976,6 @@ std::vector<string> Helper::split(const string& s, const char delimiter)
     end = s.find_first_of(delimiter, start);
   }
   return output;
-}
-
-/**
- * \brief Case-insensitive compare method, use together with sort()
- */
-bool Helper::case_insensitive_compare(const std::string& a, const std::string& b)
-{
-  struct case_insensitive_less : public std::binary_function<char, char, bool>
-  {
-    bool operator()(char x, char y) const
-    {
-      return toupper(static_cast<unsigned char>(x)) < toupper(static_cast<unsigned char>(y));
-    }
-  };
-  return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), case_insensitive_less());
 }
 
 /**
