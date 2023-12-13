@@ -21,6 +21,7 @@ test-build:
   stage: build
   only:
     - merge_requests
+    - main
   script: ./scripts/build_prod.sh
   artifacts:
     name: "Packages + Documentation"
