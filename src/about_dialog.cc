@@ -40,7 +40,7 @@ AboutDialog::AboutDialog(Gtk::Window& parent) : visit_project_link_button("https
   set_authors(devs);
   set_artists(devs);
   set_version(PROJECT_VER);
-  set_copyright("Copyright © 2019-2023 Melroy van den Berg");
+  set_copyright("Copyright © 2019-2024 Melroy van den Berg");
   set_license_type(Gtk::LICENSE_AGPL_3_0);
 
   Gtk::Box* vbox = get_vbox();
