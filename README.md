@@ -60,6 +60,7 @@ Dependencies should be met before build:
 
 Optionally:
 
+- Ccache (optional, but much **recommended**)
 - doxygen
 - graphviz
 - rpm
