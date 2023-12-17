@@ -22,15 +22,9 @@ message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message("PROJECT_VERSION = ${PROJECT_VERSION}")
 
 # Cmake settings
-# Use C++20
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
-if(NOT CYGWIN)
-  set(CMAKE_CXX_EXTENSIONS OFF)
-endif()
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
@@ -103,6 +97,12 @@ set(SOURCES
 add_schema("org.melroy.winegui.gschema.xml" GSCHEMA_RING)
 
 add_executable(${PROJECT_TARGET} ${GSCHEMA_RING} ${SOURCES})
+
+# Set C++20
+target_compile_features(${PROJECT_TARGET} PUBLIC cxx_std_20)
+set_target_properties(${PROJECT_TARGET} PROPERTIES CXX_EXTENSIONS OFF)
+
+# Linking Threads and GTKMM
 target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
 target_include_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
