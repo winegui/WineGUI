@@ -8,4 +8,4 @@ cmake --build ./build_prod --config Release
 echo "INFO: Building packages..."
 cd build_prod
 # Requires root
-cpack -G "TGZ;DEB;RPM"
+cpack -C Release -G "TGZ;DEB;RPM"
