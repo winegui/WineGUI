@@ -11,7 +11,7 @@ if [ -z ${APP_VERSION} ]; then
     exit 1
 fi
 
-output=$(curl -s --header "JOB-TOKEN: $CI_JOB_TOKEN" "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links")
+output=$(curl -s --header "JOB-TOKEN: $CI_JOB_TOKEN" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links")
 if [[ "$output" == "" ]]; then
     echo "ERROR: Retrieving links from API returns an empty request! Something is wrong."
     exit 1
@@ -25,19 +25,19 @@ if [[ "$output" == "[]" ]]; then
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data name="WineGUI Compressed binary (tar)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.tar.gz" \
-        "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data name="WineGUI RPM Package (rpm)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.rpm" \
-        "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data name="WineGUI Debian package (deb)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.deb" \
-        "https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 elif [[ "$output" == "{\"message\":\"404 Not found\"}" ]]; then
     echo "WARN: Release doesn't yet exist yet/can't be found yet in Gitlab: $APP_VERSION..."
 else
