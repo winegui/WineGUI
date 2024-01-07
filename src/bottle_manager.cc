@@ -618,7 +618,7 @@ void BottleManager::run_program(string program)
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     // For all programs (except winetricks)
-    if (!program.ends_with("winetricks --gui"))
+    if (!program.ends_with("winetricks --gui -q"))
     {
       // Between quotes (due to spaces)
       program = "\"" + program + "\"";

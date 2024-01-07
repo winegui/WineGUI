@@ -56,12 +56,14 @@ protected:
 
   Gtk::Toolbar first_toolbar;  /*!< 1st row toolbar */
   Gtk::Toolbar second_toolbar; /*!< 2nd row toolbar */
-  // Gtk::Toolbar third_toolbar;  /*!< 3rd row toolbar */
+  Gtk::Toolbar third_toolbar;  /*!< 3rd row toolbar */
+  Gtk::Toolbar fourth_toolbar; /*!< 4td row toolbar */
 
   Gtk::Label first_row_label;  /*!< 1st row label */
   Gtk::Label hint_label;       /*!< Extra hint label info for user */
   Gtk::Label second_row_label; /*!< 2nd row label */
-  // Gtk::Label third_row_label;  /*!< 3rd row label */
+  Gtk::Label third_row_label;  /*!< 3rd row label */
+  Gtk::Label fourth_row_label; /*!< 4th row label */
 
   // Buttons First row (Gaming)
   Gtk::ToolButton install_d3dx9_button; /*!< d3dx9 install button */
@@ -70,9 +72,16 @@ protected:
   // Buttons Second row
   Gtk::ToolButton install_liberation_fonts_button; /*!< Liberation fonts install button */
   Gtk::ToolButton install_core_fonts_button;       /*!< Core fonts install button */
-  Gtk::ToolButton install_visual_cpp_button;       /*!< MS Visual C++ Redistributable Package install button */
   Gtk::ToolButton install_dotnet4_0_button;        /*!< .NET v4.0 install button */
   Gtk::ToolButton install_dotnet4_5_2_button;      /*!< .NET v4.5.2 install button */
+  Gtk::ToolButton install_dotnet4_7_2_button;      /*!< .NET v4.7.2 install button */
+  Gtk::ToolButton install_dotnet4_8_button;        /*!< .NET v4.8 install button */
+  Gtk::ToolButton install_dotnet6_button;          /*!< .NET v6.0 install button */
+  Gtk::ToolButton install_visual_cpp_6_button;     /*!< MS Visual C++ v6 Package install button */
+  Gtk::ToolButton install_visual_cpp_2013_button;  /*!< MS Visual C++ 2013 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2017_button;  /*!< MS Visual C++ 2017 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2019_button;  /*!< MS Visual C++ 2019 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2022_button;  /*!< MS Visual C++ 2022 Redistributable Package install button */
 
 private:
   BottleItem* active_bottle_; /*!< Current active bottle */
@@ -81,7 +90,10 @@ private:
   bool is_dxvk_installed();
   bool is_liberation_installed();
   bool is_core_fonts_installed();
-  bool is_visual_cpp_installed();
-  bool is_dotnet_4_0_installed();
-  bool is_dotnet_4_5_2_installed();
+  bool is_dotnet_installed(const string& uninstaller_key, const string& uninstaller_name);
+  bool is_visual_cpp_6_installed();
+  bool is_visual_cpp_2013_installed();
+  bool is_visual_cpp_2017_installed();
+  bool is_visual_cpp_2019_installed();
+  bool is_visual_cpp_2022_installed();
 };

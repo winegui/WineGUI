@@ -715,7 +715,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   add_application("Uninstaller", "Remove programs", "uninstaller", "uninstaller");
   add_application("Control Panel", "Wine control panel", "control", "winecontrol");
   add_application("WineMine", "Wine Minesweeper single-player game", "winemine", "minesweeper");
-  add_application("Winetricks", "Wine helper script to download and install various libraries", Helper::get_winetricks_location() + " --gui",
+  add_application("Winetricks", "Wine helper script to download and install various libraries", Helper::get_winetricks_location() + " --gui -q",
                   "winetricks");
   add_application("Notepad", "Text editor", "notepad", "notepad");
   add_application("Internet Explorer", "Wine Internet Explorer", "iexplore", "internet_explorer");
