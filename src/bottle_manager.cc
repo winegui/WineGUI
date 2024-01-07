@@ -893,6 +893,46 @@ void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
 }
 
 /**
+ * \brief Install vkd3d-proton (Vulkan based DirectX 12)
+ * \param[in] parent Parent GTK window were the request is coming from
+ */
+void BottleManager::install_vkd3d(Gtk::Window& parent)
+{
+  if (is_bottle_not_null())
+  {
+    // Before we execute the install, show busy dialog
+    main_window_.show_busy_install_dialog(parent, "Installing VKD3D (Vulkan-based implementation of DirectX 12).\n");
+
+    string package = "vkd3d";
+    string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
+    int debug_log_level = active_bottle_->debug_log_level();
+    string program = Helper::get_winetricks_location() + " -q " + package;
+    // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
+    std::thread t(
+        [wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+         output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+         finish_dispatcher = &finished_package_install_dispatcher]
+        {
+          string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+          if (debug_logging && !output.empty())
+          {
+            {
+              std::lock_guard<std::mutex> lock(output_logging_mutex);
+              logging_bottle_prefix.get() = wine_prefix;
+              output_logging.get() = output;
+            }
+            write_log_dispatcher->emit();
+          }
+          Helper::wait_until_wineserver_is_terminated(wine_prefix);
+          finish_dispatcher->emit();
+        });
+    t.detach();
+  }
+}
+
+/**
  * \brief Install MS Visual C++ Redistributable Package
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of Visual C++, eg. 2010, 2013, 2015 (no default)
