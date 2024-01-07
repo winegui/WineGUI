@@ -36,7 +36,8 @@ class BottleConfigureWindow : public Gtk::Window
 public:
   // Signals
   sigc::signal<void, Gtk::Window&, Glib::ustring&> directx9;           /*!< Install d3dx9 for Direct3D 9 signal */
-  sigc::signal<void, Gtk::Window&, Glib::ustring&> vulkan;             /*!< Install DXVK for Direct3D 9/10/11 using Vulkan signal */
+  sigc::signal<void, Gtk::Window&, Glib::ustring&> dxvk;               /*!< Install DXVK for Direct3D 9/10/11 using Vulkan signal */
+  sigc::signal<void, Gtk::Window&> vkd3d;                              /*!< Install VKD3D-proton for Direct3D 12 using Vulkan signal */
   sigc::signal<void, Gtk::Window&> liberation_fonts;                   /*!< Install Liberation fonts signal */
   sigc::signal<void, Gtk::Window&> corefonts;                          /*!< Install Core fonts signal */
   sigc::signal<void, Gtk::Window&, Glib::ustring&> visual_cpp_package; /*!< Install Visual C++ package signal */
@@ -65,29 +66,32 @@ protected:
   Gtk::Label third_row_label;  /*!< 3rd row label */
   Gtk::Label fourth_row_label; /*!< 4th row label */
 
-  // Buttons First row (Gaming)
+  // Buttons First row
   Gtk::ToolButton install_d3dx9_button; /*!< d3dx9 install button */
   Gtk::ToolButton install_dxvk_button;  /*!< DXVK install button */
-
+  Gtk::ToolButton install_vkd3d_button; /*!< DKD3D install button */
   // Buttons Second row
   Gtk::ToolButton install_liberation_fonts_button; /*!< Liberation fonts install button */
   Gtk::ToolButton install_core_fonts_button;       /*!< Core fonts install button */
-  Gtk::ToolButton install_dotnet4_0_button;        /*!< .NET v4.0 install button */
-  Gtk::ToolButton install_dotnet4_5_2_button;      /*!< .NET v4.5.2 install button */
-  Gtk::ToolButton install_dotnet4_7_2_button;      /*!< .NET v4.7.2 install button */
-  Gtk::ToolButton install_dotnet4_8_button;        /*!< .NET v4.8 install button */
-  Gtk::ToolButton install_dotnet6_button;          /*!< .NET v6.0 install button */
-  Gtk::ToolButton install_visual_cpp_6_button;     /*!< MS Visual C++ v6 Package install button */
-  Gtk::ToolButton install_visual_cpp_2013_button;  /*!< MS Visual C++ 2013 Redistributable Package install button */
-  Gtk::ToolButton install_visual_cpp_2017_button;  /*!< MS Visual C++ 2017 Redistributable Package install button */
-  Gtk::ToolButton install_visual_cpp_2019_button;  /*!< MS Visual C++ 2019 Redistributable Package install button */
-  Gtk::ToolButton install_visual_cpp_2022_button;  /*!< MS Visual C++ 2022 Redistributable Package install button */
+  // Buttons Third row
+  Gtk::ToolButton install_dotnet4_0_button;   /*!< .NET v4.0 install button */
+  Gtk::ToolButton install_dotnet4_5_2_button; /*!< .NET v4.5.2 install button */
+  Gtk::ToolButton install_dotnet4_7_2_button; /*!< .NET v4.7.2 install button */
+  Gtk::ToolButton install_dotnet4_8_button;   /*!< .NET v4.8 install button */
+  Gtk::ToolButton install_dotnet6_button;     /*!< .NET v6.0 install button */
+  // Buttons Fourth row
+  Gtk::ToolButton install_visual_cpp_6_button;    /*!< MS Visual C++ v6 Package install button */
+  Gtk::ToolButton install_visual_cpp_2013_button; /*!< MS Visual C++ 2013 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2017_button; /*!< MS Visual C++ 2017 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2019_button; /*!< MS Visual C++ 2019 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2022_button; /*!< MS Visual C++ 2022 Redistributable Package install button */
 
 private:
   BottleItem* active_bottle_; /*!< Current active bottle */
 
   bool is_d3dx9_installed();
   bool is_dxvk_installed();
+  bool is_vkd3d_installed();
   bool is_liberation_installed();
   bool is_core_fonts_installed();
   bool is_dotnet_installed(const string& uninstaller_key, const string& uninstaller_name);

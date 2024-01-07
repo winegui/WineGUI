@@ -30,7 +30,7 @@
 BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottle_(nullptr)
 {
   set_transient_for(parent);
-  set_default_size(1000, 550);
+  set_default_size(1100, 500);
   set_modal(true);
 
   add(configure_grid);
@@ -75,7 +75,7 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
   hint_label.set_markup("<big><b>Tip:</b> Hover the mouse over the buttons for more info.</big>");
   hint_label.set_margin_top(8);
   hint_label.set_margin_bottom(4);
-  second_row_label.set_text("Fonts packages");
+  second_row_label.set_text("Font packages");
   second_row_label.set_attributes(attr_list_label);
   second_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
   third_row_label.set_text(".NET packages");
@@ -101,9 +101,12 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
   install_d3dx9_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(directx9, *this, ""));
   install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL API");
   first_toolbar.insert(install_d3dx9_button, 0);
-  install_dxvk_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(vulkan, *this, "latest"));
-  install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9/10/11 games, by using Vulkan API");
+  install_dxvk_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dxvk, *this, "latest"));
+  install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9, 10 or 11 games, by using Vulkan API");
   first_toolbar.insert(install_dxvk_button, 1);
+  install_vkd3d_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(vkd3d, *this));
+  install_vkd3d_button.set_tooltip_text("Installs VKD3D-Proton: Ideal for DirectX 12 games, by using Vulkan API");
+  first_toolbar.insert(install_vkd3d_button, 2);
 
   // Second row, Font packages
   install_liberation_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(liberation_fonts, *this));
@@ -132,15 +135,19 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
 
   // Fourth row, Visual C++ packages
   install_visual_cpp_6_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "6"));
-  install_visual_cpp_6_button.set_tooltip_text("Installs Visual C++ 6 from the year 2000");
+  install_visual_cpp_6_button.set_tooltip_text("Installs Visual C++ 6 SP4 from the year 2000");
   fourth_toolbar.insert(install_visual_cpp_6_button, 0);
   install_visual_cpp_2013_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2013"));
+  install_visual_cpp_2013_button.set_tooltip_text("Installs Visual C++ 2013");
   fourth_toolbar.insert(install_visual_cpp_2013_button, 1);
   install_visual_cpp_2017_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2017"));
+  install_visual_cpp_2017_button.set_tooltip_text("Installs Visual C++ 2017");
   fourth_toolbar.insert(install_visual_cpp_2017_button, 2);
   install_visual_cpp_2019_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2019"));
+  install_visual_cpp_2019_button.set_tooltip_text("Installs Visual C++ 2019");
   fourth_toolbar.insert(install_visual_cpp_2019_button, 3);
   install_visual_cpp_2022_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2022"));
+  install_visual_cpp_2022_button.set_tooltip_text("Installs Visual C++ 2015-2022");
   fourth_toolbar.insert(install_visual_cpp_2022_button, 4);
 
   show_all_children();
@@ -208,17 +215,32 @@ void BottleConfigureWindow::update_installed()
 
   if (is_dxvk_installed())
   {
-    Gtk::Image* reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
-    reinstall_d3dx9_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    Gtk::Image* reinstall_dxvk_image = Gtk::manage(new Gtk::Image());
+    reinstall_dxvk_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     install_dxvk_button.set_label("Reinstall DirectX v9/v10/v11 (Vulkan)");
-    install_dxvk_button.set_icon_widget(*reinstall_d3dx9_image);
+    install_dxvk_button.set_icon_widget(*reinstall_dxvk_image);
   }
   else
   {
-    Gtk::Image* install_d3dx9_image = Gtk::manage(new Gtk::Image());
-    install_d3dx9_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    Gtk::Image* install_dxvk_image = Gtk::manage(new Gtk::Image());
+    install_dxvk_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     install_dxvk_button.set_label("Install DirectX v9/v10/v11 (Vulkan)");
-    install_dxvk_button.set_icon_widget(*install_d3dx9_image);
+    install_dxvk_button.set_icon_widget(*install_dxvk_image);
+  }
+
+  if (is_vkd3d_installed())
+  {
+    Gtk::Image* reinstall_vkd3d_image = Gtk::manage(new Gtk::Image());
+    reinstall_vkd3d_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_vkd3d_button.set_label("Reinstall DirectX v12 (Vulkan)");
+    install_vkd3d_button.set_icon_widget(*reinstall_vkd3d_image);
+  }
+  else
+  {
+    Gtk::Image* install_vkd3d_image = Gtk::manage(new Gtk::Image());
+    install_vkd3d_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_vkd3d_button.set_label("Install DirectX v12 (Vulkan)");
+    install_vkd3d_button.set_icon_widget(*install_vkd3d_image);
   }
 
   if (is_liberation_installed())
@@ -451,6 +473,29 @@ bool BottleConfigureWindow::is_dxvk_installed()
     try
     {
       is_installed = Helper::get_dll_override(wine_prefix, "*dxgi");
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
+  }
+  return is_installed;
+}
+
+/**
+ * \brief Check is VKD3D (Vulkan based DirectX 12) is installed
+ * \return True if installed otherwise False
+ */
+bool BottleConfigureWindow::is_vkd3d_installed()
+{
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
+  {
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    // Check if set to 'native' load order
+    try
+    {
+      is_installed = Helper::get_dll_override(wine_prefix, "*d3d12");
     }
     catch (const std::runtime_error& error)
     {
