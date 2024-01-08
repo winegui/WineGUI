@@ -60,6 +60,7 @@ set(HEADERS
   include/remove_app_window.h
   include/preferences_window.h
   include/bottle_edit_window.h
+  include/bottle_clone_window.h
   include/bottle_configure_window.h
   include/busy_dialog.h
   include/bottle_manager.h
@@ -80,6 +81,7 @@ set(SOURCES
   src/remove_app_window.cc
   src/preferences_window.cc
   src/bottle_edit_window.cc
+  src/bottle_clone_window.cc
   src/bottle_configure_window.cc
   src/busy_dialog.cc
   src/bottle_manager.cc
