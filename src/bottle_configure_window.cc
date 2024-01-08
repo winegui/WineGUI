@@ -144,7 +144,7 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
   install_visual_cpp_2017_button.set_tooltip_text("Installs Visual C++ 2017");
   fourth_toolbar.insert(install_visual_cpp_2017_button, 2);
   install_visual_cpp_2019_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2019"));
-  install_visual_cpp_2019_button.set_tooltip_text("Installs Visual C++ 2019");
+  install_visual_cpp_2019_button.set_tooltip_text("Installs Visual C++ 2015-2019");
   fourth_toolbar.insert(install_visual_cpp_2019_button, 3);
   install_visual_cpp_2022_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2022"));
   install_visual_cpp_2022_button.set_tooltip_text("Installs Visual C++ 2015-2022");
@@ -353,7 +353,7 @@ void BottleConfigureWindow::update_installed()
     install_dotnet6_button.set_icon_widget(*install_dotnet6_image);
   }
 
-  // Check for Visual C++ v6 (year 2000)
+  // Check for Visual C++ v6 SP4 (year 2000)
   if (is_visual_cpp_6_installed())
   {
     Gtk::Image* reinstall_visual_cpp_6_image = Gtk::manage(new Gtk::Image());
@@ -446,9 +446,9 @@ bool BottleConfigureWindow::is_d3dx9_installed()
   if (active_bottle_ != nullptr)
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
-    // Check if set to 'native' load order
     try
     {
+      // Check if DLL is set to 'native' load order
       is_installed = Helper::get_dll_override(wine_prefix, "*d3dx9_43");
     }
     catch (const std::runtime_error& error)
@@ -469,9 +469,9 @@ bool BottleConfigureWindow::is_dxvk_installed()
   if (active_bottle_ != nullptr)
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
-    // Check if set to 'native' load order
     try
     {
+      // Check if DLL is set to 'native' load order
       is_installed = Helper::get_dll_override(wine_prefix, "*dxgi");
     }
     catch (const std::runtime_error& error)
@@ -492,9 +492,9 @@ bool BottleConfigureWindow::is_vkd3d_installed()
   if (active_bottle_ != nullptr)
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
-    // Check if set to 'native' load order
     try
     {
+      // Check if DLL is set to 'native' load order
       is_installed = Helper::get_dll_override(wine_prefix, "*d3d12");
     }
     catch (const std::runtime_error& error)
@@ -566,9 +566,9 @@ bool BottleConfigureWindow::is_dotnet_installed(const string& uninstaller_key, c
   if (active_bottle_ != nullptr)
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
-    // Check if set to 'native' load order
     try
     {
+      // Check if DLL is set to 'native' load order
       bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mscoree");
       if (is_dll_override)
       {
@@ -596,7 +596,40 @@ bool BottleConfigureWindow::is_dotnet_installed(const string& uninstaller_key, c
  */
 bool BottleConfigureWindow::is_visual_cpp_6_installed()
 {
-  return false; // TODO: Implement
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
+  {
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    try
+    {
+      // Check if DLL is set to 'native, builtin' load order
+      // or mfc42? .. uh.. no overrides, and no uninstallers!??
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mfc42u", DLLOverride::LoadOrder::NativeBuiltin);
+      if (is_dll_override)
+      {
+        // Next, check if package can be found to be uninstalled
+        string name = Helper::get_uninstaller(wine_prefix, "{unknown-yet}");
+        // Strings has last occurrence
+        is_installed = (name.rfind("Microsoft Visual C++ 6 Redistributable") == 0);
+
+        // Try the 64-bit package (fallback)
+        if (!is_installed)
+        {
+          name = Helper::get_uninstaller(wine_prefix, "{another-unknown-yet}");
+          is_installed = (name.rfind("Microsoft Visual C++ 6 Redistributable") == 0);
+        }
+      }
+      else
+      {
+        is_installed = false;
+      }
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
+  }
+  return is_installed;
 }
 
 /**
@@ -609,15 +642,15 @@ bool BottleConfigureWindow::is_visual_cpp_2013_installed()
   if (active_bottle_ != nullptr)
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
-    // Check if set to 'native, builtin' load order
     try
     {
+      // Check if DLL is set to 'native, builtin' load order
       bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp120", DLLOverride::LoadOrder::NativeBuiltin);
       if (is_dll_override)
       {
         // Next, check if package can be found to be uninstalled
         string name = Helper::get_uninstaller(wine_prefix, "{61087a79-ac85-455c-934d-1fa22cc64f36}");
-        // String starts with
+        // Strings has last occurrence
         is_installed = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
 
         // Try the 64-bit package (fallback)
@@ -646,7 +679,39 @@ bool BottleConfigureWindow::is_visual_cpp_2013_installed()
  */
 bool BottleConfigureWindow::is_visual_cpp_2017_installed()
 {
-  return false; // TODO: Implement
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
+  {
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    try
+    {
+      // Check if DLL is set to 'native, builtin' load order
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp140", DLLOverride::LoadOrder::NativeBuiltin);
+      if (is_dll_override)
+      {
+        // Next, check if package can be found to be uninstalled
+        string name = Helper::get_uninstaller(wine_prefix, "{624ba875-fdfc-4efa-9c66-b170dfebc3ec}");
+        // Strings has last occurrence
+        is_installed = (name.rfind("Microsoft Visual C++ 2017 Redistributable") == 0);
+
+        // Try the 64-bit package (fallback)
+        if (!is_installed)
+        {
+          name = Helper::get_uninstaller(wine_prefix, "{65835E57-3712-4382-990A-8D39008A8E0B}");
+          is_installed = (name.rfind("Microsoft Visual C++ 2017") == 0);
+        }
+      }
+      else
+      {
+        is_installed = false;
+      }
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
+  }
+  return is_installed;
 }
 
 /**
@@ -655,7 +720,39 @@ bool BottleConfigureWindow::is_visual_cpp_2017_installed()
  */
 bool BottleConfigureWindow::is_visual_cpp_2019_installed()
 {
-  return false; // TODO: Implement
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
+  {
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    try
+    {
+      // Check if DLL is set to 'native, builtin' load order
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp140", DLLOverride::LoadOrder::NativeBuiltin);
+      if (is_dll_override)
+      {
+        // Next, check if package can be found to be uninstalled
+        string name = Helper::get_uninstaller(wine_prefix, "{e3aefa8b-a2ea-42b8-a384-95f2ff6df681}");
+        // Strings has last occurrence
+        is_installed = (name.rfind("Microsoft Visual C++ 2015-2019 Redistributable") == 0);
+
+        // Try the 64-bit package (fallback)
+        if (!is_installed)
+        {
+          name = Helper::get_uninstaller(wine_prefix, "{0F03096E-F81F-48D0-AEE0-9F8513CD883F}");
+          is_installed = (name.rfind("Microsoft Visual C++ 2019") == 0);
+        }
+      }
+      else
+      {
+        is_installed = false;
+      }
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
+  }
+  return is_installed;
 }
 
 /**
@@ -664,5 +761,37 @@ bool BottleConfigureWindow::is_visual_cpp_2019_installed()
  */
 bool BottleConfigureWindow::is_visual_cpp_2022_installed()
 {
-  return false; // TODO: Implement
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
+  {
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    try
+    {
+      // Check if DLL is set to 'native, builtin' load order
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp140", DLLOverride::LoadOrder::NativeBuiltin);
+      if (is_dll_override)
+      {
+        // Next, check if package can be found to be uninstalled
+        string name = Helper::get_uninstaller(wine_prefix, "{2cfeba4a-21f8-4ea7-9927-c5a5c6f13cc9}");
+        // Strings has last occurrence
+        is_installed = (name.rfind("Microsoft Visual C++ 2015-2022 Redistributable") == 0);
+
+        // Try the 64-bit package (fallback)
+        if (!is_installed)
+        {
+          name = Helper::get_uninstaller(wine_prefix, "{1CA7421F-A225-4A9C-B320-A36981A2B789}");
+          is_installed = (name.rfind("Microsoft Visual C++ 2022") == 0);
+        }
+      }
+      else
+      {
+        is_installed = false;
+      }
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
+  }
+  return is_installed;
 }

@@ -935,14 +935,14 @@ void BottleManager::install_vkd3d(Gtk::Window& parent)
 /**
  * \brief Install MS Visual C++ Redistributable Package
  * \param[in] parent Parent GTK window were the request is coming from
- * \param[in] version Version of Visual C++, eg. 2010, 2013, 2015 (no default)
+ * \param[in] version Version of Visual C++, eg. 6, 2010, 2013, 2015, 2019 (no default)
  */
 void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string& version)
 {
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing Visual C++ package.");
+    main_window_.show_busy_install_dialog(parent, "Installing Visual C++ package (" + version + ").");
 
     string package = "vcrun" + version;
     string wine_prefix = active_bottle_->wine_location();
@@ -988,8 +988,7 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
                                          true))
     {
       // Before we execute the install, show busy dialog
-      main_window_.show_busy_install_dialog(parent, "Installing Native .NET redistributable packages (v" + version +
-                                                        ").\nThis may take quite some time...\n");
+      main_window_.show_busy_install_dialog(parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time...\n");
 
       string deinstall_command = this->get_deinstall_mono_command();
 
