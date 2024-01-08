@@ -74,17 +74,17 @@ protected:
   Gtk::ToolButton install_liberation_fonts_button; /*!< Liberation fonts install button */
   Gtk::ToolButton install_core_fonts_button;       /*!< Core fonts install button */
   // Buttons Third row
+  Gtk::ToolButton install_visual_cpp_2013_button; /*!< MS Visual C++ 2013 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2015_button; /*!< MS Visual C++ 2015 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2017_button; /*!< MS Visual C++ 2017 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2019_button; /*!< MS Visual C++ 2019 Redistributable Package install button */
+  Gtk::ToolButton install_visual_cpp_2022_button; /*!< MS Visual C++ 2022 Redistributable Package install button */
+  // Buttons Fourth row
   Gtk::ToolButton install_dotnet4_0_button;   /*!< .NET v4.0 install button */
   Gtk::ToolButton install_dotnet4_5_2_button; /*!< .NET v4.5.2 install button */
   Gtk::ToolButton install_dotnet4_7_2_button; /*!< .NET v4.7.2 install button */
   Gtk::ToolButton install_dotnet4_8_button;   /*!< .NET v4.8 install button */
   Gtk::ToolButton install_dotnet6_button;     /*!< .NET v6.0 install button */
-  // Buttons Fourth row
-  Gtk::ToolButton install_visual_cpp_6_button;    /*!< MS Visual C++ v6 (SP4) Package install button */
-  Gtk::ToolButton install_visual_cpp_2013_button; /*!< MS Visual C++ 2013 Redistributable Package install button */
-  Gtk::ToolButton install_visual_cpp_2017_button; /*!< MS Visual C++ 2017 Redistributable Package install button */
-  Gtk::ToolButton install_visual_cpp_2019_button; /*!< MS Visual C++ 2019 Redistributable Package install button */
-  Gtk::ToolButton install_visual_cpp_2022_button; /*!< MS Visual C++ 2022 Redistributable Package install button */
 
 private:
   BottleItem* active_bottle_; /*!< Current active bottle */
@@ -94,10 +94,11 @@ private:
   bool is_vkd3d_installed();
   bool is_liberation_installed();
   bool is_core_fonts_installed();
-  bool is_dotnet_installed(const string& uninstaller_key, const string& uninstaller_name);
-  bool is_visual_cpp_6_installed();
   bool is_visual_cpp_2013_installed();
+  bool is_visual_cpp_2015_installed();
   bool is_visual_cpp_2017_installed();
   bool is_visual_cpp_2019_installed();
   bool is_visual_cpp_2022_installed();
+  bool is_dotnet_installed(const string& uninstaller_key, const string& uninstaller_name);
+  bool is_dotnet_6_installed();
 };
