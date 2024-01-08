@@ -816,7 +816,7 @@ bool BottleConfigureWindow::is_dotnet_6_installed()
       // Try the 64-bit package (fallback)
       if (!is_installed)
       {
-        string name = Helper::get_uninstaller(wine_prefix, "{3CC763AD-93B3-41EF-ABF8-CFE63A1DC3A6}");
+        name = Helper::get_uninstaller(wine_prefix, "{3CC763AD-93B3-41EF-ABF8-CFE63A1DC3A6}");
         // Strings has first occurrence of display name
         is_installed = (name.find("Microsoft .NET Runtime - 6") == 0);
       }
