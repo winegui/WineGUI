@@ -69,19 +69,20 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
   Pango::AttrList attr_list_label;
   attr_list_label.insert(font_label);
 
-  first_row_label.set_text("Graphics packages");
-  first_row_label.set_attributes(attr_list_label);
-  first_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
   hint_label.set_markup("<big><b>Tip:</b> Hover the mouse over the buttons for more info.</big>");
   hint_label.set_margin_top(8);
   hint_label.set_margin_bottom(4);
+
+  first_row_label.set_text("Graphics packages");
+  first_row_label.set_attributes(attr_list_label);
+  first_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
   second_row_label.set_text("Font packages");
   second_row_label.set_attributes(attr_list_label);
   second_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
-  third_row_label.set_text(".NET packages");
+  third_row_label.set_text("Visual C++ packages");
   third_row_label.set_attributes(attr_list_label);
   third_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
-  fourth_row_label.set_text("Visual C++ packages");
+  fourth_row_label.set_text(".NET packages");
   fourth_row_label.set_attributes(attr_list_label);
   fourth_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
 
@@ -116,39 +117,39 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
   install_core_fonts_button.set_tooltip_text("Installs Microsoft Core Fonts");
   second_toolbar.insert(install_core_fonts_button, 1);
 
-  // Third row, .NET packages
-  install_dotnet4_0_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "40"));
-  install_dotnet4_0_button.set_tooltip_text("Installs .NET 4.0 from 2011");
-  third_toolbar.insert(install_dotnet4_0_button, 0);
-  install_dotnet4_5_2_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
-  install_dotnet4_5_2_button.set_tooltip_text("Installs .NET 4.0 from 2012");
-  third_toolbar.insert(install_dotnet4_5_2_button, 1);
-  install_dotnet4_7_2_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "472"));
-  install_dotnet4_7_2_button.set_tooltip_text("Installs .NET 4.0 from 2018");
-  third_toolbar.insert(install_dotnet4_7_2_button, 2);
-  install_dotnet4_8_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "48"));
-  install_dotnet4_8_button.set_tooltip_text("Installs .NET 4.0 from 2019");
-  third_toolbar.insert(install_dotnet4_8_button, 3);
-  install_dotnet6_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "6"));
-  install_dotnet6_button.set_tooltip_text("Installs .NET 6.0 from 2023");
-  third_toolbar.insert(install_dotnet6_button, 4);
-
-  // Fourth row, Visual C++ packages
-  install_visual_cpp_6_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "6"));
-  install_visual_cpp_6_button.set_tooltip_text("Installs Visual C++ 6 SP4 from the year 2000");
-  fourth_toolbar.insert(install_visual_cpp_6_button, 0);
+  // Third row, Visual C++ packages
   install_visual_cpp_2013_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2013"));
   install_visual_cpp_2013_button.set_tooltip_text("Installs Visual C++ 2013");
-  fourth_toolbar.insert(install_visual_cpp_2013_button, 1);
+  third_toolbar.insert(install_visual_cpp_2013_button, 0);
+  install_visual_cpp_2015_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2015"));
+  install_visual_cpp_2015_button.set_tooltip_text("Installs Visual C++ 2015");
+  third_toolbar.insert(install_visual_cpp_2015_button, 1);
   install_visual_cpp_2017_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2017"));
   install_visual_cpp_2017_button.set_tooltip_text("Installs Visual C++ 2017");
-  fourth_toolbar.insert(install_visual_cpp_2017_button, 2);
+  third_toolbar.insert(install_visual_cpp_2017_button, 2);
   install_visual_cpp_2019_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2019"));
   install_visual_cpp_2019_button.set_tooltip_text("Installs Visual C++ 2015-2019");
-  fourth_toolbar.insert(install_visual_cpp_2019_button, 3);
+  third_toolbar.insert(install_visual_cpp_2019_button, 3);
   install_visual_cpp_2022_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2022"));
   install_visual_cpp_2022_button.set_tooltip_text("Installs Visual C++ 2015-2022");
-  fourth_toolbar.insert(install_visual_cpp_2022_button, 4);
+  third_toolbar.insert(install_visual_cpp_2022_button, 4);
+
+  // Fourth row, .NET packages
+  install_dotnet4_0_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "40"));
+  install_dotnet4_0_button.set_tooltip_text("Installs .NET 4.0 from 2011");
+  fourth_toolbar.insert(install_dotnet4_0_button, 0);
+  install_dotnet4_5_2_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
+  install_dotnet4_5_2_button.set_tooltip_text("Installs .NET 4.5.2 from 2012");
+  fourth_toolbar.insert(install_dotnet4_5_2_button, 1);
+  install_dotnet4_7_2_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "472"));
+  install_dotnet4_7_2_button.set_tooltip_text("Installs .NET 4.7.2 from 2018");
+  fourth_toolbar.insert(install_dotnet4_7_2_button, 2);
+  install_dotnet4_8_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "48"));
+  install_dotnet4_8_button.set_tooltip_text("Installs .NET 4.8 from 2019");
+  fourth_toolbar.insert(install_dotnet4_8_button, 3);
+  install_dotnet6_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "6"));
+  install_dotnet6_button.set_tooltip_text("Installs .NET 6.0 from 2023");
+  fourth_toolbar.insert(install_dotnet6_button, 4);
 
   show_all_children();
 }
@@ -273,102 +274,6 @@ void BottleConfigureWindow::update_installed()
     install_core_fonts_button.set_icon_widget(*install_core_fonts_image);
   }
 
-  // Check for .NET 4.0
-  if (is_dotnet_installed("Microsoft .NET Framework 4 Extended", "Microsoft .NET Framework 4 Extended"))
-  {
-    Gtk::Image* reinstall_dotnet4_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet4_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_0_button.set_label("Reinstall .NET v4");
-    install_dotnet4_0_button.set_icon_widget(*reinstall_dotnet4_image);
-  }
-  else
-  {
-    Gtk::Image* install_dotnet4_image = Gtk::manage(new Gtk::Image());
-    install_dotnet4_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_0_button.set_label("Install .NET v4");
-    install_dotnet4_0_button.set_icon_widget(*install_dotnet4_image);
-  }
-
-  // Check for .NET 4.5.2
-  if (is_dotnet_installed("{92FB6C44-E685-45AD-9B20-CADF4CABA132}", "Microsoft .NET Framework 4.5.2"))
-  {
-    Gtk::Image* reinstall_dotnet4_5_2_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet4_5_2_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_5_2_button.set_label("Reinstall .NET v4.5.2");
-    install_dotnet4_5_2_button.set_icon_widget(*reinstall_dotnet4_5_2_image);
-  }
-  else
-  {
-    Gtk::Image* install_dotnet4_5_2_image = Gtk::manage(new Gtk::Image());
-    install_dotnet4_5_2_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_5_2_button.set_label("Install .NET v4.5.2");
-    install_dotnet4_5_2_button.set_icon_widget(*install_dotnet4_5_2_image);
-  }
-
-  // Check for .NET 4.7.2
-  if (is_dotnet_installed("{unkn-wn-yet}", "Microsoft .NET Framework 4.7.2"))
-  {
-    Gtk::Image* reinstall_dotnet4_7_2_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet4_7_2_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_7_2_button.set_label("Reinstall .NET v4.7.2");
-    install_dotnet4_7_2_button.set_icon_widget(*reinstall_dotnet4_7_2_image);
-  }
-  else
-  {
-    Gtk::Image* install_dotnet4_7_2_image = Gtk::manage(new Gtk::Image());
-    install_dotnet4_7_2_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_7_2_button.set_label("Install .NET v4.7.2");
-    install_dotnet4_7_2_button.set_icon_widget(*install_dotnet4_7_2_image);
-  }
-
-  // Check for .NET 4.8
-  if (is_dotnet_installed("{unkn-wn-yet}", "Microsoft .NET Framework 4.8"))
-  {
-    Gtk::Image* reinstall_dotnet4_8_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet4_8_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_8_button.set_label("Reinstall .NET v4.8");
-    install_dotnet4_8_button.set_icon_widget(*reinstall_dotnet4_8_image);
-  }
-  else
-  {
-    Gtk::Image* install_dotnet4_8_image = Gtk::manage(new Gtk::Image());
-    install_dotnet4_8_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_8_button.set_label("Install .NET v4.8");
-    install_dotnet4_8_button.set_icon_widget(*install_dotnet4_8_image);
-  }
-
-  // Check for .NET 6.0 LTS
-  if (is_dotnet_installed("{unkn-wn-yet}", "Microsoft .NET Framework 6.0"))
-  {
-    Gtk::Image* reinstall_dotnet6_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet6_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet6_button.set_label("Reinstall .NET v6.0 LTS");
-    install_dotnet6_button.set_icon_widget(*reinstall_dotnet6_image);
-  }
-  else
-  {
-    Gtk::Image* install_dotnet6_image = Gtk::manage(new Gtk::Image());
-    install_dotnet6_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet6_button.set_label("Install .NET v6.0 LTS");
-    install_dotnet6_button.set_icon_widget(*install_dotnet6_image);
-  }
-
-  // Check for Visual C++ v6 SP4 (year 2000)
-  if (is_visual_cpp_6_installed())
-  {
-    Gtk::Image* reinstall_visual_cpp_6_image = Gtk::manage(new Gtk::Image());
-    reinstall_visual_cpp_6_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_6_button.set_label("Reinstall Visual C++ 6");
-    install_visual_cpp_6_button.set_icon_widget(*reinstall_visual_cpp_6_image);
-  }
-  else
-  {
-    Gtk::Image* install_visual_cpp_6_image = Gtk::manage(new Gtk::Image());
-    install_visual_cpp_6_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_6_button.set_label("Install Visual C++ 6");
-    install_visual_cpp_6_button.set_icon_widget(*install_visual_cpp_6_image);
-  }
-
   // Check for Visual C++ 2013
   if (is_visual_cpp_2013_installed())
   {
@@ -383,6 +288,22 @@ void BottleConfigureWindow::update_installed()
     install_visual_cpp_2013_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     install_visual_cpp_2013_button.set_label("Install Visual C++ 2013");
     install_visual_cpp_2013_button.set_icon_widget(*install_visual_cpp_2013_image);
+  }
+
+  // Check for Visual C++ 2015
+  if (is_visual_cpp_2015_installed())
+  {
+    Gtk::Image* reinstall_visual_cpp_2015_image = Gtk::manage(new Gtk::Image());
+    reinstall_visual_cpp_2015_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_visual_cpp_2015_button.set_label("Reinstall Visual C++ 2015");
+    install_visual_cpp_2015_button.set_icon_widget(*reinstall_visual_cpp_2015_image);
+  }
+  else
+  {
+    Gtk::Image* install_visual_cpp_2015_image = Gtk::manage(new Gtk::Image());
+    install_visual_cpp_2015_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_visual_cpp_2015_button.set_label("Install Visual C++ 2015");
+    install_visual_cpp_2015_button.set_icon_widget(*install_visual_cpp_2015_image);
   }
 
   // Check for Visual C++ 2017
@@ -431,6 +352,86 @@ void BottleConfigureWindow::update_installed()
     install_visual_cpp_2022_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
     install_visual_cpp_2022_button.set_label("Install Visual C++ 2022");
     install_visual_cpp_2022_button.set_icon_widget(*install_visual_cpp_2022_image);
+  }
+
+  // Check for .NET 4.0
+  if (is_dotnet_installed("Microsoft .NET Framework 4 Extended", "Microsoft .NET Framework 4 Extended"))
+  {
+    Gtk::Image* reinstall_dotnet4_image = Gtk::manage(new Gtk::Image());
+    reinstall_dotnet4_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_0_button.set_label("Reinstall .NET v4");
+    install_dotnet4_0_button.set_icon_widget(*reinstall_dotnet4_image);
+  }
+  else
+  {
+    Gtk::Image* install_dotnet4_image = Gtk::manage(new Gtk::Image());
+    install_dotnet4_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_0_button.set_label("Install .NET v4");
+    install_dotnet4_0_button.set_icon_widget(*install_dotnet4_image);
+  }
+
+  // Check for .NET 4.5.2
+  if (is_dotnet_installed("{92FB6C44-E685-45AD-9B20-CADF4CABA132}", "Microsoft .NET Framework 4.5.2"))
+  {
+    Gtk::Image* reinstall_dotnet4_5_2_image = Gtk::manage(new Gtk::Image());
+    reinstall_dotnet4_5_2_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_5_2_button.set_label("Reinstall .NET v4.5.2");
+    install_dotnet4_5_2_button.set_icon_widget(*reinstall_dotnet4_5_2_image);
+  }
+  else
+  {
+    Gtk::Image* install_dotnet4_5_2_image = Gtk::manage(new Gtk::Image());
+    install_dotnet4_5_2_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_5_2_button.set_label("Install .NET v4.5.2");
+    install_dotnet4_5_2_button.set_icon_widget(*install_dotnet4_5_2_image);
+  }
+
+  // Check for .NET 4.7.2
+  if (is_dotnet_installed("{92FB6C44-E685-45AD-9B20-CADF4CABA132} - 1033", "Microsoft .NET Framework 4.7.2"))
+  {
+    Gtk::Image* reinstall_dotnet4_7_2_image = Gtk::manage(new Gtk::Image());
+    reinstall_dotnet4_7_2_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_7_2_button.set_label("Reinstall .NET v4.7.2");
+    install_dotnet4_7_2_button.set_icon_widget(*reinstall_dotnet4_7_2_image);
+  }
+  else
+  {
+    Gtk::Image* install_dotnet4_7_2_image = Gtk::manage(new Gtk::Image());
+    install_dotnet4_7_2_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_7_2_button.set_label("Install .NET v4.7.2");
+    install_dotnet4_7_2_button.set_icon_widget(*install_dotnet4_7_2_image);
+  }
+
+  // Check for .NET 4.8
+  if (is_dotnet_installed("{92FB6C44-E685-45AD-9B20-CADF4CABA132} - 1033", "Microsoft .NET Framework 4.8"))
+  {
+    Gtk::Image* reinstall_dotnet4_8_image = Gtk::manage(new Gtk::Image());
+    reinstall_dotnet4_8_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_8_button.set_label("Reinstall .NET v4.8");
+    install_dotnet4_8_button.set_icon_widget(*reinstall_dotnet4_8_image);
+  }
+  else
+  {
+    Gtk::Image* install_dotnet4_8_image = Gtk::manage(new Gtk::Image());
+    install_dotnet4_8_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet4_8_button.set_label("Install .NET v4.8");
+    install_dotnet4_8_button.set_icon_widget(*install_dotnet4_8_image);
+  }
+
+  // Check for .NET 6.0 LTS
+  if (is_dotnet_6_installed())
+  {
+    Gtk::Image* reinstall_dotnet6_image = Gtk::manage(new Gtk::Image());
+    reinstall_dotnet6_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet6_button.set_label("Reinstall .NET v6.0 LTS");
+    install_dotnet6_button.set_icon_widget(*reinstall_dotnet6_image);
+  }
+  else
+  {
+    Gtk::Image* install_dotnet6_image = Gtk::manage(new Gtk::Image());
+    install_dotnet6_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+    install_dotnet6_button.set_label("Install .NET v6.0 LTS");
+    install_dotnet6_button.set_icon_widget(*install_dotnet6_image);
   }
 
   show_all_children();
@@ -555,84 +556,6 @@ bool BottleConfigureWindow::is_core_fonts_installed()
 }
 
 /**
- * \brief Check if MS .NET is installed using the uninstaller key & display name
- * \param[in] uninstaller_key The uninstaller register key
- * \param[in] uninstaller_name The uninstaller display name
- * \return True if installed otherwise False
- */
-bool BottleConfigureWindow::is_dotnet_installed(const string& uninstaller_key, const string& uninstaller_name)
-{
-  bool is_installed = false;
-  if (active_bottle_ != nullptr)
-  {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    try
-    {
-      // Check if DLL is set to 'native' load order
-      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mscoree");
-      if (is_dll_override)
-      {
-        // Next, check if package can be found to be uninstalled
-        string name = Helper::get_uninstaller(wine_prefix, uninstaller_key);
-        // Check the display name
-        is_installed = (name == uninstaller_name);
-      }
-      else
-      {
-        is_installed = false;
-      }
-    }
-    catch (const std::runtime_error& error)
-    {
-      std::cout << "Error: " << error.what() << std::endl;
-    }
-  }
-  return is_installed;
-}
-
-/**
- * \brief Check if MS Visual C++ 6 (SP4) installed
- * \return True if installed otherwise False
- */
-bool BottleConfigureWindow::is_visual_cpp_6_installed()
-{
-  bool is_installed = false;
-  if (active_bottle_ != nullptr)
-  {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    try
-    {
-      // Check if DLL is set to 'native, builtin' load order
-      // or mfc42? .. uh.. no overrides, and no uninstallers!??
-      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mfc42u", DLLOverride::LoadOrder::NativeBuiltin);
-      if (is_dll_override)
-      {
-        // Next, check if package can be found to be uninstalled
-        string name = Helper::get_uninstaller(wine_prefix, "{unknown-yet}");
-        // Strings has last occurrence
-        is_installed = (name.rfind("Microsoft Visual C++ 6 Redistributable") == 0);
-
-        // Try the 64-bit package (fallback)
-        if (!is_installed)
-        {
-          name = Helper::get_uninstaller(wine_prefix, "{another-unknown-yet}");
-          is_installed = (name.rfind("Microsoft Visual C++ 6 Redistributable") == 0);
-        }
-      }
-      else
-      {
-        is_installed = false;
-      }
-    }
-    catch (const std::runtime_error& error)
-    {
-      std::cout << "Error: " << error.what() << std::endl;
-    }
-  }
-  return is_installed;
-}
-
-/**
  * \brief Check if MS Visual C++ 2013 installed
  * \return True if installed otherwise False
  */
@@ -658,6 +581,47 @@ bool BottleConfigureWindow::is_visual_cpp_2013_installed()
         {
           name = Helper::get_uninstaller(wine_prefix, "{ef6b00ec-13e1-4c25-9064-b2f383cb8412}");
           is_installed = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
+        }
+      }
+      else
+      {
+        is_installed = false;
+      }
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
+  }
+  return is_installed;
+}
+
+/**
+ * \brief Check if MS Visual C++ 2015 installed
+ * \return True if installed otherwise False
+ */
+bool BottleConfigureWindow::is_visual_cpp_2015_installed()
+{
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
+  {
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    try
+    {
+      // Check if DLL is set to 'native, builtin' load order
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp140", DLLOverride::LoadOrder::NativeBuiltin);
+      if (is_dll_override)
+      {
+        // Next, check if package can be found to be uninstalled
+        string name = Helper::get_uninstaller(wine_prefix, "{462f63a8-6347-4894-a1b3-dbfe3a4c981d}");
+        // Strings has last occurrence
+        is_installed = (name.rfind("Microsoft Visual C++ 2015 Redistributable") == 0);
+
+        // Try the 64-bit package (fallback)
+        if (!is_installed)
+        {
+          name = Helper::get_uninstaller(wine_prefix, "{F20396E5-D84E-3505-A7A8-7358F0155F6C}");
+          is_installed = (name.rfind("Microsoft Visual C++ 2015 Redistributable") == 0);
         }
       }
       else
@@ -786,6 +750,75 @@ bool BottleConfigureWindow::is_visual_cpp_2022_installed()
       else
       {
         is_installed = false;
+      }
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
+  }
+  return is_installed;
+}
+
+/**
+ * \brief Check if MS .NET is installed using the uninstaller key & display name.
+ * Note: Can not be used to check for .NET 6
+ * \param[in] uninstaller_key The uninstaller register key
+ * \param[in] uninstaller_name The uninstaller display name
+ * \return True if installed otherwise False
+ */
+bool BottleConfigureWindow::is_dotnet_installed(const string& uninstaller_key, const string& uninstaller_name)
+{
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
+  {
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    try
+    {
+      // Check if DLL is set to 'native' load order
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*mscoree");
+      if (is_dll_override)
+      {
+        // Next, check if package can be found to be uninstalled
+        string name = Helper::get_uninstaller(wine_prefix, uninstaller_key);
+        // Check the display name
+        is_installed = (name == uninstaller_name);
+      }
+      else
+      {
+        is_installed = false;
+      }
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
+  }
+  return is_installed;
+}
+
+/**
+ * \brief Check if MS .NET v6 is installed
+ * \return True if installed otherwise False
+ */
+bool BottleConfigureWindow::is_dotnet_6_installed()
+{
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
+  {
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    try
+    {
+      // Check if package can be found to be uninstalled
+      string name = Helper::get_uninstaller(wine_prefix, "{5DEFBDBE-FF1A-4EB2-8DFB-17A26A7E6442}");
+      // Strings has first occurrence of display name
+      is_installed = (name.find("Microsoft .NET Runtime - 6") == 0);
+      // Try the 64-bit package (fallback)
+      if (!is_installed)
+      {
+        string name = Helper::get_uninstaller(wine_prefix, "{3CC763AD-93B3-41EF-ABF8-CFE63A1DC3A6}");
+        // Strings has first occurrence of display name
+        is_installed = (name.find("Microsoft .NET Runtime - 6") == 0);
       }
     }
     catch (const std::runtime_error& error)
