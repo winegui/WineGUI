@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2024 WineGUI
  *
  * \file    menu.cc
  * \brief   Main menu bar
@@ -47,8 +47,10 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
   newitem_menuitem->signal_activate().connect(new_bottle);
   auto edit_menuitem = create_image_menu_item("Edit", "document-edit");
   edit_menuitem->signal_activate().connect(edit_bottle);
-  auto settings_menuitem = create_image_menu_item("Settings", "preferences-other");
-  settings_menuitem->signal_activate().connect(settings_bottle);
+  auto clone_menuitem = create_image_menu_item("Clone", "edit-copy");
+  clone_menuitem->signal_activate().connect(clone_bottle);
+  auto configure_menuitem = create_image_menu_item("Configure", "preferences-other");
+  configure_menuitem->signal_activate().connect(configure_bottle);
   auto run_menuitem = create_image_menu_item("Run...", "media-playback-start");
   run_menuitem->signal_activate().connect(run);
   auto remove_menuitem = create_image_menu_item("Remove", "edit-delete");
@@ -79,7 +81,8 @@ Menu::Menu() : file("_File", true), view("_View", true), machine("_Machine", tru
   machine_submenu.append(*newitem_menuitem);
   machine_submenu.append(separator2);
   machine_submenu.append(*edit_menuitem);
-  machine_submenu.append(*settings_menuitem);
+  machine_submenu.append(*clone_menuitem);
+  machine_submenu.append(*configure_menuitem);
   machine_submenu.append(*run_menuitem);
   machine_submenu.append(*remove_menuitem);
   machine_submenu.append(separator3);

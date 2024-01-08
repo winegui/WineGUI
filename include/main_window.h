@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2024 WineGUI
  *
  * \file    main_window.h
  * \brief   Main WineGUI window
@@ -47,6 +47,7 @@ public:
   sigc::signal<void> finished_new_bottle;        /*!< Finished signal */
   sigc::signal<void, BottleItem*> active_bottle; /*!< Set the active bottle in manager, based on the selected bottle */
   sigc::signal<void> show_edit_window;           /*!< show Edit window signal */
+  sigc::signal<void> show_clone_window;          /*!< show Clone window signal */
   sigc::signal<void> show_configure_window;      /*!< show Settings window signal */
   sigc::signal<void> show_add_app_window;        /*!< show add application window signal */
   sigc::signal<void> show_remove_app_window;     /*!< show remove application window signal */
@@ -136,6 +137,7 @@ protected:
   // Toolbar buttons
   Gtk::ToolButton new_button;            /*!< New toolbar button */
   Gtk::ToolButton edit_button;           /*!< Edit toolbar button */
+  Gtk::ToolButton clone_button;          /*!< Clone toolbar button */
   Gtk::ToolButton configure_button;      /*!< Configure toolbar button */
   Gtk::ToolButton run_button;            /*!< Run... toolbar button */
   Gtk::ToolButton open_c_driver_button;  /*!< Open C:\ drive toolbar button */

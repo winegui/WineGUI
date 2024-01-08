@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2024 WineGUI
  *
  * \file    signal_controller.cc
  * \brief   Manager and connect different signals and dispatchers
@@ -23,6 +23,7 @@
 
 #include "about_dialog.h"
 #include "add_app_window.h"
+#include "bottle_clone_window.h"
 #include "bottle_configure_window.h"
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
@@ -40,6 +41,7 @@ SignalController::SignalController(BottleManager& manager,
                                    PreferencesWindow& preferences_window,
                                    AboutDialog& about_dialog,
                                    BottleEditWindow& edit_window,
+                                   BottleCloneWindow& clone_window,
                                    BottleConfigureWindow& configure_window,
                                    AddAppWindow& add_app_window,
                                    RemoveAppWindow& remove_app_window)
@@ -49,6 +51,7 @@ SignalController::SignalController(BottleManager& manager,
       preferences_window_(preferences_window),
       about_dialog_(about_dialog),
       edit_window_(edit_window),
+      clone_window_(clone_window),
       configure_window_(configure_window),
       add_app_window_(add_app_window),
       remove_app_window_(remove_app_window),
@@ -96,7 +99,8 @@ void SignalController::dispatch_signals()
   menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
   menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
   menu_.edit_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
-  menu_.settings_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::show));
+  menu_.clone_bottle.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::show));
+  menu_.configure_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::show));
   menu_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
   menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
   menu_.open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
@@ -108,11 +112,13 @@ void SignalController::dispatch_signals()
   // Distribute the active bottle signal from Main Window
   main_window_->active_bottle.connect(sigc::mem_fun(manager_, &BottleManager::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::set_active_bottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::set_active_bottle));
   // Distribute the reset bottle signal from the manager
   manager_.reset_active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::reset_active_bottle));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::reset_active_bottle));
@@ -130,6 +136,7 @@ void SignalController::dispatch_signals()
   main_window_->run_executable.connect(sigc::mem_fun(manager_, &BottleManager::run_executable));
   main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
   main_window_->show_edit_window.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
+  main_window_->show_clone_window.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::show));
   main_window_->show_configure_window.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::show));
   main_window_->open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
   main_window_->reboot_bottle.connect(sigc::mem_fun(manager_, &BottleManager::reboot));

@@ -105,6 +105,7 @@ MainWindow::MainWindow(Menu& menu)
   // Toolbar buttons
   run_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
   edit_button.signal_clicked().connect(show_edit_window);
+  clone_button.signal_clicked().connect(show_clone_window);
   configure_button.signal_clicked().connect(show_configure_window);
   open_c_driver_button.signal_clicked().connect(open_c_drive);
   reboot_button.signal_clicked().connect(reboot_bottle);
@@ -864,13 +865,21 @@ void MainWindow::create_right_panel()
   edit_button.set_homogeneous(false);
   toolbar.insert(edit_button, 1);
 
+  Gtk::Image* clone_image = Gtk::manage(new Gtk::Image());
+  clone_image->set_from_icon_name("edit-copy", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  clone_button.set_label("Clone");
+  clone_button.set_tooltip_text("Clone Wine Machine");
+  clone_button.set_icon_widget(*clone_image);
+  clone_button.set_homogeneous(false);
+  toolbar.insert(clone_button, 2);
+
   Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
   manage_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   configure_button.set_label("Configure");
   configure_button.set_tooltip_text("Install additional packages");
   configure_button.set_icon_widget(*manage_image);
   configure_button.set_homogeneous(false);
-  toolbar.insert(configure_button, 2);
+  toolbar.insert(configure_button, 3);
 
   Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
   run_image->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -878,7 +887,7 @@ void MainWindow::create_right_panel()
   run_button.set_tooltip_text("Run exe or msi in Wine Machine");
   run_button.set_icon_widget(*run_image);
   run_button.set_homogeneous(false);
-  toolbar.insert(run_button, 3);
+  toolbar.insert(run_button, 4);
 
   Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
   open_c_drive_image->set_from_icon_name("drive-harddisk", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -886,7 +895,7 @@ void MainWindow::create_right_panel()
   open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
   open_c_driver_button.set_icon_widget(*open_c_drive_image);
   open_c_driver_button.set_homogeneous(false);
-  toolbar.insert(open_c_driver_button, 4);
+  toolbar.insert(open_c_driver_button, 5);
 
   Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
   reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -894,7 +903,7 @@ void MainWindow::create_right_panel()
   reboot_button.set_tooltip_text("Simulate Machine Reboot");
   reboot_button.set_icon_widget(*reboot_image);
   reboot_button.set_homogeneous(false);
-  toolbar.insert(reboot_button, 5);
+  toolbar.insert(reboot_button, 6);
 
   Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
   update_image->set_from_icon_name("system-software-update", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -902,7 +911,7 @@ void MainWindow::create_right_panel()
   update_button.set_tooltip_text("Update the Wine Machine configuration");
   update_button.set_icon_widget(*update_image);
   update_button.set_homogeneous(false);
-  toolbar.insert(update_button, 6);
+  toolbar.insert(update_button, 7);
 
   Gtk::Image* open_log_file_image = Gtk::manage(new Gtk::Image());
   open_log_file_image->set_from_icon_name("text-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -910,7 +919,7 @@ void MainWindow::create_right_panel()
   open_log_file_button.set_tooltip_text("Open debug logging file");
   open_log_file_button.set_icon_widget(*open_log_file_image);
   open_log_file_button.set_homogeneous(false);
-  toolbar.insert(open_log_file_button, 7);
+  toolbar.insert(open_log_file_button, 8);
 
   Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
   kill_processes_image->set_from_icon_name("process-stop", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
@@ -918,7 +927,7 @@ void MainWindow::create_right_panel()
   kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
   kill_processes_button.set_icon_widget(*kill_processes_image);
   kill_processes_button.set_homogeneous(false);
-  toolbar.insert(kill_processes_button, 8);
+  toolbar.insert(kill_processes_button, 9);
 
   // Add toolbar to right box
   right_vbox.add(toolbar);
@@ -1160,6 +1169,7 @@ void MainWindow::create_right_panel()
 void MainWindow::set_sensitive_toolbar_buttons(bool sensitive)
 {
   edit_button.set_sensitive(sensitive);
+  clone_button.set_sensitive(sensitive);
   configure_button.set_sensitive(sensitive);
   run_button.set_sensitive(sensitive);
   open_c_driver_button.set_sensitive(sensitive);
