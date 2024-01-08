@@ -59,6 +59,7 @@ public:
   static void create_wine_bottle(bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
   static void remove_wine_bottle(const string& prefix_path);
   static void rename_wine_bottle_folder(const string& current_prefix_path, const string& new_prefix_path);
+  static void copy_wine_bottle_folder(const string& source_prefix_path, const string& destination_prefix_path);
   static string get_folder_name(const string& prefix_path);
   static BottleTypes::Windows get_windows_version(const string& prefix_path);
   static BottleTypes::Bit get_windows_bitness(const string& prefix_path);

@@ -36,6 +36,7 @@ class BottleConfigureWindow;
 class AddAppWindow;
 class RemoveAppWindow;
 struct UpdateBottleStruct;
+struct CloneBottleStruct;
 
 /**
  * \class SignalController
@@ -60,13 +61,15 @@ public:
   void dispatch_signals();
 
   // Signal handlers
-  // signal_bottle_created() and signal_bottle_updated() are called from the thread bottle manager,
+  // signal_bottle_created(), signal_bottle_updated() and signal_bottle_cloned() are called from the thread bottle manager,
   // it's executed in the that thread. And can trigger the dispatcher (=thread safe), which gets executed in the GUI
   // thread.
   void signal_bottle_created();
   void signal_bottle_updated();
+  void signal_bottle_cloned();
   void signal_error_message_during_create();
   void signal_error_message_during_update();
+  void signal_error_message_during_clone();
 
 protected:
 private:
@@ -81,10 +84,13 @@ private:
                              bool& disable_geck_mono,
                              BottleTypes::AudioDriver audio);
   virtual void on_update_bottle(const UpdateBottleStruct& update_bottle_struct);
+  virtual void on_clone_bottle(const CloneBottleStruct& clone_bottle_struct);
   virtual void on_new_bottle_created();
   virtual void on_bottle_updated();
+  virtual void on_bottle_cloned();
   virtual void on_error_message_created();
   virtual void on_error_message_updated();
+  virtual void on_error_message_cloned();
 
   MainWindow* main_window_;
   BottleManager& manager_;
@@ -100,8 +106,10 @@ private:
   // Dispatcher for handling signals from the thread towards a GUI thread
   Glib::Dispatcher bottle_created_dispatcher_;
   Glib::Dispatcher bottle_updated_dispatcher_;
+  Glib::Dispatcher bottle_cloned_dispatcher_;
   Glib::Dispatcher error_message_created_dispatcher_;
   Glib::Dispatcher error_message_updated_dispatcher_;
+  Glib::Dispatcher error_message_cloned_dispatcher_;
   // Thread for Bottle Manager (so it doesn't block the GUI thread)
   std::thread* thread_bottle_manager_;
 };

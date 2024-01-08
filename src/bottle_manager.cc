@@ -511,6 +511,72 @@ void BottleManager::update_bottle(SignalController* caller,
 }
 
 /**
+ * \brief Clone an existing Wine bottle (runs in thread)
+ * \param[in] caller                      Signal Dispatcher pointer, in order to signal back events
+ * \param[in] name                        New Bottle Name
+ * \param[in] folder_name                 New Bottle Folder Name
+ * \param[in] description                 New Description text
+ */
+void BottleManager::clone_bottle(SignalController* caller,
+                                 const Glib::ustring& name,
+                                 const Glib::ustring& folder_name,
+                                 const Glib::ustring& description)
+{
+  if (active_bottle_ != nullptr)
+  {
+    string orginal_prefix_path = active_bottle_->wine_location();
+
+    // First do a clone of the bottle, using the new folder name as new prefix
+    std::vector<string> dirs{bottle_location_, folder_name};
+    string clone_prefix_path = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
+    try
+    {
+      Helper::copy_wine_bottle_folder(orginal_prefix_path, clone_prefix_path);
+    }
+    catch (const std::runtime_error& error)
+    {
+      {
+        std::lock_guard<std::mutex> lock(error_message_mutex_);
+        error_message_ = ("Something went wrong during during the clone.\n" + Glib::ustring(error.what()));
+      }
+      caller->signal_error_message_during_clone();
+      return; // Stop thread prematurely
+    }
+
+    // Now we update the cloned Wine Bottle config file
+    BottleConfigData bottle_config;
+    std::map<int, ApplicationData> app_list; // App list is never dirty, so no need to check
+    std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(clone_prefix_path);
+
+    // Set new cloned name (and description)
+    bottle_config.name = name;
+    bottle_config.description = description;
+    if (!BottleConfigFile::write_config_file(clone_prefix_path, bottle_config, app_list))
+    {
+      std::cout << "Error: Could not update bottle cloned config file." << std::endl;
+      {
+        std::lock_guard<std::mutex> lock(error_message_mutex_);
+        error_message_ = "Could not update new bottle cloned configuration file.";
+      }
+      caller->signal_error_message_during_clone();
+      return; // Stop thread prematurely
+    }
+  }
+  else
+  {
+    {
+      std::lock_guard<std::mutex> lock(error_message_mutex_);
+      error_message_ = "No current Windows Machine was set? Unable to clone.";
+    }
+    caller->signal_error_message_during_clone();
+    return; // Stop thread prematurely
+  }
+
+  // Trigger done signal
+  caller->signal_bottle_cloned();
+}
+
+/**
  * \brief Remove the current active Wine bottle
  */
 void BottleManager::delete_bottle()

@@ -151,14 +151,19 @@ void SignalController::dispatch_signals()
   edit_window_.update_bottle.connect(sigc::mem_fun(this, &SignalController::on_update_bottle));
   edit_window_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
 
+  // Clone Window
+  clone_window_.clone_bottle.connect(sigc::mem_fun(this, &SignalController::on_clone_bottle));
+
   // Right click menu in listbox
   main_window_->right_click_menu.connect(sigc::mem_fun(this, &SignalController::on_mouse_button_pressed));
 
   // When bottle created, the finish (or error message) event is called
   bottle_created_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_new_bottle_created));
   bottle_updated_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_bottle_updated));
+  bottle_cloned_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_bottle_cloned));
   error_message_created_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_error_message_created));
   error_message_updated_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_error_message_updated));
+  error_message_cloned_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_error_message_cloned));
 
   // When the WineExec() results into a non-zero exit code the failure_on_exec it triggered
   Helper& helper = Helper::get_instance();
@@ -207,12 +212,22 @@ void SignalController::signal_bottle_updated()
 }
 
 /**
+ * \brief Signal bottle cloned is finished, called from the thread.
+ *  Now we can trigger the dispatcher so it can run a method
+ * (connected to the dispatcher signal) in the GUI thread
+ */
+void SignalController::signal_bottle_cloned()
+{
+  bottle_cloned_dispatcher_.emit();
+}
+
+/**
  * \brief Signal error message during bottle creation,
  * called from the thread.
  */
 void SignalController::signal_error_message_during_create()
 {
-  // Show error message
+  // Dispatch during error
   error_message_created_dispatcher_.emit();
 }
 
@@ -222,8 +237,18 @@ void SignalController::signal_error_message_during_create()
  */
 void SignalController::signal_error_message_during_update()
 {
-  // Show error message
+  // Dispatch during error
   error_message_updated_dispatcher_.emit();
+}
+
+/**
+ * \brief Signal error message during bottle clone,
+ *  called from the thread.
+ */
+void SignalController::signal_error_message_during_clone()
+{
+  // Dispatch during error
+  error_message_cloned_dispatcher_.emit();
 }
 
 /**
@@ -310,6 +335,26 @@ void SignalController::on_update_bottle(const UpdateBottleStruct& update_bottle_
   }
 }
 
+/**
+ * \brief Clone existing bottle signal, starting clone_bottle() within thread
+ */
+void SignalController::on_clone_bottle(const CloneBottleStruct& clone_bottle_struct)
+{
+  if (thread_bottle_manager_)
+  {
+    main_window_->show_error_message("There is already running a thread. Please wait...");
+    // Close the clone window (signal as if the bottle was updated)
+    error_message_cloned_dispatcher_.emit();
+  }
+  else
+  {
+    // Start a new manager thread (executing NewBottle())
+    thread_bottle_manager_ =
+        new std::thread([this, clone_bottle_struct]
+                        { manager_.clone_bottle(this, clone_bottle_struct.name, clone_bottle_struct.folder_name, clone_bottle_struct.description); });
+  }
+}
+
 /******************************************
  * Dispatch events from dispatcher itself *
  * (indirectly from other classes)        *
@@ -341,6 +386,20 @@ void SignalController::on_bottle_updated()
 }
 
 /**
+ * \brief Signal handler when bottle is cloned, dispatched from the manager thread
+ */
+void SignalController::on_bottle_cloned()
+{
+  this->cleanup_bottle_manager_thread();
+
+  // Inform the clone window
+  clone_window_.on_bottle_cloned();
+
+  // Update bottle list
+  manager_.update_config_and_bottles(false);
+}
+
+/**
  * \brief Fetch the error message from the manager during bottle creation (in a thread-safe manner),
  * and report it to the main window (runs on the GUI thread).
  */
@@ -364,6 +423,20 @@ void SignalController::on_error_message_updated()
 
   // Always close the edit window (signal as if the bottle was updated)
   bottle_updated_dispatcher_.emit();
+
+  main_window_->show_error_message(manager_.get_error_message());
+}
+
+/**
+ * \brief Fetch the error message from the manager during bottle clone (in a thread-safe manner),
+ * and report it to the main window (runs on the GUI thread).
+ */
+void SignalController::on_error_message_cloned()
+{
+  this->cleanup_bottle_manager_thread();
+
+  // Always close the clone window (signal as if the bottle was updated)
+  bottle_cloned_dispatcher_.emit();
 
   main_window_->show_error_message(manager_.get_error_message());
 }
