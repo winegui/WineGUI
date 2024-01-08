@@ -31,7 +31,6 @@ class BottleItem;
 
 struct CloneBottleStruct
 {
-  Glib::ustring orginal_folder_name; // Source bottle folder name
   Glib::ustring name;
   Glib::ustring folder_name;
   Glib::ustring description;
@@ -45,7 +44,7 @@ class BottleCloneWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void, CloneBottleStruct&> clone_bottle; /*!< save button clicked signal */
+  sigc::signal<void, CloneBottleStruct&> clone_bottle; /*!< clone button clicked signal */
 
   explicit BottleCloneWindow(Gtk::Window& parent);
   virtual ~BottleCloneWindow();

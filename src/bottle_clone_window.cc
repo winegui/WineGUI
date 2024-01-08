@@ -178,14 +178,13 @@ void BottleCloneWindow::on_clone_button_clicked()
   clone_button.set_sensitive(false);
 
   // Show busy dialog
-  busy_dialog.set_message("Clone Windows Machine", "Currently cloning the Windows Machine.");
+  busy_dialog.set_message("Clone Windows Machine",
+                          "Currently cloning the Windows Machine. This can take a while, depending on the size of the machine.");
   busy_dialog.show();
 
-  // Source to copy from
-  clone_bottle_struct.orginal_folder_name = active_bottle_->folder_name();
+  // Set the new bottle configuration data for the clone
   clone_bottle_struct.name = name_entry.get_text();
   clone_bottle_struct.folder_name = folder_name_entry.get_text();
   clone_bottle_struct.description = description_text_view.get_buffer()->get_text();
-
   clone_bottle.emit(clone_bottle_struct);
 }

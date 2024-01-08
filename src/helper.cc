@@ -486,8 +486,8 @@ void Helper::remove_wine_bottle(const string& prefix_path)
 
 /**
  * \brief Rename Wine bottle folder
- * \param[in] current_prefix_path - Current wine bottle path
- * \param[in] new_prefix_path - New wine bottle path
+ * \param[in] current_prefix_path Current wine bottle path
+ * \param[in] new_prefix_path New wine bottle path
  * \throws runtime_error when we could not rename the Wine Bottle
  */
 void Helper::rename_wine_bottle_folder(const string& current_prefix_path, const string& new_prefix_path)
@@ -501,26 +501,61 @@ void Helper::rename_wine_bottle_folder(const string& current_prefix_path, const 
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (!(output.compare("0") == 0))
       {
-        throw std::runtime_error("Something went wrong when renaming the Windows Machine. Wine machine: " + get_folder_name(current_prefix_path) +
+        throw std::runtime_error("Failed to move the folder. Wine machine: " + get_folder_name(current_prefix_path) +
                                  "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
       }
     }
     else
     {
-      throw std::runtime_error("Could not rename Windows Machine, no result. Current Wine machine: " + get_folder_name(current_prefix_path) +
+      throw std::runtime_error("Failed to move the folder, no result. Wine machine: " + get_folder_name(current_prefix_path) +
                                "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
     }
   }
   else
   {
-    throw std::runtime_error("Could not rename Windows Machine, prefix is not a directory. Wine machine: " + get_folder_name(current_prefix_path) +
+    throw std::runtime_error("Prefix is not a directory or not yet. Wine machine: " + get_folder_name(current_prefix_path) +
                              "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
   }
 }
 
 /**
+ * \brief Copy Wine bottle folder
+ * \param[in] source_prefix_path Current source wine bottle path
+ * \param[in] destination_prefix_path Destination wine bottle path
+ * \throws runtime_error when we could not copy the Wine Bottle
+ */
+void Helper::copy_wine_bottle_folder(const string& source_prefix_path, const string& destination_prefix_path)
+{
+  if (Helper::dir_exists(source_prefix_path))
+  {
+    string output = exec(("cp -r \"" + source_prefix_path + "\" \"" + destination_prefix_path + "\"; echo $?").c_str());
+    if (!output.empty())
+    {
+      // Remove new lines
+      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+      if (!(output.compare("0") == 0))
+      {
+        throw std::runtime_error("Failed to copy the folder. Wine machine: " + get_folder_name(source_prefix_path) +
+                                 "\n\nSource full path location: " + source_prefix_path +
+                                 ". Tried to copy to destination: " + destination_prefix_path);
+      }
+    }
+    else
+    {
+      throw std::runtime_error("Failed to copy the folder, no result. Wine machine: " + get_folder_name(source_prefix_path) +
+                               "\n\nSource full path location: " + source_prefix_path + ". Tried to copy to destination: " + destination_prefix_path);
+    }
+  }
+  else
+  {
+    throw std::runtime_error("Prefix is not a directory or not yet. Wine machine: " + get_folder_name(source_prefix_path) +
+                             "\n\nSource full path location: " + source_prefix_path + ". Tried to copy to: " + destination_prefix_path);
+  }
+}
+
+/**
  * \brief Get Wine bottle folder name
- * \param[in] prefix_path - Bottle prefix
+ * \param[in] prefix_path Bottle prefix
  * \return Folder name
  */
 string Helper::get_folder_name(const string& prefix_path)
