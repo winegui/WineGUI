@@ -179,7 +179,7 @@ void BottleCloneWindow::on_clone_button_clicked()
 
   // Show busy dialog
   busy_dialog.set_message("Clone Windows Machine",
-                          "Currently cloning the Windows Machine. This can take a while, depending on the size of the machine.");
+                          "Currently cloning the Windows Machine.\nThis can take a while, depending on the size of the machine.");
   busy_dialog.show();
 
   // Set the new bottle configuration data for the clone
