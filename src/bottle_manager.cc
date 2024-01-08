@@ -988,7 +988,7 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
                                          true))
     {
       // Before we execute the install, show busy dialog
-      main_window_.show_busy_install_dialog(parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time...\n");
+      main_window_.show_busy_install_dialog(parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time.\n");
 
       string deinstall_command = this->get_deinstall_mono_command();
 
