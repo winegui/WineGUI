@@ -80,7 +80,7 @@ protected:
   Gtk::ToolButton install_dotnet4_8_button;   /*!< .NET v4.8 install button */
   Gtk::ToolButton install_dotnet6_button;     /*!< .NET v6.0 install button */
   // Buttons Fourth row
-  Gtk::ToolButton install_visual_cpp_6_button;    /*!< MS Visual C++ v6 Package install button */
+  Gtk::ToolButton install_visual_cpp_6_button;    /*!< MS Visual C++ v6 (SP4) Package install button */
   Gtk::ToolButton install_visual_cpp_2013_button; /*!< MS Visual C++ 2013 Redistributable Package install button */
   Gtk::ToolButton install_visual_cpp_2017_button; /*!< MS Visual C++ 2017 Redistributable Package install button */
   Gtk::ToolButton install_visual_cpp_2019_button; /*!< MS Visual C++ 2019 Redistributable Package install button */
