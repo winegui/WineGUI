@@ -368,16 +368,21 @@ string Helper::get_wine_version(bool wine_64_bit)
       }
       else
       {
+        std::cerr << "Error: Couldn't determine Wine version. Using wine executable: " << Helper::get_wine_executable_location(wine_64_bit)
+                  << ", output: " << output << std::endl;
         throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
       }
     }
     else
     {
+      std::cerr << "Error: Couldn't determine Wine version. Using wine executable: " << Helper::get_wine_executable_location(wine_64_bit)
+                << ", output: " << output << std::endl;
       throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
     }
   }
   else
   {
+    std::cerr << "Error: Couldn't determine Wine version. No output." << std::endl;
     throw std::runtime_error("Could not receive Wine version!\n\nIs Wine installed?");
   }
 }
@@ -440,12 +445,14 @@ void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, Bot
     output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
     if (!(output.compare("0") == 0))
     {
+      std::cerr << "Error: Couldn't create Wine bottle. Command: " << command << ", output: " << output << std::endl;
       throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + get_folder_name(prefix_path) +
                                "\n\nCommand executed: " + wine_command + "\nFull path location: " + prefix_path);
     }
   }
   else
   {
+    std::cerr << "Error: Couldn't create Wine bottle. Command: " << command << ". No output." << std::endl;
     throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + get_folder_name(prefix_path) +
                              "\n\nCommand executed: " + wine_command + "\nFull location: " + prefix_path);
   }
@@ -467,18 +474,21 @@ void Helper::remove_wine_bottle(const string& prefix_path)
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (!(output.compare("0") == 0))
       {
+        std::cerr << "Error: Couldn't remove Wine bottle. Wine prefix path: " << prefix_path << ", output: " << output << std::endl;
         throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + get_folder_name(prefix_path) +
                                  "\n\nFull path location: " + prefix_path);
       }
     }
     else
     {
+      std::cerr << "Error: Couldn't remove Wine bottle. Wine prefix path: " << prefix_path << ". No output." << std::endl;
       throw std::runtime_error("Could not remove Windows Machine, no result. Wine machine: " + get_folder_name(prefix_path) +
                                "\n\nFull path location: " + prefix_path);
     }
   }
   else
   {
+    std::cerr << "Error: Couldn't remove Wine bottle, prefix path doesn't exists. Wine prefix path: " << prefix_path << "." << std::endl;
     throw std::runtime_error("Could not remove Windows Machine, prefix is not a directory. Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull path location: " + prefix_path);
   }
@@ -501,18 +511,21 @@ void Helper::rename_wine_bottle_folder(const string& current_prefix_path, const 
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (!(output.compare("0") == 0))
       {
+        std::cerr << "Error: Couldn't rename Wine bottle. Wine prefix path: " << current_prefix_path << ", output: " << output << std::endl;
         throw std::runtime_error("Failed to move the folder. Wine machine: " + get_folder_name(current_prefix_path) +
                                  "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
       }
     }
     else
     {
+      std::cerr << "Error: Couldn't rename Wine bottle. Wine prefix path: " << current_prefix_path << ". No output." << std::endl;
       throw std::runtime_error("Failed to move the folder, no result. Wine machine: " + get_folder_name(current_prefix_path) +
                                "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
     }
   }
   else
   {
+    std::cerr << "Error: Couldn't rename Wine bottle, prefix path doesn't exists. Wine prefix path: " << current_prefix_path << "." << std::endl;
     throw std::runtime_error("Prefix is not a directory or not yet. Wine machine: " + get_folder_name(current_prefix_path) +
                              "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
   }
@@ -535,6 +548,7 @@ void Helper::copy_wine_bottle_folder(const string& source_prefix_path, const str
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (!(output.compare("0") == 0))
       {
+        std::cerr << "Error: Couldn't copy Wine bottle. Wine prefix path: " << source_prefix_path << ", output: " << output << std::endl;
         throw std::runtime_error("Failed to copy the folder. Wine machine: " + get_folder_name(source_prefix_path) +
                                  "\n\nSource full path location: " + source_prefix_path +
                                  ". Tried to copy to destination: " + destination_prefix_path);
@@ -542,12 +556,14 @@ void Helper::copy_wine_bottle_folder(const string& source_prefix_path, const str
     }
     else
     {
+      std::cerr << "Error: Couldn't copy Wine bottle. Wine prefix path: " << source_prefix_path << ". No output." << std::endl;
       throw std::runtime_error("Failed to copy the folder, no result. Wine machine: " + get_folder_name(source_prefix_path) +
                                "\n\nSource full path location: " + source_prefix_path + ". Tried to copy to destination: " + destination_prefix_path);
     }
   }
   else
   {
+    std::cerr << "Error: Couldn't copy Wine bottle, prefix path doesn't exists. Wine prefix path: " << source_prefix_path << std::endl;
     throw std::runtime_error("Prefix is not a directory or not yet. Wine machine: " + get_folder_name(source_prefix_path) +
                              "\n\nSource full path location: " + source_prefix_path + ". Tried to copy to: " + destination_prefix_path);
   }
@@ -714,12 +730,14 @@ BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
     }
     else
     {
+      std::cerr << "Error: Couldn't determine Bottle bitness. Using file path: " << file_path << ", value: " << value << std::endl;
       throw std::runtime_error("Could not determine Windows system bit (not win32 and not win64, value: " + value +
                                "), for Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
     }
   }
   else
   {
+    std::cerr << "Error: Couldn't determine Bottle bitness. Using file path: " << file_path << std::endl;
     throw std::runtime_error("Could not determine Windows system bit, for Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull location: " + prefix_path);
   }
@@ -817,12 +835,15 @@ string Helper::get_last_wine_updated(const string& prefix_path)
     }
     else
     {
-      throw std::runtime_error("Could not determine last time wine update timestamp, for Wine machine: " + get_folder_name(prefix_path) +
+      std::cerr << "Error: Couldn't determine last Wine update timestamp. Prefix path: " << prefix_path << ", file path: " << file_path << std::endl;
+      throw std::runtime_error("Could not determine last time Wine update timestamp, for Wine machine: " + get_folder_name(prefix_path) +
                                "\n\nFull location: " + prefix_path);
     }
   }
   else
   {
+    std::cerr << "Error: Couldn't determine last Wine update timestamp, file doesn't exists. Prefix path: " << prefix_path
+              << ", file path: " << file_path << std::endl;
     throw std::runtime_error("Could not determine last time wine update timestamp, for Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull location: " + prefix_path);
   }
@@ -1065,6 +1086,7 @@ void Helper::install_or_update_winetricks()
     bool created = create_dir(WineGuiDataDir);
     if (!created)
     {
+      std::cerr << "Error: Couldn't create the WineGUI data folder. Data path: " << WineGuiDataDir << std::endl;
       throw std::runtime_error("Incorrect permissions to create a WineGUI data folder (" + WineGuiDataDir + ")! Abort.");
     }
   }
@@ -1076,7 +1098,8 @@ void Helper::install_or_update_winetricks()
   // Winetricks script should exists now...
   if (!file_exists(WinetricksExecutable))
   {
-    throw std::runtime_error("Winetrick helper script can not be found / installed. This could/will result into issues with WineGUI!");
+    std::cerr << "Error: Couldn't find Winetricks script. Winetricks path: " << WinetricksExecutable << std::endl;
+    throw std::runtime_error("Winetricks helper script can not be found / installed. This could/will result into issues with WineGUI!");
   }
 }
 
@@ -1097,16 +1120,19 @@ void Helper::self_update_winetricks()
       {
         // TODO: This could be a bug as well, maybe fallback to redownloading the winetricks binary?
         // Because the --self-update flag should be always present (ps. avoid a dead-loop).
+        std::cerr << "Error: Couldn't update Winetricks script. Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
         throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::get_winetricks_version());
       }
     }
     else
     {
+      std::cerr << "Error: Couldn't update Winetricks script. Winetricks path: " << WinetricksExecutable << ". No output." << std::endl;
       throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::get_winetricks_version());
     }
   }
   else
   {
+    std::cerr << "Error: Couldn't update Winetricks script. Winetricks doesn't exists. Winetricks path: " << WinetricksExecutable << std::endl;
     throw std::runtime_error("Try to update the Winetricks script, while there is no winetricks installed/not found!");
   }
 }
@@ -1128,13 +1154,21 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (output.compare("0") != 0)
       {
+        std::cerr << "Error: Couldn't set Windows OS version. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+                  << ", output: " << output << std::endl;
         throw std::runtime_error("Could not set Windows OS version");
       }
     }
     else
     {
+      std::cerr << "Error: Couldn't set Windows OS version. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+                << ". No output." << std::endl;
       throw std::runtime_error("Could not set Windows OS version");
     }
+  }
+  else
+  {
+    std::cerr << "Error: Couldn't set Windows OS version, no Winetricks executable found. Winetricks path: " << WinetricksExecutable << std::endl;
   }
 }
 
@@ -1159,6 +1193,8 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
       }
       catch (std::exception const& e)
       {
+        std::cerr << "Error: Couldn't set virtual desktop resolution, Winetricks path: " << WinetricksExecutable << ", error message: " << e.what()
+                  << std::endl;
         throw std::runtime_error("Could not set virtual desktop resolution (invalid input)");
       }
 
@@ -1174,18 +1210,29 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
         output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
         if (output.compare("0") != 0)
         {
+          std::cerr << "Error: Couldn't set virtual desktop resolution. Wine prefix path: " << prefix_path
+                    << ", Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
           throw std::runtime_error("Could not set virtual desktop resolution");
         }
       }
       else
       {
+        std::cerr << "Error: Couldn't set virtual desktop resolution. Wine prefix path: " << prefix_path
+                  << ", Winetricks path: " << WinetricksExecutable << ". No output." << output << std::endl;
         throw std::runtime_error("Could not set virtual desktop resolution");
       }
     }
     else
     {
+      std::cerr << "Error: Couldn't set virtual desktop resolution, invalid input. Wine prefix path: " << prefix_path
+                << ", Winetricks path: " << WinetricksExecutable << std::endl;
       throw std::runtime_error("Could not set virtual desktop resolution (invalid input)");
     }
+  }
+  else
+  {
+    std::cerr << "Error:Couldn't set virtual desktop resolution, no Winetricks executable found. Wine prefix path: " << prefix_path
+              << ", Winetricks path: " << WinetricksExecutable << std::endl;
   }
 }
 
@@ -1204,13 +1251,19 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (output.compare("0") != 0)
       {
+        std::cerr << "Error: Couldn't disable desktop, Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
         throw std::runtime_error("Could not Disable Virtual Desktop");
       }
     }
     else
     {
+      std::cerr << "Error: Couldn't disable virtual desktop, Winetricks path: " << WinetricksExecutable << ". No output." << std::endl;
       throw std::runtime_error("Could not Disable Virtual Desktop");
     }
+  }
+  else
+  {
+    std::cerr << "Error:Couldn't disable desktop, no Winetricks executable found. Winetricks path: " << WinetricksExecutable << std::endl;
   }
 }
 
@@ -1232,13 +1285,22 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (output.compare("0") != 0)
       {
+        std::cerr << "Error: Couldn't set audio driver, Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+                  << ", output: " << output << std::endl;
         throw std::runtime_error("Could not set Audio driver");
       }
     }
     else
     {
+      std::cerr << "Error: Couldn't set audio driver, Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+                << ". No output." << std::endl;
       throw std::runtime_error("Could not set Audio driver");
     }
+  }
+  else
+  {
+    std::cerr << "Error:Couldn't set audio driver, no Winetricks executable found. Wine prefix path: " << prefix_path
+              << ", Winetricks path: " << WinetricksExecutable << std::endl;
   }
 }
 
@@ -1694,6 +1756,8 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
   }
   else
   {
+    std::cerr << "Error: Couldn't open registry file during get_reg_value(). Trying to read from file: " << file_path << "(using key: " << key_name
+              << " and value: " << value_name << ")" << std::endl;
     throw std::runtime_error("Could not open registry file!");
   }
   return output;
@@ -1733,6 +1797,8 @@ std::vector<string> Helper::get_reg_keys(const string& file_path, const string& 
   }
   else
   {
+    std::cerr << "Error: Couldn't open registry file during get_reg_keys(). Trying to read from file: " << file_path << "(using key: " << key_name
+              << ")" << std::endl;
     throw std::runtime_error("Could not open registry file!");
   }
   return keys;
@@ -1816,6 +1882,9 @@ std::vector<std::pair<string, string>> Helper::get_reg_keys_name_data_pair_filte
   }
   else
   {
+    std::cerr << "Error: Couldn't open registry file during get_reg_keys_name_data_pair_filter_ignore(). Trying to read from file: " << file_path
+              << "(using key: " << key_name << ", key value filter: " << key_value_filter << " and key ignore filter: " << key_name_ignore_filter
+              << ")" << std::endl;
     throw std::runtime_error("Could not open registry file!");
   }
   return pairs;
@@ -1898,6 +1967,9 @@ std::vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& 
   }
   else
   {
+    std::cerr << "Error: Couldn't open registry file during get_reg_keys_value_data_filter_ignore(). Trying to read from file: " << file_path
+              << "(using key: " << key_name << ", key value filter: " << key_value_filter << " and key ignore filter: " << key_name_ignore_filter
+              << ")" << std::endl;
     throw std::runtime_error("Could not open registry file!");
   }
   return keys;
@@ -1934,6 +2006,8 @@ string Helper::get_reg_meta_data(const string& file_path, const string& meta_val
   }
   else
   {
+    std::cerr << "Error: Couldn't open registry file during get_reg_meta_data(). Trying to read from file: " << file_path
+              << "(using meta value name: " << meta_value_name << ")" << std::endl;
     throw std::runtime_error("Could not open registry file!");
   }
   return output;
@@ -1986,6 +2060,7 @@ std::vector<string> Helper::read_file_lines(const string& file_path)
   }
   else
   {
+    std::cerr << "Error: Couldn't open file during read_file_lines(). Trying to read from file: " << file_path << std::endl;
     throw std::runtime_error("Could not open file!");
   }
   return output;
