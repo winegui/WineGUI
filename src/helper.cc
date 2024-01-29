@@ -1155,6 +1155,7 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
       if (output.compare("0") != 0)
       {
         std::cerr << "Error: Couldn't set Windows OS version. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+                  << ", to Windows version: " << BottleTypes::to_string(windows) << "(Winetricks string: " << win << ")"
                   << ", output: " << output << std::endl;
         throw std::runtime_error("Could not set Windows OS version");
       }
@@ -1162,6 +1163,7 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
     else
     {
       std::cerr << "Error: Couldn't set Windows OS version. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+                << ", to Windows version: " << BottleTypes::to_string(windows) << "(Winetricks string: " << win << ")"
                 << ". No output." << std::endl;
       throw std::runtime_error("Could not set Windows OS version");
     }
@@ -1278,21 +1280,22 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
   if (file_exists(WinetricksExecutable))
   {
     string audio = BottleTypes::get_winetricks_string(audio_driver);
-    //
     string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " sound=" + audio + ">/dev/null 2>&1; echo $?").c_str());
     if (!output.empty())
     {
       output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
       if (output.compare("0") != 0)
       {
-        std::cerr << "Error: Couldn't set audio driver, Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+        std::cerr << "Error: Couldn't set audio driver. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+                  << ", to audio driver: " << BottleTypes::to_string(audio_driver) << "(Winetricks string: " << audio << ")"
                   << ", output: " << output << std::endl;
         throw std::runtime_error("Could not set Audio driver");
       }
     }
     else
     {
-      std::cerr << "Error: Couldn't set audio driver, Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+      std::cerr << "Error: Couldn't set audio driver. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
+                << ", to audio driver: " << BottleTypes::to_string(audio_driver) << "(Winetricks string: " << audio << ")"
                 << ". No output." << std::endl;
       throw std::runtime_error("Could not set Audio driver");
     }
