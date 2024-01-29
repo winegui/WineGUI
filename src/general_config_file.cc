@@ -210,7 +210,7 @@ std::string GeneralConfigFile::config_and_folder_migration(const std::string& co
     // TODO: Eventually warn users about the obsolete prefixes folder. And remove/clean-up the migration code in the future.
     // For now give people some time to migrate.
 
-    // Check if the old prefix directoy is a directory / can be found & check if prefix folder is used.
+    // Check if the old prefix directory is a directory / can be found & check if prefix folder is used.
     if (Glib::file_test(default_prefix_folder_old, Glib::FileTest::FILE_TEST_IS_DIR))
     {
       try
