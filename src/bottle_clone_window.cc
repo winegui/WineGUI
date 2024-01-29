@@ -61,7 +61,7 @@ BottleCloneWindow::BottleCloneWindow(Gtk::Window& parent)
   name_label.set_halign(Gtk::Align::ALIGN_END);
   folder_name_label.set_halign(Gtk::Align::ALIGN_END);
   name_label.set_tooltip_text("New name of the machine");
-  folder_name_label.set_tooltip_text("Do NOT keep this the same as the orginal machine folder (or a copy will not work)");
+  folder_name_label.set_tooltip_text("Do NOT keep this the same as the original machine folder (or a copy will not work)");
 
   description_label.set_halign(Gtk::Align::ALIGN_START);
   name_entry.set_hexpand(true);
