@@ -197,7 +197,7 @@ void RemoveAppWindow::on_remove_selected_button_clicked()
   }
   else
   {
-    Gtk::MessageDialog dialog(*this, "Error occured during saving, because there is no active Windows machine set.", false, Gtk::MESSAGE_ERROR,
+    Gtk::MessageDialog dialog(*this, "Error occurred during saving, because there is no active Windows machine set.", false, Gtk::MESSAGE_ERROR,
                               Gtk::BUTTONS_OK);
     dialog.set_title("Error during remove application saving");
     dialog.set_modal(true);

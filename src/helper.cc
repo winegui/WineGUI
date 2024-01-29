@@ -971,7 +971,7 @@ string Helper::get_desktop_program_icon_path(const string& prefix_path, const st
 
 /**
  * \brief Retrieve target path from Windows shortcut (*.lnk) file.
- * Which could be used to guess the icon based on the file extenstion.
+ * Which could be used to guess the icon based on the file extension.
  * (in the future we might also read the comment from the lnk file)
  * \param[in] prefix_path Bottle prefix
  * \param[in] shortcut_path Windows shortcut file path
