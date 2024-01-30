@@ -638,10 +638,10 @@ const Glib::ustring& BottleManager::get_error_message() const
 
 /**
  * \brief Run an executable (exe) or MSI file in Wine (using the current active bottle)
- * \param[in] filename Filename location of the program (selected by the user)
+ * \param[in] program Path of the program (selected by the user)
  * \param[in] is_msi_file True, if you running a Windows Installer (MSI), otherwise False for EXE
  */
-void BottleManager::run_executable(string filename, bool is_msi_file = false)
+void BottleManager::run_executable(string program, bool is_msi_file = false)
 {
   if (is_bottle_not_null())
   {
@@ -649,8 +649,8 @@ void BottleManager::run_executable(string filename, bool is_msi_file = false)
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program_prefix = is_msi_file ? "msiexec /i" : "start /unix";
-    // Be-sure to execute the filename also between quotes (due to spaces)
-    string program = program_prefix + " \"" + filename + "\"";
+    // Be-sure to execute the program between quotes (due to spaces)
+    program = program_prefix + " \"" + program + "\"";
     std::thread t(
         [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
@@ -686,8 +686,17 @@ void BottleManager::run_program(string program)
     // For all programs (except winetricks)
     if (!program.ends_with("winetricks --gui -q"))
     {
-      // Between quotes (due to spaces)
-      program = "\"" + program + "\"";
+      // Be-sure to execute the program between quotes (due to spaces).
+      if (program.starts_with("/"))
+      {
+        // Add 'start /unix' for Unit style command, like application shortcuts
+        program = "start /unix \"" + program + "\"";
+      }
+      else
+      {
+        // Add 'start' for Windows style commands, like 'notepad'
+        program = "start \"" + program + "\"";
+      }
       std::thread t(
           [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
            debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
