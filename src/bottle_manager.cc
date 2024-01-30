@@ -686,7 +686,6 @@ void BottleManager::run_program(string program)
     // For all programs (except winetricks)
     if (!program.ends_with("winetricks --gui -q"))
     {
-      std::cout << "Program: " << program << std::endl;
       // Be-sure to execute the program between quotes (due to spaces).
       if (program.starts_with("/"))
       {
