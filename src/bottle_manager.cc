@@ -49,7 +49,7 @@ BottleManager::BottleManager(MainWindow& main_window)
       error_message_()
 {
   // Connect internal dispatcher(s)
-  update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(this, &BottleManager::update_config_and_bottles), false));
+  update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(this, &BottleManager::update_config_and_bottles), "", false));
   write_log_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::write_log_to_file));
 }
 
@@ -96,8 +96,9 @@ void BottleManager::prepare()
   }
 
   // Start the initial read from disk to fetch the bottles & update GUI
+  // "" - during startup (no bottle name to select)
   // true - during startup
-  update_config_and_bottles(true);
+  update_config_and_bottles("", true);
 }
 
 /**
@@ -117,9 +118,10 @@ void BottleManager::write_log_to_file()
 
 /**
  * \brief Update WineGUI Config and update bottles by reading the Wine Bottles from disk and update GUI
+ * \param select_bottle_name If set, try to find the bottle with this name and set it as active bottle (used for newly created bottles)
  * \param is_startup Set to true if this function is called during start-up, otherwise false
  */
-void BottleManager::update_config_and_bottles(bool is_startup)
+void BottleManager::update_config_and_bottles(const Glib::ustring& select_bottle_name, bool is_startup)
 {
   // Read general & save config in bottle manager
   GeneralConfigData config_data = load_and_save_general_config();
@@ -168,10 +170,22 @@ void BottleManager::update_config_and_bottles(bool is_startup)
       // Update main Window
       main_window_.set_wine_bottles(bottles_);
 
-      // Is try to store boolean true?
+      // Is select_bottle_name set?
+      if (!select_bottle_name.empty())
+      {
+        // Check if there is a bottle with the same name and select as active bottle
+        auto it = std::find_if(bottles_.begin(), bottles_.end(),
+                               [&select_bottle_name](const BottleItem& bottle) { return bottle.name() == select_bottle_name; });
+        if (it != bottles_.end())
+        {
+          main_window_.select_row_bottle(*it);
+          active_bottle_ = &(*it);
+        }
+      }
+      // Is try_to_restore boolean true?
       // And: Is the bottle list size the same?
       // And: Is the previous index not bigger than the list size?
-      if (try_to_restore && (bottles_.size() == previous_bottles_list_size_) && ((size_t)previous_active_bottle_index_ < bottles_.size()))
+      else if (try_to_restore && (bottles_.size() == previous_bottles_list_size_) && ((size_t)previous_active_bottle_index_ < bottles_.size()))
       {
         // Let's reset the previous state!
         auto front = bottles_.begin();
@@ -182,7 +196,7 @@ void BottleManager::update_config_and_bottles(bool is_startup)
       }
       else
       {
-        // Bottle list is changed, let's set the first bottle in the detailed info panel.
+        // Default behaviour: Bottle list is changed, let's set the first bottle in the detailed info panel.
         // begin() gives us an iterator with the first element
         auto first = bottles_.begin();
         // Trigger select row, except during start-up (show_all will auto-select the first listbox item in GTK)
@@ -246,6 +260,18 @@ void BottleManager::new_bottle(SignalController* caller,
   std::vector<string> dirs{bottle_location_, name};
   string prefix_path = Glib::build_path(G_DIR_SEPARATOR_S, dirs);
   bool bottle_created = false;
+
+  // Check if prefix_path already exists, if so, abort and show error message
+  if (Helper::dir_exists(prefix_path))
+  {
+    {
+      std::lock_guard<std::mutex> lock(error_message_mutex_);
+      error_message_ = "A Wine bottle with the same name already exists. Try another name.";
+    }
+    caller->signal_error_message_during_create();
+    return; // Stop thread prematurely
+  }
+
   try
   {
     // Now create a new Wine Bottle
@@ -338,7 +364,7 @@ void BottleManager::new_bottle(SignalController* caller,
   // Wait until wineserver terminates
   Helper::wait_until_wineserver_is_terminated(prefix_path);
 
-  // Trigger done signal
+  // Trigger done signal, which will eventually use a Glib dispatcher to signal back to the GUI thread
   caller->signal_bottle_created();
 }
 
@@ -596,7 +622,7 @@ void BottleManager::delete_bottle()
         // Signal that bottle is removed
         bottle_removed.emit();
         Helper::remove_wine_bottle(prefix_path);
-        this->update_config_and_bottles(false);
+        this->update_config_and_bottles("", false);
       }
       else
       {
