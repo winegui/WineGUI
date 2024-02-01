@@ -719,11 +719,13 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   add_application("Winetricks", "Wine helper script to download and install various libraries", Helper::get_winetricks_location() + " --gui -q",
                   "winetricks");
   add_application("Notepad", "Text editor", "notepad", "notepad");
+  add_application("File Manager", "Wine File manager", "winefile", "winefile");
   add_application("Internet Explorer", "Wine Internet Explorer", "iexplore", "internet_explorer");
   add_application("Task Manager", "Task Manager", "taskmgr", "task_manager");
-  add_application("File Explorer", "Windows file explorer", "explorer", "file_explorer");
+  add_application("File Explorer", "File explorer", "explorer", "file_explorer");
   add_application("Command Prompt", "Command-line interpreter", "wineconsole", "command_prompt");
   add_application("Registry editor", "Windows registry editor", "regedit", "regedit");
+  add_application("Wine OLE View", "Windows OLE View", "oleview", "oleview");
 }
 
 /**
