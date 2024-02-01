@@ -121,7 +121,7 @@ void BottleManager::write_log_to_file()
  * \param select_bottle_name If set, try to find the bottle with this name and set it as active bottle (used for newly created bottles)
  * \param is_startup Set to true if this function is called during start-up, otherwise false
  */
-void BottleManager::update_config_and_bottles(const string& select_bottle_name, bool is_startup)
+void BottleManager::update_config_and_bottles(const Glib::ustring& select_bottle_name, bool is_startup)
 {
   // Read general & save config in bottle manager
   GeneralConfigData config_data = load_and_save_general_config();
@@ -170,10 +170,22 @@ void BottleManager::update_config_and_bottles(const string& select_bottle_name, 
       // Update main Window
       main_window_.set_wine_bottles(bottles_);
 
-      // Is try to store boolean true?
+      // Is select_bottle_name set?
+      if (!select_bottle_name.empty())
+      {
+        // Check if there is a bottle with the same name and select as active bottle
+        auto it = std::find_if(bottles_.begin(), bottles_.end(),
+                               [&select_bottle_name](const BottleItem& bottle) { return bottle.name() == select_bottle_name; });
+        if (it != bottles_.end())
+        {
+          main_window_.select_row_bottle(*it);
+          active_bottle_ = &(*it);
+        }
+      }
+      // Is try_to_restore boolean true?
       // And: Is the bottle list size the same?
       // And: Is the previous index not bigger than the list size?
-      if (try_to_restore && (bottles_.size() == previous_bottles_list_size_) && ((size_t)previous_active_bottle_index_ < bottles_.size()))
+      else if (try_to_restore && (bottles_.size() == previous_bottles_list_size_) && ((size_t)previous_active_bottle_index_ < bottles_.size()))
       {
         // Let's reset the previous state!
         auto front = bottles_.begin();
@@ -181,20 +193,6 @@ void BottleManager::update_config_and_bottles(const string& select_bottle_name, 
         main_window_.select_row_bottle(*front);
         // Set active bottle at the previous index
         active_bottle_ = &(*front);
-      }
-      else if (!select_bottle_name.empty())
-      {
-        // Loop over all bottles in bottles_ and check if there is a bottle with the same name
-        // select this bottle as active bottle
-        for (auto& bottle : bottles_)
-        {
-          if (bottle.name() == select_bottle_name)
-          {
-            main_window_.select_row_bottle(bottle);
-            active_bottle_ = &bottle;
-            break;
-          }
-        }
       }
       else
       {
