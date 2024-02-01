@@ -263,6 +263,9 @@ void BottleNewAssistant::get_result(Glib::ustring& name,
  */
 void BottleNewAssistant::bottle_created()
 {
+  // Grap a copy of the bottle name
+  Glib::ustring created_bottle_name = name_entry.get_text();
+
   // Reset defaults (including timer_.disconnect())
   set_default_values();
 
@@ -270,7 +273,8 @@ void BottleNewAssistant::bottle_created()
   this->hide();
 
   // Inform UI, emit signal new_bottle_finished (causes the GUI to refresh)
-  new_bottle_finished.emit();
+  // pass along the name of the created bottle
+  new_bottle_finished.emit(created_bottle_name);
 }
 
 /**
