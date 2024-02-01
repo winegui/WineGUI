@@ -95,7 +95,7 @@ void SignalController::dispatch_signals()
   menu_.preferences.connect(sigc::mem_fun(preferences_window_, &PreferencesWindow::show));
   menu_.quit.connect(
       sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefore closes the app */
-  menu_.refresh_view.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
+  menu_.refresh_view.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
   menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
   menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
   menu_.edit_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
@@ -132,7 +132,7 @@ void SignalController::dispatch_signals()
 
   // Menu / Toolbar actions
   main_window_->new_bottle.connect(sigc::mem_fun(this, &SignalController::on_new_bottle));
-  main_window_->finished_new_bottle.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
+  main_window_->finished_new_bottle.connect(sigc::bind<1>(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
   main_window_->run_executable.connect(sigc::mem_fun(manager_, &BottleManager::run_executable));
   main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
   main_window_->show_edit_window.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
@@ -182,13 +182,13 @@ void SignalController::dispatch_signals()
   configure_window_.visual_cpp_package.connect(sigc::mem_fun(manager_, &BottleManager::install_visual_cpp_package));
 
   // Add new application Window
-  add_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
+  add_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 
   // Remove application Window
-  remove_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
+  remove_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 
   // WineGUI Preference Window
-  preferences_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
+  preferences_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 }
 
 /**
@@ -382,7 +382,7 @@ void SignalController::on_bottle_updated()
   edit_window_.on_bottle_updated();
 
   // Update bottle list
-  manager_.update_config_and_bottles(false);
+  manager_.update_config_and_bottles("", false);
 }
 
 /**
@@ -396,7 +396,7 @@ void SignalController::on_bottle_cloned()
   clone_window_.on_bottle_cloned();
 
   // Update bottle list
-  manager_.update_config_and_bottles(false);
+  manager_.update_config_and_bottles("", false);
 }
 
 /**

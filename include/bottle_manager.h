@@ -53,7 +53,7 @@ public:
   virtual ~BottleManager();
 
   void prepare();
-  void update_config_and_bottles(bool is_startup);
+  void update_config_and_bottles(const string& select_bottle_name, bool is_startup);
   void new_bottle(SignalController* caller,
                   const Glib::ustring& name,
                   BottleTypes::Windows windows_version,
