@@ -725,7 +725,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   add_application("File Explorer", "File explorer", "explorer", "file_explorer");
   add_application("Command Prompt", "Command-line interpreter", "wineconsole", "command_prompt");
   add_application("Registry editor", "Windows registry editor", "regedit", "regedit");
-  add_application("Wine OLE View", "Windows OLE View", "oleview", "oleview");
+  add_application("Wine OLE View", "Windows OLE object viewer", "oleview", "oleview");
 }
 
 /**
