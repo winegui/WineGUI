@@ -151,12 +151,13 @@ void BottleCloneWindow::reset_active_bottle()
 }
 
 /**
- * \brief Handler when the bottle is cloned.
+ * \brief Handler when the bottle is cloned. Return just cloned bottle name
  */
-void BottleCloneWindow::on_bottle_cloned()
+Glib::ustring BottleCloneWindow::on_bottle_cloned()
 {
   busy_dialog.hide();
   hide(); // Close the clone Window
+  return name_entry.get_text();
 }
 
 /**
