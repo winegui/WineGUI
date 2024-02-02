@@ -54,7 +54,7 @@ public:
   void reset_active_bottle();
 
   // Signal handlers
-  virtual void on_bottle_cloned();
+  virtual Glib::ustring on_bottle_cloned();
 
 protected:
   // Child widgets
