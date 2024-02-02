@@ -287,7 +287,7 @@ bool SignalController::on_mouse_button_pressed(GdkEventButton* event)
 }
 
 /**
- * \brief New Bottle signal, starting NewBottle() within thread
+ * \brief New Bottle signal, starting new_bottle() within thread
  */
 void SignalController::on_new_bottle(Glib::ustring& name,
                                      BottleTypes::Windows windows_version,
@@ -304,7 +304,7 @@ void SignalController::on_new_bottle(Glib::ustring& name,
   }
   else
   {
-    // Start a new manager thread (executing NewBottle())
+    // Start a new manager thread
     thread_bottle_manager_ =
         new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio]
                         { manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio); });
@@ -324,7 +324,7 @@ void SignalController::on_update_bottle(const UpdateBottleStruct& update_bottle_
   }
   else
   {
-    // Start a new manager thread (executing NewBottle())
+    // Start a new manager thread
     thread_bottle_manager_ = new std::thread(
         [this, update_bottle_struct]
         {
@@ -348,7 +348,7 @@ void SignalController::on_clone_bottle(const CloneBottleStruct& clone_bottle_str
   }
   else
   {
-    // Start a new manager thread (executing NewBottle())
+    // Start a new manager thread
     thread_bottle_manager_ =
         new std::thread([this, clone_bottle_struct]
                         { manager_.clone_bottle(this, clone_bottle_struct.name, clone_bottle_struct.folder_name, clone_bottle_struct.description); });
@@ -392,11 +392,11 @@ void SignalController::on_bottle_cloned()
 {
   this->cleanup_bottle_manager_thread();
 
-  // Inform the clone window
-  clone_window_.on_bottle_cloned();
+  // Inform the clone window, returns newly cloned bottle name
+  Glib::ustring new_cloned_bottle_name = clone_window_.on_bottle_cloned();
 
-  // Update bottle list
-  manager_.update_config_and_bottles("", false);
+  // Update bottle list and select the cloned bottle
+  manager_.update_config_and_bottles(new_cloned_bottle_name, false);
 }
 
 /**
