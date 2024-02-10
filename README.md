@@ -86,10 +86,10 @@ cmake --build ./build
 
 Building from the source code archive files (eg. `tar.gz`) is just as easy, however you are missing the git tag information I use to set the project version within CMake.
 
-Luckily, I provide an easy solution just set an environment variable `CUSTOM_PROJECT_VERSION` to the version you want, for example:
+Luckily, I provide an easy solution just setting a define: `-DCUSTOM_PROJECT_VERSION` flag to the version you want, for example:
 
 ```bash
-export CUSTOM_PROJECT_VERSION="1.0.0"
+cmake -GNinja -B build -DCUSTOM_PROJECT_VERSION:STRING="1.0.0"
 ```
 
 Then execute the build using `cmake` as shown earlier.
