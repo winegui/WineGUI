@@ -7,14 +7,20 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 option(doc "Build Documentation" OFF)
 
-# Get GIT_TAG_VERSION from most recent git tag
-include(git_version)
+# If CUSTOM_PROJECT_VERSION is defined, use it as the project version instead of git tag
+if(DEFINED ENV{CUSTOM_PROJECT_VERSION})
+    set(LOCAL_PROJECT_VERSION "$ENV{CUSTOM_PROJECT_VERSION}")
+else()
+  # Get GIT_TAG_VERSION from most recent git tag 
+  include(git_version)
+  set(LOCAL_PROJECT_VERSION ${GIT_TAG_VERSION})
+endif()
+
 # Include cmake GTK GSettings schema
 include(g_settings)
 
-# Don't forget to update the about_dialog.h VERSION as well
 project(${PROJECT_NAME}
-  VERSION ${GIT_TAG_VERSION}
+  VERSION ${LOCAL_PROJECT_VERSION}
   DESCRIPTION "WineGUI is a user-friendly WINE graphical interface"
   LANGUAGES CXX)
 
