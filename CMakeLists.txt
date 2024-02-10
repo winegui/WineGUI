@@ -8,8 +8,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 option(doc "Build Documentation" OFF)
 
 # If CUSTOM_PROJECT_VERSION is defined, use it as the project version instead of git tag
-if(DEFINED ENV{CUSTOM_PROJECT_VERSION})
-    set(LOCAL_PROJECT_VERSION "$ENV{CUSTOM_PROJECT_VERSION}")
+if(DEFINED CUSTOM_PROJECT_VERSION)
+    set(LOCAL_PROJECT_VERSION "${CUSTOM_PROJECT_VERSION}")
 else()
   # Get GIT_TAG_VERSION from most recent git tag 
   include(git_version)
