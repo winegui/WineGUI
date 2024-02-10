@@ -71,9 +71,9 @@ Optionally:
 
 ### Build
 
-Run: `./scripts/build.sh`
+Run script: `./scripts/build.sh`
 
-Or execute:
+_Or_ execute:
 
 ```bash
 # Prepare
@@ -81,6 +81,18 @@ cmake -GNinja -B build
 # Build WineGUI
 cmake --build ./build
 ```
+
+#### Building from source
+
+Building from the source code archive files (eg. `tar.gz`) is just as easy, however you are missing the git tag information I use to set the project version within CMake.
+
+Luckily, I provide an easy solution just set an environment variable `CUSTOM_PROJECT_VERSION` to the version you want, for example:
+
+```bash
+export CUSTOM_PROJECT_VERSION="1.0.0"
+```
+
+Then execute the build using `cmake` as shown earlier.
 
 ### Run
 
