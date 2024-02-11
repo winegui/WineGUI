@@ -16,9 +16,12 @@ else()
   # If CUSTOM_PROJECT_VERSION is defined use it as version.
   if(DEFINED CUSTOM_PROJECT_VERSION)
       set(LOCAL_PROJECT_VERSION "${CUSTOM_PROJECT_VERSION}")
-  else()
-    # Read version from version.txt file (fallback)
+  elseif(EXISTS "${CMAKE_SOURCE_DIR}/version.txt")
+    # Read version from version.txt file
     file(READ "version.txt" LOCAL_PROJECT_VERSION)
+  else()
+    # Fallback to version 1.0.0
+    set(LOCAL_PROJECT_VERSION "1.0.0")
   endif()
 endif()
 
