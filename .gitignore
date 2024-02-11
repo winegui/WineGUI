@@ -11,6 +11,9 @@ release/
 # winetricks script
 winetricks
 
+# Version file
+version.txt
+
 # CMake
 CMakeLists.txt.user
 CMakeCache.txt
