@@ -7,13 +7,19 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 option(doc "Build Documentation" OFF)
 
-# If CUSTOM_PROJECT_VERSION is defined, use it as the project version instead of git tag
-if(DEFINED CUSTOM_PROJECT_VERSION)
-    set(LOCAL_PROJECT_VERSION "${CUSTOM_PROJECT_VERSION}")
-else()
-  # Get GIT_TAG_VERSION from most recent git tag 
+# If we have a git folder, get GIT_TAG_VERSION from most recent git tag
+if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
   include(git_version)
   set(LOCAL_PROJECT_VERSION ${GIT_TAG_VERSION})
+else()
+  # In source archives there is no .git folder present.
+  # If CUSTOM_PROJECT_VERSION is defined use it as version.
+  if(DEFINED CUSTOM_PROJECT_VERSION)
+      set(LOCAL_PROJECT_VERSION "${CUSTOM_PROJECT_VERSION}")
+  else()
+    # Read version from version.txt file (fallback)
+    file(READ "version.txt" LOCAL_PROJECT_VERSION)
+  endif()
 endif()
 
 # Include cmake GTK GSettings schema
