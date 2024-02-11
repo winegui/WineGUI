@@ -55,7 +55,7 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
   include(packaging)
 endif()
 
-configure_file(src/project_config.h.in ${CMAKE_BINARY_DIR}/project_config.h)
+configure_file(include/project_config.h.in ${CMAKE_BINARY_DIR}/project_config.h)
 
 set(HEADERS
   include/menu.h
