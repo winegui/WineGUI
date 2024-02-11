@@ -23,7 +23,7 @@ if [[ "$output" == "[]" ]]; then
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data name="WineGUI Compressed binary (tar)" \
+        --data name="WineGUI Compressed Binary (tar)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.tar.gz" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
@@ -35,9 +35,16 @@ if [[ "$output" == "[]" ]]; then
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data name="WineGUI Debian package (deb)" \
+        --data name="WineGUI Debian Package (deb)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
+    curl --request POST \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data name="WineGUI Source Code Archive (tar.gz)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-Source-$APP_VERSION.tar.gz" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
 elif [[ "$output" == "{\"message\":\"404 Not found\"}" ]]; then
     echo "WARN: Release doesn't yet exist yet/can't be found yet in Gitlab: $APP_VERSION..."
 else

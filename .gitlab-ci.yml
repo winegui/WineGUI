@@ -42,6 +42,7 @@ build-and-deploy:
   script:
     - ./scripts/build_prod.sh
     - export APP_VERSION=${CI_COMMIT_TAG}
+    - ./scripts/create_source_archive.sh
     - ./scripts/create_release_links.sh
     - ./scripts/create_latest_release_file.sh
   environment:
@@ -56,6 +57,7 @@ build-and-deploy:
       - build_prod/WineGUI-*.deb
       - build_prod/WineGUI-*.rpm
       - build_prod/WineGUI-*.tar.gz
+      - build_prod/WineGUI-Source-*.tar.gz
 #unit_test:
 #  stage: test
 #  script: ./build_prod/bin/runTests
