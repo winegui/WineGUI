@@ -84,9 +84,10 @@ cmake --build ./build
 
 #### Building from source
 
-Building from the source code archive files (eg. `tar.gz`) is just as easy, however you are missing the git tag information I use to set the project version within CMake.
+Building from the source code archive files (eg. `tar.gz`) is just as easy, however sure to download the **specially prepared** `WineGUI-Source-*.tar.gz` archive file (instead of the GitLab generated source archives).  
+This WineGUI source archive contains the `version.txt` for you already, so the tarball is aware of the project version during the build.
 
-Luckily, I provide an easy solution just setting a define: `-DCUSTOM_PROJECT_VERSION` flag to the version you want, for example:
+Alternatively, you can set the version yourself. Either by introducing a `version.txt` file in the root directory or set the option flag: `-DCUSTOM_PROJECT_VERSION` to the version you want, for example:
 
 ```bash
 cmake -GNinja -B build -DCUSTOM_PROJECT_VERSION:STRING="1.0.0"
