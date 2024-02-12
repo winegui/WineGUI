@@ -310,7 +310,6 @@ void BottleManager::new_bottle(SignalController* caller,
     // Only change Windows OS when NOT default
     try
     {
-      std::cout << "Setting Windows Version: " << BottleTypes::to_string(windows_version) << std::endl;
       Helper::set_windows_version(prefix_path, windows_version);
     }
     catch (const std::runtime_error& error)
