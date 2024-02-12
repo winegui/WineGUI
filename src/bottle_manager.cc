@@ -306,22 +306,21 @@ void BottleManager::new_bottle(SignalController* caller,
   // Continue with additional settings
   if (bottle_created)
   {
+    // Always set the Windows Version (we do not know which Wine version the user is using)
     // Only change Windows OS when NOT default
-    if (windows_version != WineDefaults::WindowsOs)
+    try
     {
-      try
+      std::cout << "Setting Windows Version: " << BottleTypes::to_string(windows_version) << std::endl;
+      Helper::set_windows_version(prefix_path, windows_version);
+    }
+    catch (const std::runtime_error& error)
+    {
       {
-        Helper::set_windows_version(prefix_path, windows_version);
+        std::lock_guard<std::mutex> lock(error_message_mutex_);
+        error_message_ = ("Something went wrong during setting another Windows version.\n" + Glib::ustring(error.what()));
       }
-      catch (const std::runtime_error& error)
-      {
-        {
-          std::lock_guard<std::mutex> lock(error_message_mutex_);
-          error_message_ = ("Something went wrong during setting another Windows version.\n" + Glib::ustring(error.what()));
-        }
-        caller->signal_error_message_during_create();
-        return; // Stop thread prematurely
-      }
+      caller->signal_error_message_during_create();
+      return; // Stop thread prematurely
     }
 
     // Only if virtual desktop is not empty, enable it

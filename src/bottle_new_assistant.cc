@@ -116,6 +116,7 @@ void BottleNewAssistant::create_first_page()
        it != BottleTypes::SupportedWindowsVersions.end(); ++it)
   {
     auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
+    // TODO: Add if ((*it).first != BottleTypes::Windows::Windows11) in case of Wine v8 or lower
     windows_version_combobox.append(std::to_string(index), BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
   }
 
@@ -285,7 +286,6 @@ void BottleNewAssistant::on_assistant_apply()
 {
   // Guess the time interval based on the user input
   bool is_desktop_enabled = virtual_desktop_check.get_active();
-  bool is_non_default_windows = false;
   bool is_non_default_audio_driver = false;
 
   std::string::size_type sz;
@@ -304,30 +304,11 @@ void BottleNewAssistant::on_assistant_apply()
   catch (const std::out_of_range& e)
   {
   }
-  try
-  {
-    size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
-    auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
-    is_non_default_windows = WineDefaults::WindowsOs != currentWindowsBit.first;
-  }
-  catch (const std::runtime_error& error)
-  {
-  }
-  catch (const std::invalid_argument& e)
-  {
-  }
-  catch (const std::out_of_range& e)
-  {
-  }
 
-  int time_interval = 300;
+  int time_interval = 360;
   if (is_desktop_enabled)
   {
     time_interval += 90;
-  }
-  if (is_non_default_windows)
-  {
-    time_interval += 60;
   }
   if (is_non_default_audio_driver)
   {
