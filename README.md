@@ -84,16 +84,16 @@ cmake --build ./build
 
 #### Building from source
 
-Building from the source code archive files (eg. `tar.gz`) is just as easy, however sure to download the **specially prepared** `WineGUI-Source-*.tar.gz` archive file (instead of the GitLab generated source archives).  
-This WineGUI source archive contains the `version.txt` for you already, so the tarball is aware of the project version during the build.
+Building from the source code archive files (eg. `tar.gz`) is just as easy, however be sure to download the **specially prepared** `WineGUI-Source-*.tar.gz` archive file (instead of the GitLab generated source archives).  
+This WineGUI source archive contains the `version.txt` meaning the tarball is aware of the project version during the build.
 
-Alternatively, you can set the version yourself. Either by introducing a `version.txt` file in the root directory or set the option flag: `-DCUSTOM_PROJECT_VERSION` to the version you want, for example:
+There are various CMake options/variables flags you can set. Use `cmake -LAH` to see all options. For example (release build with `/usr` install prefix):
 
 ```bash
-cmake -GNinja -B build -DCUSTOM_PROJECT_VERSION:STRING="1.0.0"
+cmake -GNinja -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr
 ```
 
-Then execute the build using `cmake` as shown earlier.
+Then execute the build using: `cmake --build ./build` as shown earlier.
 
 ### Run
 
