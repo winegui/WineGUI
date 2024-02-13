@@ -93,7 +93,7 @@ static const string UpdateTimestamp = ".update-timestamp";
  * \brief Windows version table to convert Windows version in registry to BottleType Windows enum value.
  *  Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L51
  *
- * \note Don't forget to update the hardcoded WindowsEnumSize below!!
+ * \note Don't forget to update the hardcoded WindowsStructSize below!!
  */
 static const struct
 {
@@ -123,8 +123,8 @@ static const struct
                        {BottleTypes::Windows::Windows30, "win30", "3.0", "0", ""},
                        {BottleTypes::Windows::Windows20, "win20", "2.0", "0", ""}};
 
-//// Size of Windows enum class
-static const unsigned int WindowsEnumSize = 20; // See struct array size above
+//// Size of Windows Versions struct, see above!
+static const unsigned int WindowsStructSize = 20;
 
 /// Meyers Singleton
 Helper::Helper() = default;
@@ -598,7 +598,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   string win_version = Helper::get_reg_value(user_reg_file_path, RegKeyWine, RegNameWindowsVersion);
   if (!win_version.empty())
   {
-    for (unsigned int i = 0; i < WindowsEnumSize; i++)
+    for (unsigned int i = 0; i < WindowsStructSize; i++)
     {
       // Check if Windows version matches the win_version string
       if (((WindowsVersions[i].version).compare(win_version) == 0))
@@ -616,7 +616,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
     string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
     string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);
     // Find the correct Windows version, comparing the version, build number and NT type (if present)
-    for (unsigned int i = 0; i < WindowsEnumSize; i++)
+    for (unsigned int i = 0; i < WindowsStructSize; i++)
     {
       // Check if version + build number matches
       if (((WindowsVersions[i].versionNumber).compare(version) == 0) && ((WindowsVersions[i].buildNumber).compare(build_number_nt) == 0))
@@ -635,7 +635,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
       }
 
       // Fall-back - return the Windows version based on build NT number, even if the version number doesn't exactly match
-      for (unsigned int x = 0; x < WindowsEnumSize; x++)
+      for (unsigned int x = 0; x < WindowsStructSize; x++)
       {
         // Check if build number matches
         if ((WindowsVersions[x].buildNumber).compare(build_number_nt) == 0)
@@ -652,7 +652,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
     }
 
     // Fall-back of fall-back - return the Windows version based on version number, even if the build NT number doesn't exactly match
-    for (unsigned int y = 0; y < WindowsEnumSize; y++)
+    for (unsigned int y = 0; y < WindowsStructSize; y++)
     {
       // Check if version matches
       if ((WindowsVersions[y].versionNumber).compare(version) == 0)
@@ -688,7 +688,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
     }
 
     // Find Windows version
-    for (unsigned int i = 0; i < WindowsEnumSize; i++)
+    for (unsigned int i = 0; i < WindowsStructSize; i++)
     {
       // Check if version + build number matches
       if (((WindowsVersions[i].versionNumber).compare(current_version) == 0) && ((WindowsVersions[i].buildNumber).compare(current_build_number) == 0))
