@@ -33,7 +33,7 @@ namespace BottleTypes
    * \enum Windows
    * \brief List of Windows versions.
    * \note Don't forget to update the to_string methods if required!
-   * \note Don't forget to update the hardcoded size below! C++ -,-
+   * \note Don't forget to update WindowsVersions struct in helper.cc
    */
   enum class Windows
   {
@@ -57,9 +57,6 @@ namespace BottleTypes
     Windows10,
     Windows11
   };
-
-  //// Size of Windows enum class
-  static const unsigned int WindowsEnumSize = 19;
 
   /**
    * \enum Bit
