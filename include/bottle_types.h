@@ -58,9 +58,6 @@ namespace BottleTypes
     Windows11
   };
 
-  //// Size of Windows enum class
-  static const unsigned int WindowsEnumSize = 19;
-
   /**
    * \enum Bit
    * \brief Windows bit options

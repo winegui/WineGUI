@@ -92,7 +92,8 @@ static const string UpdateTimestamp = ".update-timestamp";
 /**
  * \brief Windows version table to convert Windows version in registry to BottleType Windows enum value.
  *  Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L51
- * \note Don't forget to update the hardcoded WindowsEnumSize in bottle_types.h!
+ *
+ * \note Don't forget to update the hardcoded WindowsEnumSize below!!
  */
 static const struct
 {
@@ -102,7 +103,7 @@ static const struct
   const string buildNumber;
   const string productType;
 } WindowsVersions[] = {{BottleTypes::Windows::Windows11, "win11", "11.0", "22000", "WinNT"},
-                       {BottleTypes::Windows::Windows10, "win10", "10.0", "18362", "WinNT"},
+                       {BottleTypes::Windows::Windows10, "win10", "10.0", "19043", "WinNT"},
                        {BottleTypes::Windows::Windows81, "win81", "6.3", "9600", "WinNT"},
                        {BottleTypes::Windows::Windows8, "win8", "6.2", "9200", "WinNT"},
                        {BottleTypes::Windows::Windows2008R2, "win2008r2", "6.1", "7601", "ServerNT"},
@@ -121,6 +122,9 @@ static const struct
                        {BottleTypes::Windows::Windows31, "win31", "3.10", "0", ""},
                        {BottleTypes::Windows::Windows30, "win30", "3.0", "0", ""},
                        {BottleTypes::Windows::Windows20, "win20", "2.0", "0", ""}};
+
+//// Size of Windows enum class
+static const unsigned int WindowsEnumSize = 20; // See struct array size above
 
 /// Meyers Singleton
 Helper::Helper() = default;
@@ -594,7 +598,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   string win_version = Helper::get_reg_value(user_reg_file_path, RegKeyWine, RegNameWindowsVersion);
   if (!win_version.empty())
   {
-    for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
+    for (unsigned int i = 0; i < WindowsEnumSize; i++)
     {
       // Check if Windows version matches the win_version string
       if (((WindowsVersions[i].version).compare(win_version) == 0))
@@ -612,7 +616,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
     string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
     string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);
     // Find the correct Windows version, comparing the version, build number and NT type (if present)
-    for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
+    for (unsigned int i = 0; i < WindowsEnumSize; i++)
     {
       // Check if version + build number matches
       if (((WindowsVersions[i].versionNumber).compare(version) == 0) && ((WindowsVersions[i].buildNumber).compare(build_number_nt) == 0))
@@ -631,7 +635,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
       }
 
       // Fall-back - return the Windows version based on build NT number, even if the version number doesn't exactly match
-      for (unsigned int x = 0; x < BottleTypes::WindowsEnumSize; x++)
+      for (unsigned int x = 0; x < WindowsEnumSize; x++)
       {
         // Check if build number matches
         if ((WindowsVersions[x].buildNumber).compare(build_number_nt) == 0)
@@ -648,7 +652,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
     }
 
     // Fall-back of fall-back - return the Windows version based on version number, even if the build NT number doesn't exactly match
-    for (unsigned int y = 0; y < BottleTypes::WindowsEnumSize; y++)
+    for (unsigned int y = 0; y < WindowsEnumSize; y++)
     {
       // Check if version matches
       if ((WindowsVersions[y].versionNumber).compare(version) == 0)
@@ -684,7 +688,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
     }
 
     // Find Windows version
-    for (unsigned int i = 0; i < BottleTypes::WindowsEnumSize; i++)
+    for (unsigned int i = 0; i < WindowsEnumSize; i++)
     {
       // Check if version + build number matches
       if (((WindowsVersions[i].versionNumber).compare(current_version) == 0) && ((WindowsVersions[i].buildNumber).compare(current_build_number) == 0))
