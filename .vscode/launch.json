@@ -8,19 +8,24 @@
       "name": "(gdb) Launch",
       "type": "cppdbg",
       "request": "launch",
-      "cwd": "${workspaceFolder}/build_debug",
-      "program": "${workspaceFolder}/build_debug/bin/winegui",
+      "program": "${workspaceFolder}/build/bin/winegui",
       "args": [],
       "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/build",
       "environment": [],
-      "externalConsole": true,
+      "externalConsole": false,
       "MIMode": "gdb",
       "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          },
+          {
+              "description": "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+          }
       ]
     }
   ]
