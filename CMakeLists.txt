@@ -6,6 +6,7 @@ set(PROJECT_TARGET winegui)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 option(doc "Build Documentation" OFF)
+option(package "Build packages in release mode" OFF)
 
 # If we have a git folder, get GIT_TAG_VERSION from most recent git tag
 if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
@@ -33,8 +34,10 @@ project(${PROJECT_NAME}
   DESCRIPTION "WineGUI is a user-friendly WINE graphical interface"
   LANGUAGES CXX)
 
-message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
-message("PROJECT_VERSION = ${PROJECT_VERSION}")
+message("Project version: ${PROJECT_VERSION}")
+message("Build type: ${CMAKE_BUILD_TYPE}")
+message("Create packages: ${package}")
+message("Generate documentation: ${doc}")
 
 # Cmake settings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
@@ -58,8 +61,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set (DATADIR share CACHE PATH "datadir")
 
-# Production build
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+# Production build and packaging is ON
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Release" AND package)
   # Include CPack packaging settings
   include(packaging)
 endif()
