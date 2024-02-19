@@ -34,10 +34,10 @@ project(${PROJECT_NAME}
   DESCRIPTION "WineGUI is a user-friendly WINE graphical interface"
   LANGUAGES CXX)
 
-message("Project version: ${PROJECT_VERSION}")
-message("Build type: ${CMAKE_BUILD_TYPE}")
-message("Create packages: ${package}")
-message("Generate documentation: ${doc}")
+message(STATUS "Project version: ${PROJECT_VERSION}")
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Create packages: ${package}")
+message(STATUS "Generate documentation: ${doc}")
 
 # Cmake settings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
