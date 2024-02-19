@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.20)
 set(PROJECT_NAME WineGUI)
 set(PROJECT_TARGET winegui)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+option(DOXYGEN "Build Documentation" OFF)
+option(PACKAGE "Build packages in release mode" OFF)
 
-option(doc "Build Documentation" OFF)
-option(package "Build packages in release mode" OFF)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 # If we have a git folder, get GIT_TAG_VERSION from most recent git tag
 if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
@@ -36,8 +36,8 @@ project(${PROJECT_NAME}
 
 message(STATUS "Project version: ${PROJECT_VERSION}")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Create packages: ${package}")
-message(STATUS "Generate documentation: ${doc}")
+message(STATUS "Create packages: ${PACKAGE}")
+message(STATUS "Generate documentation: ${DOXYGEN}")
 
 # Cmake settings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
@@ -62,7 +62,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set (DATADIR share CACHE PATH "datadir")
 
 # Production build and packaging is ON
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Release" AND package)
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Release" AND PACKAGE)
   # Include CPack packaging settings
   include(packaging)
 endif()
@@ -146,7 +146,7 @@ add_custom_target( run
 ############
 # Doxygen  #
 ############
-if(doc)
+if(DOXYGEN)
   include(doxygen)
 endif()
 

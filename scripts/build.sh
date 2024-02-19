@@ -4,7 +4,7 @@
 
 if [ -z "$(ls build)" ]; then
   echo "INFO: Run cmake & ninja"
-  cmake -GNinja -Ddoc=ON -B build
+  cmake -GNinja -DDOXYGEN=ON -B build
 else
   echo "INFO: Only run ninja..."
 fi
