@@ -152,9 +152,10 @@ For production build and DEB file package, you can run: `./scripts/build_prod.sh
 Or use:
 
 ```sh
-cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=Release -B build_prod
-
+cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -DPACKAGE -DCMAKE_BUILD_TYPE=Release -B build_prod
 cmake --build ./build_prod --config Release
+cd build_prod
+cpack -C Release -G "DEB"
 ```
 
 ### Build Doxygen
@@ -162,7 +163,7 @@ cmake --build ./build_prod --config Release
 Or build with generated doxygen files locally:
 
 ```sh
-cmake -GNinja -Ddoc=ON -B build_docs
+cmake -GNinja -DDOXYGEN=ON -B build_docs
 cmake --build ./build_docs --target Doxygen
 ```
 
