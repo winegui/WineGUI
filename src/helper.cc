@@ -130,7 +130,7 @@ struct file_deleter
 {
   void operator()(std::FILE* fp)
   {
-    std::fclose(fp);
+    pclose(fp);
   }
 };
 
