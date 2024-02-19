@@ -126,6 +126,16 @@ static const struct
 //// Size of Windows Versions struct, see above!
 static const unsigned int WindowsStructSize = 20;
 
+struct file_deleter
+{
+  void operator()(std::FILE* fp)
+  {
+    std::fclose(fp);
+  }
+};
+
+using unique_file = std::unique_ptr<std::FILE, file_deleter>;
+
 /// Meyers Singleton
 Helper::Helper() = default;
 /// Destructor
@@ -1620,7 +1630,7 @@ string Helper::exec(const char* cmd)
 
   // Execute command using popen,
   // And use the standard C pclose method during stream closure.
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), &pclose);
+  unique_file pipe{popen(cmd, "r")};
   if (!pipe)
   {
     throw std::runtime_error("popen() failed!");
@@ -1646,8 +1656,17 @@ string Helper::exec_error_message(const char* cmd)
   string output = "";
 
   // Execute command using popen
-  // Use a custom close file function during the pipe close (close_exec_stream method, see below)
-  std::unique_ptr<FILE, decltype(&close_exec_stream)> pipe(popen(cmd, "r"), &close_exec_stream);
+  struct custom_file_deleter
+  {
+    void operator()(std::FILE* fp)
+    {
+      // Use a custom close file function during the pipe close (close_exec_stream)
+      // See close_exec_stream below.
+      Helper::close_exec_stream(fp);
+    }
+  };
+  using unique_file_custom_deleter = std::unique_ptr<std::FILE, custom_file_deleter>;
+  unique_file_custom_deleter pipe{popen(cmd, "r")};
   if (!pipe)
   {
     throw std::runtime_error("popen() failed!");
