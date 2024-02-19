@@ -67,6 +67,20 @@
     "concepts": "cpp",
     "numbers": "cpp",
     "semaphore": "cpp",
-    "stop_token": "cpp"
+    "stop_token": "cpp",
+    "variant": "cpp",
+    "__bit_reference": "cpp",
+    "__bits": "cpp",
+    "__config": "cpp",
+    "__debug": "cpp",
+    "__hash_table": "cpp",
+    "__locale": "cpp",
+    "__node_handle": "cpp",
+    "__split_buffer": "cpp",
+    "__threading_support": "cpp",
+    "__tuple": "cpp",
+    "__verbose_abort": "cpp",
+    "ios": "cpp",
+    "locale": "cpp"
 }
 }
