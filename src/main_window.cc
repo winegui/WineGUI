@@ -901,8 +901,6 @@ void MainWindow::check_version(MainWindow* mainWindow, bool show_equal_or_error)
           info_message_ = "WineGUI release is up-to-date. Well done!";
         }
         mainWindow->signal_info_message_check_version();
-        // Should trigger:
-        // show_info_message("WineGUI release is up-to-date. Well done!");
       }
     }
   }
@@ -915,8 +913,6 @@ void MainWindow::check_version(MainWindow* mainWindow, bool show_equal_or_error)
         error_message_ = "We could not determine the latest WineGUI version. Try again later.";
       }
       mainWindow->signal_error_message_check_version();
-      // Should trigger:
-      // show_error_message("We could not determine the latest WineGUI version. Try again later.");
     }
   }
 }
