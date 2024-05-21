@@ -55,8 +55,6 @@ SignalController::SignalController(BottleManager& manager,
       configure_window_(configure_window),
       add_app_window_(add_app_window),
       remove_app_window_(remove_app_window),
-      bottle_created_dispatcher_(),
-      error_message_created_dispatcher_(),
       thread_bottle_manager_(nullptr)
 {
   // Nothing
