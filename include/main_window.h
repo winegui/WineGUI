@@ -31,6 +31,7 @@
 #include <iostream>
 #include <list>
 #include <string>
+#include <thread>
 
 using std::cout;
 using std::endl;
@@ -91,10 +92,13 @@ public:
 protected:
   // Signal handlers
   void on_startup_version_update();
-  bool delete_window(GdkEventAny* any_event);
-  Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
+  void on_error_message_check_version();
+  void on_info_message_check_version();
+  void on_new_version_available();
+  bool on_delete_window(GdkEventAny* any_event);
 
-  AppListModelColumns app_list_columns; /*!< Application list model columns for app tree view */
+  Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
+  AppListModelColumns app_list_columns;        /*!< Application list model columns for app tree view */
 
   // Child widgets
   Gtk::Box vbox;    /*!< The main vertical box */
@@ -154,8 +158,20 @@ protected:
   // Busy dialog
   BusyDialog busy_dialog_; /*!< Busy dialog, when the user should wait until install is finished */
 private:
+  mutable std::mutex info_message_mutex_;  /*!< Synchronizes access to info message using mutex */
+  mutable std::mutex error_message_mutex_; /*!< Synchronizes access to error message using mutex */
+  mutable std::mutex new_version_mutex_;   /*!< Synchronizes access to new version using mutex */
+  Glib::ustring info_message_;
+  Glib::ustring error_message_;
+  string new_version_;
   BottleNewAssistant new_bottle_assistant_; /*!< New bottle wizard (behind the "new" toolbar button) */
   GeneralConfigData general_config_data_;
+  std::thread* thread_check_version_; /*!< Thread for checking version */
+  // Dispatchers for handling signals from the thread towards a GUI thread
+  Glib::Dispatcher error_message_check_version_dispatcher_;
+  Glib::Dispatcher info_message_check_version_dispatcher_;
+  Glib::Dispatcher new_version_available_dispatcher_;
+  Glib::Dispatcher check_version_finished_dispatcher_;
 
   // Signal handlers
   virtual void on_bottle_row_clicked(Gtk::ListBoxRow* row);
@@ -167,7 +183,9 @@ private:
   void set_detailed_info(const BottleItem& bottle);
   void set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_List);
   void add_application(const string& name, const string& description, const string& command, const string& icon_name, bool is_icon_full_path = false);
-  void check_version_update(bool show_equal = false);
+  void cleanup_check_version_thread();
+  void check_version_update(bool show_equal_or_error = false);
+  void check_version(bool show_equal_or_error);
   void load_stored_window_settings();
   void create_left_panel();
   void create_right_panel();
