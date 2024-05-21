@@ -123,11 +123,12 @@ MainWindow::MainWindow(Menu& menu)
   error_message_check_version_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_error_message_check_version));
   info_message_check_version_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_info_message_check_version));
   new_version_available_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_new_version_available));
+  check_version_finished_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::cleanup_check_version_thread));
 
   // Check for update (when GTK is idle)
   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_startup_version_update), Glib::PRIORITY_DEFAULT_IDLE);
   // Window closed signal
-  signal_delete_event().connect(sigc::mem_fun(this, &MainWindow::signal_delete_window));
+  signal_delete_event().connect(sigc::mem_fun(this, &MainWindow::on_delete_window));
 
   // Show the widget children
   show_all_children();
@@ -561,7 +562,7 @@ void MainWindow::on_new_version_available()
 /**
  * \brief Called when Window is closed/exited
  */
-bool MainWindow::signal_delete_window(GdkEventAny* any_event __attribute__((unused)))
+bool MainWindow::on_delete_window(GdkEventAny* any_event __attribute__((unused)))
 {
   if (window_settings)
   {
@@ -577,30 +578,6 @@ bool MainWindow::signal_delete_window(GdkEventAny* any_event __attribute__((unus
       window_settings->set_int("position-divider-container-paned", container_paned.get_position());
   }
   return false;
-}
-
-/**
- * \brief Signal error message during version check
- */
-void MainWindow::signal_error_message_check_version()
-{
-  error_message_check_version_dispatcher_.emit();
-}
-
-/**
- * \brief Signal info message during version check
- */
-void MainWindow::signal_info_message_check_version()
-{
-  info_message_check_version_dispatcher_.emit();
-}
-
-/**
- * \brief Signal for new available version (opens dialog)
- */
-void MainWindow::signal_new_version_available()
-{
-  new_version_available_dispatcher_.emit();
 }
 
 /**
@@ -866,16 +843,15 @@ void MainWindow::check_version_update(bool show_equal_or_error)
   else
   {
     // Start the check version thread
-    thread_check_version_ = new std::thread([this, show_equal_or_error] { check_version(this, show_equal_or_error); });
+    thread_check_version_ = new std::thread([this, show_equal_or_error] { check_version(show_equal_or_error); });
   }
 }
 
 /**
  * \brief Check WineGUI version (runs in thread)
- * \param[in] mainWindow Main Window pointer, in order to signal back events
  * \param[in] show_equal_or_error Also show message when the versions matches or an error occurs.
  */
-void MainWindow::check_version(MainWindow* mainWindow, bool show_equal_or_error)
+void MainWindow::check_version(bool show_equal_or_error)
 {
   string version = Helper::open_file_from_uri("https://winegui.melroy.org/latest_release.txt");
   // Remove new lines
@@ -889,7 +865,8 @@ void MainWindow::check_version(MainWindow* mainWindow, bool show_equal_or_error)
         std::lock_guard<std::mutex> lock(new_version_mutex_);
         new_version_ = version;
       }
-      mainWindow->signal_new_version_available(); // Will eventually show a dialog
+      this->new_version_available_dispatcher_.emit(); // Will eventually show a dialog
+      return;
     }
     else
     {
@@ -900,7 +877,8 @@ void MainWindow::check_version(MainWindow* mainWindow, bool show_equal_or_error)
           std::lock_guard<std::mutex> lock(info_message_mutex_);
           info_message_ = "WineGUI release is up-to-date. Well done!";
         }
-        mainWindow->signal_info_message_check_version();
+        this->info_message_check_version_dispatcher_.emit();
+        return;
       }
     }
   }
@@ -912,9 +890,11 @@ void MainWindow::check_version(MainWindow* mainWindow, bool show_equal_or_error)
         std::lock_guard<std::mutex> lock(error_message_mutex_);
         error_message_ = "We could not determine the latest WineGUI version. Try again later.";
       }
-      mainWindow->signal_error_message_check_version();
+      this->error_message_check_version_dispatcher_.emit();
+      return;
     }
   }
+  this->check_version_finished_dispatcher_.emit(); // Clean-up the thread pointer
 }
 
 /**

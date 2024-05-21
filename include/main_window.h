@@ -95,11 +95,7 @@ protected:
   void on_error_message_check_version();
   void on_info_message_check_version();
   void on_new_version_available();
-
-  bool signal_delete_window(GdkEventAny* any_event);
-  void signal_error_message_check_version();
-  void signal_info_message_check_version();
-  void signal_new_version_available();
+  bool on_delete_window(GdkEventAny* any_event);
 
   Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
   AppListModelColumns app_list_columns;        /*!< Application list model columns for app tree view */
@@ -175,6 +171,7 @@ private:
   Glib::Dispatcher error_message_check_version_dispatcher_;
   Glib::Dispatcher info_message_check_version_dispatcher_;
   Glib::Dispatcher new_version_available_dispatcher_;
+  Glib::Dispatcher check_version_finished_dispatcher_;
 
   // Signal handlers
   virtual void on_bottle_row_clicked(Gtk::ListBoxRow* row);
@@ -188,7 +185,7 @@ private:
   void add_application(const string& name, const string& description, const string& command, const string& icon_name, bool is_icon_full_path = false);
   void cleanup_check_version_thread();
   void check_version_update(bool show_equal_or_error = false);
-  void check_version(MainWindow* mainWindow, bool show_equal_or_error);
+  void check_version(bool show_equal_or_error);
   void load_stored_window_settings();
   void create_left_panel();
   void create_right_panel();
