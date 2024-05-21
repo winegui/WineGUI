@@ -103,7 +103,7 @@ private:
   AddAppWindow& add_app_window_;
   RemoveAppWindow& remove_app_window_;
 
-  // Dispatcher for handling signals from the thread towards a GUI thread
+  // Dispatchers for handling signals from the thread towards a GUI thread
   Glib::Dispatcher bottle_created_dispatcher_;
   Glib::Dispatcher bottle_updated_dispatcher_;
   Glib::Dispatcher bottle_cloned_dispatcher_;

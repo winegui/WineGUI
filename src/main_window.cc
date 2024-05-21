@@ -43,7 +43,8 @@ MainWindow::MainWindow(Menu& menu)
       app_list_top_hbox(Gtk::Orientation::ORIENTATION_HORIZONTAL),
       container_paned(Gtk::Orientation::ORIENTATION_HORIZONTAL),
       separator1(Gtk::Orientation::ORIENTATION_HORIZONTAL),
-      busy_dialog_(*this)
+      busy_dialog_(*this),
+      thread_check_version_(nullptr)
 {
   // Set some Window properties
   set_title("WineGUI - WINE Manager");
@@ -118,10 +119,15 @@ MainWindow::MainWindow(Menu& menu)
   remove_app_list_button.signal_clicked().connect(show_remove_app_window);
   refresh_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_refresh_app_list_button_clicked));
 
+  // Dispatch signals
+  error_message_check_version_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_error_message_check_version));
+  info_message_check_version_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_info_message_check_version));
+  new_version_available_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_new_version_available));
+
   // Check for update (when GTK is idle)
   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_startup_version_update), Glib::PRIORITY_DEFAULT_IDLE);
   // Window closed signal
-  signal_delete_event().connect(sigc::mem_fun(this, &MainWindow::delete_window));
+  signal_delete_event().connect(sigc::mem_fun(this, &MainWindow::signal_delete_window));
 
   // Show the widget children
   show_all_children();
@@ -132,6 +138,8 @@ MainWindow::MainWindow(Menu& menu)
  */
 MainWindow::~MainWindow()
 {
+  // Avoid zombies
+  this->cleanup_check_version_thread();
 }
 
 /**
@@ -498,13 +506,62 @@ void MainWindow::on_new_bottle_apply()
  */
 void MainWindow::on_startup_version_update()
 {
-  check_version_update(); // Without message when versions are equal
+  // Silent check
+  check_version_update();
+}
+
+/**
+ * \brief Show error messages from the version check thread
+ */
+void MainWindow::on_error_message_check_version()
+{
+  this->cleanup_check_version_thread();
+
+  {
+    std::lock_guard<std::mutex> lock(error_message_mutex_);
+    show_error_message(error_message_);
+  }
+}
+
+/**
+ * \brief Show info messages from the version check thread
+ */
+void MainWindow::on_info_message_check_version()
+{
+  this->cleanup_check_version_thread();
+
+  {
+    std::lock_guard<std::mutex> lock(info_message_mutex_);
+    show_info_message(info_message_);
+  }
+}
+
+/**
+ * \brief Show new version available dialog from the version check thread
+ */
+void MainWindow::on_new_version_available()
+{
+  this->cleanup_check_version_thread();
+
+  // Show dialog
+  {
+    std::lock_guard<std::mutex> lock(new_version_mutex_);
+    string message = "<b>New WineGUI release is out.</b> Please, <i>update</i> WineGUI to the latest release.\n"
+                     "You are using: v" +
+                     std::string(PROJECT_VER) + ". Latest version: v" + new_version_ + ".";
+    Gtk::MessageDialog dialog(*this, message, true, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
+    dialog.set_secondary_text("<big><a href=\"https://gitlab.melroy.org/melroy/winegui/-/releases\">Download the latest release now!</a></big>",
+                              true);
+    dialog.set_title("New WineGUI Release!");
+    dialog.set_modal(true);
+    dialog.run();
+  }
 }
 
 /**
  * \brief Called when Window is closed/exited
  */
-bool MainWindow::delete_window(GdkEventAny* any_event __attribute__((unused)))
+bool MainWindow::signal_delete_window(GdkEventAny* any_event __attribute__((unused)))
 {
   if (window_settings)
   {
@@ -520,6 +577,30 @@ bool MainWindow::delete_window(GdkEventAny* any_event __attribute__((unused)))
       window_settings->set_int("position-divider-container-paned", container_paned.get_position());
   }
   return false;
+}
+
+/**
+ * \brief Signal error message during version check
+ */
+void MainWindow::signal_error_message_check_version()
+{
+  error_message_check_version_dispatcher_.emit();
+}
+
+/**
+ * \brief Signal info message during version check
+ */
+void MainWindow::signal_info_message_check_version()
+{
+  info_message_check_version_dispatcher_.emit();
+}
+
+/**
+ * \brief Signal for new available version (opens dialog)
+ */
+void MainWindow::signal_new_version_available()
+{
+  new_version_available_dispatcher_.emit();
 }
 
 /**
@@ -756,42 +837,86 @@ void MainWindow::add_application(const string& name, const string& description, 
 }
 
 /**
- * \brief Check for WineGUI version, is there an update?
- * \param show_equal Also show user message when the versions matches.
+ * \brief Helper method for cleaning the manage thread.
  */
-void MainWindow::check_version_update(bool show_equal)
+void MainWindow::cleanup_check_version_thread()
+{
+  if (thread_check_version_)
+  {
+    if (thread_check_version_->joinable())
+      thread_check_version_->join();
+    delete thread_check_version_;
+    thread_check_version_ = nullptr;
+  }
+}
+
+/**
+ * \brief Check for WineGUI version, is there an update?
+ * \param show_equal_or_error Also show message when the versions matches or an error occurs.
+ */
+void MainWindow::check_version_update(bool show_equal_or_error)
+{
+  if (thread_check_version_)
+  {
+    if (show_equal_or_error)
+    {
+      show_error_message("WineGUI version check already running");
+    }
+  }
+  else
+  {
+    // Start the check version thread
+    thread_check_version_ = new std::thread([this, show_equal_or_error] { check_version(this, show_equal_or_error); });
+  }
+}
+
+/**
+ * \brief Check WineGUI version (runs in thread)
+ * \param[in] mainWindow Main Window pointer, in order to signal back events
+ * \param[in] show_equal_or_error Also show message when the versions matches or an error occurs.
+ */
+void MainWindow::check_version(MainWindow* mainWindow, bool show_equal_or_error)
 {
   string version = Helper::open_file_from_uri("https://winegui.melroy.org/latest_release.txt");
   // Remove new lines
   version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
   if (!version.empty())
   {
-    // Is there a different version? Show the user the message to update to the latest release.
+    // Is there a different version? Signal a new version available.
     if (version.compare(PROJECT_VER) != 0)
     {
-      string message = "<b>New WineGUI release is out.</b> Please, <i>update</i> WineGUI to the latest release.\n"
-                       "You are using: v" +
-                       std::string(PROJECT_VER) + ". Latest version: v" + version + ".";
-      Gtk::MessageDialog dialog(*this, message, true, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
-      dialog.set_secondary_text("<big><a href=\"https://gitlab.melroy.org/melroy/winegui/-/releases\">Download the latest release now!</a></big>",
-                                true);
-      dialog.set_title("New WineGUI Release!");
-      dialog.set_modal(true);
-      dialog.run();
+      {
+        std::lock_guard<std::mutex> lock(new_version_mutex_);
+        new_version_ = version;
+      }
+      mainWindow->signal_new_version_available(); // Will eventually show a dialog
     }
     else
     {
-      if (show_equal)
+      if (show_equal_or_error)
       {
-        show_info_message("WineGUI release is up-to-date. Well done!");
+
+        {
+          std::lock_guard<std::mutex> lock(info_message_mutex_);
+          info_message_ = "WineGUI release is up-to-date. Well done!";
+        }
+        mainWindow->signal_info_message_check_version();
+        // Should trigger:
+        // show_info_message("WineGUI release is up-to-date. Well done!");
       }
     }
   }
   else
   {
-    if (show_equal)
+    if (show_equal_or_error)
     {
-      show_error_message("We could determine the latest WineGUI version. Try again later.");
+      {
+        std::lock_guard<std::mutex> lock(error_message_mutex_);
+        error_message_ = "We could not determine the latest WineGUI version. Try again later.";
+      }
+      mainWindow->signal_error_message_check_version();
+      // Should trigger:
+      // show_error_message("We could not determine the latest WineGUI version. Try again later.");
     }
   }
 }
