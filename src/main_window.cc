@@ -837,7 +837,7 @@ void MainWindow::check_version_update(bool show_equal_or_error)
   {
     if (show_equal_or_error)
     {
-      show_error_message("WineGUI version check already running");
+      show_error_message("WineGUI version check is stilling running. Please try again later.");
     }
   }
   else
