@@ -125,8 +125,8 @@ MainWindow::MainWindow(Menu& menu)
   new_version_available_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_new_version_available));
   check_version_finished_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::cleanup_check_version_thread));
 
-  // Check for update (when GTK is idle)
-  Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_startup_version_update), Glib::PRIORITY_DEFAULT_IDLE);
+  // Check for update without (error) messages, when app is idle
+  Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &MainWindow::check_version_update), false), Glib::PRIORITY_DEFAULT_IDLE);
   // Window closed signal
   signal_delete_event().connect(sigc::mem_fun(this, &MainWindow::on_delete_window));
 
@@ -500,15 +500,6 @@ void MainWindow::on_new_bottle_apply()
 
   // Emit new bottle signal (see dispatcher)
   new_bottle.emit(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
-}
-
-/**
- * \brief Check for WineGUI version, is there an update?
- */
-void MainWindow::on_startup_version_update()
-{
-  // Silent check
-  check_version_update();
 }
 
 /**

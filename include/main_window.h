@@ -91,7 +91,6 @@ public:
 
 protected:
   // Signal handlers
-  void on_startup_version_update();
   void on_error_message_check_version();
   void on_info_message_check_version();
   void on_new_version_available();
