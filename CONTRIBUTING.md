@@ -62,7 +62,7 @@ This project and everyone participating in it is governed by the [WineGUI Code o
 3. Push your branch to your forked repository on GitHub.
 4. Open a Pull Request on the [GitHub repository](https://github.com/winegui/WineGUI/pulls).
 
-Alternatively, if you prefer, you can submit Merge Requests via the [GitLab instance](https://gitlab.melroy.org/WineGUI/WineGUI) (assuming you have access).
+Alternatively, if you prefer, you can submit Merge Requests via the [GitLab instance](https://gitlab.melroy.org/melroy/winegui) (assuming you have access).
 
 ## Coding Standards
 
@@ -90,7 +90,7 @@ Alternatively, if you prefer, you can submit Merge Requests via the [GitLab inst
 ## Resources
 
 - [GitHub Mirror](https://github.com/winegui/WineGUI)
-- [GitLab Main Project](https://gitlab.melroy.org/WineGUI/WineGUI)
+- [GitLab Main Project](https://gitlab.melroy.org/melroy/winegui)
 - [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
 - [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
 - [Clang-Format Documentation](https://clang.llvm.org/docs/ClangFormat.html)
