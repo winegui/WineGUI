@@ -4,7 +4,6 @@ At last, a user-interface friendly [Wine](https://www.winehq.org/) (A compatibil
 
 [![Pipeline](https://gitlab.melroy.org/melroy/winegui/badges/main/pipeline.svg)](https://gitlab.melroy.org/melroy/winegui/-/pipelines/latest)
 [![Telegram](https://img.shields.io/badge/chat-on%20telegram-brightgreen)](https://t.me/winegui)
-[![Matrix](https://img.shields.io/badge/chat-on%20matrix-brightgreen)](https://matrix.to/#/#winegui:melroy.org)
 [![Release](https://img.shields.io/badge/release-latest-orange)](https://gitlab.melroy.org/melroy/winegui/-/releases)
 
 ![WineGUI](misc/winegui_screenshots.gif)
@@ -32,22 +31,17 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 
 ---
 
+## Contributing
+
+Thank you for considering contributing!
+
+Please, read the dedicated [contributing page](CONTRIBUTING.md).
+
 ## Development
 
-WineGUI is created by using [GTK3 toolkit](https://www.gtk.org/) (Gtkmm C++-interface) and C++ code.
-
-Development has been done in VSCcodium, using the following extensions:
-
-- C/C++
-- CMake
-- CMake Tools
-- GitLab Workflow
-
-### Documentation
-
-See latest [WineGUI Developer Docs](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/main/file/doc/doxygen/index.html?job=test-build).
-
 ### Requirements
+
+WineGUI is created by using [GTK3 toolkit](https://www.gtk.org/) (Gtkmm C++-interface) and C++ code.
 
 Dependencies should be met before build:
 
@@ -60,7 +54,7 @@ Dependencies should be met before build:
 
 Optionally:
 
-- Ccache (optional, but much **recommended**)
+- Ccache (optional, but recommended)
 - doxygen
 - graphviz
 - rpm
@@ -107,7 +101,7 @@ Or execute the binary directly:
 
 ### Rebuild
 
-Configuring the ninja build system via CMake is often only needed once (`cmake -GNinja -B build`), after that just execute:
+Configuring the Ninja build system via CMake is often only needed once (`cmake -GNinja -B build`), after that just execute:
 
 ```bash
 cmake --build ./build
@@ -127,22 +121,6 @@ Start debugging in [GDB (GNU Debugger)](https://cs.brown.edu/courses/cs033/docs/
 ```sh
 cd build_debug
 gdb -ex=run bin/winegui
-```
-
-### Memory check
-
-First **build** the (Linux) target including _debug symbols_. Binary should be present in the `build/bin` directory.
-
-Next, check for memory leaks using `valgrind` by executing:
-
-```sh
-./scripts/valgrind.sh
-```
-
-Or to generate a memory usage plot in [massif format](https://valgrind.org/docs/manual/ms-manual.html), execute:
-
-```sh
-./scripts/valgrind_plot.sh
 ```
 
 ### Production
@@ -167,36 +145,32 @@ cmake -GNinja -DDOXYGEN=ON -B build_docs
 cmake --build ./build_docs --target Doxygen
 ```
 
+### Documentation
+
+See latest [WineGUI Doxygen webpage](https://gitlab.melroy.org/melroy/winegui/-/jobs/artifacts/main/file/doc/doxygen/index.html?job=test-build).
+
+### Memory check
+
+First build the (Linux) target including _debug symbols_ (see [Debug](#debug) section above). Binary should be present in the `build/bin` directory.
+
+Next, check for memory leaks using `valgrind` by executing:
+
+```sh
+./scripts/valgrind.sh
+```
+
+Or to generate a memory usage plot in [massif format](https://valgrind.org/docs/manual/ms-manual.html), execute:
+
+```sh
+./scripts/valgrind_plot.sh
+```
+
 ### Releasing
 
 Before you can make a new release, align the version number in WineGUI with the version you want to release.
 Then create a new tagged version in Gitlab with the same version name.
 
 _Note:_ Only a `release tag` on the `main` branch will trigger the publish task.
-
-### Automated Clang Format
-
-We use our [own Clang LLVM C++ Programming Style Format](.clang-format), using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) command.
-
-To automatically comply to our style format execute following script (inplace edits are performed for you):
-
-```sh
-./scripts/fix_format.sh
-```
-
-Or depend on the docker image instead of your local `clang-format`:
-
-```sh
-./scripts/fix_format.sh docker
-```
-
-Check only for errors, run: `./scripts/check_format.sh` (same idea with Docker, run: `./scripts/check_format.sh docker` to not depend on your local `clang-format` tool)
-
-### Guidelines
-
-First we try to use the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) as basis.
-
-Next, we also tend to follow the popular [C++ Core Guidelines](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) as much as possible.
 
 ### CI/CD
 
