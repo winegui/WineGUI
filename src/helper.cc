@@ -442,8 +442,8 @@ void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, Bot
   if (exit_code != 0)
   {
     std::cerr << "Error: Couldn't create Wine bottle. Command: " << command << ", output: " << output << std::endl;
-    throw std::runtime_error("Failed to create Wine prefix: " + get_folder_name(prefix_path) + ". \nWith the following output:\n" + output +
-                             "\n\nCommand executed:\n " + command);
+    throw std::runtime_error("Failed to create Wine prefix: " + get_folder_name(prefix_path) + ". \n\nWith the following output:\n\n" + output +
+                             "\n\nCommand executed:\n" + command);
   }
 }
 
