@@ -1541,13 +1541,12 @@ string Helper::string_to_icon(const std::string& string)
  */
 std::pair<int, string> Helper::exec(const string& command)
 {
-  // Max 128 characters
-  std::array<char, 128> buffer{};
   int exit_code = -1;
   string output = "";
 
   // local scope kicks off pclose before returning exit_code
   {
+    std::array<char, 128> buffer{};
     // And use the standard C pclose method during stream closure.
     auto deleter = [&exit_code](std::FILE* ptr) { exit_code = pclose(ptr); };
 
