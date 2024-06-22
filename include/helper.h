@@ -98,8 +98,8 @@ private:
   Helper(const Helper&) = delete;
   Helper& operator=(const Helper&) = delete;
 
-  static string exec(const char* cmd);
-  static string exec_error_message(const char* cmd);
+  static std::pair<int, string> exec(const std::string& command);
+  static string exec_error_message(const std::string& command);
   static int close_exec_stream(std::FILE* file);
   static void write_file(const string& filename, const string& contents);
   static string read_file(const string& filename);
