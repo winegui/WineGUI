@@ -436,7 +436,7 @@ void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, Bot
   string wine_dll_overrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
   string command =
       "WINEPREFIX=\"" + prefix_path + "\"" + wine_arch + wine_dll_overrides + " " + Helper::get_wine_executable_location(wine_64_bit) + " wineboot";
-  auto exec_result = exec(command);
+  auto exec_result = exec(command + " 2>&1");
   int exit_code = exec_result.first;
   string output = exec_result.second;
   if (exit_code != 0)
