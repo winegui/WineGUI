@@ -126,16 +126,6 @@ static const struct
 //// Size of Windows Versions struct, see above!
 static const unsigned int WindowsStructSize = 20;
 
-struct file_deleter
-{
-  void operator()(std::FILE* fp)
-  {
-    pclose(fp);
-  }
-};
-
-using unique_file = std::unique_ptr<std::FILE, file_deleter>;
-
 /// Meyers Singleton
 Helper::Helper() = default;
 /// Destructor
@@ -196,6 +186,7 @@ std::vector<std::string> Helper::get_bottles_paths(const string& dir_path, bool 
 /**
  * \brief Run any program with only setting the WINEPREFIX env variable (run this method async).
  * Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
+ * Improvement/TODO: We could now also log the output from the program into a GUI console window.
  * \param[in] prefix_path The path to wine bottle
  * \param[in] debug_log_level Debug log level
  * \param[in] program Program that gets executed (ideally full path)
@@ -213,12 +204,13 @@ string Helper::run_program(const string& prefix_path, int debug_log_level, const
   if (give_error)
   {
     // Execute the command that also shows an error message to the user when exit code is non-zero
-    output = exec_error_message(command.c_str());
+    output = exec_error_message(command);
   }
   else
   {
     // No error message when exit code is non-zero, but we can still return the output and log to disk (if logging is enabled)
-    output = exec(command.c_str());
+    auto exec_result = exec(command);
+    output = exec_result.second;
   }
   return output;
 }
@@ -276,10 +268,13 @@ string Helper::get_log_file_path(const string& logging_bottle_prefix)
  */
 void Helper::wait_until_wineserver_is_terminated(const string& prefix_path)
 {
-  string exit_code = exec(("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w; echo $?").c_str());
-  if (exit_code == "124")
+  auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w");
+  int exit_code = exec_result.first;
+  string output = exec_result.second;
+  if (exit_code == 124)
   {
     std::cout << "INFO: Time-out of wineserver wait command triggered (wineserver is still running..)" << std::endl;
+    std::cout << "INFO: Output of wineserver: " << output << std::endl;
   }
 }
 
@@ -289,35 +284,23 @@ void Helper::wait_until_wineserver_is_terminated(const string& prefix_path)
  */
 int Helper::determine_wine_executable()
 {
-  int return_status = -2;
+  int return_status = -1;
   // Try wine 32-bit
-  string output32 = exec(("command -v " + Helper::get_wine_executable_location(false) + " >/dev/null 2>&1; echo $?").c_str());
-  if (!output32.empty())
+  auto exec_result32 = exec("command -v " + Helper::get_wine_executable_location(false));
+  int exit_code32 = exec_result32.first;
+  if (exit_code32 == 0)
   {
-    // Remove new lines
-    output32.erase(std::remove(output32.begin(), output32.end(), '\n'), output32.end());
-    if (output32.compare("0") == 0)
-    {
-      return_status = 0;
-    }
+    return_status = 0;
   }
   // Try wine 64-bit
-  if (return_status == -2)
+  if (return_status != 0)
   {
-    string output64 = exec(("command -v " + Helper::get_wine_executable_location(true) + " >/dev/null 2>&1; echo $?").c_str());
-    if (!output64.empty())
+    auto exec_result64 = exec("command -v " + Helper::get_wine_executable_location(true));
+    int exit_code64 = exec_result64.first;
+    if (exit_code64 == 0)
     {
-      // Remove new lines
-      output64.erase(std::remove(output64.begin(), output64.end(), '\n'), output64.end());
-      if (output64.compare("0") == 0)
-      {
-        return_status = 1;
-      }
+      return_status = 1;
     }
-  }
-  if (return_status == -2)
-  {
-    return_status = -1;
   }
   return return_status;
 }
@@ -365,8 +348,10 @@ string Helper::get_winetricks_location()
  */
 string Helper::get_wine_version(bool wine_64_bit)
 {
-  string output = exec((Helper::get_wine_executable_location(wine_64_bit) + " --version").c_str());
-  if (!output.empty())
+  auto exec_result = exec(Helper::get_wine_executable_location(wine_64_bit) + " --version");
+  int exit_code = exec_result.first;
+  string output = exec_result.second;
+  if (exit_code == 0 && !output.empty())
   {
     std::vector<string> results = split(output, '-');
     if (results.size() >= 2)
@@ -449,26 +434,16 @@ void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, Bot
     break;
   }
   string wine_dll_overrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
-  string wine_command =
+  string command =
       "WINEPREFIX=\"" + prefix_path + "\"" + wine_arch + wine_dll_overrides + " " + Helper::get_wine_executable_location(wine_64_bit) + " wineboot";
-  string command = wine_command + ">/dev/null 2>&1; echo $?";
-  string output = exec(command.c_str());
-  if (!output.empty())
+  auto exec_result = exec(command);
+  int exit_code = exec_result.first;
+  string output = exec_result.second;
+  if (exit_code != 0)
   {
-    // Remove new lines
-    output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-    if (!(output.compare("0") == 0))
-    {
-      std::cerr << "Error: Couldn't create Wine bottle. Command: " << command << ", output: " << output << std::endl;
-      throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + get_folder_name(prefix_path) +
-                               "\n\nCommand executed: " + wine_command + "\nFull path location: " + prefix_path);
-    }
-  }
-  else
-  {
-    std::cerr << "Error: Couldn't create Wine bottle. Command: " << command << ". No output." << std::endl;
-    throw std::runtime_error("Something went wrong when creating a new Windows machine. Wine prefix: " + get_folder_name(prefix_path) +
-                             "\n\nCommand executed: " + wine_command + "\nFull location: " + prefix_path);
+    std::cerr << "Error: Couldn't create Wine bottle. Command: " << command << ", output: " << output << std::endl;
+    throw std::runtime_error("Something went wrong when creating a new Windows machine. With output message: " + output +
+                             ". Wine prefix: " + get_folder_name(prefix_path) + "\n\nCommand executed: " + command);
   }
 }
 
@@ -481,22 +456,13 @@ void Helper::remove_wine_bottle(const string& prefix_path)
 {
   if (Helper::dir_exists(prefix_path))
   {
-    string output = exec(("rm -rf \"" + prefix_path + "\"; echo $?").c_str());
-    if (!output.empty())
+    auto exec_result = exec("rm -rf \"" + prefix_path + "\"");
+    int exit_code = exec_result.first;
+    string output = exec_result.second;
+    if (exit_code != 0)
     {
-      // Remove new lines
-      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-      if (!(output.compare("0") == 0))
-      {
-        std::cerr << "Error: Couldn't remove Wine bottle. Wine prefix path: " << prefix_path << ", output: " << output << std::endl;
-        throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + get_folder_name(prefix_path) +
-                                 "\n\nFull path location: " + prefix_path);
-      }
-    }
-    else
-    {
-      std::cerr << "Error: Couldn't remove Wine bottle. Wine prefix path: " << prefix_path << ". No output." << std::endl;
-      throw std::runtime_error("Could not remove Windows Machine, no result. Wine machine: " + get_folder_name(prefix_path) +
+      std::cerr << "Error: Couldn't remove Wine bottle. Wine prefix path: " << prefix_path << ", output: " << output << std::endl;
+      throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + get_folder_name(prefix_path) +
                                "\n\nFull path location: " + prefix_path);
     }
   }
@@ -518,22 +484,13 @@ void Helper::rename_wine_bottle_folder(const string& current_prefix_path, const 
 {
   if (Helper::dir_exists(current_prefix_path))
   {
-    string output = exec(("mv \"" + current_prefix_path + "\" \"" + new_prefix_path + "\"; echo $?").c_str());
-    if (!output.empty())
+    auto exec_result = exec("mv \"" + current_prefix_path + "\" \"" + new_prefix_path + "\"");
+    int exit_code = exec_result.first;
+    string output = exec_result.second;
+    if (exit_code != 0)
     {
-      // Remove new lines
-      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-      if (!(output.compare("0") == 0))
-      {
-        std::cerr << "Error: Couldn't rename Wine bottle. Wine prefix path: " << current_prefix_path << ", output: " << output << std::endl;
-        throw std::runtime_error("Failed to move the folder. Wine machine: " + get_folder_name(current_prefix_path) +
-                                 "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
-      }
-    }
-    else
-    {
-      std::cerr << "Error: Couldn't rename Wine bottle. Wine prefix path: " << current_prefix_path << ". No output." << std::endl;
-      throw std::runtime_error("Failed to move the folder, no result. Wine machine: " + get_folder_name(current_prefix_path) +
+      std::cerr << "Error: Couldn't rename Wine bottle. Wine prefix path: " << current_prefix_path << ", output: " << output << std::endl;
+      throw std::runtime_error("Failed to move the folder. Wine machine: " + get_folder_name(current_prefix_path) +
                                "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
     }
   }
@@ -555,23 +512,13 @@ void Helper::copy_wine_bottle_folder(const string& source_prefix_path, const str
 {
   if (Helper::dir_exists(source_prefix_path))
   {
-    string output = exec(("cp -r \"" + source_prefix_path + "\" \"" + destination_prefix_path + "\"; echo $?").c_str());
-    if (!output.empty())
+    auto exec_result = exec("cp -r \"" + source_prefix_path + "\" \"" + destination_prefix_path + "\"");
+    int exit_code = exec_result.first;
+    string output = exec_result.second;
+    if (exit_code != 0)
     {
-      // Remove new lines
-      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-      if (!(output.compare("0") == 0))
-      {
-        std::cerr << "Error: Couldn't copy Wine bottle. Wine prefix path: " << source_prefix_path << ", output: " << output << std::endl;
-        throw std::runtime_error("Failed to copy the folder. Wine machine: " + get_folder_name(source_prefix_path) +
-                                 "\n\nSource full path location: " + source_prefix_path +
-                                 ". Tried to copy to destination: " + destination_prefix_path);
-      }
-    }
-    else
-    {
-      std::cerr << "Error: Couldn't copy Wine bottle. Wine prefix path: " << source_prefix_path << ". No output." << std::endl;
-      throw std::runtime_error("Failed to copy the folder, no result. Wine machine: " + get_folder_name(source_prefix_path) +
+      std::cerr << "Error: Couldn't copy Wine bottle. Wine prefix path: " << source_prefix_path << ", output: " << output << std::endl;
+      throw std::runtime_error("Failed to copy the folder. Wine machine: " + get_folder_name(source_prefix_path) +
                                "\n\nSource full path location: " + source_prefix_path + ". Tried to copy to destination: " + destination_prefix_path);
     }
   }
@@ -1105,10 +1052,18 @@ void Helper::install_or_update_winetricks()
     }
   }
 
-  exec(("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks "
-        "&& chmod +x winetricks && mv winetricks " +
-        WinetricksExecutable)
-           .c_str());
+  auto exec_result = exec("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks "
+                          "&& chmod +x winetricks && mv winetricks " +
+                          WinetricksExecutable);
+  int exit_code = exec_result.first;
+  string output = exec_result.second;
+  if (exit_code != 0)
+  {
+    std::cerr << "Error: Downloading Winetricks failed. Winetricks path: " << WinetricksExecutable << std::endl;
+    std::cerr << "Error: " << output << std::endl;
+    throw std::runtime_error("Winetricks helper script can not be downloaded. This could/will result into issues with WineGUI!");
+  }
+
   // Winetricks script should exists now...
   if (!file_exists(WinetricksExecutable))
   {
@@ -1126,22 +1081,15 @@ void Helper::self_update_winetricks()
 {
   if (file_exists(WinetricksExecutable))
   {
-    string output = exec((WinetricksExecutable + " --self-update >/dev/null 2>&1; echo $?").c_str());
-    if (!output.empty())
+    auto exec_result = exec(WinetricksExecutable + " --self-update");
+    int exit_code = exec_result.first;
+    string output = exec_result.second;
+    if (exit_code != 0)
     {
-      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-      if (output.compare("0") != 0)
-      {
-        // TODO: This could be a bug as well, maybe fallback to redownloading the winetricks binary?
-        // Because the --self-update flag should be always present (ps. avoid a dead-loop).
-        std::cerr << "Error: Couldn't update Winetricks script. Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
-        throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::get_winetricks_version());
-      }
-    }
-    else
-    {
-      std::cerr << "Error: Couldn't update Winetricks script. Winetricks path: " << WinetricksExecutable << ". No output." << std::endl;
-      throw std::invalid_argument("Could not update Winetricks, keep using the v" + Helper::get_winetricks_version());
+      // TODO: This could be a bug as well, maybe fallback to redownloading the winetricks binary?
+      // Because the --self-update flag should be always present (ps. avoid a dead-loop).
+      std::cerr << "Error: Couldn't update Winetricks script. Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
+      throw std::invalid_argument("Could not update Winetricks, keep using the version " + Helper::get_winetricks_version());
     }
   }
   else
@@ -1162,23 +1110,14 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
   if (file_exists(WinetricksExecutable))
   {
     string win = BottleTypes::get_winetricks_string(windows);
-    string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " " + win + ">/dev/null 2>&1; echo $?").c_str());
-    if (!output.empty())
-    {
-      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-      if (output.compare("0") != 0)
-      {
-        std::cerr << "Error: Couldn't set Windows OS version. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
-                  << ", to Windows version: " << BottleTypes::to_string(windows) << "(Winetricks string: " << win << ")"
-                  << ", output: " << output << std::endl;
-        throw std::runtime_error("Could not set Windows OS version");
-      }
-    }
-    else
+    auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " " + win);
+    int exit_code = exec_result.first;
+    string output = exec_result.second;
+    if (exit_code != 0)
     {
       std::cerr << "Error: Couldn't set Windows OS version. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
                 << ", to Windows version: " << BottleTypes::to_string(windows) << "(Winetricks string: " << win << ")"
-                << ". No output." << std::endl;
+                << ", output: " << output << std::endl;
       throw std::runtime_error("Could not set Windows OS version");
     }
   }
@@ -1220,21 +1159,13 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
         resolution = "640x480";
       }
 
-      string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=" + resolution + ">/dev/null 2>&1; echo $?").c_str());
-      if (!output.empty())
-      {
-        output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-        if (output.compare("0") != 0)
-        {
-          std::cerr << "Error: Couldn't set virtual desktop resolution. Wine prefix path: " << prefix_path
-                    << ", Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
-          throw std::runtime_error("Could not set virtual desktop resolution");
-        }
-      }
-      else
+      auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=" + resolution);
+      int exit_code = exec_result.first;
+      string output = exec_result.second;
+      if (exit_code != 0)
       {
         std::cerr << "Error: Couldn't set virtual desktop resolution. Wine prefix path: " << prefix_path
-                  << ", Winetricks path: " << WinetricksExecutable << ". No output." << output << std::endl;
+                  << ", Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
         throw std::runtime_error("Could not set virtual desktop resolution");
       }
     }
@@ -1261,20 +1192,13 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
 {
   if (file_exists(WinetricksExecutable))
   {
-    string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=off>/dev/null 2>&1; echo $?").c_str());
-    if (!output.empty())
+    auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=off");
+    int exit_code = exec_result.first;
+    string output = exec_result.second;
+    if (exit_code != 0)
     {
-      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-      if (output.compare("0") != 0)
-      {
-        std::cerr << "Error: Couldn't disable desktop, Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
-        throw std::runtime_error("Could not Disable Virtual Desktop");
-      }
-    }
-    else
-    {
-      std::cerr << "Error: Couldn't disable virtual desktop, Winetricks path: " << WinetricksExecutable << ". No output." << std::endl;
-      throw std::runtime_error("Could not Disable Virtual Desktop");
+      std::cerr << "Error: Couldn't disable desktop, Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
+      throw std::runtime_error("Could not disable virtual desktop");
     }
   }
   else
@@ -1294,23 +1218,14 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
   if (file_exists(WinetricksExecutable))
   {
     string audio = BottleTypes::get_winetricks_string(audio_driver);
-    string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " sound=" + audio + ">/dev/null 2>&1; echo $?").c_str());
-    if (!output.empty())
-    {
-      output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
-      if (output.compare("0") != 0)
-      {
-        std::cerr << "Error: Couldn't set audio driver. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
-                  << ", to audio driver: " << BottleTypes::to_string(audio_driver) << "(Winetricks string: " << audio << ")"
-                  << ", output: " << output << std::endl;
-        throw std::runtime_error("Could not set Audio driver");
-      }
-    }
-    else
+    auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " sound=" + audio);
+    int exit_code = exec_result.first;
+    string output = exec_result.second;
+    if (exit_code != 0)
     {
       std::cerr << "Error: Couldn't set audio driver. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
                 << ", to audio driver: " << BottleTypes::to_string(audio_driver) << "(Winetricks string: " << audio << ")"
-                << ". No output." << std::endl;
+                << ", output: " << output << std::endl;
       throw std::runtime_error("Could not set Audio driver");
     }
   }
@@ -1390,10 +1305,11 @@ string Helper::log_level_to_winedebug_string(int log_level)
  */
 string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name)
 {
-  string output = exec(("WINEPREFIX=\"" + prefix_path + "\" " + Helper::get_wine_executable_location(wine_64_bit) + " uninstaller --list | grep \"" +
-                        application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1")
-                           .c_str());
-  if (!output.empty())
+  auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + Helper::get_wine_executable_location(wine_64_bit) +
+                          " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1");
+  int exit_code = exec_result.first;
+  string output = exec_result.second;
+  if (exit_code == 0 && !output.empty())
   {
     output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
   }
@@ -1617,39 +1533,46 @@ string Helper::string_to_icon(const std::string& string)
  ****************************************************************************/
 
 /**
- * \brief Execute command on terminal. Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
- * \param[in] cmd The command to be executed
+ * \brief Execute command on terminal. Returns both the exit code as well as stdout output.
+ * Note: Redirect stderr to stdout (2>&1), if you want stderr as well.
+ * \param[in] command The command to be executed
  * \throws runtime_error when popen failed (empty pipe pointer)
- * \return Terminal stdout output
+ * \return Exit code and terminal stdout output as a pair
  */
-string Helper::exec(const char* cmd)
+std::pair<int, string> Helper::exec(const string& command)
 {
   // Max 128 characters
-  std::array<char, 128> buffer;
+  std::array<char, 128> buffer{};
+  int exit_code = -1;
   string output = "";
 
-  // Execute command using popen,
-  // And use the standard C pclose method during stream closure.
-  unique_file pipe{popen(cmd, "r")};
-  if (!pipe)
+  // local scope kicks off pclose before returning exit_code
   {
-    throw std::runtime_error("popen() failed!");
+    // And use the standard C pclose method during stream closure.
+    auto deleter = [&exit_code](std::FILE* ptr) { exit_code = pclose(ptr); };
+
+    // Execute command using popen,
+    std::unique_ptr<std::FILE, decltype(deleter)> pipe(popen(command.c_str(), "r"), deleter);
+    if (!pipe)
+    {
+      throw std::runtime_error("popen() failed!");
+    }
+    while (std::fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+    {
+      output += buffer.data();
+    }
   }
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
-  {
-    output += buffer.data();
-  }
-  return output;
+  return std::make_pair(exit_code, output);
 }
 
 /**
  * \brief Execute command on terminal, give user an error message when exit code is non-zero.
  * Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
- * \param[in] cmd The command to be executed
+ * \param[in] command The command to be executed
  * \throws runtime_error when popen failed (empty pipe pointer)
  * \return Terminal stdout output
  */
-string Helper::exec_error_message(const char* cmd)
+string Helper::exec_error_message(const string& command)
 {
   // Max 128 characters
   std::array<char, 128> buffer;
@@ -1666,7 +1589,7 @@ string Helper::exec_error_message(const char* cmd)
     }
   };
   using unique_file_custom_deleter = std::unique_ptr<std::FILE, custom_file_deleter>;
-  unique_file_custom_deleter pipe{popen(cmd, "r")};
+  unique_file_custom_deleter pipe{popen(command.c_str(), "r")};
   if (!pipe)
   {
     throw std::runtime_error("popen() failed!");
@@ -1723,15 +1646,17 @@ string Helper::read_file(const string& filename)
 
 /**
  * \brief Get the Winetrick version
- * \return The version of Winetricks
+ * \return The version of Winetricks, or otherwise "unknown"
  */
 string Helper::get_winetricks_version()
 {
-  string version = "";
+  string version = "unknown";
   if (file_exists(WinetricksExecutable))
   {
-    string output = exec((WinetricksExecutable + " --version").c_str());
-    if (!output.empty())
+    auto exec_result = exec(WinetricksExecutable + " --version");
+    int exit_code = exec_result.first;
+    string output = exec_result.second;
+    if (exit_code == 0 && !output.empty())
     {
       if (output.length() >= 8)
       {
