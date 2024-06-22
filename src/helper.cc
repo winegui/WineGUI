@@ -268,7 +268,7 @@ string Helper::get_log_file_path(const string& logging_bottle_prefix)
  */
 void Helper::wait_until_wineserver_is_terminated(const string& prefix_path)
 {
-  auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w");
+  auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w 2>&1");
   int exit_code = exec_result.first;
   string output = exec_result.second;
   if (exit_code == 124)
@@ -348,7 +348,7 @@ string Helper::get_winetricks_location()
  */
 string Helper::get_wine_version(bool wine_64_bit)
 {
-  auto exec_result = exec(Helper::get_wine_executable_location(wine_64_bit) + " --version");
+  auto exec_result = exec(Helper::get_wine_executable_location(wine_64_bit) + " --version 2>&1");
   int exit_code = exec_result.first;
   string output = exec_result.second;
   if (exit_code == 0 && !output.empty())
@@ -456,7 +456,7 @@ void Helper::remove_wine_bottle(const string& prefix_path)
 {
   if (Helper::dir_exists(prefix_path))
   {
-    auto exec_result = exec("rm -rf \"" + prefix_path + "\"");
+    auto exec_result = exec("rm -rf \"" + prefix_path + "\" 2>&1");
     int exit_code = exec_result.first;
     string output = exec_result.second;
     if (exit_code != 0)
@@ -484,7 +484,7 @@ void Helper::rename_wine_bottle_folder(const string& current_prefix_path, const 
 {
   if (Helper::dir_exists(current_prefix_path))
   {
-    auto exec_result = exec("mv \"" + current_prefix_path + "\" \"" + new_prefix_path + "\"");
+    auto exec_result = exec("mv \"" + current_prefix_path + "\" \"" + new_prefix_path + "\" 2>&1");
     int exit_code = exec_result.first;
     string output = exec_result.second;
     if (exit_code != 0)
@@ -512,7 +512,7 @@ void Helper::copy_wine_bottle_folder(const string& source_prefix_path, const str
 {
   if (Helper::dir_exists(source_prefix_path))
   {
-    auto exec_result = exec("cp -r \"" + source_prefix_path + "\" \"" + destination_prefix_path + "\"");
+    auto exec_result = exec("cp -r \"" + source_prefix_path + "\" \"" + destination_prefix_path + "\" 2>&1");
     int exit_code = exec_result.first;
     string output = exec_result.second;
     if (exit_code != 0)
@@ -1054,7 +1054,7 @@ void Helper::install_or_update_winetricks()
 
   auto exec_result = exec("cd \"$(mktemp -d)\" && wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks "
                           "&& chmod +x winetricks && mv winetricks " +
-                          WinetricksExecutable);
+                          WinetricksExecutable + " 2>&1");
   int exit_code = exec_result.first;
   string output = exec_result.second;
   if (exit_code != 0)
@@ -1081,7 +1081,7 @@ void Helper::self_update_winetricks()
 {
   if (file_exists(WinetricksExecutable))
   {
-    auto exec_result = exec(WinetricksExecutable + " --self-update");
+    auto exec_result = exec(WinetricksExecutable + " --self-update 2>&1");
     int exit_code = exec_result.first;
     string output = exec_result.second;
     if (exit_code != 0)
@@ -1110,7 +1110,7 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
   if (file_exists(WinetricksExecutable))
   {
     string win = BottleTypes::get_winetricks_string(windows);
-    auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " " + win);
+    auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " " + win + " 2>&1");
     int exit_code = exec_result.first;
     string output = exec_result.second;
     if (exit_code != 0)
@@ -1159,7 +1159,7 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
         resolution = "640x480";
       }
 
-      auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=" + resolution);
+      auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=" + resolution + " 2>&1");
       int exit_code = exec_result.first;
       string output = exec_result.second;
       if (exit_code != 0)
@@ -1192,7 +1192,7 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
 {
   if (file_exists(WinetricksExecutable))
   {
-    auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=off");
+    auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=off 2>&1");
     int exit_code = exec_result.first;
     string output = exec_result.second;
     if (exit_code != 0)
@@ -1218,7 +1218,7 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
   if (file_exists(WinetricksExecutable))
   {
     string audio = BottleTypes::get_winetricks_string(audio_driver);
-    auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " sound=" + audio);
+    auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " sound=" + audio + " 2>&1");
     int exit_code = exec_result.first;
     string output = exec_result.second;
     if (exit_code != 0)
@@ -1306,7 +1306,7 @@ string Helper::log_level_to_winedebug_string(int log_level)
 string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name)
 {
   auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + Helper::get_wine_executable_location(wine_64_bit) +
-                          " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1");
+                          " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1 2>&1");
   int exit_code = exec_result.first;
   string output = exec_result.second;
   if (exit_code == 0 && !output.empty())
