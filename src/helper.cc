@@ -270,9 +270,9 @@ void Helper::wait_until_wineserver_is_terminated(const string& prefix_path)
 {
   auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w 2>&1");
   int exit_code = exec_result.first;
-  string output = exec_result.second;
   if (exit_code == 124)
   {
+    string output = exec_result.second;
     std::cout << "INFO: Time-out of wineserver wait command triggered (wineserver is still running..)" << std::endl;
     std::cout << "INFO: Output of wineserver: " << output << std::endl;
   }
@@ -438,9 +438,9 @@ void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, Bot
       "WINEPREFIX=\"" + prefix_path + "\"" + wine_arch + wine_dll_overrides + " " + Helper::get_wine_executable_location(wine_64_bit) + " wineboot";
   auto exec_result = exec(command + " 2>&1");
   int exit_code = exec_result.first;
-  string output = exec_result.second;
   if (exit_code != 0)
   {
+    string output = exec_result.second;
     std::cerr << "Error: Couldn't create Wine bottle. Command: " << command << ", output: " << output << std::endl;
     throw std::runtime_error("Failed to create Wine prefix: " + get_folder_name(prefix_path) + ". \n\nWith the following output:\n\n" + output +
                              "\n\nCommand executed:\n" + command);
@@ -458,9 +458,9 @@ void Helper::remove_wine_bottle(const string& prefix_path)
   {
     auto exec_result = exec("rm -rf \"" + prefix_path + "\" 2>&1");
     int exit_code = exec_result.first;
-    string output = exec_result.second;
     if (exit_code != 0)
     {
+      string output = exec_result.second;
       std::cerr << "Error: Couldn't remove Wine bottle. Wine prefix path: " << prefix_path << ", output: " << output << std::endl;
       throw std::runtime_error("Something went wrong when removing the Windows Machine. Wine machine: " + get_folder_name(prefix_path) +
                                "\n\nFull path location: " + prefix_path);
@@ -486,9 +486,9 @@ void Helper::rename_wine_bottle_folder(const string& current_prefix_path, const 
   {
     auto exec_result = exec("mv \"" + current_prefix_path + "\" \"" + new_prefix_path + "\" 2>&1");
     int exit_code = exec_result.first;
-    string output = exec_result.second;
     if (exit_code != 0)
     {
+      string output = exec_result.second;
       std::cerr << "Error: Couldn't rename Wine bottle. Wine prefix path: " << current_prefix_path << ", output: " << output << std::endl;
       throw std::runtime_error("Failed to move the folder. Wine machine: " + get_folder_name(current_prefix_path) +
                                "\n\nCurrent full path location: " + current_prefix_path + ". Tried to rename to: " + new_prefix_path);
@@ -514,9 +514,9 @@ void Helper::copy_wine_bottle_folder(const string& source_prefix_path, const str
   {
     auto exec_result = exec("cp -r \"" + source_prefix_path + "\" \"" + destination_prefix_path + "\" 2>&1");
     int exit_code = exec_result.first;
-    string output = exec_result.second;
     if (exit_code != 0)
     {
+      string output = exec_result.second;
       std::cerr << "Error: Couldn't copy Wine bottle. Wine prefix path: " << source_prefix_path << ", output: " << output << std::endl;
       throw std::runtime_error("Failed to copy the folder. Wine machine: " + get_folder_name(source_prefix_path) +
                                "\n\nSource full path location: " + source_prefix_path + ". Tried to copy to destination: " + destination_prefix_path);
@@ -1056,9 +1056,9 @@ void Helper::install_or_update_winetricks()
                           "&& chmod +x winetricks && mv winetricks " +
                           WinetricksExecutable + " 2>&1");
   int exit_code = exec_result.first;
-  string output = exec_result.second;
   if (exit_code != 0)
   {
+    string output = exec_result.second;
     std::cerr << "Error: Downloading Winetricks failed. Winetricks path: " << WinetricksExecutable << std::endl;
     std::cerr << "Error: " << output << std::endl;
     throw std::runtime_error("Winetricks helper script can not be downloaded. This could/will result into issues with WineGUI!");
@@ -1083,9 +1083,9 @@ void Helper::self_update_winetricks()
   {
     auto exec_result = exec(WinetricksExecutable + " --self-update 2>&1");
     int exit_code = exec_result.first;
-    string output = exec_result.second;
     if (exit_code != 0)
     {
+      string output = exec_result.second;
       // TODO: This could be a bug as well, maybe fallback to redownloading the winetricks binary?
       // Because the --self-update flag should be always present (ps. avoid a dead-loop).
       std::cerr << "Error: Couldn't update Winetricks script. Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
@@ -1112,9 +1112,9 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
     string win = BottleTypes::get_winetricks_string(windows);
     auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " " + win + " 2>&1");
     int exit_code = exec_result.first;
-    string output = exec_result.second;
     if (exit_code != 0)
     {
+      string output = exec_result.second;
       std::cerr << "Error: Couldn't set Windows OS version. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
                 << ", to Windows version: " << BottleTypes::to_string(windows) << "(Winetricks string: " << win << ")"
                 << ", output: " << output << std::endl;
@@ -1161,9 +1161,9 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
 
       auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=" + resolution + " 2>&1");
       int exit_code = exec_result.first;
-      string output = exec_result.second;
       if (exit_code != 0)
       {
+        string output = exec_result.second;
         std::cerr << "Error: Couldn't set virtual desktop resolution. Wine prefix path: " << prefix_path
                   << ", Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
         throw std::runtime_error("Could not set virtual desktop resolution");
@@ -1194,9 +1194,9 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
   {
     auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=off 2>&1");
     int exit_code = exec_result.first;
-    string output = exec_result.second;
     if (exit_code != 0)
     {
+      string output = exec_result.second;
       std::cerr << "Error: Couldn't disable desktop, Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
       throw std::runtime_error("Could not disable virtual desktop");
     }
@@ -1220,9 +1220,9 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
     string audio = BottleTypes::get_winetricks_string(audio_driver);
     auto exec_result = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " sound=" + audio + " 2>&1");
     int exit_code = exec_result.first;
-    string output = exec_result.second;
     if (exit_code != 0)
     {
+      string output = exec_result.second;
       std::cerr << "Error: Couldn't set audio driver. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
                 << ", to audio driver: " << BottleTypes::to_string(audio_driver) << "(Winetricks string: " << audio << ")"
                 << ", output: " << output << std::endl;
@@ -1379,7 +1379,7 @@ string Helper::get_font_filename(const string& prefix_path, BottleTypes::Bit bit
 string Helper::get_image_location(const string& filename)
 {
   // Try absolute path first
-  for (string data_dir : Glib::get_system_data_dirs())
+  for (const string& data_dir : Glib::get_system_data_dirs())
   {
     std::vector<std::string> path_builder{data_dir, "winegui", "images", filename};
     string file_path = Glib::build_path(G_DIR_SEPARATOR_S, path_builder);
@@ -1677,7 +1677,6 @@ string Helper::get_winetricks_version()
 string Helper::get_reg_value(const string& file_path, const string& key_name, const string& value_name)
 {
   string output;
-  string value_pattern = '"' + value_name + "\"=";
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
@@ -1692,6 +1691,7 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
       }
       else
       {
+        string value_pattern = '"' + value_name + "\"=";
         std::size_t pos = line.find(value_pattern);
         if (pos != std::string::npos)
         {
@@ -1935,10 +1935,10 @@ std::vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& 
 string Helper::get_reg_meta_data(const string& file_path, const string& meta_value_name)
 {
   string output;
-  string meta_pattern = "#" + meta_value_name + "=";
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
+    string meta_pattern = "#" + meta_value_name + "=";
     std::string line;
     line.reserve(80);
     while (std::getline(reg_file, line))

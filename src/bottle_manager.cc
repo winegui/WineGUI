@@ -1325,7 +1325,7 @@ std::vector<string> BottleManager::get_bottle_paths()
  * \param[in] bottle_dirs  The list of bottle directories
  * \returns Array of Bottle Items
  */
-std::list<BottleItem> BottleManager::create_wine_bottles(std::vector<string> bottle_dirs)
+std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<string>& bottle_dirs)
 {
   std::list<BottleItem> bottles;
   Glib::ustring wine_version = get_wine_version();
