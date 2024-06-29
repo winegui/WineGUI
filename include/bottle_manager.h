@@ -121,5 +121,5 @@ private:
   string get_deinstall_mono_command();
   string get_wine_version();
   std::vector<string> get_bottle_paths();
-  std::list<BottleItem> create_wine_bottles(std::vector<string> bottle_dirs);
+  std::list<BottleItem> create_wine_bottles(const std::vector<string>& bottle_dirs);
 };
