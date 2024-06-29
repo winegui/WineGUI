@@ -396,7 +396,7 @@ void MainWindow::on_refresh_app_list_button_clicked()
   if (selected_row)
   {
     // Refresh the current app list
-    auto current_bottle = dynamic_cast<BottleItem*>(selected_row);
+    const auto* current_bottle = dynamic_cast<BottleItem*>(selected_row);
     set_application_list(current_bottle->wine_location(), current_bottle->app_list());
   }
 }
@@ -635,7 +635,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   try
   {
     auto menu_items = Helper::get_menu_items(prefix_path);
-    for (string item : menu_items)
+    for (const string& item : menu_items)
     {
       string name = "- Unknown menu item -";
       size_t found = item.find_last_of('\\');
@@ -701,6 +701,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
     auto desktop_items = Helper::get_desktop_items(prefix_path);
     for (std::pair<string, string> item : desktop_items)
     {
+      // cppcheck-suppress variableScope
       string value_name = item.first;
       string value_data = item.second;
 
@@ -1322,6 +1323,7 @@ bool MainWindow::app_list_visible_func(const Gtk::TreeModel::const_iterator& ite
  */
 void MainWindow::treeview_set_cell_data_name_desc(Gtk::CellRenderer* renderer, const Gtk::TreeModel::iterator& iter)
 {
+  // cppcheck-suppress cstyleCast
   Gtk::CellRendererText* text_renderer = (Gtk::CellRendererText*)renderer;
   Glib::ustring name = "<b>" + (*iter)[app_list_columns.name] + "</b>\n";
   name += (*iter)[app_list_columns.description];
