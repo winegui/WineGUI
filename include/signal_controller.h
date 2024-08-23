@@ -32,6 +32,7 @@ class PreferencesWindow;
 class AboutDialog;
 class BottleEditWindow;
 class BottleCloneWindow;
+class BottleConfigureEnvVarWindow;
 class BottleConfigureWindow;
 class AddAppWindow;
 class RemoveAppWindow;
@@ -53,6 +54,7 @@ public:
                    AboutDialog& about_dialog,
                    BottleEditWindow& edit_window,
                    BottleCloneWindow& clone_window,
+                   BottleConfigureEnvVarWindow& configure_env_var_window,
                    BottleConfigureWindow& configure_window,
                    AddAppWindow& add_app_window,
                    RemoveAppWindow& remove_app_window);
@@ -99,6 +101,7 @@ private:
   AboutDialog& about_dialog_;
   BottleEditWindow& edit_window_;
   BottleCloneWindow& clone_window_;
+  BottleConfigureEnvVarWindow& configure_env_var_window_;
   BottleConfigureWindow& configure_window_;
   AddAppWindow& add_app_window_;
   RemoveAppWindow& remove_app_window_;
