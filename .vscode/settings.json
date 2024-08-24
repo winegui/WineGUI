@@ -86,6 +86,7 @@
     "codecvt": "cpp",
     "__errc": "cpp",
     "__mutex_base": "cpp",
-    "__tree": "cpp"
+    "__tree": "cpp",
+    "format": "cpp"
 }
 }
