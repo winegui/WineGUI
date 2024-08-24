@@ -137,7 +137,7 @@ void BottleConfigureEnvVarWindow::load_environment_variables_from_config()
     std::map<int, ApplicationData> app_list;
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
 
-    for (auto& env_var : bottle_config.env_vars)
+    for (const std::pair<std::string, std::string>& env_var : bottle_config.env_vars)
     {
       Gtk::TreeModel::Row row = *(m_refTreeModel->append());
       row[m_Columns.m_col_name] = env_var.first;
@@ -198,7 +198,7 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
 
     // Get all items from the treeview
     Gtk::TreeModel::Children children = m_refTreeModel->children();
-    for (auto& child : children)
+    for (const auto& child : children)
     {
       std::string name = child.get_value(m_Columns.m_col_name);
       std::string value = child.get_value(m_Columns.m_col_value);
