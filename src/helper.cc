@@ -42,10 +42,10 @@
 #include <tuple>
 #include <unistd.h>
 
-std::vector<std::string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
+vector<string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
 static string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
 
-std::vector<std::string> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
+vector<string> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
 static string DefaultBottleWineDir = Glib::build_path(G_DIR_SEPARATOR_S, defaultWineDir);
 
 // Wine & Winetricks exec
@@ -152,9 +152,9 @@ Helper& Helper::get_instance()
  * \param[in] display_default_wine_machine If set to true, also add the default Wine bottle to the list of bottle paths
  * \return List of full path (string) of the found directories plus ~/.wine
  */
-std::vector<std::string> Helper::get_bottles_paths(const string& dir_path, bool display_default_wine_machine)
+vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_default_wine_machine)
 {
-  std::vector<std::string> list;
+  vector<string> list;
   list.reserve(5);
   Glib::Dir dir(dir_path);
   auto name = dir.read_name();
@@ -171,7 +171,7 @@ std::vector<std::string> Helper::get_bottles_paths(const string& dir_path, bool 
 
   // Sort alphabetically (case insensitive)
   std::sort(list.begin(), list.end(),
-            [](const std::string& a, const std::string& b)
+            [](const string& a, const string& b)
             { return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), [](char x, char y) { return toupper(x) < toupper(y); }); });
 
   // Add default wine bottle to the end, if enabled by settings and if directory is present
@@ -192,15 +192,29 @@ std::vector<std::string> Helper::get_bottles_paths(const string& dir_path, bool 
  * \param[in] program Program that gets executed (ideally full path)
  * \param[in] give_error Inform user when application exit with non-zero exit code
  * \param[in] stderr_output Also output stderr (together with stout)
+ * \param[in] env_vars Array of environment variables to set
  * \return Terminal stdout output
  */
-string Helper::run_program(const string& prefix_path, int debug_log_level, const string& program, bool give_error, bool stderr_output)
+string Helper::run_program(const string& prefix_path,
+                           int debug_log_level,
+                           const string& program,
+                           const vector<pair<string, string>>& env_vars,
+                           bool give_error,
+                           bool stderr_output)
 {
   string output;
 
   string debug = (debug_log_level != 1) ? "WINEDEBUG=" + Helper::log_level_to_winedebug_string(debug_log_level) + " " : "";
   string exec_program = (stderr_output) ? program + " 2>&1" : program;
-  string command = debug + "WINEPREFIX=\"" + prefix_path + "\" " + exec_program;
+  string env_vars_str(debug + "WINEPREFIX=\"" + prefix_path + "\" ");
+
+  // Convert key/value pair to string, append to env_vars_str
+  for (const auto& env_var : env_vars)
+  {
+    env_vars_str += env_var.first + "=\"" + env_var.second + "\" ";
+  }
+
+  string command = env_vars_str + exec_program;
   if (give_error)
   {
     // Execute the command that also shows an error message to the user when exit code is non-zero
@@ -225,12 +239,19 @@ string Helper::run_program(const string& prefix_path, int debug_log_level, const
  * brackets in case of spaces)
  * \param[in] give_error Inform user when application exit with non-zero exit code
  * \param[in] stderr_output Also output stderr (together with stout)
+ * \param[in] env_vars Array of environment variables to set
  * \return Terminal stdout output
  */
-string Helper::run_program_under_wine(
-    bool wine_64_bit, const string& prefix_path, int debug_log_level, const string& program, bool give_error, bool stderr_output)
+string Helper::run_program_under_wine(bool wine_64_bit,
+                                      const string& prefix_path,
+                                      int debug_log_level,
+                                      const string& program,
+                                      const vector<pair<string, string>>& env_vars,
+                                      bool give_error,
+                                      bool stderr_output)
 {
-  return run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit) + " " + program, give_error, stderr_output);
+  return run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit) + " " + program, env_vars, give_error,
+                     stderr_output);
 }
 
 /**
@@ -353,11 +374,11 @@ string Helper::get_wine_version(bool wine_64_bit)
   string output = exec_result.second;
   if (exit_code == 0 && !output.empty())
   {
-    std::vector<string> results = split(output, '-');
+    vector<string> results = split(output, '-');
     if (results.size() >= 2)
     {
       string result2 = results.at(1);
-      std::vector<string> results2 = split(result2, ' ');
+      vector<string> results2 = split(result2, ' ');
       if (results2.size() >= 1)
       {
         string version = results2.at(0); // just only get the version number (eg. 6.0)
@@ -401,7 +422,7 @@ string Helper::open_file_from_uri(const string& uri)
   {
     gsize size = 0;
     auto stream = file->read();
-    std::vector<uint8_t> buffer(stream->query_info()->get_size());
+    vector<uint8_t> buffer(stream->query_info()->get_size());
     stream->read_all(buffer.data(), buffer.size(), size);
     contents.assign(buffer.begin(), buffer.end());
   }
@@ -632,7 +653,7 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   {
     string current_version = "";
     string current_build_number = "";
-    std::vector<string> version_list = split(version, '.');
+    vector<string> version_list = split(version, '.');
     // Only get minor & major
     if (sizeof(version_list) >= 2)
     {
@@ -950,7 +971,7 @@ string Helper::get_program_icon_from_shortcut_file(const string& prefix_path, co
   // Read Shortcut file from disk
   string file_content = Helper::read_file(shortcut_path_linux);
   // Convert content to hex value string
-  std::string hex_content = Helper::string2hex(file_content);
+  string hex_content = Helper::string2hex(file_content);
   std::size_t target_path_starts = hex_content.find("431000000000"); // Searching for x43x10x00x00x00x00 hex pattern (C:\ drive)
   if (target_path_starts == std::string::npos)
   {
@@ -1137,7 +1158,7 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
 {
   if (file_exists(WinetricksExecutable))
   {
-    std::vector<string> res = split(resolution, 'x');
+    vector<string> res = split(resolution, 'x');
     if (res.size() >= 2)
     {
       int x = 0, y = 0;
@@ -1240,9 +1261,9 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
  * \brief Get menu items/links from Wine bottle
  * \param prefix_path Bottle prefix
  * \throws runtime_error when Windows registry could not be opened
- * \return vector array of menu items/links (value data only)
+ * \return array of menu items/links (value data only)
  */
-std::vector<string> Helper::get_menu_items(const string& prefix_path)
+vector<string> Helper::get_menu_items(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
   // Key menu items from registry, only get the data keys containing "\\Start Menu\\" and ignore key values containing "applications-merged"
@@ -1253,9 +1274,9 @@ std::vector<string> Helper::get_menu_items(const string& prefix_path)
  * \brief Get desktop items/links from Wine bottle
  * \param prefix_path Bottle prefix
  * \throws runtime_error when Windows registry could not be opened
- * \return vector array of pairs of desktop items (value name + value data)
+ * \return array of pairs of desktop items (value name + value data)
  */
-std::vector<std::pair<string, string>> Helper::get_desktop_items(const string& prefix_path)
+vector<pair<string, string>> Helper::get_desktop_items(const string& prefix_path)
 {
   string file_path = Glib::build_filename(prefix_path, UserReg);
   // Key desktop items from registry, only get the data keys containing "\\Desktop\\"
@@ -1381,7 +1402,7 @@ string Helper::get_image_location(const string& filename)
   // Try absolute path first
   for (const string& data_dir : Glib::get_system_data_dirs())
   {
-    std::vector<std::string> path_builder{data_dir, "winegui", "images", filename};
+    vector<string> path_builder{data_dir, "winegui", "images", filename};
     string file_path = Glib::build_path(G_DIR_SEPARATOR_S, path_builder);
     if (file_exists(file_path))
     {
@@ -1419,22 +1440,22 @@ bool Helper::is_default_wine_bottle(const string& prefix_path)
 
 /**
  * \brief Encode text string for GTK (eg. ampersand-character)
- * \param[in] string String that needs to be encoded
+ * \param[in] text String that needs to be encoded
  * \return Encoded string
  */
-string Helper::encode_text(const std::string& string)
+string Helper::encode_text(const string& text)
 {
-  std::string buffer;
-  buffer.reserve(string.size() + 5);
-  for (size_t pos = 0; pos != string.size(); ++pos)
+  string buffer;
+  buffer.reserve(text.size() + 5);
+  for (size_t pos = 0; pos != text.size(); ++pos)
   {
-    switch (string[pos])
+    switch (text[pos])
     {
     case '&':
       buffer.append("&amp;");
       break;
     default:
-      buffer.append(&string[pos], 1);
+      buffer.append(&text[pos], 1);
       break;
     }
   }
@@ -1443,18 +1464,18 @@ string Helper::encode_text(const std::string& string)
 
 /**
  * \brief Try to guess the file type/MIME type based on the file extension. Then return the corresponding icon for it.
- * \param[in] string Filename or full path including the file extension
+ * \param[in] filename Filename or full path including the file extension
  * \return File icon
  */
-string Helper::string_to_icon(const std::string& string)
+string Helper::string_to_icon(const std::string& filename)
 {
-  std::string icon;
+  string icon;
   // Get file extension
-  std::string ext;
-  size_t dot_pos = string.find_last_of('.');
+  string ext;
+  size_t dot_pos = filename.find_last_of('.');
   if (dot_pos != string::npos)
   {
-    ext = string.substr(dot_pos + 1);
+    ext = filename.substr(dot_pos + 1);
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
   }
   if (ext == "url")
@@ -1680,7 +1701,7 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
-    std::string line;
+    string line;
     line.reserve(128);
     bool match = false;
     while (std::getline(reg_file, line))
@@ -1720,13 +1741,13 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
  * \throws runtime_error when we couldn't load the Windows registry
  * \return List all the sub keys
  */
-std::vector<string> Helper::get_reg_keys(const string& file_path, const string& key_name)
+vector<string> Helper::get_reg_keys(const string& file_path, const string& key_name)
 {
-  std::vector<string> keys;
+  vector<string> keys;
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
-    std::string line;
+    string line;
     line.reserve(128);
     bool match = false;
     while (std::getline(reg_file, line))
@@ -1761,7 +1782,7 @@ std::vector<string> Helper::get_reg_keys(const string& file_path, const string& 
  * \throws runtime_error when Windows registry could not be opened
  * \return List all the sub keys pairs (that is the value name + value data)
  */
-std::vector<std::pair<string, string>> Helper::get_reg_keys_name_data_pair(const string& file_path, const string& key_name)
+vector<pair<string, string>> Helper::get_reg_keys_name_data_pair(const string& file_path, const string& key_name)
 {
   return get_reg_keys_name_data_pair_filter(file_path, key_name);
 }
@@ -1774,7 +1795,7 @@ std::vector<std::pair<string, string>> Helper::get_reg_keys_name_data_pair(const
  * \throws runtime_error when Windows registry could not be opened
  * \return List all the sub keys pairs (that is the value name + value data))
  */
-std::vector<std::pair<string, string>>
+vector<pair<string, string>>
 Helper::get_reg_keys_name_data_pair_filter(const string& file_path, const string& key_name, const string& key_value_filter)
 {
   return get_reg_keys_name_data_pair_filter_ignore(file_path, key_name, key_value_filter);
@@ -1791,16 +1812,16 @@ Helper::get_reg_keys_name_data_pair_filter(const string& file_path, const string
  * \throws runtime_error when we couldn't load the Windows registry
  * \return List all the sub keys pairs (that is the value name + value data)
  */
-std::vector<std::pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(const string& file_path,
-                                                                                         const string& key_name,
-                                                                                         const string& key_value_filter,
-                                                                                         const string& key_name_ignore_filter)
+vector<pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(const string& file_path,
+                                                                               const string& key_name,
+                                                                               const string& key_value_filter,
+                                                                               const string& key_name_ignore_filter)
 {
-  std::vector<std::pair<string, string>> pairs;
+  vector<pair<string, string>> pairs;
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
-    std::string line;
+    string line;
     line.reserve(128);
     bool match = false;
     while (std::getline(reg_file, line))
@@ -1847,7 +1868,7 @@ std::vector<std::pair<string, string>> Helper::get_reg_keys_name_data_pair_filte
  * \throws runtime_error when Windows registry could not be opened
  * \return List all the sub keys value data (so everything after the = sign only)
  */
-std::vector<string> Helper::get_reg_keys_value_data(const string& file_path, const string& key_name)
+vector<string> Helper::get_reg_keys_value_data(const string& file_path, const string& key_name)
 {
   return get_reg_keys_value_data_filter(file_path, key_name);
 }
@@ -1860,7 +1881,7 @@ std::vector<string> Helper::get_reg_keys_value_data(const string& file_path, con
  * \throws runtime_error when Windows registry could not be opened
  * \return List all the sub keys value data (so everything after the = sign only)
  */
-std::vector<string> Helper::get_reg_keys_value_data_filter(const string& file_path, const string& key_name, const string& key_value_filter)
+vector<string> Helper::get_reg_keys_value_data_filter(const string& file_path, const string& key_name, const string& key_value_filter)
 {
   return get_reg_keys_value_data_filter_ignore(file_path, key_name, key_value_filter);
 }
@@ -1875,16 +1896,16 @@ std::vector<string> Helper::get_reg_keys_value_data_filter(const string& file_pa
  * \throws runtime_error when we couldn't load the Windows registry
  * \return List all the sub keys value data (so everything after the = sign only)
  */
-std::vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_path,
-                                                                  const string& key_name,
-                                                                  const string& key_value_filter,
-                                                                  const string& key_name_ignore_filter)
+vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_path,
+                                                             const string& key_name,
+                                                             const string& key_value_filter,
+                                                             const string& key_name_ignore_filter)
 {
-  std::vector<string> keys;
+  vector<string> keys;
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
-    std::string line;
+    string line;
     line.reserve(128);
     bool match = false;
     while (std::getline(reg_file, line))
@@ -1939,7 +1960,7 @@ string Helper::get_reg_meta_data(const string& file_path, const string& meta_val
   if (reg_file.is_open())
   {
     string meta_pattern = "#" + meta_value_name + "=";
-    std::string line;
+    string line;
     line.reserve(80);
     while (std::getline(reg_file, line))
     {
@@ -1994,13 +2015,13 @@ string Helper::get_bottle_dir_from_prefix(const string& prefix_path)
  * \throws runtime_error when file could not be opened
  * \return Data from file
  */
-std::vector<string> Helper::read_file_lines(const string& file_path)
+vector<string> Helper::read_file_lines(const string& file_path)
 {
-  std::vector<string> output;
+  vector<string> output;
   std::ifstream myfile(file_path);
   if (myfile.is_open())
   {
-    std::string line;
+    string line;
     line.reserve(100);
     while (std::getline(myfile, line))
     {
@@ -2022,11 +2043,11 @@ std::vector<string> Helper::read_file_lines(const string& file_path)
  * \param[in] delimiter Delimiter character
  * \return Array/vector of strings
  */
-std::vector<string> Helper::split(const string& s, const char delimiter)
+vector<string> Helper::split(const string& s, const char delimiter)
 {
   size_t start = 0;
   size_t end = s.find_first_of(delimiter);
-  std::vector<string> output;
+  vector<string> output;
   while (end <= string::npos)
   {
     output.emplace_back(s.substr(start, end - start));
@@ -2193,7 +2214,7 @@ string Helper::unescape_reg_key_data(const string& src)
  * \param[in] capital Captical hex values? (default: false, so lower cases)
  * \return Hex numbers of the string
  */
-string Helper::string2hex(const std::string& str, bool capital)
+string Helper::string2hex(const string& str, bool capital)
 {
   string hexstr;
   hexstr.resize(str.size() * 2);
@@ -2210,7 +2231,7 @@ string Helper::string2hex(const std::string& str, bool capital)
  * \brief Convert hex to string (chars)
  * \return string (chars) of the hex string
  */
-string Helper::hex2string(const std::string& hexstr)
+string Helper::hex2string(const string& hexstr)
 {
   string str;
   str.resize((hexstr.size() + 1) / 2);
