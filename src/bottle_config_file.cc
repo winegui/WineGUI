@@ -59,6 +59,11 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
     keyfile.set_string("General", "Description", bottle_config.description);
     keyfile.set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
     keyfile.set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
+    // Iterate over the key/value environment variable pairs (if present)
+    for (const auto& kv : bottle_config.env_vars)
+    {
+      keyfile.set_value("EnvironmentVariables", kv.first, kv.second);
+    }
     // Save custom application list (if present)
     for (int i = 0; std::pair<const int, ApplicationData> app : app_list)
     {
@@ -123,6 +128,16 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       bottle_config.description = keyfile.get_string("General", "Description");
       bottle_config.logging_enabled = keyfile.get_boolean("Logging", "Enabled");
       bottle_config.debug_log_level = keyfile.get_integer("Logging", "DebugLevel");
+
+      // Retrieve environment variables (if present)
+      if (keyfile.has_group("EnvironmentVariables"))
+      {
+        auto keys = keyfile.get_keys("EnvironmentVariables");
+        for (Glib::ustring key : keys)
+        {
+          bottle_config.env_vars.emplace_back(std::pair<std::string, std::string>(key, keyfile.get_string("EnvironmentVariables", key)));
+        }
+      }
 
       // Retrieve custom application list (if present)
       auto groups = keyfile.get_groups();

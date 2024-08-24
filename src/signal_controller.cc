@@ -24,6 +24,7 @@
 #include "about_dialog.h"
 #include "add_app_window.h"
 #include "bottle_clone_window.h"
+#include "bottle_configure_env_var_window.h"
 #include "bottle_configure_window.h"
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
@@ -42,6 +43,7 @@ SignalController::SignalController(BottleManager& manager,
                                    AboutDialog& about_dialog,
                                    BottleEditWindow& edit_window,
                                    BottleCloneWindow& clone_window,
+                                   BottleConfigureEnvVarWindow& configure_env_var_window,
                                    BottleConfigureWindow& configure_window,
                                    AddAppWindow& add_app_window,
                                    RemoveAppWindow& remove_app_window)
@@ -52,6 +54,7 @@ SignalController::SignalController(BottleManager& manager,
       about_dialog_(about_dialog),
       edit_window_(edit_window),
       clone_window_(clone_window),
+      configure_env_var_window_(configure_env_var_window),
       configure_window_(configure_window),
       add_app_window_(add_app_window),
       remove_app_window_(remove_app_window),
@@ -111,12 +114,14 @@ void SignalController::dispatch_signals()
   main_window_->active_bottle.connect(sigc::mem_fun(manager_, &BottleManager::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::set_active_bottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(configure_env_var_window_, &BottleConfigureEnvVarWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::set_active_bottle));
   // Distribute the reset bottle signal from the manager
   manager_.reset_active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::reset_active_bottle));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(configure_env_var_window_, &BottleConfigureEnvVarWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::reset_active_bottle));
@@ -146,6 +151,7 @@ void SignalController::dispatch_signals()
   main_window_->show_remove_app_window.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::show));
 
   // Edit Window
+  edit_window_.configure_environment_variables.connect(sigc::mem_fun(configure_env_var_window_, &BottleConfigureEnvVarWindow::show));
   edit_window_.update_bottle.connect(sigc::mem_fun(this, &SignalController::on_update_bottle));
   edit_window_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
 
@@ -172,7 +178,6 @@ void SignalController::dispatch_signals()
   configure_window_.directx9.connect(sigc::mem_fun(manager_, &BottleManager::install_d3dx9));
   configure_window_.dxvk.connect(sigc::mem_fun(manager_, &BottleManager::install_dxvk));
   configure_window_.vkd3d.connect(sigc::mem_fun(manager_, &BottleManager::install_vkd3d));
-
   // Settings additional package buttons
   configure_window_.liberation_fonts.connect(sigc::mem_fun(manager_, &BottleManager::install_liberation));
   configure_window_.corefonts.connect(sigc::mem_fun(manager_, &BottleManager::install_core_fonts));
@@ -181,6 +186,9 @@ void SignalController::dispatch_signals()
 
   // Add new application Window
   add_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
+
+  // Configure environment variables Window
+  configure_env_var_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 
   // Remove application Window
   remove_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));

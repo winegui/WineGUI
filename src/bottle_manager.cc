@@ -675,13 +675,15 @@ void BottleManager::run_executable(string program, bool is_msi_file = false)
     string program_prefix = is_msi_file ? "msiexec /i" : "start /unix";
     // Be-sure to execute the program between quotes (due to spaces)
     program = program_prefix + " \"" + program + "\"";
+    auto& env_vars = active_bottle_->env_vars();
+
     std::thread t(
-        [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
+        [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, env_vars, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, true, logging_stderr);
+          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, env_vars, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -721,13 +723,15 @@ void BottleManager::run_program(string program)
         // Add 'start' for Windows style commands, like 'notepad'
         program = "start \"" + program + "\"";
       }
+      auto& env_vars = active_bottle_->env_vars();
+
       std::thread t(
-          [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
+          [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, env_vars, logging_stderr = std::move(is_logging_stderr_),
            debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
            logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
            write_log_dispatcher = &write_log_dispatcher_]
           {
-            string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, true, logging_stderr);
+            string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, env_vars, true, logging_stderr);
             if (debug_logging && !output.empty())
             {
               {
@@ -748,7 +752,7 @@ void BottleManager::run_program(string program)
            output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
            output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, {}, true, logging_stderr);
             if (debug_logging && !output.empty())
             {
               {
@@ -794,7 +798,7 @@ void BottleManager::reboot()
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -r", true, logging_stderr);
+          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -r", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -826,7 +830,7 @@ void BottleManager::update()
          output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", true, logging_stderr);
+          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -884,7 +888,7 @@ void BottleManager::kill_processes()
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -k", true, logging_stderr);
+          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -k", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -928,7 +932,7 @@ void BottleManager::install_d3dx9(Gtk::Window& parent, const string& version)
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
          finish_dispatcher = &finished_package_install_dispatcher]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+          string output = Helper::run_program(wine_prefix, debug_log_level, program, {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -974,7 +978,7 @@ void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
          finish_dispatcher = &finished_package_install_dispatcher]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+          string output = Helper::run_program(wine_prefix, debug_log_level, program, {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -1014,7 +1018,7 @@ void BottleManager::install_vkd3d(Gtk::Window& parent)
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
          finish_dispatcher = &finished_package_install_dispatcher]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+          string output = Helper::run_program(wine_prefix, debug_log_level, program, {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -1055,7 +1059,7 @@ void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
          finish_dispatcher = &finished_package_install_dispatcher]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+          string output = Helper::run_program(wine_prefix, debug_log_level, program, {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -1114,7 +1118,7 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
            output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
            finish_dispatcher = &finished_package_install_dispatcher]
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, {}, true, logging_stderr);
             if (debug_logging && !output.empty())
             {
               {
@@ -1158,7 +1162,7 @@ void BottleManager::install_core_fonts(Gtk::Window& parent)
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
          finish_dispatcher = &finished_package_install_dispatcher]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+          string output = Helper::run_program(wine_prefix, debug_log_level, program, {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -1197,7 +1201,7 @@ void BottleManager::install_liberation(Gtk::Window& parent)
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
          finish_dispatcher = &finished_package_install_dispatcher]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, true, logging_stderr);
+          string output = Helper::run_program(wine_prefix, debug_log_level, program, {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -1334,27 +1338,19 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
   for (const string& prefix : bottle_dirs)
   {
     // Reset variables
-    Glib::ustring name = "";
     Glib::ustring folder_name = "";
-    Glib::ustring description = "";
     Glib::ustring virtual_desktop = "";
     BottleTypes::Bit bit = BottleTypes::Bit::win32;
     Glib::ustring c_drive_location = "- Unknown -";
     Glib::ustring last_time_wine_updated = "- Unknown -";
     BottleTypes::AudioDriver audio_driver = BottleTypes::AudioDriver::pulseaudio;
     BottleTypes::Windows windows = WineDefaults::WindowsOs;
-    bool debug_logging_enabled = false;
-    int debug_log_level = 1;
     bool status = false;
 
     // Retrieve bottle config data & custom app list
     BottleConfigData bottle_config;
     std::map<int, ApplicationData> bottle_app_list;
     std::tie(bottle_config, bottle_app_list) = BottleConfigFile::read_config_file(prefix);
-    name = bottle_config.name;
-    description = bottle_config.description;
-    debug_logging_enabled = bottle_config.logging_enabled;
-    debug_log_level = bottle_config.debug_log_level;
 
     try
     {
@@ -1415,10 +1411,13 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
       main_window_.show_error_message(error.what());
     }
 
-    Glib::ustring prefix_path(prefix); // Convert to Glib ustring
-    BottleItem* bottle =
-        new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix_path, c_drive_location,
-                       last_time_wine_updated, audio_driver, virtual_desktop, debug_logging_enabled, debug_log_level, bottle_app_list);
+    // Convert to Glib ustrings
+    Glib::ustring name(bottle_config.name);
+    Glib::ustring description(bottle_config.description);
+    Glib::ustring prefix_path(prefix);
+    BottleItem* bottle = new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix_path,
+                                        c_drive_location, last_time_wine_updated, audio_driver, virtual_desktop, bottle_config.logging_enabled,
+                                        bottle_config.debug_log_level, bottle_config.env_vars, bottle_app_list);
     bottles.push_back(*bottle);
   }
   return bottles;

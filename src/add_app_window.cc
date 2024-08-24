@@ -223,7 +223,7 @@ void AddAppWindow::on_save_button_clicked()
       // Save application to bottle config
       if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
       {
-        Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+        Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
         dialog.set_title("An error has occurred!");
         dialog.set_modal(true);
         dialog.run();

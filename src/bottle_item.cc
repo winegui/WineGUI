@@ -55,6 +55,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
     virtual_desktop_ = bottle_item.virtual_desktop();
     is_debug_logging_ = bottle_item.is_debug_logging();
     debug_log_level_ = bottle_item.debug_log_level();
+    env_vars_ = bottle_item.env_vars();
     app_list_ = bottle_item.app_list();
   }
 
@@ -107,6 +108,7 @@ BottleItem::BottleItem(Glib::ustring& name,
                        Glib::ustring& virtual_desktop,
                        bool is_debug_logging,
                        int debug_log_level,
+                       std::vector<std::pair<std::string, std::string>>& env_vars,
                        std::map<int, ApplicationData>& app_list)
     : name_(name),
       folder_name_(folder_name),
@@ -123,6 +125,7 @@ BottleItem::BottleItem(Glib::ustring& name,
       virtual_desktop_(virtual_desktop),
       is_debug_logging_(is_debug_logging),
       debug_log_level_(debug_log_level),
+      env_vars_(env_vars),
       app_list_(app_list){
           // Gui will be created during the copy constructor called by Gtk
       };
