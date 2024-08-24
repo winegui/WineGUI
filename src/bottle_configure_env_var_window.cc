@@ -51,6 +51,8 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   add_app_grid.set_column_spacing(6);
   add_app_grid.set_row_spacing(8);
 
+  // TODO: Move to editable cells like the demo app using a GtkTreeView.
+
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
   fd_label.set_weight(Pango::WEIGHT_BOLD);
