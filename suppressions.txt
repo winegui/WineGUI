@@ -1,3 +1,4 @@
 missingIncludeSystem
 missingInclude
 checkersReport
+unusedFunction:src/helper.cc
