@@ -37,8 +37,10 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       virtual_desktop_resolution_label("Window Resolution:"),
       log_level_label("Log Level:"),
       description_label("Description:"),
+      environment_variables_label("Environment Variables:"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
       enable_logging_check("Enable debug logging"),
+      configure_environment_variables_button("Configure Environment Variables"),
       save_button("Save"),
       cancel_button("Cancel"),
       delete_button("Delete Machine"),
@@ -46,7 +48,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       active_bottle_(nullptr)
 {
   set_transient_for(parent);
-  set_default_size(500, 500);
+  set_default_size(540, 540);
   set_modal(true);
 
   edit_grid.set_margin_top(5);
@@ -72,12 +74,16 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   audio_driver_label.set_halign(Gtk::Align::ALIGN_END);
   virtual_desktop_resolution_label.set_halign(Gtk::Align::ALIGN_END);
   log_level_label.set_halign(Gtk::Align::ALIGN_END);
+  environment_variables_label.set_halign(Gtk::Align::ALIGN_END);
+  description_label.set_halign(Gtk::Align::ALIGN_START);
   name_label.set_tooltip_text("Change the machine name");
   folder_name_label.set_tooltip_text("Change the folder. NOTE: This break your shortcuts!");
   windows_version_label.set_tooltip_text("Change the Windows version");
   audio_driver_label.set_tooltip_text("Change the audio driver");
   virtual_desktop_resolution_label.set_tooltip_text("Set the emulated desktop resolution");
   log_level_label.set_tooltip_text("Change the Wine debug messages for logging");
+  environment_variables_label.set_tooltip_text("Set one or more environment variables");
+  description_label.set_tooltip_text("Add an additional description text to your machine");
 
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
@@ -88,7 +94,6 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   virtual_desktop_resolution_entry.set_text("1024x768");
   enable_logging_check.set_active(false);
 
-  description_label.set_halign(Gtk::Align::ALIGN_START);
   log_level_combobox.append("0", "Off");
   log_level_combobox.append("1", "Error + Fixme (Default)");
   log_level_combobox.append("2", "Only Errors (Could improve performance)");
@@ -109,7 +114,6 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   virtual_desktop_check.set_tooltip_text("Enable emulate virtual desktop resolution");
   enable_logging_check.set_tooltip_text("Enable output logging to disk");
   folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name instead, see above.");
-  description_label.set_tooltip_text("Add an additional description text to your machine");
 
   description_scrolled_window.add(description_text_view);
   description_scrolled_window.set_hexpand(true);
@@ -129,9 +133,11 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   edit_grid.attach(enable_logging_check, 0, 6, 2);
   edit_grid.attach(log_level_label, 0, 7);
   edit_grid.attach(log_level_combobox, 1, 7);
-  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 8, 2);
-  edit_grid.attach(description_label, 0, 9, 2);
-  edit_grid.attach(description_scrolled_window, 0, 10, 2);
+  edit_grid.attach(environment_variables_label, 0, 8);
+  edit_grid.attach(configure_environment_variables_button, 1, 8);
+  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 9, 2);
+  edit_grid.attach(description_label, 0, 10, 2);
+  edit_grid.attach(description_scrolled_window, 0, 11, 2);
 
   hbox_buttons.pack_start(delete_button, false, false, 4);
   hbox_buttons.pack_end(save_button, false, false, 4);
@@ -147,6 +153,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   log_level_sensitive(false);
 
   // Signals
+  configure_environment_variables_button.signal_clicked().connect(configure_environment_variables);
   delete_button.signal_clicked().connect(remove_bottle);
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
   enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));

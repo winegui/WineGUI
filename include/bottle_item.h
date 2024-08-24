@@ -68,6 +68,7 @@ public:
     swap(a.virtual_desktop_, b.virtual_desktop_);
     swap(a.is_debug_logging_, b.is_debug_logging_);
     swap(a.debug_log_level_, b.debug_log_level_);
+    swap(a.env_vars_, b.env_vars_);
     swap(a.app_list_, b.app_list_);
   }
 
@@ -94,6 +95,7 @@ public:
              Glib::ustring& virtual_desktop,
              bool is_debug_logging,
              int debug_log_level,
+             std::vector<std::pair<std::string, std::string>>& env_vars,
              std::map<int, ApplicationData>& app_list);
 
   /**
@@ -255,6 +257,16 @@ public:
   {
     return debug_log_level_;
   };
+  /// set environment variables
+  void env_vars(const std::vector<std::pair<std::string, std::string>>& env_vars)
+  {
+    env_vars_ = env_vars;
+  };
+  /// get environment variables
+  const std::vector<std::pair<std::string, std::string>>& env_vars() const
+  {
+    return env_vars_;
+  };
   /// set app list
   void app_list(const std::map<int, ApplicationData>& app_list)
   {
@@ -290,6 +302,7 @@ private:
   Glib::ustring virtual_desktop_;
   bool is_debug_logging_;
   int debug_log_level_;
+  std::vector<std::pair<std::string, std::string>> env_vars_;
   std::map<int, ApplicationData> app_list_;
 
   void CreateUI();

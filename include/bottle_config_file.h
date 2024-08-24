@@ -24,6 +24,7 @@
 #include <map>
 #include <string>
 #include <tuple>
+#include <vector>
 
 struct BottleConfigData
 {
@@ -31,6 +32,7 @@ struct BottleConfigData
   std::string description;
   bool logging_enabled;
   int debug_log_level;
+  std::vector<std::pair<std::string, std::string>> env_vars;
 };
 
 /**
