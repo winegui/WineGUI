@@ -170,8 +170,7 @@ std::vector<std::string> Helper::get_bottles_paths(const string& dir_path, bool 
   }
 
   // Sort alphabetically (case insensitive)
-  std::sort(list.begin(), list.end(),
-            [](const std::string& a, const std::string& b)
+  std::sort(list.begin(), list.end(), [](const std::string& a, const std::string& b)
             { return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), [](char x, char y) { return toupper(x) < toupper(y); }); });
 
   // Add default wine bottle to the end, if enabled by settings and if directory is present
@@ -1116,8 +1115,8 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
     {
       string output = exec_result.second;
       std::cerr << "Error: Couldn't set Windows OS version. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
-                << ", to Windows version: " << BottleTypes::to_string(windows) << "(Winetricks string: " << win << ")"
-                << ", output: " << output << std::endl;
+                << ", to Windows version: " << BottleTypes::to_string(windows) << "(Winetricks string: " << win << ")" << ", output: " << output
+                << std::endl;
       throw std::runtime_error("Could not set Windows OS version");
     }
   }
@@ -1224,8 +1223,8 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
     {
       string output = exec_result.second;
       std::cerr << "Error: Couldn't set audio driver. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
-                << ", to audio driver: " << BottleTypes::to_string(audio_driver) << "(Winetricks string: " << audio << ")"
-                << ", output: " << output << std::endl;
+                << ", to audio driver: " << BottleTypes::to_string(audio_driver) << "(Winetricks string: " << audio << ")" << ", output: " << output
+                << std::endl;
       throw std::runtime_error("Could not set Audio driver");
     }
   }

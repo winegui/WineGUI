@@ -47,7 +47,7 @@ class BottleConfigureEnvVarWindow : public Gtk::Window
 {
 public:
   // Signals
-  // sigc::signal<void> config_saved; /*!< bottle config is saved signal */
+  sigc::signal<void> config_saved; /*!< bottle config is saved signal */
 
   explicit BottleConfigureEnvVarWindow(Gtk::Window& parent);
   virtual ~BottleConfigureEnvVarWindow();
@@ -81,4 +81,7 @@ private:
   void on_remove_button_clicked();
   void on_save_button_clicked();
   void on_cancel_button_clicked();
+
+  // Private methods
+  void load_environment_variables_from_config();
 };

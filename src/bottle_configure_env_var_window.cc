@@ -32,7 +32,7 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
       hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
       hbox_2_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
       header_configure_env_var_label("Configure Environment Variables"),
-      environment_variables_label("Current environment variables set:"),
+      environment_variables_label("Current environment variables set for this machine:"),
       add_button("Add"),
       remove_button("Remove"),
       save_button("Save"),
@@ -82,15 +82,6 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   m_refTreeModel = Gtk::ListStore::create(m_Columns);
   m_TreeView.set_model(m_refTreeModel);
 
-  // Fill the TreeView's model
-  Gtk::TreeModel::Row row = *(m_refTreeModel->append());
-  row[m_Columns.m_col_name] = "WINEPREFIX";
-  row[m_Columns.m_col_value] = "/home/user/.wine";
-
-  row = *(m_refTreeModel->append());
-  row[m_Columns.m_col_name] = "WINEARCH";
-  row[m_Columns.m_col_value] = "win64";
-
   // Add the TreeView's view columns:
   m_TreeView.append_column_editable("Name", m_Columns.m_col_name);
   m_TreeView.append_column_editable("Value", m_Columns.m_col_value);
@@ -104,6 +95,8 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   remove_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_remove_button_clicked));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_save_button_clicked));
+  // On show signal, load the environment variables from the config file
+  signal_show().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::load_environment_variables_from_config));
 
   show_all_children();
 }
@@ -130,6 +123,27 @@ void BottleConfigureEnvVarWindow::set_active_bottle(BottleItem* bottle)
 void BottleConfigureEnvVarWindow::reset_active_bottle()
 {
   active_bottle_ = nullptr;
+}
+
+void BottleConfigureEnvVarWindow::load_environment_variables_from_config()
+{
+  // Clear the treeview
+  m_refTreeModel->clear();
+
+  if (active_bottle_ != nullptr)
+  {
+    std::string prefix_path = active_bottle_->wine_location();
+    BottleConfigData bottle_config;
+    std::map<int, ApplicationData> app_list;
+    std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
+
+    for (auto& env_var : bottle_config.env_vars)
+    {
+      Gtk::TreeModel::Row row = *(m_refTreeModel->append());
+      row[m_Columns.m_col_name] = env_var.first;
+      row[m_Columns.m_col_value] = env_var.second;
+    }
+  }
 }
 
 void BottleConfigureEnvVarWindow::on_add_button_clicked()
@@ -178,29 +192,40 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
     std::string prefix_path = active_bottle_->wine_location();
     // Read existing config data
     BottleConfigData bottle_config;
+    std::vector<std::pair<std::string, std::string>> env_vars;
     std::map<int, ApplicationData> app_list;
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
 
-    int new_index = (!app_list.empty()) ? std::prev(app_list.end())->first + 1 : 0;
-    // Append new app
-    ApplicationData new_app;
-    // TODO: Retrieve data from treeview..
-    // new_app.name = key_entry.get_text();
-    // new_app.command = value_entry.get_text();
-    app_list.insert(std::pair<int, ApplicationData>(new_index, new_app));
+    // Get all items from the treeview
+    Gtk::TreeModel::Children children = m_refTreeModel->children();
+    for (auto& child : children)
+    {
+      std::string name = child.get_value(m_Columns.m_col_name);
+      std::string value = child.get_value(m_Columns.m_col_value);
+      if (name.empty() || value.empty())
+      {
+        continue; // Skip empty rows
+      }
+      env_vars.push_back(std::make_pair(name, value));
+    }
+
+    // Set (override existing) env vars
+    bottle_config.env_vars = env_vars;
 
     // Save application to bottle config
     if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
     {
-      Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+      Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
       dialog.set_title("An error has occurred!");
       dialog.set_modal(true);
       dialog.run();
     }
     else
     {
-      // Trigger manager update & UI update
-      // config_saved.emit();
+      hide();
+
+      // Trigger update config signal (so the bottle config file will be re-read)
+      config_saved.emit();
     }
   }
   else
