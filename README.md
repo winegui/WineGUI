@@ -58,7 +58,7 @@ Optionally:
 - doxygen
 - graphviz
 - rpm
-- clang-format (v18)
+- clang-format (v14)
 - cppcheck (v2.10 or higher)
 
 **Hint:** You could execute `./scripts/deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
