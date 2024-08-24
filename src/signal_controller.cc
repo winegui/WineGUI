@@ -187,6 +187,9 @@ void SignalController::dispatch_signals()
   // Add new application Window
   add_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 
+  // Configure environment variables Window
+  configure_env_var_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
+
   // Remove application Window
   remove_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 

@@ -81,6 +81,11 @@
     "__tuple": "cpp",
     "__verbose_abort": "cpp",
     "ios": "cpp",
-    "locale": "cpp"
+    "locale": "cpp",
+    "span": "cpp",
+    "codecvt": "cpp",
+    "__errc": "cpp",
+    "__mutex_base": "cpp",
+    "__tree": "cpp"
 }
 }

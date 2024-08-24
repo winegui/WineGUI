@@ -1334,27 +1334,19 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
   for (const string& prefix : bottle_dirs)
   {
     // Reset variables
-    Glib::ustring name = "";
     Glib::ustring folder_name = "";
-    Glib::ustring description = "";
     Glib::ustring virtual_desktop = "";
     BottleTypes::Bit bit = BottleTypes::Bit::win32;
     Glib::ustring c_drive_location = "- Unknown -";
     Glib::ustring last_time_wine_updated = "- Unknown -";
     BottleTypes::AudioDriver audio_driver = BottleTypes::AudioDriver::pulseaudio;
     BottleTypes::Windows windows = WineDefaults::WindowsOs;
-    bool debug_logging_enabled = false;
-    int debug_log_level = 1;
     bool status = false;
 
     // Retrieve bottle config data & custom app list
     BottleConfigData bottle_config;
     std::map<int, ApplicationData> bottle_app_list;
     std::tie(bottle_config, bottle_app_list) = BottleConfigFile::read_config_file(prefix);
-    name = bottle_config.name;
-    description = bottle_config.description;
-    debug_logging_enabled = bottle_config.logging_enabled;
-    debug_log_level = bottle_config.debug_log_level;
 
     try
     {
@@ -1415,10 +1407,13 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
       main_window_.show_error_message(error.what());
     }
 
-    Glib::ustring prefix_path(prefix); // Convert to Glib ustring
-    BottleItem* bottle =
-        new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix_path, c_drive_location,
-                       last_time_wine_updated, audio_driver, virtual_desktop, debug_logging_enabled, debug_log_level, bottle_app_list);
+    // Convert to Glib ustrings
+    Glib::ustring name(bottle_config.name);
+    Glib::ustring description(bottle_config.description);
+    Glib::ustring prefix_path(prefix);
+    BottleItem* bottle = new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix_path,
+                                        c_drive_location, last_time_wine_updated, audio_driver, virtual_desktop, bottle_config.logging_enabled,
+                                        bottle_config.debug_log_level, bottle_config.env_vars, bottle_app_list);
     bottles.push_back(*bottle);
   }
   return bottles;
