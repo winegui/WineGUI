@@ -25,6 +25,20 @@
 // Forward declaration
 class BottleItem;
 
+// Tree model columns
+class ModelColumns : public Gtk::TreeModel::ColumnRecord
+{
+public:
+  ModelColumns()
+  {
+    add(m_col_name);
+    add(m_col_value);
+  }
+
+  Gtk::TreeModelColumn<Glib::ustring> m_col_name;
+  Gtk::TreeModelColumn<Glib::ustring> m_col_value;
+};
+
 /**
  * \class BottleConfigureEnvVarWindow
  * \brief Add new application GTK Window class for the bottle environment variable
@@ -43,25 +57,28 @@ public:
 
 protected:
   // Child widgets
-  Gtk::Box vbox;          /*!< main vertical box */
-  Gtk::Box hbox_buttons;  /*!< box for buttons */
-  Gtk::Grid add_app_grid; /*!< grid layout for settings */
+  Gtk::Box vbox;           /*!< main vertical box */
+  Gtk::Box hbox_buttons;   /*!< box for add/remove buttons */
+  Gtk::Box hbox_2_buttons; /*!< box save button and cancel button */
 
-  Gtk::Label header_configure_env_var_label;  /*!< header config env var label */
-  Gtk::Label key_label;                       /*!< env key label */
-  Gtk::Label value_label;                     /*!< env value label */
-  Gtk::Label environment_variables_label;     /*!< Environment variables label */
-  Gtk::Entry key_entry;                       /*!< env key input field */
-  Gtk::Entry value_entry;                     /*!< env value input field */
-  Gtk::Button add_button;                     /*!< Add button */
-  Gtk::ListBox environment_variables_listbox; /*!< Environment variables list box */
+  Gtk::Label header_configure_env_var_label; /*!< header config env var label */
+  Gtk::Label environment_variables_label;    /*!< Environment variables label */
+  Gtk::Button add_button;                    /*!< Add button */
+  Gtk::Button remove_button;                 /*!< Remove button */
+  Gtk::Button save_button;                   /*!< Save button */
+  Gtk::Button cancel_button;                 /*!< Save button */
+
+  ModelColumns m_Columns;
+  Gtk::ScrolledWindow m_ScrolledWindow;
+  Gtk::TreeView m_TreeView;
+  Glib::RefPtr<Gtk::ListStore> m_refTreeModel;
 
 private:
   BottleItem* active_bottle_; /*!< Current active bottle */
 
   // Signal handlers
   void on_add_button_clicked();
-
-  // Member functions
-  void set_default_values();
+  void on_remove_button_clicked();
+  void on_save_button_clicked();
+  void on_cancel_button_clicked();
 };

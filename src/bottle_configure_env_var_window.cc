@@ -30,28 +30,19 @@
 BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
     : vbox(Gtk::ORIENTATION_VERTICAL, 4),
       hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
+      hbox_2_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
       header_configure_env_var_label("Configure Environment Variables"),
-      key_label("Environment variable name: "),
-      value_label("Environment variable value: "),
       environment_variables_label("Current environment variables set:"),
       add_button("Add"),
+      remove_button("Remove"),
+      save_button("Save"),
+      cancel_button("Cancel"),
       active_bottle_(nullptr)
 {
   set_transient_for(parent);
   set_title("Configure Environment Variables");
   set_default_size(500, 500);
   set_modal(true);
-
-  set_default_values();
-
-  add_app_grid.set_margin_top(5);
-  add_app_grid.set_margin_end(5);
-  add_app_grid.set_margin_bottom(6);
-  add_app_grid.set_margin_start(6);
-  add_app_grid.set_column_spacing(6);
-  add_app_grid.set_row_spacing(8);
-
-  // TODO: Move to editable cells like the demo app using a GtkTreeView.
 
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
@@ -63,34 +54,56 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   header_configure_env_var_label.set_margin_top(5);
   header_configure_env_var_label.set_margin_bottom(5);
 
-  key_label.set_halign(Gtk::Align::ALIGN_END);
-  value_label.set_halign(Gtk::Align::ALIGN_END);
   environment_variables_label.set_halign(Gtk::Align::ALIGN_START);
   environment_variables_label.set_margin_start(6);
-  key_entry.set_hexpand(true);
-  value_entry.set_hexpand(true);
-  environment_variables_listbox.set_margin_start(6);
-  environment_variables_listbox.set_margin_end(6);
-  environment_variables_listbox.set_margin_bottom(5);
-  key_entry.set_tooltip_text("Set the name of the environment variable");
-  value_entry.set_tooltip_text("Set the value of the environment variable");
 
-  add_app_grid.attach(key_label, 0, 0);
-  add_app_grid.attach(key_entry, 1, 0, 2);
-  add_app_grid.attach(value_label, 0, 1);
-  add_app_grid.attach(value_entry, 1, 1, 2);
-  hbox_buttons.pack_end(add_button, false, false, 4);
+  // Horizontal buttons
+  hbox_buttons.set_homogeneous(true);
+  hbox_buttons.pack_end(remove_button, false, true, 4);
+  hbox_buttons.pack_end(add_button, false, true, 4);
+  hbox_buttons.set_margin_bottom(12);
+  hbox_2_buttons.pack_end(save_button, false, false, 4);
+  hbox_2_buttons.pack_end(cancel_button, false, false, 4);
+
+  // Add treeview to a scrolled window
+  m_ScrolledWindow.add(m_TreeView);
+  m_ScrolledWindow.set_margin_start(6);
+  m_ScrolledWindow.set_margin_end(6);
 
   vbox.pack_start(header_configure_env_var_label, false, false, 4);
-  vbox.pack_start(add_app_grid, false, true, 4);
-  vbox.pack_start(hbox_buttons, false, false, 4);
   vbox.pack_start(environment_variables_label, false, false, 4);
-  vbox.pack_start(environment_variables_listbox, true, true, 4);
+  vbox.pack_start(m_ScrolledWindow, true, true, 4);
+  vbox.pack_start(hbox_buttons, false, true, 4);
+  vbox.pack_start(hbox_2_buttons, false, false, 4);
 
   add(vbox);
 
+  // Create the Tree model
+  m_refTreeModel = Gtk::ListStore::create(m_Columns);
+  m_TreeView.set_model(m_refTreeModel);
+
+  // Fill the TreeView's model
+  Gtk::TreeModel::Row row = *(m_refTreeModel->append());
+  row[m_Columns.m_col_name] = "WINEPREFIX";
+  row[m_Columns.m_col_value] = "/home/user/.wine";
+
+  row = *(m_refTreeModel->append());
+  row[m_Columns.m_col_name] = "WINEARCH";
+  row[m_Columns.m_col_value] = "win64";
+
+  // Add the TreeView's view columns:
+  m_TreeView.append_column_editable("Name", m_Columns.m_col_name);
+  m_TreeView.append_column_editable("Value", m_Columns.m_col_value);
+  m_TreeView.get_selection()->set_mode(Gtk::SelectionMode::SELECTION_SINGLE);
+
+  m_TreeView.get_column(0)->set_min_width(200);
+  m_TreeView.set_resize_mode(Gtk::ResizeMode::RESIZE_IMMEDIATE);
+
   // Signals
   add_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_add_button_clicked));
+  remove_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_remove_button_clicked));
+  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_cancel_button_clicked));
+  save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_save_button_clicked));
 
   show_all_children();
 }
@@ -119,58 +132,75 @@ void BottleConfigureEnvVarWindow::reset_active_bottle()
   active_bottle_ = nullptr;
 }
 
-void BottleConfigureEnvVarWindow::set_default_values()
+void BottleConfigureEnvVarWindow::on_add_button_clicked()
 {
-  key_entry.set_text("");
-  value_entry.set_text("");
+  Gtk::TreeModel::Row row = *(m_refTreeModel->append());
+  row[m_Columns.m_col_name] = ""; // Empty placeholder
+  row[m_Columns.m_col_value] = "";
+
+  // Move cursor to the new row
+  Gtk::TreeModel::Path path = m_refTreeModel->get_path(row);
+  Gtk::TreeViewColumn* column = m_TreeView.get_column(0);
+  m_TreeView.scroll_to_row(path, 0);
+  m_TreeView.set_cursor(path, *column, true);
+}
+
+void BottleConfigureEnvVarWindow::on_remove_button_clicked()
+{
+  Glib::RefPtr<Gtk::TreeSelection> refSelection = m_TreeView.get_selection();
+
+  // Get the selected row iterator
+  Gtk::TreeModel::iterator iter = refSelection->get_selected();
+
+  // Check if a row is selected
+  if (iter)
+  {
+    // Remove the selected row from the TreeModel
+    m_refTreeModel->erase(iter);
+  }
 }
 
 /**
- * \brief Triggered when add button is clicked
+ * \brief Triggered when cancel button is clicked
  */
-void BottleConfigureEnvVarWindow::on_add_button_clicked()
+void BottleConfigureEnvVarWindow::on_cancel_button_clicked()
+{
+  hide();
+}
+
+/**
+ * \brief Triggered when save button is clicked
+ */
+void BottleConfigureEnvVarWindow::on_save_button_clicked()
 {
   if (active_bottle_ != nullptr)
   {
-    // Check if all fields are filled-in
-    if (key_entry.get_text().empty() || value_entry.get_text().empty())
+    std::string prefix_path = active_bottle_->wine_location();
+    // Read existing config data
+    BottleConfigData bottle_config;
+    std::map<int, ApplicationData> app_list;
+    std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
+
+    int new_index = (!app_list.empty()) ? std::prev(app_list.end())->first + 1 : 0;
+    // Append new app
+    ApplicationData new_app;
+    // TODO: Retrieve data from treeview..
+    // new_app.name = key_entry.get_text();
+    // new_app.command = value_entry.get_text();
+    app_list.insert(std::pair<int, ApplicationData>(new_index, new_app));
+
+    // Save application to bottle config
+    if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
     {
-      Gtk::MessageDialog dialog(*this, "Please fill-in the key and value of the environment variable you wish to add.", false, Gtk::MESSAGE_ERROR,
-                                Gtk::BUTTONS_OK);
-      dialog.set_title("Error during adding a new environment variable");
+      Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+      dialog.set_title("An error has occurred!");
       dialog.set_modal(true);
       dialog.run();
     }
     else
     {
-      std::string prefix_path = active_bottle_->wine_location();
-      // Read existing config data
-      BottleConfigData bottle_config;
-      std::map<int, ApplicationData> app_list;
-      std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
-
-      int new_index = (!app_list.empty()) ? std::prev(app_list.end())->first + 1 : 0;
-      // Append new app
-      ApplicationData new_app;
-      new_app.name = key_entry.get_text();
-      new_app.command = value_entry.get_text();
-      app_list.insert(std::pair<int, ApplicationData>(new_index, new_app));
-
-      // Save application to bottle config
-      if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
-      {
-        Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
-        dialog.set_title("An error has occurred!");
-        dialog.set_modal(true);
-        dialog.run();
-      }
-      else
-      {
-        // Reset entry fields
-        set_default_values();
-        // Trigger manager update & UI update
-        // config_saved.emit();
-      }
+      // Trigger manager update & UI update
+      // config_saved.emit();
     }
   }
   else
