@@ -47,25 +47,20 @@ protected:
   Gtk::Box hbox_buttons;  /*!< box for buttons */
   Gtk::Grid add_app_grid; /*!< grid layout for settings */
 
-  Gtk::Label header_configure_env_var_label; /*!< header config env var label */
-  Gtk::Label name_label;                     /*!< app name label */
-  Gtk::Label description_label;              /*!< app description label */
-  Gtk::Label command_label;                  /*!< app command label */
-  Gtk::Entry name_entry;                     /*!< app name input field */
-  Gtk::Entry description_entry;              /*!< app description input field */
-  Gtk::Entry command_entry;                  /*!< app command input field */
-  Gtk::Button select_executable_button;      /*!< select file executable button */
-  Gtk::Button save_button;                   /*!< save button */
-  Gtk::Button cancel_button;                 /*!< cancel button */
+  Gtk::Label header_configure_env_var_label;  /*!< header config env var label */
+  Gtk::Label key_label;                       /*!< env key label */
+  Gtk::Label value_label;                     /*!< env value label */
+  Gtk::Label environment_variables_label;     /*!< Environment variables label */
+  Gtk::Entry key_entry;                       /*!< env key input field */
+  Gtk::Entry value_entry;                     /*!< env value input field */
+  Gtk::Button add_button;                     /*!< Add button */
+  Gtk::ListBox environment_variables_listbox; /*!< Environment variables list box */
 
 private:
   BottleItem* active_bottle_; /*!< Current active bottle */
 
   // Signal handlers
-  void on_select_file();
-  void on_select_dialog_response(int response_id, Gtk::FileChooserDialog* dialog);
-  void on_cancel_button_clicked();
-  void on_save_button_clicked();
+  void on_add_button_clicked();
 
   // Member functions
   void set_default_values();

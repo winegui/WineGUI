@@ -31,17 +31,15 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
     : vbox(Gtk::ORIENTATION_VERTICAL, 4),
       hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
       header_configure_env_var_label("Configure Environment Variables"),
-      name_label("Application name: "),
-      description_label("Description: "),
-      command_label("Command: "),
-      select_executable_button("Select executable..."),
-      save_button("Save"),
-      cancel_button("Cancel"),
+      key_label("Environment variable name: "),
+      value_label("Environment variable value: "),
+      environment_variables_label("Current environment variables set:"),
+      add_button("Add"),
       active_bottle_(nullptr)
 {
   set_transient_for(parent);
   set_title("Configure Environment Variables");
-  set_default_size(500, 200);
+  set_default_size(500, 500);
   set_modal(true);
 
   set_default_values();
@@ -63,33 +61,34 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   header_configure_env_var_label.set_margin_top(5);
   header_configure_env_var_label.set_margin_bottom(5);
 
-  name_label.set_halign(Gtk::Align::ALIGN_END);
-  description_label.set_halign(Gtk::Align::ALIGN_END);
-  command_label.set_halign(Gtk::Align::ALIGN_END);
-  name_entry.set_hexpand(true);
-  description_entry.set_hexpand(true);
-  command_entry.set_hexpand(true);
+  key_label.set_halign(Gtk::Align::ALIGN_END);
+  value_label.set_halign(Gtk::Align::ALIGN_END);
+  environment_variables_label.set_halign(Gtk::Align::ALIGN_START);
+  environment_variables_label.set_margin_start(6);
+  key_entry.set_hexpand(true);
+  value_entry.set_hexpand(true);
+  environment_variables_listbox.set_margin_start(6);
+  environment_variables_listbox.set_margin_end(6);
+  environment_variables_listbox.set_margin_bottom(5);
+  key_entry.set_tooltip_text("Set the name of the environment variable");
+  value_entry.set_tooltip_text("Set the value of the environment variable");
 
-  add_app_grid.attach(name_label, 0, 0);
-  add_app_grid.attach(name_entry, 1, 0, 2);
-  add_app_grid.attach(description_label, 0, 1);
-  add_app_grid.attach(description_entry, 1, 1, 2);
-  add_app_grid.attach(command_label, 0, 2);
-  add_app_grid.attach(command_entry, 1, 2);
-  add_app_grid.attach(select_executable_button, 2, 2);
-
-  hbox_buttons.pack_end(save_button, false, false, 4);
-  hbox_buttons.pack_end(cancel_button, false, false, 4);
+  add_app_grid.attach(key_label, 0, 0);
+  add_app_grid.attach(key_entry, 1, 0, 2);
+  add_app_grid.attach(value_label, 0, 1);
+  add_app_grid.attach(value_entry, 1, 1, 2);
+  hbox_buttons.pack_end(add_button, false, false, 4);
 
   vbox.pack_start(header_configure_env_var_label, false, false, 4);
-  vbox.pack_start(add_app_grid, true, true, 4);
+  vbox.pack_start(add_app_grid, false, true, 4);
   vbox.pack_start(hbox_buttons, false, false, 4);
+  vbox.pack_start(environment_variables_label, false, false, 4);
+  vbox.pack_start(environment_variables_listbox, true, true, 4);
+
   add(vbox);
 
   // Signals
-  select_executable_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_select_file));
-  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_cancel_button_clicked));
-  save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_save_button_clicked));
+  add_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_add_button_clicked));
 
   show_all_children();
 }
@@ -120,87 +119,23 @@ void BottleConfigureEnvVarWindow::reset_active_bottle()
 
 void BottleConfigureEnvVarWindow::set_default_values()
 {
-  name_entry.set_text("");
-  description_entry.set_text("");
-  command_entry.set_text("");
+  key_entry.set_text("");
+  value_entry.set_text("");
 }
 
 /**
- * \brief Triggered when select file button is clicked
+ * \brief Triggered when add button is clicked
  */
-void BottleConfigureEnvVarWindow::on_select_file()
-{
-  auto filter_win = Gtk::FileFilter::create();
-  filter_win->set_name("Windows Executable/MSI Installer");
-  filter_win->add_mime_type("application/x-ms-dos-executable");
-  filter_win->add_mime_type("application/x-msi");
-  auto filter_any = Gtk::FileFilter::create();
-  filter_any->set_name("Any file");
-  filter_any->add_pattern("*");
-
-  auto* file_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_OPEN, Gtk::DialogFlags::DIALOG_MODAL);
-  file_chooser->set_modal(true);
-  file_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_select_dialog_response), file_chooser));
-  file_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
-  file_chooser->add_button("_Select file", Gtk::ResponseType::RESPONSE_OK);
-  if (active_bottle_ != nullptr)
-  {
-    file_chooser->set_current_folder(active_bottle_->wine_c_drive());
-  }
-  file_chooser->add_filter(filter_win);
-  file_chooser->add_filter(filter_any);
-  file_chooser->show();
-}
-
-/**
- * \brief when file is selected
- */
-void BottleConfigureEnvVarWindow::on_select_dialog_response(int response_id, Gtk::FileChooserDialog* dialog)
-{
-  switch (response_id)
-  {
-  case Gtk::ResponseType::RESPONSE_OK:
-  {
-    // Update the command entry
-    auto filename = dialog->get_filename();
-    command_entry.set_text(filename);
-    break;
-  }
-  case Gtk::ResponseType::RESPONSE_CANCEL:
-  {
-    break; // ignore
-  }
-  default:
-  {
-    std::cout << "Error: Unexpected button clicked." << std::endl;
-    break;
-  }
-  }
-  delete dialog;
-}
-
-/**
- * \brief Triggered when cancel button is clicked
- */
-void BottleConfigureEnvVarWindow::on_cancel_button_clicked()
-{
-  hide();
-}
-
-/**
- * \brief Triggered when save button is clicked
- */
-void BottleConfigureEnvVarWindow::on_save_button_clicked()
+void BottleConfigureEnvVarWindow::on_add_button_clicked()
 {
   if (active_bottle_ != nullptr)
   {
     // Check if all fields are filled-in
-    if (name_entry.get_text().empty() || command_entry.get_text().empty())
+    if (key_entry.get_text().empty() || value_entry.get_text().empty())
     {
-      Gtk::MessageDialog dialog(*this, "You forgot to fill-in the name and command (only the description is optional).", false, Gtk::MESSAGE_ERROR,
+      Gtk::MessageDialog dialog(*this, "Please fill-in the key and value of the environment variable you wish to add.", false, Gtk::MESSAGE_ERROR,
                                 Gtk::BUTTONS_OK);
-      dialog.set_title("Error during new application saving");
+      dialog.set_title("Error during adding a new environment variable");
       dialog.set_modal(true);
       dialog.run();
     }
@@ -215,9 +150,8 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
       int new_index = (!app_list.empty()) ? std::prev(app_list.end())->first + 1 : 0;
       // Append new app
       ApplicationData new_app;
-      new_app.name = name_entry.get_text();
-      new_app.description = description_entry.get_text();
-      new_app.command = command_entry.get_text();
+      new_app.name = key_entry.get_text();
+      new_app.command = value_entry.get_text();
       app_list.insert(std::pair<int, ApplicationData>(new_index, new_app));
 
       // Save application to bottle config
@@ -230,8 +164,6 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
       }
       else
       {
-        // Hide new application window
-        hide();
         // Reset entry fields
         set_default_values();
         // Trigger manager update & UI update
