@@ -414,6 +414,17 @@ void MainWindow::on_hide_window()
  */
 void MainWindow::on_give_feedback()
 {
+  if (!Gio::AppInfo::launch_default_for_uri("https://github.com/winegui/WineGUI/issues/new"))
+  {
+    this->show_error_message("Could not open browser.");
+  }
+}
+
+/**
+ * \brief Open issue tickets on GitLab
+ */
+void MainWindow::on_issue_tickets()
+{
   if (!Gio::AppInfo::launch_default_for_uri("https://gitlab.melroy.org/melroy/winegui/-/issues"))
   {
     this->show_error_message("Could not open browser.");

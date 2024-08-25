@@ -25,7 +25,9 @@
 /**
  * \brief Constructor
  */
-AboutDialog::AboutDialog(Gtk::Window& parent) : visit_project_link_button("https://gitlab.melroy.org/melroy/winegui", "Visit the GitLab Project")
+AboutDialog::AboutDialog(Gtk::Window& parent)
+    : visit_gitlab_project_link_button("https://gitlab.melroy.org/melroy/winegui", "Visit the Official GitLab Project"),
+      visit_github_project_link_button("https://github.com/winegui/WineGUI", "Visit the mirror GitHub Project")
 {
   // Set logo
   logo.set(Helper::get_image_location("logo.png"));
@@ -34,7 +36,7 @@ AboutDialog::AboutDialog(Gtk::Window& parent) : visit_project_link_button("https
   devs.push_back("Melroy van den Berg <melroy@melroy.org>");
 
   set_transient_for(parent);
-  set_program_name("WineGui");
+  set_program_name("WineGUI");
   set_comments("The most user-friendly WINE manager.");
   set_logo(logo.get_pixbuf());
   set_authors(devs);
@@ -44,8 +46,10 @@ AboutDialog::AboutDialog(Gtk::Window& parent) : visit_project_link_button("https
   set_license_type(Gtk::LICENSE_AGPL_3_0);
 
   Gtk::Box* vbox = get_vbox();
-  vbox->pack_end(visit_project_link_button, Gtk::PackOptions::PACK_SHRINK);
-  visit_project_link_button.show();
+  vbox->pack_start(visit_gitlab_project_link_button, Gtk::PackOptions::PACK_SHRINK);
+  vbox->pack_start(visit_github_project_link_button, Gtk::PackOptions::PACK_SHRINK);
+
+  vbox->show_all();
 }
 
 AboutDialog::~AboutDialog()
