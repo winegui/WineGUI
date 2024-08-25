@@ -106,6 +106,7 @@ void SignalController::dispatch_signals()
   menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
   menu_.open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
   menu_.give_feedback.connect(sigc::mem_fun(*main_window_, &MainWindow::on_give_feedback));
+  menu_.list_issues.connect(sigc::mem_fun(*main_window_, &MainWindow::on_issue_tickets));
   menu_.check_version.connect(sigc::mem_fun(main_window_, &MainWindow::on_check_version));
   menu_.show_about.connect(sigc::mem_fun(about_dialog_, &AboutDialog::run_dialog));
   about_dialog_.signal_response().connect(sigc::mem_fun(about_dialog_, &AboutDialog::hide_dialog));
