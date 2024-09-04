@@ -36,8 +36,9 @@ endif()
 set(CPACK_RPM_PACKAGE_SUGGESTS "vulkan, vulkan-loader")
 
 # Debian Jessie/Ubuntu Trusty/Mint Qiana (libgtkmm-3.0-1) or 
-# Debian Stretch, Buster or newer, Ubuntu Xenial, Artful, Bionic or newer, Linux Mint Sarah, Tessa, Tina or newer (libgtkmm-3.0-1v5)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-3.0-1 | libgtkmm-3.0-1v5, cabextract, unzip, p7zip, wget")
+# Debian Stretch, Buster, Bookworm, Ubuntu Xenial, Artful, Bionic, Jammy, Lunar, Linux Mint Sarah, Tessa, Tina (libgtkmm-3.0-1v5) or
+# Debian trixie, Sid, Ubuntu Noble Numbat, Linux Mint 22 (libgtkmm-3.0-1t64)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-3.0-1 | libgtkmm-3.0-1v5 | libgtkmm-3.0-1t64, cabextract, unzip, p7zip, wget")
 # Optional deb packages
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "libvulkan1, libvulkan1:i386, mesa-vulkan-drivers, mesa-vulkan-drivers:i386")
 
