@@ -42,15 +42,20 @@
 BottleManager::BottleManager(MainWindow& main_window)
     : error_message_mutex_(),
       output_loging_mutex_(),
+      error_message_update_winetricks_mutex_(),
+      thread_update_winetricks_(nullptr),
       main_window_(main_window),
       active_bottle_(nullptr),
       is_wine64_bit_(false),
       is_logging_stderr_(true),
-      error_message_()
+      error_message_(),
+      error_message_winetricks_update_()
 {
   // Connect internal dispatcher(s)
   update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(this, &BottleManager::update_config_and_bottles), "", false));
   write_log_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::write_log_to_file));
+  error_message_update_winetricks_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::on_error_message_update_winetricks));
+  update_winetricks_finished_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::cleanup_update_winetricks_thread));
 }
 
 /**
@@ -58,6 +63,8 @@ BottleManager::BottleManager(MainWindow& main_window)
  */
 BottleManager::~BottleManager()
 {
+  // Avoid zombie thread
+  this->cleanup_update_winetricks_thread();
 }
 
 /**
@@ -80,19 +87,8 @@ void BottleManager::prepare()
   }
   else
   {
-    // Update existing script
-    try
-    {
-      Helper::self_update_winetricks();
-    }
-    catch (const std::invalid_argument& msg)
-    {
-      std::cout << "WARN: " << msg.what() << std::endl;
-    }
-    catch (const std::runtime_error& error)
-    {
-      main_window_.show_error_message(error.what());
-    }
+    // Update Winetricks within a thread (async)
+    this->update_winetricks_thread();
   }
 
   // Start the initial read from disk to fetch the bottles & update GUI
@@ -114,6 +110,66 @@ void BottleManager::write_log_to_file()
     output_logging_ += '\n';
   }
   Helper::write_to_log_file(logging_bottle_prefix_, output_logging_);
+}
+
+/**
+ * \brief Helper method for cleaning the manage thread.
+ */
+void BottleManager::cleanup_update_winetricks_thread()
+{
+  if (thread_update_winetricks_)
+  {
+    if (thread_update_winetricks_->joinable())
+      thread_update_winetricks_->join();
+    delete thread_update_winetricks_;
+    thread_update_winetricks_ = nullptr;
+  }
+}
+
+/**
+ * \brief Show error winetricks error messages to the main window
+ */
+void BottleManager::on_error_message_update_winetricks()
+{
+  this->cleanup_update_winetricks_thread();
+
+  {
+    std::lock_guard<std::mutex> lock(error_message_update_winetricks_mutex_);
+    main_window_.show_error_message(error_message_winetricks_update_);
+  }
+}
+
+/**
+ * \brief Update Winetricks self-update within a thread.
+ */
+void BottleManager::update_winetricks_thread()
+{
+  if (thread_update_winetricks_ == nullptr)
+  {
+    // Start the update winetricks thread
+    thread_update_winetricks_ = new std::thread(
+        [this]
+        {
+          try
+          {
+            Helper::self_update_winetricks();
+          }
+          catch (const std::invalid_argument& msg)
+          {
+            std::cout << "WARN: " << msg.what() << std::endl;
+          }
+          catch (const std::runtime_error& error)
+          {
+            {
+              std::lock_guard<std::mutex> lock(error_message_update_winetricks_mutex_);
+              error_message_winetricks_update_ = error.what();
+            }
+            this->error_message_update_winetricks_dispatcher_.emit();
+            return; // Stop thread prematurely
+          }
+          this->update_winetricks_finished_dispatcher_.emit(); // Clean-up the thread pointer
+        });
+  }
 }
 
 /**
