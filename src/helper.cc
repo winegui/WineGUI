@@ -42,11 +42,11 @@
 #include <tuple>
 #include <unistd.h>
 
-vector<string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
-static string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
+static const std::array<std::string, 2> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
+static const string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
 
-vector<string> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
-static string DefaultBottleWineDir = Glib::build_path(G_DIR_SEPARATOR_S, defaultWineDir);
+static const std::array<std::string, 2> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
+static const string DefaultBottleWineDir = Glib::build_path(G_DIR_SEPARATOR_S, defaultWineDir);
 
 // Wine & Winetricks exec
 static const string WineExecutable = "wine";     /*!< Currently expect to be installed globally */
@@ -155,7 +155,7 @@ Helper& Helper::get_instance()
 vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_default_wine_machine)
 {
   vector<string> list;
-  list.reserve(5);
+  list.reserve(50);
   Glib::Dir dir(dir_path);
   auto name = dir.read_name();
 
@@ -164,7 +164,7 @@ vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_de
     auto path = Glib::build_filename(dir_path, name);
     if (Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR))
     {
-      list.push_back(path);
+      list.emplace_back(path);
     }
     name = dir.read_name();
   }
@@ -177,7 +177,7 @@ vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_de
   // Add default wine bottle to the end, if enabled by settings and if directory is present
   if (display_default_wine_machine && dir_exists(DefaultBottleWineDir))
   {
-    list.push_back(DefaultBottleWineDir);
+    list.emplace_back(DefaultBottleWineDir);
   }
 
   return list;
@@ -1698,6 +1698,7 @@ string Helper::get_winetricks_version()
 string Helper::get_reg_value(const string& file_path, const string& key_name, const string& value_name)
 {
   string output;
+  output.reserve(10);
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
@@ -1744,6 +1745,7 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
 vector<string> Helper::get_reg_keys(const string& file_path, const string& key_name)
 {
   vector<string> keys;
+  keys.reserve(10);
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
@@ -1761,7 +1763,7 @@ vector<string> Helper::get_reg_keys(const string& file_path, const string& key_n
         if (line.empty() || reg_file.eof())
           break; // End of key section in registry
         if (!line.starts_with('#'))
-          keys.push_back(line);
+          keys.emplace_back(line);
       }
     }
     reg_file.close();
@@ -1818,6 +1820,7 @@ vector<pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(c
                                                                                const string& key_name_ignore_filter)
 {
   vector<pair<string, string>> pairs;
+  pairs.reserve(3);
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
@@ -1844,7 +1847,7 @@ vector<pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(c
           auto results = split(line, '=');
           if (results.size() > 1)
           {
-            pairs.push_back(std::make_pair(results.at(0), results.at(1)));
+            pairs.emplace_back(std::make_pair(results.at(0), results.at(1)));
           }
         }
       }
@@ -1902,6 +1905,7 @@ vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_
                                                              const string& key_name_ignore_filter)
 {
   vector<string> keys;
+  keys.reserve(10);
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
@@ -1929,7 +1933,7 @@ vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_
           {
             line = results.at(1);
             line.erase(std::remove(line.begin(), line.end(), '\"'), line.end());
-            keys.push_back(line);
+            keys.emplace_back(line);
           }
         }
       }
@@ -1956,6 +1960,7 @@ vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_
 string Helper::get_reg_meta_data(const string& file_path, const string& meta_value_name)
 {
   string output;
+  output.reserve(10);
   std::ifstream reg_file(file_path);
   if (reg_file.is_open())
   {
@@ -2018,6 +2023,7 @@ string Helper::get_bottle_dir_from_prefix(const string& prefix_path)
 vector<string> Helper::read_file_lines(const string& file_path)
 {
   vector<string> output;
+  output.reserve(50);
   std::ifstream myfile(file_path);
   if (myfile.is_open())
   {
@@ -2025,7 +2031,7 @@ vector<string> Helper::read_file_lines(const string& file_path)
     line.reserve(100);
     while (std::getline(myfile, line))
     {
-      output.push_back(line);
+      output.emplace_back(line);
     }
     myfile.close();
   }
@@ -2048,6 +2054,7 @@ vector<string> Helper::split(const string& s, const char delimiter)
   size_t start = 0;
   size_t end = s.find_first_of(delimiter);
   vector<string> output;
+  output.reserve(3);
   while (end <= string::npos)
   {
     output.emplace_back(s.substr(start, end - start));
