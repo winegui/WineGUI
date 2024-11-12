@@ -33,7 +33,7 @@ AboutDialog::AboutDialog(Gtk::Window& parent)
   logo.set(Helper::get_image_location("logo.png"));
   // Set version
   std::vector<Glib::ustring> devs;
-  devs.push_back("Melroy van den Berg <melroy@melroy.org>");
+  devs.emplace_back("Melroy van den Berg <melroy@melroy.org>");
 
   set_transient_for(parent);
   set_program_name("WineGUI");
