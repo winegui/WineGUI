@@ -193,6 +193,7 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
     // Read existing config data
     BottleConfigData bottle_config;
     std::vector<std::pair<std::string, std::string>> env_vars;
+    env_vars.reserve(2);
     std::map<int, ApplicationData> app_list;
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
 
@@ -206,7 +207,7 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
       {
         continue; // Skip empty rows
       }
-      env_vars.push_back(std::make_pair(name, value));
+      env_vars.emplace_back(std::make_pair(name, value));
     }
 
     // Set (override existing) env vars

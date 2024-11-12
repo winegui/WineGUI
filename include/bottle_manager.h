@@ -95,12 +95,12 @@ private:
   // Synchronizes access to data members using mutexes
   mutable std::mutex error_message_mutex_;
   mutable std::mutex output_loging_mutex_;
-  mutable std::mutex error_message_update_winetricks_mutex_;
-  std::thread* thread_update_winetricks_;                       /*!< Thread for updating winetricks binary */
-  Glib::Dispatcher update_bottles_dispatcher_;                  /*!< Dispatcher if the bottle list needs to be updated, from thread */
-  Glib::Dispatcher write_log_dispatcher_;                       /*!< Dispatcher if we can write the output logging to disk */
-  Glib::Dispatcher error_message_update_winetricks_dispatcher_; /*!< Dispatcher when there is an error message during winetricks update thread */
-  Glib::Dispatcher update_winetricks_finished_dispatcher_;      /*!< Dispatcher when the Winetricks install is completed */
+  mutable std::mutex error_message_winetricks_mutex_;
+  std::thread* thread_install_update_winetricks_;        /*!< Thread for installing/updating winetricks binary */
+  Glib::Dispatcher update_bottles_dispatcher_;           /*!< Dispatcher if the bottle list needs to be updated, from thread */
+  Glib::Dispatcher write_log_dispatcher_;                /*!< Dispatcher if we can write the output logging to disk */
+  Glib::Dispatcher error_message_winetricks_dispatcher_; /*!< Dispatcher when there is an error message during winetricks install/update thread */
+  Glib::Dispatcher winetricks_finished_dispatcher_;      /*!< Dispatcher when the Winetricks install is completed */
 
   MainWindow& main_window_;
   string bottle_location_;
@@ -114,16 +114,16 @@ private:
 
   //// error_message is used by both the GUI thread and NewBottle thread (used a 'temp' location)
   Glib::ustring error_message_;
-  Glib::ustring error_message_winetricks_update_;
+  Glib::ustring error_message_winetricks_;
   std::string logging_bottle_prefix_;
   std::string output_logging_;
 
   // Signal handlers
   virtual void write_log_to_file();
-  virtual void on_error_message_update_winetricks();
-  virtual void cleanup_update_winetricks_thread();
+  virtual void on_error_winetricks();
+  virtual void cleanup_install_update_winetricks_thread();
 
-  void update_winetricks_thread();
+  void install_or_update_winetricks_thread(bool install);
   GeneralConfigData load_and_save_general_config();
   bool is_bottle_not_null();
   string get_deinstall_mono_command();
