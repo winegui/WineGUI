@@ -42,20 +42,20 @@
 BottleManager::BottleManager(MainWindow& main_window)
     : error_message_mutex_(),
       output_loging_mutex_(),
-      error_message_update_winetricks_mutex_(),
-      thread_update_winetricks_(nullptr),
+      error_message_winetricks_mutex_(),
+      thread_install_update_winetricks_(nullptr),
       main_window_(main_window),
       active_bottle_(nullptr),
       is_wine64_bit_(false),
       is_logging_stderr_(true),
       error_message_(),
-      error_message_winetricks_update_()
+      error_message_winetricks_()
 {
   // Connect internal dispatcher(s)
   update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(this, &BottleManager::update_config_and_bottles), "", false));
   write_log_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::write_log_to_file));
-  error_message_update_winetricks_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::on_error_message_update_winetricks));
-  update_winetricks_finished_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::cleanup_update_winetricks_thread));
+  error_message_winetricks_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::on_error_winetricks));
+  winetricks_finished_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::cleanup_install_update_winetricks_thread));
 }
 
 /**
@@ -64,7 +64,7 @@ BottleManager::BottleManager(MainWindow& main_window)
 BottleManager::~BottleManager()
 {
   // Avoid zombie thread
-  this->cleanup_update_winetricks_thread();
+  this->cleanup_install_update_winetricks_thread();
 }
 
 /**
@@ -72,28 +72,21 @@ BottleManager::~BottleManager()
  */
 void BottleManager::prepare()
 {
-  // Install winetricks if not yet present,
+  // Install or self-update winetricks if not yet present within a thread (async),
   // Winetricks script is used by WineGUI.
   if (!Helper::file_exists(Helper::get_winetricks_location()))
   {
-    try
-    {
-      Helper::install_or_update_winetricks();
-    }
-    catch (const std::runtime_error& error)
-    {
-      main_window_.show_error_message(error.what());
-    }
+    install_or_update_winetricks_thread(true);
   }
   else
   {
-    // Update Winetricks within a thread (async)
-    this->update_winetricks_thread();
+    install_or_update_winetricks_thread(false);
   }
 
   // Start the initial read from disk to fetch the bottles & update GUI
   // "" - during startup (no bottle name to select)
   // true - during startup
+  // TODO: Run in thread, not blocking the main thread
   update_config_and_bottles("", true);
 }
 
@@ -113,46 +106,54 @@ void BottleManager::write_log_to_file()
 }
 
 /**
- * \brief Helper method for cleaning the manage thread.
+ * \brief Helper method for cleaning the winetricks thread.
  */
-void BottleManager::cleanup_update_winetricks_thread()
+void BottleManager::cleanup_install_update_winetricks_thread()
 {
-  if (thread_update_winetricks_)
+  if (thread_install_update_winetricks_)
   {
-    if (thread_update_winetricks_->joinable())
-      thread_update_winetricks_->join();
-    delete thread_update_winetricks_;
-    thread_update_winetricks_ = nullptr;
+    if (thread_install_update_winetricks_->joinable())
+      thread_install_update_winetricks_->join();
+    delete thread_install_update_winetricks_;
+    thread_install_update_winetricks_ = nullptr;
   }
 }
 
 /**
  * \brief Show error winetricks error messages to the main window
  */
-void BottleManager::on_error_message_update_winetricks()
+void BottleManager::on_error_winetricks()
 {
-  this->cleanup_update_winetricks_thread();
+  this->cleanup_install_update_winetricks_thread();
 
   {
-    std::lock_guard<std::mutex> lock(error_message_update_winetricks_mutex_);
-    main_window_.show_error_message(error_message_winetricks_update_);
+    std::lock_guard<std::mutex> lock(error_message_winetricks_mutex_);
+    main_window_.show_error_message(error_message_winetricks_);
   }
 }
 
 /**
- * \brief Update Winetricks self-update within a thread.
+ * \brief Install or self-update Winetricks within a thread.
+ * \param install True to install/update winetricks, false to self-update
  */
-void BottleManager::update_winetricks_thread()
+void BottleManager::install_or_update_winetricks_thread(bool install)
 {
-  if (thread_update_winetricks_ == nullptr)
+  if (thread_install_update_winetricks_ == nullptr)
   {
     // Start the update winetricks thread
-    thread_update_winetricks_ = new std::thread(
-        [this]
+    thread_install_update_winetricks_ = new std::thread(
+        [this, install]
         {
           try
           {
-            Helper::self_update_winetricks();
+            if (install)
+            {
+              Helper::install_or_update_winetricks();
+            }
+            else
+            {
+              Helper::self_update_winetricks();
+            }
           }
           catch (const std::invalid_argument& msg)
           {
@@ -161,13 +162,13 @@ void BottleManager::update_winetricks_thread()
           catch (const std::runtime_error& error)
           {
             {
-              std::lock_guard<std::mutex> lock(error_message_update_winetricks_mutex_);
-              error_message_winetricks_update_ = error.what();
+              std::lock_guard<std::mutex> lock(error_message_winetricks_mutex_);
+              error_message_winetricks_ = error.what();
             }
-            this->error_message_update_winetricks_dispatcher_.emit();
+            this->error_message_winetricks_dispatcher_.emit();
             return; // Stop thread prematurely
           }
-          this->update_winetricks_finished_dispatcher_.emit(); // Clean-up the thread pointer
+          this->winetricks_finished_dispatcher_.emit(); // Clean-up the thread pointer
         });
   }
 }
@@ -1474,7 +1475,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
     BottleItem* bottle = new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix_path,
                                         c_drive_location, last_time_wine_updated, audio_driver, virtual_desktop, bottle_config.logging_enabled,
                                         bottle_config.debug_log_level, bottle_config.env_vars, bottle_app_list);
-    bottles.push_back(*bottle);
+    bottles.emplace_back(*bottle);
   }
   return bottles;
 }
