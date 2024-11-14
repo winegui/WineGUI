@@ -57,8 +57,7 @@ SignalController::SignalController(BottleManager& manager,
       configure_env_var_window_(configure_env_var_window),
       configure_window_(configure_window),
       add_app_window_(add_app_window),
-      remove_app_window_(remove_app_window),
-      thread_bottle_manager_(nullptr)
+      remove_app_window_(remove_app_window)
 {
   // Nothing
 }
@@ -263,12 +262,10 @@ void SignalController::signal_error_message_during_clone()
  */
 void SignalController::cleanup_bottle_manager_thread()
 {
-  if (thread_bottle_manager_)
+  if (thread_bottle_manager_ && thread_bottle_manager_->joinable())
   {
-    if (thread_bottle_manager_->joinable())
-      thread_bottle_manager_->join();
-    delete thread_bottle_manager_;
-    thread_bottle_manager_ = nullptr;
+    thread_bottle_manager_->join();
+    thread_bottle_manager_.reset();
   }
 }
 
@@ -312,9 +309,9 @@ void SignalController::on_new_bottle(Glib::ustring& name,
   else
   {
     // Start a new manager thread
-    thread_bottle_manager_ =
-        new std::thread([this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio]
-                        { manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio); });
+    thread_bottle_manager_ = std::make_unique<std::thread>(
+        [this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio]
+        { manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio); });
   }
 }
 
@@ -332,7 +329,7 @@ void SignalController::on_update_bottle(const UpdateBottleStruct& update_bottle_
   else
   {
     // Start a new manager thread
-    thread_bottle_manager_ = new std::thread(
+    thread_bottle_manager_ = std::make_unique<std::thread>(
         [this, update_bottle_struct]
         {
           manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.description,
@@ -356,9 +353,9 @@ void SignalController::on_clone_bottle(const CloneBottleStruct& clone_bottle_str
   else
   {
     // Start a new manager thread
-    thread_bottle_manager_ =
-        new std::thread([this, clone_bottle_struct]
-                        { manager_.clone_bottle(this, clone_bottle_struct.name, clone_bottle_struct.folder_name, clone_bottle_struct.description); });
+    thread_bottle_manager_ = std::make_unique<std::thread>(
+        [this, clone_bottle_struct]
+        { manager_.clone_bottle(this, clone_bottle_struct.name, clone_bottle_struct.folder_name, clone_bottle_struct.description); });
   }
 }
 
