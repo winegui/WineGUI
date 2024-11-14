@@ -137,11 +137,11 @@ void BottleConfigureEnvVarWindow::load_environment_variables_from_config()
     std::map<int, ApplicationData> app_list;
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
 
-    for (const std::pair<std::string, std::string>& env_var : bottle_config.env_vars)
+    for (const auto& [name, value] : bottle_config.env_vars)
     {
       Gtk::TreeModel::Row row = *(m_refTreeModel->append());
-      row[m_Columns.m_col_name] = env_var.first;
-      row[m_Columns.m_col_value] = env_var.second;
+      row[m_Columns.m_col_name] = name;
+      row[m_Columns.m_col_value] = value;
     }
   }
 }

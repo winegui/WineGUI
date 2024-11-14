@@ -87,6 +87,8 @@
     "__errc": "cpp",
     "__mutex_base": "cpp",
     "__tree": "cpp",
-    "format": "cpp"
+    "format": "cpp",
+    "charconv": "cpp",
+    "__memory": "cpp"
 }
 }

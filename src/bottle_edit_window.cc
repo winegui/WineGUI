@@ -356,8 +356,8 @@ void BottleEditWindow::on_save_button_clicked()
   try
   {
     size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
-    const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
-    update_bottle_struct.windows_version = currentWindowsBit.first;
+    const auto& [currentWindowsVersionName, _] = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
+    update_bottle_struct.windows_version = currentWindowsVersionName;
   }
   catch (const std::runtime_error& error)
   {

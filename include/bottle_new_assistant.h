@@ -32,17 +32,21 @@ class BottleNewAssistant : public Gtk::Assistant
 public:
   // Signal
   sigc::signal<void, Glib::ustring&> new_bottle_finished; /*!< Signal when New Bottle Assistant is finished with the just created bottle name */
+  // Result struct
+  struct Result
+  {
+    Glib::ustring name;
+    BottleTypes::Windows windows_version;
+    BottleTypes::Bit bit;
+    Glib::ustring virtual_desktop_resolution;
+    bool disable_gecko_mono;
+    BottleTypes::AudioDriver audio;
+  };
 
   BottleNewAssistant();
   virtual ~BottleNewAssistant();
 
-  void get_result(Glib::ustring& name,
-                  BottleTypes::Windows& windows_version,
-                  BottleTypes::Bit& bit,
-                  Glib::ustring& virtual_desktop_resolution,
-                  bool& disable_gecko_mono,
-                  BottleTypes::AudioDriver& audio);
-
+  Result get_result();
   void bottle_created();
 
   // Child widgets
