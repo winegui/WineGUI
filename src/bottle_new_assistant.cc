@@ -190,33 +190,23 @@ void BottleNewAssistant::create_third_page()
 /**
  * \brief Retrieve the results (after the wizard is finished).
  * And reset the values to default values again.
- * Idea: use one struct as in/out parameter
- * \param[inout] name                        Bottle Name
- * \param[inout] windows_version             Windows OS version
- * \param[inout] bit                         Windows Bit (32/64-bit)
- * \param[inout] virtual_desktop_resolution  Virtual desktop resolution (empty if disabled)
- * \param[inout] disable_gecko_mono          Enable/Disable Gecko/Mono during install
- * \param[inout] audio                       Audio Driver type
  */
-void BottleNewAssistant::get_result(Glib::ustring& name,
-                                    BottleTypes::Windows& windows_version,
-                                    BottleTypes::Bit& bit,
-                                    Glib::ustring& virtual_desktop_resolution,
-                                    bool& disable_gecko_mono,
-                                    BottleTypes::AudioDriver& audio)
+BottleNewAssistant::Result BottleNewAssistant::get_result()
 {
   std::string::size_type sz;
-  windows_version = WineDefaults::WindowsOs;
-  bit = BottleTypes::Bit::win32;
-  audio = WineDefaults::AudioDriver;
-  name = name_entry.get_text();
+  auto windows_version = WineDefaults::WindowsOs;
+  auto bit = BottleTypes::Bit::win32;
+  auto audio = WineDefaults::AudioDriver;
+  auto name = name_entry.get_text();
+  auto vd_res = Glib::ustring("");
+  auto disable_gecko_mono = false;
 
   try
   {
     size_t win_bit_index = size_t(std::stoi(windows_version_combobox.get_active_id(), &sz));
-    const auto currentWindowsBit = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
-    windows_version = currentWindowsBit.first;
-    bit = currentWindowsBit.second;
+    const auto& [windows_version_value, bit_value] = BottleTypes::SupportedWindowsVersions.at(win_bit_index);
+    windows_version = windows_version_value;
+    bit = bit_value;
   }
   catch (const std::runtime_error& error)
   {
@@ -232,12 +222,12 @@ void BottleNewAssistant::get_result(Glib::ustring& name,
   bool isDesktopEnabled = virtual_desktop_check.get_active();
   if (isDesktopEnabled)
   {
-    virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
+    vd_res = virtual_desktop_resolution_entry.get_text();
   }
   else
   {
     // Just empty
-    virtual_desktop_resolution = "";
+    vd_res = "";
   }
 
   disable_gecko_mono = disable_gecko_mono_check.get_active();
@@ -247,6 +237,7 @@ void BottleNewAssistant::get_result(Glib::ustring& name,
     size_t audio_index = size_t(std::stoi(audio_driver_combobox.get_active_id(), &sz));
     audio = BottleTypes::AudioDriver(audio_index);
   }
+  // Ignore the catches
   catch (const std::runtime_error& error)
   {
   }
@@ -256,7 +247,7 @@ void BottleNewAssistant::get_result(Glib::ustring& name,
   catch (const std::out_of_range& e)
   {
   }
-  // Ignore the catches
+  return {name, windows_version, bit, vd_res, disable_gecko_mono, audio};
 }
 
 /**

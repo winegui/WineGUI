@@ -499,18 +499,11 @@ void MainWindow::on_application_row_activated(const Gtk::TreeModel::Path& path, 
  */
 void MainWindow::on_new_bottle_apply()
 {
-  Glib::ustring name;
-  BottleTypes::Windows windows_version;
-  BottleTypes::Bit bit;
-  Glib::ustring virtual_desktop_resolution;
-  bool disable_gecko_mono;
-  BottleTypes::AudioDriver audio;
-
   // Retrieve assistant results
-  new_bottle_assistant_.get_result(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
+  auto [name, windows_version, bit, vd_res, disable_gecko_mono, audio] = new_bottle_assistant_.get_result();
 
   // Emit new bottle signal (see dispatcher)
-  new_bottle.emit(name, windows_version, bit, virtual_desktop_resolution, disable_gecko_mono, audio);
+  new_bottle.emit(name, windows_version, bit, vd_res, disable_gecko_mono, audio);
 }
 
 /**
@@ -631,11 +624,11 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   reset_application_list();
 
   // First add the custom application items
-  for (const auto& app : app_list)
+  for (const auto& [_, app_data] : app_list)
   {
-    string command = app.second.command;
+    string command = app_data.command;
     string icon = Helper::string_to_icon(command);
-    add_application(app.second.name, app.second.description, command, icon);
+    add_application(app_data.name, app_data.description, command, icon);
   }
 
   // Temporally store the list of menu item names,
@@ -710,12 +703,8 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   try
   {
     auto desktop_items = Helper::get_desktop_items(prefix_path);
-    for (std::pair<string, string> item : desktop_items)
+    for (const auto& [value_name, value_data] : desktop_items)
     {
-      // cppcheck-suppress variableScope
-      string value_name = item.first;
-      string value_data = item.second;
-
       string name = "- Unknown desktop item -";
       size_t found = value_data.find_last_of('\\');
       size_t subtract = found + 5; // Remove the .lnk part as well using substr

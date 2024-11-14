@@ -111,9 +111,9 @@ void RemoveAppWindow::show()
     BottleConfigData bottle_config;
     std::map<int, ApplicationData> app_list;
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
-    for (const auto& app : app_list)
+    for (const auto& [_, app_data] : app_list)
     {
-      std::string label_name = (!app.second.description.empty()) ? app.second.name + " - " + app.second.description : app.second.name;
+      std::string label_name = (!app_data.description.empty()) ? app_data.name + " - " + app_data.description : app_data.name;
       Gtk::Label* label = Gtk::manage(new Gtk::Label(label_name));
       app_list_box.add(*label);
     }

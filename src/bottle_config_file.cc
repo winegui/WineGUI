@@ -60,18 +60,18 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
     keyfile.set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
     keyfile.set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
     // Iterate over the key/value environment variable pairs (if present)
-    for (const auto& kv : bottle_config.env_vars)
+    for (const auto& [key, value] : bottle_config.env_vars)
     {
-      keyfile.set_value("EnvironmentVariables", kv.first, kv.second);
+      keyfile.set_value("EnvironmentVariables", key, value);
     }
     // Save custom application list (if present)
-    for (int i = 0; std::pair<const int, ApplicationData> app : app_list)
+    for (int i = 0; const auto& [_, app_data] : app_list)
     {
       // Instead of reusing the key, we will reindex if needed (starting from 0)
       std::string group_name = "Application." + std::to_string(i);
-      keyfile.set_string(group_name, "Name", app.second.name);
-      keyfile.set_string(group_name, "Description", app.second.description);
-      keyfile.set_string(group_name, "Command", app.second.command);
+      keyfile.set_string(group_name, "Name", app_data.name);
+      keyfile.set_string(group_name, "Description", app_data.description);
+      keyfile.set_string(group_name, "Command", app_data.command);
       i++;
     }
 
