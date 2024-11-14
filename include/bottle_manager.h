@@ -96,9 +96,9 @@ private:
   mutable std::mutex error_message_mutex_;
   mutable std::mutex output_loging_mutex_;
   mutable std::mutex error_message_winetricks_mutex_;
-  std::thread* thread_install_update_winetricks_;        /*!< Thread for installing/updating winetricks binary */
-  Glib::Dispatcher update_bottles_dispatcher_;           /*!< Dispatcher if the bottle list needs to be updated, from thread */
-  Glib::Dispatcher write_log_dispatcher_;                /*!< Dispatcher if we can write the output logging to disk */
+  std::unique_ptr<std::thread> thread_install_update_winetricks_; /*!< Thread for installing/updating winetricks binary */
+  Glib::Dispatcher update_bottles_dispatcher_;                    /*!< Dispatcher if the bottle list needs to be updated, from thread */
+  Glib::Dispatcher write_log_dispatcher_;                         /*!< Dispatcher if we can write the output logging to disk */
   Glib::Dispatcher error_message_winetricks_dispatcher_; /*!< Dispatcher when there is an error message during winetricks install/update thread */
   Glib::Dispatcher winetricks_finished_dispatcher_;      /*!< Dispatcher when the Winetricks install is completed */
 

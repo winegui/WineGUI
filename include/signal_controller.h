@@ -114,5 +114,5 @@ private:
   Glib::Dispatcher error_message_updated_dispatcher_;
   Glib::Dispatcher error_message_cloned_dispatcher_;
   // Thread for Bottle Manager (so it doesn't block the GUI thread)
-  std::thread* thread_bottle_manager_;
+  std::unique_ptr<std::thread> thread_bottle_manager_;
 };

@@ -43,7 +43,6 @@ BottleManager::BottleManager(MainWindow& main_window)
     : error_message_mutex_(),
       output_loging_mutex_(),
       error_message_winetricks_mutex_(),
-      thread_install_update_winetricks_(nullptr),
       main_window_(main_window),
       active_bottle_(nullptr),
       is_wine64_bit_(false),
@@ -110,12 +109,10 @@ void BottleManager::write_log_to_file()
  */
 void BottleManager::cleanup_install_update_winetricks_thread()
 {
-  if (thread_install_update_winetricks_)
+  if (thread_install_update_winetricks_ && thread_install_update_winetricks_->joinable())
   {
-    if (thread_install_update_winetricks_->joinable())
-      thread_install_update_winetricks_->join();
-    delete thread_install_update_winetricks_;
-    thread_install_update_winetricks_ = nullptr;
+    thread_install_update_winetricks_->join();
+    thread_install_update_winetricks_.reset();
   }
 }
 
@@ -141,7 +138,7 @@ void BottleManager::install_or_update_winetricks_thread(bool install)
   if (thread_install_update_winetricks_ == nullptr)
   {
     // Start the update winetricks thread
-    thread_install_update_winetricks_ = new std::thread(
+    thread_install_update_winetricks_ = std::make_unique<std::thread>(
         [this, install]
         {
           try
