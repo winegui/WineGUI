@@ -7,7 +7,6 @@ cd ./build_debug/bin
 G_DEBUG=gc-friendly G_SLICE=always-malloc valgrind \
 --suppressions=/usr/share/glib-2.0/valgrind/glib.supp \
 --suppressions=/usr/share/gtk-3.0/valgrind/gtk.supp \
---log-file=valgrind-out.txt \
 --leak-check=full \
 --track-origins=yes \
 --show-leak-kinds=all \
