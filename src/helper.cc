@@ -270,7 +270,7 @@ void Helper::write_to_log_file(const string& logging_bottle_prefix, const string
   }
   catch (const Glib::Error& ex)
   {
-    std::cout << "Error: Couldn't write debug logging to log file. Error " << ex.what() << std::endl;
+    std::cerr << "Error: Couldn't write debug logging to log file. Error " << ex.what() << std::endl;
   }
 }
 
@@ -423,7 +423,7 @@ string Helper::open_file_from_uri(const string& uri)
   }
   catch (const Glib::Error& ex)
   {
-    std::cout << "Error: Could not open and/or read from URI. " << ex.what() << std::endl;
+    std::cerr << "Error: Could not open and/or read from URI. " << ex.what() << std::endl;
   }
   return contents;
 }
@@ -1901,10 +1901,10 @@ vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_
         if (!line.starts_with('#') && (key_value_filter.empty() || line.find(key_value_filter) != string::npos) &&
             (key_name_ignore_filter.empty() || line.find(key_name_ignore_filter) == string::npos))
         {
-          auto results = split(line, '=');
-          if (results.size() > 1)
+          auto results = split(line, '"');
+          if (results.size() >= 4)
           {
-            line = results.at(1);
+            line = results.at(3);
             line.erase(std::remove(line.begin(), line.end(), '\"'), line.end());
             keys.emplace_back(line);
           }
