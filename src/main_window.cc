@@ -644,6 +644,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
       string name = "- Unknown menu item -";
       bool is_icon_full_path = false;
       string icon, comment;
+      // Only continue further if the item is not empty
       if (!item.empty())
       {
         size_t found = item.find_last_of('\\');
@@ -695,7 +696,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
       }
       else
       {
-        std::cerr << "ERROR: Menu item is empty, so except an unknown menu item." << std::endl;
+        std::cerr << "WARN: Menu item is empty, so expect an unknown menu item." << std::endl;
       }
       // Fall-back (keep in mind, menu item has almost always a .lnk file extension)
       if (icon.empty())
@@ -721,54 +722,69 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
     for (const auto& [value_name, value_data] : desktop_items)
     {
       string name = "- Unknown desktop item -";
-      size_t found = value_data.find_last_of('\\');
-      size_t subtract = found + 5; // Remove the .lnk part as well using substr
-      if (found != string::npos && value_data.length() >= subtract)
+      if (!value_data.empty())
       {
-        // Get the name only
-        name = value_data.substr(found + 1, value_data.length() - subtract);
+        size_t found = value_data.find_last_of('\\');
+        size_t subtract = found + 5; // Remove the .lnk part as well using substr
+        if (found != string::npos && value_data.length() >= subtract)
+        {
+          // Get the name only
+          name = value_data.substr(found + 1, value_data.length() - subtract);
+        }
+      }
+      else
+      {
+        std::cerr << "ERROR: Desktop value data is empty, so expect the desktop item to not work." << std::endl;
       }
 
-      // Only add the desktop item if the item is not found in the list of menu items
-      if (menu_item_names.find(name) == menu_item_names.end())
+      string icon;
+      bool is_icon_full_path = false;
+      // Only continue further if the value name is not empty
+      if (!value_name.empty())
       {
-        string icon;
-        bool is_icon_full_path = false;
-        try
+        // Only add the desktop item if the item is not found in the list of menu items
+        if (menu_item_names.find(name) == menu_item_names.end())
         {
-          icon = Helper::get_desktop_program_icon_path(prefix_path, value_name);
-          is_icon_full_path = true;
-        }
-        catch (const Glib::FileError& error)
-        {
-          std::cerr << "WARN: Linux desktop file couldn't be found for desktop item: " << value_name << std::endl;
-        }
-        if (icon.empty())
-        {
-          // If desktop file could not be found; use the Windows shortcut (lnk) file to retrieve the target path
-          // For example: "C:\Program Files\Game\game.exe (which will get an icon for the .exe file extension)
           try
           {
-            icon = Helper::get_program_icon_from_shortcut_file(prefix_path, value_name);
-            is_icon_full_path = false; // just to be sure
+            icon = Helper::get_desktop_program_icon_path(prefix_path, value_name);
+            is_icon_full_path = true;
           }
           catch (const Glib::FileError& error)
           {
-            std::cerr << "WARN: Windows shortcut file couldn't be found for desktop item: " << value_name << std::endl;
+            std::cerr << "WARN: Linux desktop file couldn't be found for desktop item: " << value_name << std::endl;
           }
-          catch (const std::runtime_error& error)
+          if (icon.empty())
           {
-            // Ignore if Windows target path could not be found
+            // If desktop file could not be found; use the Windows shortcut (lnk) file to retrieve the target path
+            // For example: "C:\Program Files\Game\game.exe (which will get an icon for the .exe file extension)
+            try
+            {
+              icon = Helper::get_program_icon_from_shortcut_file(prefix_path, value_name);
+              is_icon_full_path = false; // just to be sure
+            }
+            catch (const Glib::FileError& error)
+            {
+              std::cerr << "WARN: Windows shortcut file couldn't be found for desktop item: " << value_name << std::endl;
+            }
+            catch (const std::runtime_error& error)
+            {
+              // Ignore if Windows target path could not be found
+            }
           }
         }
-        // Fall-back (keep in mind, desktop item has basically always a .desktop file extension)
-        if (icon.empty())
-        {
-          icon = Helper::string_to_icon(value_name);
-          is_icon_full_path = false;
-        }
-        add_application(name, "", value_data, icon, is_icon_full_path);
       }
+      else
+      {
+        std::cerr << "WARN: Desktop value name is empty, expect a fallback desktop icon." << std::endl;
+      }
+      // Fall-back (keep in mind, desktop item are almost always a .desktop file extension)
+      if (icon.empty())
+      {
+        icon = Helper::string_to_icon(value_name);
+        is_icon_full_path = false;
+      }
+      add_application(name, "", value_data, icon, is_icon_full_path);
     }
   }
   catch (const std::runtime_error& error)

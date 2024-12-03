@@ -1816,11 +1816,14 @@ vector<pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(c
         if (!line.starts_with('#') && (key_value_filter.empty() || line.find(key_value_filter) != string::npos) &&
             (key_name_ignore_filter.empty() || line.find(key_name_ignore_filter) == string::npos))
         {
-          line.erase(std::remove(line.begin(), line.end(), '\"'), line.end());
-          auto results = split(line, '=');
-          if (results.size() > 1)
+          auto results = split(line, '"');
+          if (results.size() >= 5)
           {
-            pairs.emplace_back(std::make_pair(results.at(0), results.at(1)));
+            auto key = results.at(1);
+            key.erase(std::remove(key.begin(), key.end(), '\"'), key.end());
+            auto value = results.at(3);
+            value.erase(std::remove(value.begin(), value.end(), '\"'), value.end());
+            pairs.emplace_back(std::make_pair(key, value));
           }
         }
       }
@@ -1902,7 +1905,7 @@ vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_
             (key_name_ignore_filter.empty() || line.find(key_name_ignore_filter) == string::npos))
         {
           auto results = split(line, '"');
-          if (results.size() >= 4)
+          if (results.size() >= 5)
           {
             line = results.at(3);
             line.erase(std::remove(line.begin(), line.end(), '\"'), line.end());
