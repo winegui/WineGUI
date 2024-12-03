@@ -642,47 +642,62 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
     for (const string& item : menu_items)
     {
       string name = "- Unknown menu item -";
-      size_t found = item.find_last_of('\\');
-      size_t subtract = found + 5; // Remove the .lnk part as well using substr
-      if (found != string::npos && item.length() >= subtract)
-      {
-        // Get the name only
-        name = item.substr(found + 1, item.length() - subtract);
-      }
       bool is_icon_full_path = false;
       string icon, comment;
-      try
+      if (!item.empty())
       {
-        std::tie(icon, comment) = Helper::get_menu_program_icon_path_and_comment(item);
-        is_icon_full_path = true;
-      }
-      catch (const Glib::FileError& error)
-      {
-        std::cerr << "WARN: Linux desktop file couldn't be found for menu item: " << item << std::endl;
-      }
-      catch (const std::runtime_error& error)
-      {
-        std::cerr << "WARN: Could not retrieve menu icon: " << error.what() << std::endl;
-      }
-      if (icon.empty())
-      {
-        // If desktop file could not be found; use the Windows shortcut (lnk) file to retrieve the target path
-        // For example: "C:\Program Files\Game\game.exe (which will get an icon for the .exe file extension)
+        size_t found = item.find_last_of('\\');
+        size_t subtract = found + 5; // Remove the .lnk part as well using substr
+        if (found != string::npos && item.length() >= subtract)
+        {
+          // Get the name only
+          name = item.substr(found + 1, item.length() - subtract);
+        }
         try
         {
-          icon = Helper::get_program_icon_from_shortcut_file(prefix_path, item);
-          is_icon_full_path = false;
+          std::tie(icon, comment) = Helper::get_menu_program_icon_path_and_comment(item);
+          is_icon_full_path = true;
         }
         catch (const Glib::FileError& error)
         {
-          std::cerr << "WARN: Windows shortcut file couldn't be found for menu item: " << item << std::endl;
+          std::cerr << "WARN: Linux desktop file couldn't be found for menu item: " << item << std::endl;
         }
         catch (const std::runtime_error& error)
         {
-          // Ignore if Windows target path could not be found
+          std::cerr << "WARN: Could not retrieve menu icon: " << error.what() << std::endl;
+        }
+        catch (const std::exception& error)
+        {
+          std::cerr << "ERROR: Something really went wrong trying to get the menu icon: " << error.what() << std::endl;
+        }
+        if (icon.empty())
+        {
+          // If desktop file could not be found; use the Windows shortcut (lnk) file to retrieve the target path
+          // For example: "C:\Program Files\Game\game.exe (which will get an icon for the .exe file extension)
+          try
+          {
+            icon = Helper::get_program_icon_from_shortcut_file(prefix_path, item);
+            is_icon_full_path = false;
+          }
+          catch (const Glib::FileError& error)
+          {
+            std::cerr << "WARN: Windows shortcut file couldn't be found for menu item: " << item << std::endl;
+          }
+          catch (const std::runtime_error& error)
+          {
+            // Ignore if Windows target path could not be found
+          }
+          catch (const std::exception& error)
+          {
+            std::cerr << "ERROR: Something really went wrong trying to get the menu icon from the shortcut file: " << error.what() << std::endl;
+          }
         }
       }
-      // Fall-back (keep in mind, menu item has basically always a .lnk file extension)
+      else
+      {
+        std::cerr << "ERROR: Menu item is empty, so except an unknown menu item." << std::endl;
+      }
+      // Fall-back (keep in mind, menu item has almost always a .lnk file extension)
       if (icon.empty())
       {
         icon = Helper::string_to_icon(item);
