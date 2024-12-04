@@ -44,6 +44,8 @@ MainWindow::MainWindow(Menu& menu)
       container_paned(Gtk::Orientation::ORIENTATION_HORIZONTAL),
       separator1(Gtk::Orientation::ORIENTATION_HORIZONTAL),
       busy_dialog_(*this),
+      unknown_menu_item_name_("- Unknown menu item -"),
+      unknown_desktop_item_name_("- Unknown desktop item -"),
       thread_check_version_(nullptr)
 {
   // Set some Window properties
@@ -641,7 +643,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
     auto menu_items = Helper::get_menu_items(prefix_path);
     for (const string& item : menu_items)
     {
-      string name = "- Unknown menu item -";
+      string name = unknown_menu_item_name_;
       bool is_icon_full_path = false;
       string icon, comment;
       // Only continue further if the item is not empty
@@ -706,7 +708,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
       }
       add_application(name, comment, item, icon, is_icon_full_path);
       // Also add the name to your list, used for finding duplicates when adding desktop files
-      if (name != "-Unknown menu item -")
+      if (name != unknown_menu_item_name_)
         menu_item_names.insert(name);
     }
   }
@@ -721,7 +723,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
     auto desktop_items = Helper::get_desktop_items(prefix_path);
     for (const auto& [value_name, value_data] : desktop_items)
     {
-      string name = "- Unknown desktop item -";
+      string name = unknown_desktop_item_name_;
       if (!value_data.empty())
       {
         size_t found = value_data.find_last_of('\\');
@@ -737,13 +739,13 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
         std::cerr << "ERROR: Desktop value data is empty, so expect the desktop item to not work." << std::endl;
       }
 
-      string icon;
-      bool is_icon_full_path = false;
-      // Only continue further if the value name is not empty
-      if (!value_name.empty())
+      // Only add the desktop item if the item is not found in the list of menu items
+      if (menu_item_names.find(name) == menu_item_names.end())
       {
-        // Only add the desktop item if the item is not found in the list of menu items
-        if (menu_item_names.find(name) == menu_item_names.end())
+        string icon;
+        bool is_icon_full_path = false;
+        // Only continue further if the value name is not empty
+        if (!value_name.empty())
         {
           try
           {
@@ -773,18 +775,18 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
             }
           }
         }
+        else
+        {
+          std::cerr << "WARN: Desktop value name is empty, expect a fallback desktop icon." << std::endl;
+        }
+        // Fall-back (keep in mind, desktop item are almost always a .desktop file extension)
+        if (icon.empty())
+        {
+          icon = Helper::string_to_icon(value_name);
+          is_icon_full_path = false;
+        }
+        add_application(name, "", value_data, icon, is_icon_full_path);
       }
-      else
-      {
-        std::cerr << "WARN: Desktop value name is empty, expect a fallback desktop icon." << std::endl;
-      }
-      // Fall-back (keep in mind, desktop item are almost always a .desktop file extension)
-      if (icon.empty())
-      {
-        icon = Helper::string_to_icon(value_name);
-        is_icon_full_path = false;
-      }
-      add_application(name, "", value_data, icon, is_icon_full_path);
     }
   }
   catch (const std::runtime_error& error)

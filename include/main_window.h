@@ -164,6 +164,8 @@ private:
   Glib::ustring info_message_;
   Glib::ustring error_message_;
   string new_version_;
+  string unknown_menu_item_name_;
+  string unknown_desktop_item_name_;
   BottleNewAssistant new_bottle_assistant_; /*!< New bottle wizard (behind the "new" toolbar button) */
   GeneralConfigData general_config_data_;
   std::thread* thread_check_version_; /*!< Thread for checking version */
