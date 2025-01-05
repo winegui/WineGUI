@@ -46,12 +46,10 @@ protected:
   Gtk::Label header_preferences_label;                 /*!< header preferences label */
   Gtk::Label default_folder_label;                     /*!< default folder label */
   Gtk::Label display_default_wine_machine_label;       /*!< display default Wine machine label */
-  Gtk::Label prefer_wine64_label;                      /*!< prefer Wine 64-bit label */
   Gtk::Label logging_label_heading;                    /*!< Logging header label */
   Gtk::Label logging_stderr_label;                     /*!< logging stderr label */
   Gtk::Entry default_folder_entry;                     /*!< default folder input field */
   Gtk::CheckButton display_default_wine_machine_check; /*!< display default Wine machine checkbox */
-  Gtk::CheckButton prefer_wine64_check;                /*!< prefer Wine 64-bit checkbox */
   Gtk::CheckButton enable_logging_stderr_check;        /*!< debug logging checkbox */
   Gtk::Button select_folder_button;                    /*!< select folder button */
   Gtk::Button save_button;                             /*!< save button */

@@ -1285,7 +1285,7 @@ GeneralConfigData BottleManager::load_and_save_general_config()
   GeneralConfigData general_config = GeneralConfigFile::read_config_file();
   bottle_location_ = general_config.default_folder;
   is_display_default_wine_machine_ = general_config.display_default_wine_machine;
-  is_wine64_bit_ = ((Helper::determine_wine_executable() == 1) || general_config.prefer_wine64);
+  is_wine64_bit_ = Helper::determine_wine_executable() == 1;
   is_logging_stderr_ = general_config.enable_logging_stderr;
   return general_config;
 }
