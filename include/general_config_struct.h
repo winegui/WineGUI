@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 WineGUI
+ * Copyright (c) 2023-2025 WineGUI
  *
  * \file    general_config_struct.h
  * \brief   General configuration struct
@@ -26,6 +26,5 @@ struct GeneralConfigData
 {
   std::string default_folder;
   bool display_default_wine_machine;
-  bool prefer_wine64;
   bool enable_logging_stderr;
 };
