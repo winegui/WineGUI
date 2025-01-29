@@ -590,8 +590,10 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
   windows += " (" + BottleTypes::to_string(bottle.bit()) + ')';
   window_version_label.set_text(windows);
   c_drive_location_label.set_text(bottle.wine_c_drive());
-  Glib::ustring wine_bitness = (bottle.is_wine64_bit()) ? "64-bit" : "32-bit";
-  wine_version_label.set_text(bottle.wine_version() + " (" + wine_bitness + ")");
+  // Hide which wine bitness is used, since users think they need to run 64-bit,
+  // while they shouldn't.
+  // Glib::ustring wine_bitness = (bottle.is_wine64_bit()) ? "64-bit" : "32-bit";
+  wine_version_label.set_text(bottle.wine_version());
   if (Helper::is_default_wine_bottle(bottle.wine_location()))
   {
     wine_location_label.set_text(bottle.wine_location() + " - ⚠ Default Wine prefix");
