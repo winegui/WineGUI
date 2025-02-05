@@ -16,7 +16,8 @@ Download the WineGUI package you require for your Linux distribution. I provide 
 
 - Use the `.deb` package file for Ubuntu, Debian, Linux Mint, Zorin OS, MX linux, and other Debian-based distributions.
 - Use the `.rpm` package for Fedora, RHEL, and similar distributions.
-- The `.tar.gz` file is available for manual installation or standalone usage.
+- The Compressed Binary `.tar.gz` file is available for manual installation or standalone usage. This is prebuild.
+- The Source Code Archive (also `tar.gz`) is intented for building WineGUI from source.
 
 Install the package and you are ready to go! WineGUI should be listed in your menu.
 
