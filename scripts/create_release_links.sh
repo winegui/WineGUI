@@ -23,7 +23,7 @@ if [[ "$output" == "[]" ]]; then
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data name="WineGUI Compressed Binary (tar)" \
+        --data name="WineGUI Compressed Binary (tar.gz)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.tar.gz" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
