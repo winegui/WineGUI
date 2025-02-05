@@ -116,7 +116,6 @@ void BottleNewAssistant::create_first_page()
        it != BottleTypes::SupportedWindowsVersions.end(); ++it)
   {
     auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
-    // TODO: Add if ((*it).first != BottleTypes::Windows::Windows11) in case of Wine v8 or lower
     windows_version_combobox.append(std::to_string(index), BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
   }
 
