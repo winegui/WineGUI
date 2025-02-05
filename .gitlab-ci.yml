@@ -1,4 +1,4 @@
-image: danger89/gtk3-docker-cmake-ninja:4.2
+image: danger89/gtk3-docker-cmake-ninja:5.2
 
 stages:
   - test
