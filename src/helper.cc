@@ -582,7 +582,8 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   {
     string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
     string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);
-    if (type_nt.empty()) {
+    if (type_nt.empty())
+    {
       // Check the second registry location
       type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType2, RegNameProductType);
     }
