@@ -63,6 +63,7 @@ static const string UserdefReg = "userdef.reg";
 static const string RegKeyName9x = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion]";
 static const string RegKeyNameNT = "[Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion]";
 static const string RegKeyType = "[System\\\\CurrentControlSet\\\\Control\\\\ProductOptions]";
+static const string RegKeyType2 = "[System\\\\ControlSet001\\\\Control\\\\ProductOptions]"; // Second location
 static const string RegKeyWine = "[Software\\\\Wine]";
 static const string RegKeyAudio = "[Software\\\\Wine\\\\Drivers]";
 static const string RegKeyVirtualDesktop = "[Software\\\\Wine\\\\Explorer]";
@@ -104,7 +105,7 @@ static const struct
   const string buildNumber;
   const string productType;
 } WindowsVersions[] = {{BottleTypes::Windows::Windows11, "win11", "10.0", "22000", "WinNT"},
-                       {BottleTypes::Windows::Windows10, "win10", "10.0", "18362", "WinNT"},
+                       {BottleTypes::Windows::Windows10, "win10", "10.0", "19043", "WinNT"},
                        {BottleTypes::Windows::Windows81, "win81", "6.3", "9600", "WinNT"},
                        {BottleTypes::Windows::Windows8, "win8", "6.2", "9200", "WinNT"},
                        {BottleTypes::Windows::Windows2008R2, "win2008r2", "6.1", "7601", "ServerNT"},
@@ -581,6 +582,10 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
   {
     string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
     string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);
+    if (type_nt.empty()) {
+      // Check the second registry location
+      type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType2, RegNameProductType);
+    }
     // Find the correct Windows version, comparing the version, build number and NT type (if present)
     for (unsigned int i = 0; i < WindowsStructSize; i++)
     {
