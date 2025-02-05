@@ -91,7 +91,7 @@ static const string UpdateTimestamp = ".update-timestamp";
 
 /**
  * \brief Windows version table to convert Windows version in registry to BottleType Windows enum value.
- *  Source: https://github.com/wine-mirror/wine/blob/master/programs/winecfg/appdefaults.c#L51
+ *  Source: https://gitlab.winehq.org/wine/wine/-/blob/master/programs/winecfg/appdefaults.c#L51
  *
  * \note Don't forget to update the hardcoded WindowsStructSize below!!
  */
@@ -99,11 +99,11 @@ static const struct
 {
   const BottleTypes::Windows windows;
   const string version;
-  const string versionNumber;
+  const string versionNumber; // This version seems to no longer reflect the real OS major/minor version for Windows 10 and up (too bad): https://gitlab.winehq.org/wine/wine/-/commit/3a819255f57e54917c598e66e60efb875162f8a3
   const string buildNumber;
   const string productType;
-} WindowsVersions[] = {{BottleTypes::Windows::Windows11, "win11", "11.0", "22000", "WinNT"},
-                       {BottleTypes::Windows::Windows10, "win10", "10.0", "19043", "WinNT"},
+} WindowsVersions[] = {{BottleTypes::Windows::Windows11, "win11", "10.0", "22000", "WinNT"},
+                       {BottleTypes::Windows::Windows10, "win10", "10.0", "18362", "WinNT"},
                        {BottleTypes::Windows::Windows81, "win81", "6.3", "9600", "WinNT"},
                        {BottleTypes::Windows::Windows8, "win8", "6.2", "9200", "WinNT"},
                        {BottleTypes::Windows::Windows2008R2, "win2008r2", "6.1", "7601", "ServerNT"},

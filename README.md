@@ -12,9 +12,15 @@ At last, a user-interface friendly [Wine](https://www.winehq.org/) (A compatibil
 
 You can find the latest version on the [Releases page](https://gitlab.melroy.org/melroy/winegui/-/releases) of GitLab.
 
-Download the WineGUI package you require for your Linux distribution (we provide `.deb`, `.rpm` and `.tar.gz` files). Typically you should use `.deb` file for Ubuntu and Linux Mint distros.
+Download the WineGUI package you require for your Linux distribution. I provide `.deb`, `.rpm` and `.tar.gz` files:
+
+- Use the `.deb` package file for Ubuntu, Debian, Linux Mint, Zorin OS, MX linux, and other Debian-based distributions.
+- Use the `.rpm` package for Fedora, RHEL, and similar distributions.
+- The `.tar.gz` file is available for manual installation or standalone usage.
 
 Install the package and you are ready to go! WineGUI should be listed in your menu.
+
+**Run-time requirement:** Wine v9 or higher.
 
 ## Features
 
