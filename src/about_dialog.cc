@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    about_dialog.cc
  * \brief   The About dialog
@@ -42,7 +42,7 @@ AboutDialog::AboutDialog(Gtk::Window& parent)
   set_authors(devs);
   set_artists(devs);
   set_version(PROJECT_VER);
-  set_copyright("Copyright © 2019-2024 Melroy van den Berg");
+  set_copyright("Copyright © 2019-2025 Melroy van den Berg");
   set_license_type(Gtk::LICENSE_AGPL_3_0);
 
   Gtk::Box* vbox = get_vbox();
