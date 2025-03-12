@@ -1,9 +1,9 @@
 /**
- * Copyright (c) 2019-2024 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    menu.cc
  * \brief   Main menu bar
- * \author  Melroy van den Berg <webmaster1989@gmail.com>
+ * \author  Melroy van den Berg <melroy@melroy.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as

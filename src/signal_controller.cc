@@ -1,10 +1,10 @@
 /**
- * Copyright (c) 2019-2024 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    signal_controller.cc
  * \brief   Manager and connect different signals and dispatchers
  *          (eg. Menu button clicks and new bottle wizard signals) them to the proper calls within WineGUI
- * \author  Melroy van den Berg <webmaster1989@gmail.com>
+ * \author  Melroy van den Berg <melroy@melroy.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as

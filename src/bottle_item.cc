@@ -1,9 +1,9 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    bottle_item.cc
  * \brief   Wine bottle item class
- * \author  Melroy van den Berg <webmaster1989@gmail.com>
+ * \author  Melroy van den Berg <melroy@melroy.org>
  * \note https://github.com/pirobtumen/Remember/blob/master/src/gui/taskitem.cpp
  *
  * This program is free software: you can redistribute it and/or modify
