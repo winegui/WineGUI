@@ -1,5 +1,4 @@
 {
-"C_Cpp.intelliSenseEngineFallback": "enabled",
 "files.associations": {
     "list": "cpp",
     "*.tcc": "cpp",
