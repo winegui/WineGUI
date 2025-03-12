@@ -10,9 +10,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/build/bin/winegui",
       "args": [],
-      "stopAtEntry": false,
       "cwd": "${workspaceFolder}/build",
-      "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",
       "setupCommands": [
