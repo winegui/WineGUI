@@ -39,7 +39,8 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Create packages: ${PACKAGE}")
 message(STATUS "Generate documentation: ${DOXYGEN}")
 
-# Cmake settings
+# Global CMake settings
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
@@ -120,8 +121,8 @@ add_schema("org.melroy.winegui.gschema.xml" GSCHEMA_RING)
 
 add_executable(${PROJECT_TARGET} ${GSCHEMA_RING} ${SOURCES})
 
-# Set C++20
-target_compile_features(${PROJECT_TARGET} PUBLIC cxx_std_20)
+# Set C++ standard to C++23 and disable C++ extensions
+set_target_properties(${PROJECT_TARGET} PROPERTIES CXX_STANDARD 23)
 set_target_properties(${PROJECT_TARGET} PROPERTIES CXX_EXTENSIONS OFF)
 
 # Linking Threads and GTKMM
