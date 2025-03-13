@@ -50,14 +50,15 @@ public:
   static string run_program(const string& prefix_path,
                             int debug_log_level,
                             const string& program,
-                            const vector<pair<string, string>>& env_vars,
+                            const vector<pair<string, string>>& env_vars = {},
                             bool give_error = true,
                             bool stderr_output = true);
   static string run_program_under_wine(bool wine_64_bit,
                                        const string& prefix_path,
                                        int debug_log_level,
                                        const string& program,
-                                       const vector<pair<string, string>>& env_vars,
+                                       const string& working_directory = "",
+                                       const vector<pair<string, string>>& env_vars = {},
                                        bool give_error = true,
                                        bool stderr_output = true);
   static void write_to_log_file(const string& logging_bottle_prefix, const string& logging);
