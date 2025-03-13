@@ -192,6 +192,7 @@ vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_de
  * \param[in] prefix_path The path to wine bottle
  * \param[in] debug_log_level Debug log level
  * \param[in] program Program that gets executed (ideally full path)
+ * \param[in] working_directory Working directory of where the program will be executed
  * \param[in] give_error Inform user when application exit with non-zero exit code
  * \param[in] stderr_output Also output stderr (together with stout)
  * \param[in] env_vars Array of environment variables to set
@@ -200,6 +201,7 @@ vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_de
 string Helper::run_program(const string& prefix_path,
                            int debug_log_level,
                            const string& program,
+                           const string& working_directory,
                            const vector<pair<string, string>>& env_vars,
                            bool give_error,
                            bool stderr_output)
@@ -208,6 +210,7 @@ string Helper::run_program(const string& prefix_path,
 
   string debug = (debug_log_level != 1) ? "WINEDEBUG=" + Helper::log_level_to_winedebug_string(debug_log_level) + " " : "";
   string exec_program = (stderr_output) ? program + " 2>&1" : program;
+  string change_directory = working_directory.empty() ? "" : "cd \"" + working_directory + "\" && ";
   string env_vars_str(debug + "WINEPREFIX=\"" + prefix_path + "\" ");
 
   // Convert key/value pair to string, append to env_vars_str
@@ -216,7 +219,7 @@ string Helper::run_program(const string& prefix_path,
     env_vars_str += key + "=\"" + value + "\" ";
   }
 
-  string command = env_vars_str + exec_program;
+  string command = change_directory + env_vars_str + exec_program;
   if (give_error)
   {
     // Execute the command that also shows an error message to the user when exit code is non-zero
@@ -254,8 +257,7 @@ string Helper::run_program_under_wine(bool wine_64_bit,
                                       bool give_error,
                                       bool stderr_output)
 {
-  const string change_directory = working_directory.empty() ? "" : "cd \"" + working_directory + "\" && ";
-  return run_program(prefix_path, debug_log_level, change_directory + Helper::get_wine_executable_location(wine_64_bit) + " " + program, env_vars,
+  return run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit) + " " + program, working_directory, env_vars,
                      give_error, stderr_output);
 }
 

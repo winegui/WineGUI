@@ -50,6 +50,7 @@ public:
   static string run_program(const string& prefix_path,
                             int debug_log_level,
                             const string& program,
+                            const string& working_directory = "",
                             const vector<pair<string, string>>& env_vars = {},
                             bool give_error = true,
                             bool stderr_output = true);
