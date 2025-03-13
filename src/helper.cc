@@ -239,6 +239,7 @@ string Helper::run_program(const string& prefix_path,
  * \param[in] debug_log_level Debug log level
  * \param[in] program Program/executable that will be executed (be sure your application executable is between
  * brackets in case of spaces)
+ * \param[in] working_directory Working directory of where the program will be executed
  * \param[in] give_error Inform user when application exit with non-zero exit code
  * \param[in] stderr_output Also output stderr (together with stout)
  * \param[in] env_vars Array of environment variables to set
@@ -248,12 +249,14 @@ string Helper::run_program_under_wine(bool wine_64_bit,
                                       const string& prefix_path,
                                       int debug_log_level,
                                       const string& program,
+                                      const string& working_directory,
                                       const vector<pair<string, string>>& env_vars,
                                       bool give_error,
                                       bool stderr_output)
 {
-  return run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit) + " " + program, env_vars, give_error,
-                     stderr_output);
+  const string change_directory = working_directory.empty() ? "" : "cd \"" + working_directory + "\" && ";
+  return run_program(prefix_path, debug_log_level, change_directory + Helper::get_wine_executable_location(wine_64_bit) + " " + program, env_vars,
+                     give_error, stderr_output);
 }
 
 /**

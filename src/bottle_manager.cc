@@ -727,17 +727,19 @@ void BottleManager::run_executable(string program, bool is_msi_file = false)
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     string program_prefix = is_msi_file ? "msiexec /i" : "start /unix";
+    string working_directory = Glib::path_get_dirname(program);
     // Be-sure to execute the program between quotes (due to spaces)
     program = program_prefix + " \"" + program + "\"";
     auto& env_vars = active_bottle_->env_vars();
 
     std::thread t(
-        [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, env_vars, logging_stderr = std::move(is_logging_stderr_),
-         debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
-         logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_]
+        [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, working_directory, env_vars,
+         logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+         output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, env_vars, true, logging_stderr);
+          string output =
+              Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -766,9 +768,14 @@ void BottleManager::run_program(string program)
     // For all programs (except winetricks)
     if (!program.ends_with("winetricks --gui -q"))
     {
+      string working_directory = "";
       // Be-sure to execute the program between quotes (due to spaces).
       if (program.starts_with("/"))
       {
+        // TODO: Provide the user the option whether or not the working directory need to be set.
+        // If true, we can use: working_directory = Glib::path_get_dirname(program);
+        // And pass it alone with run_program_under_wine() below.
+
         // Add 'start /unix' for Unit style command, like application shortcuts
         program = "start /unix \"" + program + "\"";
       }
@@ -780,12 +787,13 @@ void BottleManager::run_program(string program)
       auto& env_vars = active_bottle_->env_vars();
 
       std::thread t(
-          [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, env_vars, logging_stderr = std::move(is_logging_stderr_),
-           debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
-           logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-           write_log_dispatcher = &write_log_dispatcher_]
+          [wine64 = std::move(is_wine64_bit_), wine_prefix, debug_log_level, program, working_directory, env_vars,
+           logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+           output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+           output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
           {
-            string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, env_vars, true, logging_stderr);
+            string output =
+                Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true, logging_stderr);
             if (debug_logging && !output.empty())
             {
               {
@@ -852,7 +860,7 @@ void BottleManager::reboot()
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -r", {}, true, logging_stderr);
+          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -r", "", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -884,7 +892,7 @@ void BottleManager::update()
          output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", {}, true, logging_stderr);
+          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", "", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -942,7 +950,7 @@ void BottleManager::kill_processes()
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -k", {}, true, logging_stderr);
+          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -k", "", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
