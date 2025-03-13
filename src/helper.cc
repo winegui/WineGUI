@@ -257,7 +257,7 @@ string Helper::run_program_under_wine(bool wine_64_bit,
                                       bool give_error,
                                       bool stderr_output)
 {
-  return run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit) + " " + program, working_directory, env_vars,
+  return Helper::run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit) + " " + program, working_directory, env_vars,
                      give_error, stderr_output);
 }
 
