@@ -1,4 +1,4 @@
-image: danger89/gtk3-docker-cmake-ninja:4.3
+image: registry.melroy.org/melroy/docker-images/gtk3-docker-cmake-ninja:bookworm
 
 stages:
   - test
