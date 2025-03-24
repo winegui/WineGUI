@@ -1,4 +1,5 @@
-image: registry.melroy.org/melroy/docker-images/gtk3-docker-cmake-ninja:bookworm
+default:
+  image: registry.melroy.org/melroy/docker-images/gtk3-docker-cmake-ninja:bookworm
 
 stages:
   - test
