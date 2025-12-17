@@ -33,7 +33,7 @@ class AddAppWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void> config_saved; /*!< bottle config is saved signal */
+  sigc::signal<void()> config_saved; /*!< bottle config is saved signal */
 
   explicit AddAppWindow(Gtk::Window& parent);
   virtual ~AddAppWindow();

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <gtkmm/aboutdialog.h>
+#include <gtkmm/box.h>
 #include <gtkmm/image.h>
 #include <gtkmm/linkbutton.h>
 #include <string>
@@ -36,7 +37,7 @@ public:
   virtual ~AboutDialog();
 
   void run_dialog();
-  void hide_dialog(int response);
+  void hide_dialog();
 
   static std::string get_version();
 

@@ -30,7 +30,6 @@
 #include <giomm/file.h>
 #include <glibmm/fileutils.h>
 #include <glibmm/miscutils.h>
-#include <glibmm/timeval.h>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -43,10 +42,10 @@
 #include <tuple>
 #include <unistd.h>
 
-static const std::array<std::string, 2> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
+static const std::vector<std::string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
 static const string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
 
-static const std::array<std::string, 2> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
+static const std::vector<std::string> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
 static const string DefaultBottleWineDir = Glib::build_path(G_DIR_SEPARATOR_S, defaultWineDir);
 
 // Wine & Winetricks exec
@@ -164,7 +163,7 @@ vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_de
   while (!name.empty())
   {
     auto path = Glib::build_filename(dir_path, name);
-    if (Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR))
+    if (Glib::file_test(path, Glib::FileTest::IS_DIR))
     {
       list.emplace_back(path);
     }
@@ -271,7 +270,7 @@ void Helper::write_to_log_file(const string& logging_bottle_prefix, const string
   auto file = Gio::File::create_for_path(log_path);
   try
   {
-    auto output = file->append_to(Gio::FileCreateFlags::FILE_CREATE_NONE);
+    auto output = file->append_to(Gio::File::CreateFlags::NONE);
     output->write(logging);
   }
   catch (const Glib::Error& ex)
@@ -1026,7 +1025,7 @@ string Helper::get_c_letter_drive(const string& prefix_path)
  */
 bool Helper::dir_exists(const string& dir_path)
 {
-  return Glib::file_test(dir_path, Glib::FileTest::FILE_TEST_IS_DIR);
+  return Glib::file_test(dir_path, Glib::FileTest::IS_DIR);
 }
 
 /**
@@ -1050,7 +1049,7 @@ bool Helper::create_dir(const string& dir_path)
  */
 bool Helper::file_exists(const string& file_path)
 {
-  return Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR);
+  return Glib::file_test(file_path, Glib::FileTest::IS_REGULAR);
 }
 
 /**

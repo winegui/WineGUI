@@ -26,8 +26,8 @@
  * \param parent Reference to parent GTK Window
  */
 BottleCloneWindow::BottleCloneWindow(Gtk::Window& parent)
-    : vbox(Gtk::ORIENTATION_VERTICAL, 4),
-      hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
+    : vbox(Gtk::Orientation::VERTICAL, 4),
+      hbox_buttons(Gtk::Orientation::HORIZONTAL, 4),
       header_clone_label("Clone Existing Machine"),
       name_label("New Name: "),
       folder_name_label("New Folder Name: "),
@@ -58,19 +58,22 @@ BottleCloneWindow::BottleCloneWindow(Gtk::Window& parent)
   header_clone_label.set_margin_top(5);
   header_clone_label.set_margin_bottom(5);
 
-  name_label.set_halign(Gtk::Align::ALIGN_END);
-  folder_name_label.set_halign(Gtk::Align::ALIGN_END);
+  name_label.set_halign(Gtk::Align::END);
+  folder_name_label.set_halign(Gtk::Align::END);
   name_label.set_tooltip_text("New name of the machine");
   folder_name_label.set_tooltip_text("Do NOT keep this the same as the original machine folder (or a copy will not work)");
 
-  description_label.set_halign(Gtk::Align::ALIGN_START);
+  description_label.set_halign(Gtk::Align::START);
   name_entry.set_hexpand(true);
   folder_name_entry.set_hexpand(true);
 
   description_text_view.set_hexpand(true);
+  description_text_view.set_vexpand(true);
+  description_text_view.set_wrap_mode(Gtk::WrapMode::WORD_CHAR);
+  description_text_view.set_halign(Gtk::Align::FILL);
   description_label.set_tooltip_text("Optional new description text to your machine");
 
-  description_scrolled_window.add(description_text_view);
+  description_scrolled_window.set_child(description_text_view);
   description_scrolled_window.set_hexpand(true);
   description_scrolled_window.set_vexpand(true);
 
@@ -78,23 +81,26 @@ BottleCloneWindow::BottleCloneWindow(Gtk::Window& parent)
   clone_grid.attach(name_entry, 1, 0);
   clone_grid.attach(folder_name_label, 0, 1);
   clone_grid.attach(folder_name_entry, 1, 1);
-  clone_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 8, 2);
+  clone_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 8, 2);
   clone_grid.attach(description_label, 0, 9, 2);
   clone_grid.attach(description_scrolled_window, 0, 10, 2);
+  clone_grid.set_hexpand(true);
+  clone_grid.set_vexpand(true);
+  clone_grid.set_halign(Gtk::Align::FILL);
+  clone_grid.set_valign(Gtk::Align::FILL);
+  clone_grid.set_margin_bottom(5);
 
-  hbox_buttons.pack_end(clone_button, false, false, 4);
-  hbox_buttons.pack_end(cancel_button, false, false, 4);
+  hbox_buttons.append(clone_button);
+  hbox_buttons.append(cancel_button);
 
-  vbox.pack_start(header_clone_label, false, false, 4);
-  vbox.pack_start(clone_grid, true, true, 4);
-  vbox.pack_start(hbox_buttons, false, false, 4);
-  add(vbox);
+  vbox.prepend(header_clone_label);
+  vbox.prepend(clone_grid);
+  vbox.prepend(hbox_buttons);
+  set_child(vbox);
 
   // Signals
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleCloneWindow::on_cancel_button_clicked));
   clone_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleCloneWindow::on_clone_button_clicked));
-
-  show_all_children();
 }
 
 /**
@@ -122,8 +128,6 @@ void BottleCloneWindow::show()
     folder_name_entry.set_text(active_bottle_->folder_name() + "_copy");
     // Set description
     description_text_view.get_buffer()->set_text(active_bottle_->description());
-
-    show_all_children();
   }
   else
   {
@@ -155,8 +159,8 @@ void BottleCloneWindow::reset_active_bottle()
  */
 Glib::ustring BottleCloneWindow::on_bottle_cloned()
 {
-  busy_dialog.hide();
-  hide(); // Close the clone Window
+  busy_dialog.set_visible(false);
+  set_visible(false); // Close the clone Window
   return name_entry.get_text();
 }
 
@@ -165,7 +169,7 @@ Glib::ustring BottleCloneWindow::on_bottle_cloned()
  */
 void BottleCloneWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**

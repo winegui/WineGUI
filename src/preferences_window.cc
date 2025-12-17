@@ -27,8 +27,8 @@
  * \param parent Reference to parent GTK Window
  */
 PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
-    : vbox(Gtk::ORIENTATION_VERTICAL, 4),
-      hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
+    : vbox(Gtk::Orientation::VERTICAL, 4),
+      hbox_buttons(Gtk::Orientation::HORIZONTAL, 4),
       header_preferences_label("Preferences"),
       default_folder_label("Machine folder location: "),
       display_default_wine_machine_label("Show default Wine machine: "),
@@ -50,6 +50,9 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
   settings_grid.set_margin_start(6);
   settings_grid.set_column_spacing(6);
   settings_grid.set_row_spacing(8);
+  settings_grid.set_hexpand(true);
+  settings_grid.set_vexpand(true);
+  settings_grid.set_halign(Gtk::Align::FILL);
 
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
@@ -62,36 +65,34 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
   header_preferences_label.set_margin_bottom(5);
 
   logging_label_heading.set_markup("<big><b>Logging</b></big>");
-  default_folder_label.set_halign(Gtk::Align::ALIGN_END);
-  display_default_wine_machine_label.set_halign(Gtk::Align::ALIGN_END);
-  logging_stderr_label.set_halign(Gtk::Align::ALIGN_END);
+  default_folder_label.set_halign(Gtk::Align::END);
+  display_default_wine_machine_label.set_halign(Gtk::Align::END);
+  logging_stderr_label.set_halign(Gtk::Align::END);
   default_folder_entry.set_hexpand(true);
 
   settings_grid.attach(default_folder_label, 0, 0);
   settings_grid.attach(default_folder_entry, 1, 0);
   settings_grid.attach(select_folder_button, 2, 0);
-  settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 1, 3);
+  settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 1, 3);
   settings_grid.attach(display_default_wine_machine_label, 0, 2);
   settings_grid.attach(display_default_wine_machine_check, 1, 2, 2);
-  settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 4, 3);
+  settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 4, 3);
   settings_grid.attach(logging_label_heading, 0, 5, 3);
   settings_grid.attach(logging_stderr_label, 0, 6);
   settings_grid.attach(enable_logging_stderr_check, 1, 6, 2);
 
-  hbox_buttons.pack_end(save_button, false, false, 4);
-  hbox_buttons.pack_end(cancel_button, false, false, 4);
+  hbox_buttons.append(save_button);
+  hbox_buttons.append(cancel_button);
 
-  vbox.pack_start(header_preferences_label, false, false, 4);
-  vbox.pack_start(settings_grid, true, true, 4);
-  vbox.pack_start(hbox_buttons, false, false, 4);
-  add(vbox);
+  vbox.prepend(header_preferences_label);
+  vbox.prepend(settings_grid);
+  vbox.prepend(hbox_buttons);
+  set_child(vbox);
 
   // Signals
   select_folder_button.signal_clicked().connect(sigc::mem_fun(*this, &PreferencesWindow::on_select_folder));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &PreferencesWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &PreferencesWindow::on_save_button_clicked));
-
-  show_all_children();
 }
 
 /**
@@ -119,13 +120,15 @@ void PreferencesWindow::show()
  */
 void PreferencesWindow::on_select_folder()
 {
+  auto folder = Gio::File::create_for_path(default_folder_entry.get_text());
+
   auto* folder_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER, Gtk::DialogFlags::DIALOG_MODAL);
+      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER);
   folder_chooser->set_modal(true);
   folder_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &PreferencesWindow::on_select_dialog_response), folder_chooser));
-  folder_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
-  folder_chooser->add_button("_Select folder", Gtk::ResponseType::RESPONSE_OK);
-  folder_chooser->set_current_folder(default_folder_entry.get_text());
+  folder_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
+  folder_chooser->add_button("_Select folder", Gtk::ResponseType::OK);
+  folder_chooser->set_current_folder(folder);
   folder_chooser->show();
 }
 
@@ -136,14 +139,14 @@ void PreferencesWindow::on_select_dialog_response(int response_id, Gtk::FileChoo
 {
   switch (response_id)
   {
-  case Gtk::ResponseType::RESPONSE_OK:
+  case Gtk::ResponseType::OK:
   {
     // Get current older and update folder entry
     auto folder = dialog->get_current_folder();
-    default_folder_entry.set_text(folder);
+    default_folder_entry.set_text(folder->get_path()); // TODO: or file->basename(); ?
     break;
   }
-  case Gtk::ResponseType::RESPONSE_CANCEL:
+  case Gtk::ResponseType::CANCEL:
   {
     break; // ignore
   }
@@ -176,10 +179,10 @@ void PreferencesWindow::on_save_button_clicked()
   general_config.enable_logging_stderr = enable_logging_stderr_check.get_active();
   if (!GeneralConfigFile::write_config_file(general_config))
   {
-    Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+    Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
     dialog.set_title("An error has occurred!");
     dialog.set_modal(true);
-    dialog.run();
+    dialog.present();
   }
   else
   {

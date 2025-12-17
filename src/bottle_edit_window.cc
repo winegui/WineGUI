@@ -27,8 +27,8 @@
  * \param parent Reference to parent GTK Window
  */
 BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
-    : vbox(Gtk::ORIENTATION_VERTICAL, 4),
-      hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
+    : vbox(Gtk::Orientation::VERTICAL, 4),
+      hbox_buttons(Gtk::Orientation::HORIZONTAL, 4),
       header_edit_label("Edit Machine"),
       name_label("Name: "),
       folder_name_label("Folder Name: "),
@@ -115,7 +115,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   enable_logging_check.set_tooltip_text("Enable output logging to disk");
   folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name instead, see above.");
 
-  description_scrolled_window.add(description_text_view);
+  description_scrolled_window.set_child(description_text_view);
   description_scrolled_window.set_hexpand(true);
   description_scrolled_window.set_vexpand(true);
 
@@ -135,18 +135,22 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   edit_grid.attach(log_level_combobox, 1, 7);
   edit_grid.attach(environment_variables_label, 0, 8);
   edit_grid.attach(configure_environment_variables_button, 1, 8);
-  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 9, 2);
+  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 9, 2);
   edit_grid.attach(description_label, 0, 10, 2);
   edit_grid.attach(description_scrolled_window, 0, 11, 2);
+  edit_grid.set_hexpand(true);
+  edit_grid.set_vexpand(true);
+  edit_grid.set_halign(Gtk::Align::FILL);
+  edit_grid.set_margin_end(5);
 
-  hbox_buttons.pack_start(delete_button, false, false, 4);
-  hbox_buttons.pack_end(save_button, false, false, 4);
-  hbox_buttons.pack_end(cancel_button, false, false, 4);
+  hbox_buttons.prepend(delete_button);
+  hbox_buttons.append(save_button);
+  hbox_buttons.append(cancel_button);
 
-  vbox.pack_start(header_edit_label, false, false, 4);
-  vbox.pack_start(edit_grid, true, true, 4);
-  vbox.pack_start(hbox_buttons, false, false, 4);
-  add(vbox);
+  vbox.prepend(header_edit_label);
+  vbox.prepend(edit_grid);
+  vbox.prepend(hbox_buttons);
+  set_child(vbox);
 
   // Gray-out virtual desktop & log level by default
   virtual_desktop_resolution_sensitive(false);
@@ -159,8 +163,6 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_save_button_clicked));
-
-  show_all_children();
 }
 
 /**
@@ -219,8 +221,6 @@ void BottleEditWindow::show()
 
     enable_logging_check.set_active(active_bottle_->is_debug_logging());
     log_level_combobox.set_active_id(std::to_string((int)active_bottle_->debug_log_level()));
-
-    show_all_children();
   }
   else
   {

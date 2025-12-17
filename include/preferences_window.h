@@ -30,7 +30,7 @@ class PreferencesWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void> config_saved; /*!< config is saved signal */
+  sigc::signal<void()> config_saved; /*!< config is saved signal */
 
   explicit PreferencesWindow(Gtk::Window& parent);
   virtual ~PreferencesWindow();

@@ -31,21 +31,23 @@ BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), d
   set_modal(true);
   set_deletable(false);
 
-  heading_label.set_alignment(0.0);
-  message_label.set_alignment(0.0);
+  heading_label.set_xalign(0.0);
+  message_label.set_xalign(0.0);
+  message_label.set_hexpand(true);
   loading_bar.set_pulse_step(0.3);
+  loading_bar.set_hexpand(true);
 
-  Gtk::Box* box = get_vbox();
+  // create a vbox on the fly and add it to the dialog content area
+  Gtk::Box* box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
   box->set_margin_top(10);
-  box->set_margin_right(10);
+  box->set_margin_start(10);
   box->set_margin_bottom(10);
-  box->set_margin_left(10);
+  box->set_margin_end(10);
 
-  box->pack_start(heading_label, false, false);
-  box->pack_start(message_label, true, false);
-  box->pack_start(loading_bar, true, false);
-
-  show_all_children();
+  box->prepend(heading_label);
+  box->prepend(message_label);
+  box->prepend(loading_bar);
+  set_child(*box);
 }
 
 /**

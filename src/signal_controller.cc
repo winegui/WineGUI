@@ -108,7 +108,7 @@ void SignalController::dispatch_signals()
   menu_.list_issues.connect(sigc::mem_fun(*main_window_, &MainWindow::on_issue_tickets));
   menu_.check_version.connect(sigc::mem_fun(main_window_, &MainWindow::on_check_version));
   menu_.show_about.connect(sigc::mem_fun(about_dialog_, &AboutDialog::run_dialog));
-  about_dialog_.signal_response().connect(sigc::mem_fun(about_dialog_, &AboutDialog::hide_dialog));
+  about_dialog_.signal_hide().connect(sigc::mem_fun(about_dialog_, &AboutDialog::hide_dialog));
 
   // Distribute the active bottle signal from Main Window
   main_window_->active_bottle.connect(sigc::mem_fun(manager_, &BottleManager::set_active_bottle));

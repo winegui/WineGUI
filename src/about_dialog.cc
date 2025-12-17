@@ -46,11 +46,10 @@ AboutDialog::AboutDialog(Gtk::Window& parent)
   set_copyright("Copyright © 2019-2025 Melroy van den Berg");
   set_license_type(Gtk::License::AGPL_3_0);
 
-  Gtk::Box* vbox = get_vbox();
-  vbox->pack_start(visit_gitlab_project_link_button, Gtk::PackOptions::PACK_SHRINK);
-  vbox->pack_start(visit_github_project_link_button, Gtk::PackOptions::PACK_SHRINK);
-
-  vbox->show_all();
+  Gtk::Box* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 5);
+  vbox->prepend(visit_gitlab_project_link_button);
+  vbox->prepend(visit_github_project_link_button);
+  set_child(*vbox);
 }
 
 AboutDialog::~AboutDialog()
@@ -58,19 +57,19 @@ AboutDialog::~AboutDialog()
 }
 
 /**
- * \brief Open about dialog
+ * \brief Open about dialog window
  */
 void AboutDialog::run_dialog()
 {
-  run();
+  present();
 }
 
 /**
- * \brief Close the about dialog
+ * \brief Close the about dialog window
  */
-void AboutDialog::hide_dialog(__attribute__((unused)) int response)
+void AboutDialog::hide_dialog()
 {
-  hide();
+  set_visible(false);
 }
 
 /**

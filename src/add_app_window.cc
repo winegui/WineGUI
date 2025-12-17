@@ -28,8 +28,8 @@
  * \param parent Reference to parent GTK Window
  */
 AddAppWindow::AddAppWindow(Gtk::Window& parent)
-    : vbox(Gtk::ORIENTATION_VERTICAL, 4),
-      hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
+    : vbox(Gtk::Orientation::VERTICAL, 4),
+      hbox_buttons(Gtk::Orientation::HORIZONTAL, 4),
       header_add_app_label("Add Application shortcut"),
       name_label("Application name: "),
       description_label("Description: "),
@@ -63,9 +63,9 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
   header_add_app_label.set_margin_top(5);
   header_add_app_label.set_margin_bottom(5);
 
-  name_label.set_halign(Gtk::Align::ALIGN_END);
-  description_label.set_halign(Gtk::Align::ALIGN_END);
-  command_label.set_halign(Gtk::Align::ALIGN_END);
+  name_label.set_halign(Gtk::Align::END);
+  description_label.set_halign(Gtk::Align::END);
+  command_label.set_halign(Gtk::Align::END);
   name_entry.set_hexpand(true);
   description_entry.set_hexpand(true);
   command_entry.set_hexpand(true);
@@ -77,21 +77,22 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
   add_app_grid.attach(command_label, 0, 2);
   add_app_grid.attach(command_entry, 1, 2);
   add_app_grid.attach(select_executable_button, 2, 2);
+  add_app_grid.set_hexpand(true);
+  add_app_grid.set_vexpand(true);
+  add_app_grid.set_halign(Gtk::Align::FILL);
 
-  hbox_buttons.pack_end(save_button, false, false, 4);
-  hbox_buttons.pack_end(cancel_button, false, false, 4);
+  hbox_buttons.append(save_button);
+  hbox_buttons.append(cancel_button);
 
-  vbox.pack_start(header_add_app_label, false, false, 4);
-  vbox.pack_start(add_app_grid, true, true, 4);
-  vbox.pack_start(hbox_buttons, false, false, 4);
-  add(vbox);
+  vbox.prepend(header_add_app_label);
+  vbox.prepend(add_app_grid);
+  vbox.prepend(hbox_buttons);
+  set_child(vbox);
 
   // Signals
   select_executable_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_select_file));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_save_button_clicked));
-
-  show_all_children();
 }
 
 /**
@@ -138,15 +139,17 @@ void AddAppWindow::on_select_file()
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
 
+  auto folder = Gio::File::create_for_path(active_bottle_->wine_c_drive());
+
   auto* file_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_OPEN, Gtk::DialogFlags::DIALOG_MODAL);
+      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::OPEN);
   file_chooser->set_modal(true);
   file_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &AddAppWindow::on_select_dialog_response), file_chooser));
-  file_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
-  file_chooser->add_button("_Select file", Gtk::ResponseType::RESPONSE_OK);
+  file_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
+  file_chooser->add_button("_Select file", Gtk::ResponseType::OK);
   if (active_bottle_ != nullptr)
   {
-    file_chooser->set_current_folder(active_bottle_->wine_c_drive());
+    file_chooser->set_current_folder(folder);
   }
   file_chooser->add_filter(filter_win);
   file_chooser->add_filter(filter_any);
@@ -160,14 +163,17 @@ void AddAppWindow::on_select_dialog_response(int response_id, Gtk::FileChooserDi
 {
   switch (response_id)
   {
-  case Gtk::ResponseType::RESPONSE_OK:
+  case Gtk::ResponseType::OK:
   {
     // Update the command entry
-    auto filename = dialog->get_filename();
-    command_entry.set_text(filename);
+    auto file = dialog->get_file();
+    if (file) {
+      auto filename = file->get_basename(); // TODO: or file->get_path(); ?
+      command_entry.set_text(filename);
+    }
     break;
   }
-  case Gtk::ResponseType::RESPONSE_CANCEL:
+  case Gtk::ResponseType::CANCEL:
   {
     break; // ignore
   }
@@ -198,11 +204,11 @@ void AddAppWindow::on_save_button_clicked()
     // Check if all fields are filled-in
     if (name_entry.get_text().empty() || command_entry.get_text().empty())
     {
-      Gtk::MessageDialog dialog(*this, "You forgot to fill-in the name and command (only the description is optional).", false, Gtk::MESSAGE_ERROR,
-                                Gtk::BUTTONS_OK);
+      Gtk::MessageDialog dialog(*this, "You forgot to fill-in the name and command (only the description is optional).", false, Gtk::MessageType::ERROR,
+                                Gtk::ButtonsType::OK);
       dialog.set_title("Error during new application saving");
       dialog.set_modal(true);
-      dialog.run();
+      dialog.present();
     }
     else
     {
@@ -223,10 +229,10 @@ void AddAppWindow::on_save_button_clicked()
       // Save application to bottle config
       if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
       {
-        Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+        Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
         dialog.set_title("An error has occurred!");
         dialog.set_modal(true);
-        dialog.run();
+        dialog.present();
       }
       else
       {
@@ -241,11 +247,11 @@ void AddAppWindow::on_save_button_clicked()
   }
   else
   {
-    Gtk::MessageDialog dialog(*this, "Error occurred during saving, because there is no active Windows machine set.", false, Gtk::MESSAGE_ERROR,
-                              Gtk::BUTTONS_OK);
+    Gtk::MessageDialog dialog(*this, "Error occurred during saving, because there is no active Windows machine set.", false, Gtk::MessageType::ERROR,
+                              Gtk::ButtonsType::OK);
     dialog.set_title("Error during new application saving");
     dialog.set_modal(true);
-    dialog.run();
+    dialog.present();
     std::cout << "Error: No current Windows machine is set. Change won't be saved." << std::endl;
   }
 }
