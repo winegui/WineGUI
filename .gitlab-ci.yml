@@ -1,5 +1,5 @@
 default:
-  image: registry.melroy.org/melroy/docker-images/gtk3-docker-cmake-ninja:bookworm
+  image: registry.melroy.org/melroy/docker-images/gtk3-docker-cmake-ninja:trixie 
 
 stages:
   - test
