@@ -134,7 +134,7 @@ void SignalController::dispatch_signals()
   manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::update_installed));
 
   // Menu / Toolbar actions
-  main_window_->new_bottle.connect(sigc::mem_fun(this, &SignalController::on_new_bottle));
+  main_window_->new_bottle.connect(sigc::mem_fun(*this, &SignalController::on_new_bottle));
   main_window_->finished_new_bottle.connect(sigc::bind<1>(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
   main_window_->run_executable.connect(sigc::mem_fun(manager_, &BottleManager::run_executable));
   main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
@@ -152,22 +152,22 @@ void SignalController::dispatch_signals()
 
   // Edit Window
   edit_window_.configure_environment_variables.connect(sigc::mem_fun(configure_env_var_window_, &BottleConfigureEnvVarWindow::show));
-  edit_window_.update_bottle.connect(sigc::mem_fun(this, &SignalController::on_update_bottle));
+  edit_window_.update_bottle.connect(sigc::mem_fun(*this, &SignalController::on_update_bottle));
   edit_window_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
 
   // Clone Window
-  clone_window_.clone_bottle.connect(sigc::mem_fun(this, &SignalController::on_clone_bottle));
+  clone_window_.clone_bottle.connect(sigc::mem_fun(*this, &SignalController::on_clone_bottle));
 
   // Right click menu in listbox
-  main_window_->right_click_menu.connect(sigc::mem_fun(this, &SignalController::on_mouse_button_pressed));
+  main_window_->right_click_menu.connect(sigc::mem_fun(*this, &SignalController::on_mouse_button_pressed));
 
   // When bottle created, the finish (or error message) event is called
-  bottle_created_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_new_bottle_created));
-  bottle_updated_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_bottle_updated));
-  bottle_cloned_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_bottle_cloned));
-  error_message_created_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_error_message_created));
-  error_message_updated_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_error_message_updated));
-  error_message_cloned_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_error_message_cloned));
+  bottle_created_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_new_bottle_created));
+  bottle_updated_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_bottle_updated));
+  bottle_cloned_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_bottle_cloned));
+  error_message_created_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_error_message_created));
+  error_message_updated_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_error_message_updated));
+  error_message_cloned_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_error_message_cloned));
 
   // When the WineExec() results into a non-zero exit code the failure_on_exec it triggered
   Helper& helper = Helper::get_instance();

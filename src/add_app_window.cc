@@ -141,8 +141,7 @@ void AddAppWindow::on_select_file()
 
   auto folder = Gio::File::create_for_path(active_bottle_->wine_c_drive());
 
-  auto* file_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::OPEN);
+  auto* file_chooser = new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::OPEN);
   file_chooser->set_modal(true);
   file_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &AddAppWindow::on_select_dialog_response), file_chooser));
   file_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
@@ -167,7 +166,8 @@ void AddAppWindow::on_select_dialog_response(int response_id, Gtk::FileChooserDi
   {
     // Update the command entry
     auto file = dialog->get_file();
-    if (file) {
+    if (file)
+    {
       auto filename = file->get_basename(); // TODO: or file->get_path(); ?
       command_entry.set_text(filename);
     }
@@ -204,8 +204,8 @@ void AddAppWindow::on_save_button_clicked()
     // Check if all fields are filled-in
     if (name_entry.get_text().empty() || command_entry.get_text().empty())
     {
-      Gtk::MessageDialog dialog(*this, "You forgot to fill-in the name and command (only the description is optional).", false, Gtk::MessageType::ERROR,
-                                Gtk::ButtonsType::OK);
+      Gtk::MessageDialog dialog(*this, "You forgot to fill-in the name and command (only the description is optional).", false,
+                                Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
       dialog.set_title("Error during new application saving");
       dialog.set_modal(true);
       dialog.present();

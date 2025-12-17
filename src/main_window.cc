@@ -51,16 +51,16 @@ MainWindow::MainWindow(Menu& menu)
   // Set some Window properties
   set_title("WineGUI - WINE Manager");
   set_default_size(1120, 675);
-  set_position(Gtk::WIN_POS_CENTER);
 
-  try
-  {
-    set_icon_from_file(Helper::get_image_location("logo.png"));
-  }
-  catch (Glib::FileError& e)
-  {
-    cout << "Error: couldn't load our logo: " << e.what() << endl;
-  }
+  // TODO: No more icon via set_icon_from_file.. How to set a icon now using .res resource files?
+  // try
+  // {
+  //   set_icon_from_file(Helper::get_image_location("logo.png"));
+  // }
+  // catch (Glib::FileError& e)
+  // {
+  //   cout << "Error: couldn't load our logo: " << e.what() << endl;
+  // }
 
   // Add menu to box (top), no expand/fill
   vbox.prepend(menu);
@@ -122,15 +122,16 @@ MainWindow::MainWindow(Menu& menu)
   refresh_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_refresh_app_list_button_clicked));
 
   // Dispatch signals
-  error_message_check_version_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_error_message_check_version));
-  info_message_check_version_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_info_message_check_version));
-  new_version_available_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_new_version_available));
-  check_version_finished_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::cleanup_check_version_thread));
+  error_message_check_version_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::on_error_message_check_version));
+  info_message_check_version_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::on_info_message_check_version));
+  new_version_available_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::on_new_version_available));
+  check_version_finished_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::cleanup_check_version_thread));
 
   // Check for update without (error) messages, when app is idle
   Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &MainWindow::check_version_update), false), Glib::PRIORITY_DEFAULT_IDLE);
   // Window closed signal
-  signal_delete_event().connect(sigc::mem_fun(this, &MainWindow::on_delete_window));
+  // TODO: There is no close signal anymore on a window...
+  // signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::on_delete_window));
 }
 
 /**
@@ -221,10 +222,10 @@ void MainWindow::set_general_config(const GeneralConfigData& config_data)
  */
 void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MessageType::INFO, Gtk::ButtonsType::OK);
   dialog.set_title("Information message");
   dialog.set_modal(true);
-  dialog.run();
+  dialog.present();
 }
 
 /**
@@ -234,10 +235,10 @@ void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
  */
 void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MessageType::WARNING, Gtk::ButtonsType::OK);
   dialog.set_title("Warning message");
   dialog.set_modal(true);
-  dialog.run();
+  dialog.present();
 }
 
 /**
@@ -247,10 +248,10 @@ void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
  */
 void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
   dialog.set_title("An error has occurred!");
   dialog.set_modal(true);
-  dialog.run();
+  dialog.present();
 }
 
 /**
@@ -261,16 +262,39 @@ void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
  */
 bool MainWindow::show_confirm_dialog(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
+  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MessageType::QUESTION, Gtk::ButtonsType::YES_NO);
   dialog.set_title("Are you sure?");
   dialog.set_modal(true);
-  int result = dialog.run();
-  bool return_value = false;
-  if (result == Gtk::RESPONSE_YES)
-  {
-    return_value = true;
-  }
-  return return_value;
+  // Non-blocking show
+  dialog.present();
+
+  // Connect the response signal
+  dialog.signal_response().connect(
+      [this, &dialog](int result)
+      {
+        // Handle the response:
+        switch (result)
+        {
+        case (Gtk::ResponseType::YES):
+        {
+          // TODO: do something
+          break;
+        }
+        case (Gtk::ResponseType::NO):
+        {
+          // TODO: do something
+          break;
+        }
+        default:
+        {
+          // Unexpected button, ignore
+          break;
+        }
+        }
+      });
+
+  // TODO: Should we return the dialog itself?!?
+  return false;
 }
 
 /**
@@ -351,50 +375,51 @@ void MainWindow::on_run_button_clicked()
   dialog.present();
 
   // Connect the response signal
-  dialog.signal_response().connect([this, &dialog](int result)
-  {
-    // Handle the response:
-    switch (result)
-    {
-    case (Gtk::ResponseType::OK):
-    {
-      Glib::RefPtr<Gio::File> file = dialog.get_file();
-      if (file)
+  dialog.signal_response().connect(
+      [this, &dialog](int result)
       {
-        // Just guess based on extension
-        string filename = file->get_basename(); // TODO: or file->get_path(); ?
-        string ext = filename.substr(filename.find_last_of(".") + 1);
-        // To lower case
-        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
-        if (ext == "exe")
+        // Handle the response:
+        switch (result)
         {
-          run_executable.emit(filename, false);
-        }
-        else if (ext == "msi")
+        case (Gtk::ResponseType::OK):
         {
-          // Run as MSI (true=MSI)
-          run_executable.emit(filename, true);
+          Glib::RefPtr<Gio::File> file = dialog.get_file();
+          if (file)
+          {
+            // Just guess based on extension
+            string filename = file->get_basename(); // TODO: or file->get_path(); ?
+            string ext = filename.substr(filename.find_last_of(".") + 1);
+            // To lower case
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (ext == "exe")
+            {
+              run_executable.emit(filename, false);
+            }
+            else if (ext == "msi")
+            {
+              // Run as MSI (true=MSI)
+              run_executable.emit(filename, true);
+            }
+            else
+            {
+              // fall-back: try run as Exe
+              run_executable.emit(filename, false);
+            }
+            break;
+          }
         }
-        else
+        case (Gtk::ResponseType::CANCEL):
         {
-          // fall-back: try run as Exe
-          run_executable.emit(filename, false);
+          // Cancelled, do nothing
+          break;
         }
-        break;
-      }
-    }
-    case (Gtk::ResponseType::CANCEL):
-    {
-      // Cancelled, do nothing
-      break;
-    }
-    default:
-    {
-      // Unexpected button, ignore
-      break;
-    }
-    }
-  });
+        default:
+        {
+          // Unexpected button, ignore
+          break;
+        }
+        }
+      });
 }
 
 /**
@@ -454,10 +479,11 @@ void MainWindow::on_check_version()
  */
 void MainWindow::on_exec_failure()
 {
-  Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+  Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false, Gtk::MessageType::INFO,
+                            Gtk::ButtonsType::OK);
   dialog.set_title("An error has occurred during Wine application execution!");
   dialog.set_modal(false);
-  dialog.run();
+  dialog.present();
 }
 
 /************************
@@ -555,12 +581,12 @@ void MainWindow::on_new_version_available()
     string message = "<b>New WineGUI release is out.</b> Please, <i>update</i> WineGUI to the latest release.\n"
                      "You are using: v" +
                      std::string(PROJECT_VER) + ". Latest version: v" + new_version_ + ".";
-    Gtk::MessageDialog dialog(*this, message, true, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
+    Gtk::MessageDialog dialog(*this, message, true, Gtk::MessageType::WARNING, Gtk::ButtonsType::OK);
     dialog.set_secondary_text("<big><a href=\"https://gitlab.melroy.org/melroy/winegui/-/releases\">Download the latest release now!</a></big>",
                               true);
     dialog.set_title("New WineGUI Release!");
     dialog.set_modal(true);
-    dialog.run();
+    dialog.present();
   }
 }
 
@@ -576,7 +602,7 @@ bool MainWindow::on_delete_window(GdkEventAny* any_event __attribute__((unused))
     window_settings->set_int("height", get_height());
     window_settings->set_boolean("maximized", is_maximized());
     // Fullscreen will be available with gtkmm-4.0
-    // settings->set_boolean("fullscreen", is_fullscreen());
+    window_settings->set_boolean("fullscreen", is_fullscreen());
     if (paned.get_position() > 0)
       window_settings->set_int("position-divider-paned", paned.get_position());
     if (container_paned.get_position() > 0)
@@ -966,13 +992,13 @@ void MainWindow::load_stored_window_settings()
 void MainWindow::create_left_panel()
 {
   // Add scrolled window with listbox to paned
-  paned.pack1(scrolled_window_listbox);
+  paned.set_start_child(scrolled_window_listbox);
 
   // Set function that will add separators between each item
   listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
 
   // Add list box to scrolled window
-  scrolled_window_listbox.add(listbox);
+  scrolled_window_listbox.set_child(listbox);
 }
 
 /**
@@ -1068,8 +1094,8 @@ void MainWindow::create_right_panel()
   toolbar.insert(kill_processes_button, 9);
 
   // Add toolbar to right box
-  right_vbox.add(toolbar);
-  right_vbox.add(separator1);
+  right_vbox.append(toolbar);
+  right_vbox.append(separator1);
 
   /**
    * Detail section (below toolbar)
@@ -1080,6 +1106,8 @@ void MainWindow::create_right_panel()
   detail_grid.set_margin_start(8);
   detail_grid.set_column_spacing(8);
   detail_grid.set_row_spacing(12);
+  detail_grid.set_hexpand(true);
+  detail_grid.set_vexpand(false);
 
   // General heading
   Gtk::Image* general_icon = Gtk::manage(new Gtk::Image());
@@ -1207,10 +1235,10 @@ void MainWindow::create_right_panel()
   // End Description
 
   // Place inside a scrolled window
-  detail_grid_scrolled_window_detail.add(detail_grid);
+  detail_grid_scrolled_window_detail.set_child(detail_grid);
 
   // Add to container
-  container_paned.pack1(detail_grid_scrolled_window_detail);
+  container_paned.set_start_child(detail_grid_scrolled_window_detail);
 
   /**
    * Application list section
@@ -1229,27 +1257,33 @@ void MainWindow::create_right_panel()
   application_list_treeview.set_headers_visible(false);
   application_list_treeview.set_hover_selection(true);
   application_list_treeview.set_show_expanders(false);
-  application_list_treeview.get_selection()->set_mode(Gtk::SELECTION_SINGLE);
+  application_list_treeview.get_selection()->set_mode(Gtk::SelectionMode::SINGLE);
 
+  app_list_scrolled_window.set_margin_top(6);
   app_list_scrolled_window.set_margin_start(6);
   app_list_scrolled_window.set_margin_end(6);
   app_list_scrolled_window.set_margin_bottom(6);
-  app_list_scrolled_window.set_border_width(2);
-  app_list_scrolled_window.add(application_list_treeview);
+  app_list_scrolled_window.set_child(application_list_treeview);
 
   app_list_search_entry.set_margin_start(6);
   app_list_search_entry.set_margin_end(2);
   app_list_search_entry.set_margin_top(6);
   app_list_search_entry.set_margin_bottom(6);
+  app_list_search_entry.set_hexpand(true);
+  app_list_search_entry.set_halign(Gtk::Align::FILL);
 
   // Add application header text
   Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
   application_icon->set_from_icon_name("application-x-executable", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  application_icon->set_margin_bottom(6);
   Gtk::Label* application_label = Gtk::manage(new Gtk::Label());
   application_label->set_markup("<b>Applications</b>");
+  application_label->set_margin_bottom(20);
   Gtk::Box* application_box = Gtk::manage(new Gtk::Box());
-  application_box->pack_start(*application_icon, false, false, 8);
-  application_box->pack_start(*application_label, false, false, 20);
+  application_box->append(*application_icon);
+  application_box->append(*application_label);
+  application_box->set_margin_bottom(10);
+  application_box->set_halign(Gtk::Align::FILL);
 
   // App list add shortcut button
   Gtk::Image* add_app_list_image = Gtk::manage(new Gtk::Image());
@@ -1279,25 +1313,31 @@ void MainWindow::create_right_panel()
   refresh_app_list_button.set_margin_end(6);
 
   // Preparing the horizontal box above the app list (containing the search entry & refresh button)
-  app_list_top_hbox.pack_start(app_list_search_entry, true, true);
-  app_list_top_hbox.pack_end(refresh_app_list_button, false, false);
-  app_list_top_hbox.pack_end(remove_app_list_button, false, false);
-  app_list_top_hbox.pack_end(add_app_list_button, false, false);
+  app_list_top_hbox.prepend(app_list_search_entry);
+  app_list_top_hbox.append(refresh_app_list_button);
+  app_list_top_hbox.append(remove_app_list_button);
+  app_list_top_hbox.append(add_app_list_button);
+  app_list_top_hbox.set_halign(Gtk::Align::FILL);
+  app_list_top_hbox.set_margin_bottom(6);
 
   // Add heading (label + icon)
-  app_list_vbox.pack_start(*application_box, false, true, 5);
+  app_list_vbox.prepend(*application_box);
   // Add horizontal box (search entry + refresh button)
-  app_list_vbox.pack_start(app_list_top_hbox, false, true);
+  app_list_vbox.prepend(app_list_top_hbox);
   // Add application list (in scrolled window)
-  app_list_vbox.pack_end(app_list_scrolled_window);
+  app_list_vbox.append(app_list_scrolled_window);
   // Add to container
-  container_paned.pack2(app_list_vbox, false, false);
+  container_paned.set_end_child(app_list_vbox);
+  container_paned.set_vexpand(true);
+  container_paned.set_hexpand(true);
+  container_paned.set_halign(Gtk::Align::FILL);
+  container_paned.set_valign(Gtk::Align::FILL);
 
   // Add container to right box
-  right_vbox.pack_start(container_paned, true, true);
+  right_vbox.prepend(container_paned);
 
   // Add right box to paned
-  paned.pack2(right_vbox);
+  paned.set_end_child(right_vbox);
 }
 
 /**
@@ -1347,7 +1387,7 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
  */
 bool MainWindow::app_list_visible_func(const Gtk::TreeModel::const_iterator& iter)
 {
-  Gtk::TreeModel::Row row = *iter;
+  auto row = *iter;
   Glib::ustring name = row[app_list_columns.name];
   Glib::ustring description = row[app_list_columns.description];
   if (name.lowercase().find(app_list_search_entry.get_text().lowercase()) != Glib::ustring::npos)

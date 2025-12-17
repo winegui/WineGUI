@@ -122,8 +122,7 @@ void PreferencesWindow::on_select_folder()
 {
   auto folder = Gio::File::create_for_path(default_folder_entry.get_text());
 
-  auto* folder_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER);
+  auto* folder_chooser = new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER);
   folder_chooser->set_modal(true);
   folder_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &PreferencesWindow::on_select_dialog_response), folder_chooser));
   folder_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
