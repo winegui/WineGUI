@@ -86,8 +86,8 @@ BottleItem::BottleItem(Glib::ustring& name,
       audio_driver_(WineDefaults::AudioDriver),
       virtual_desktop_(""),
       is_debug_logging_(false),
-      debug_log_level_(1){
-          // Gui will be created during the copy constructor called by Gtk
+      debug_log_level_(1) {
+        // Gui will be created during the copy constructor called by Gtk
       };
 
 /**
@@ -126,8 +126,8 @@ BottleItem::BottleItem(Glib::ustring& name,
       is_debug_logging_(is_debug_logging),
       debug_log_level_(debug_log_level),
       env_vars_(env_vars),
-      app_list_(app_list){
-          // Gui will be created during the copy constructor called by Gtk
+      app_list_(app_list) {
+        // Gui will be created during the copy constructor called by Gtk
       };
 
 void BottleItem::CreateUI()
