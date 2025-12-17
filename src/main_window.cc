@@ -1358,7 +1358,7 @@ bool MainWindow::app_list_visible_func(const Gtk::TreeModel::const_iterator& ite
  */
 void MainWindow::treeview_set_cell_data_name_desc(Gtk::CellRenderer* renderer, const Gtk::TreeModel::iterator& iter)
 {
-  // cppcheck-suppress cstyleCast
+  // cppcheck-suppress dangerousTypeCast
   Gtk::CellRendererText* text_renderer = (Gtk::CellRendererText*)renderer;
   Glib::ustring name = "<b>" + (*iter)[app_list_columns.name] + "</b>\n";
   name += (*iter)[app_list_columns.description];
