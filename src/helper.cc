@@ -172,8 +172,7 @@ vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_de
   }
 
   // Sort alphabetically (case insensitive)
-  std::sort(list.begin(), list.end(),
-            [](const string& a, const string& b)
+  std::sort(list.begin(), list.end(), [](const string& a, const string& b)
             { return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), [](char x, char y) { return toupper(x) < toupper(y); }); });
 
   // Add default wine bottle to the end, if enabled by settings and if directory is present
