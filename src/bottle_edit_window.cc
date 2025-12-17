@@ -60,7 +60,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
 
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
-  fd_label.set_weight(Pango::WEIGHT_BOLD);
+  fd_label.set_weight(Pango::Weight::BOLD);
   auto font_label = Pango::Attribute::create_attr_font_desc(fd_label);
   Pango::AttrList attr_list_header_label;
   attr_list_header_label.insert(font_label);
@@ -68,14 +68,14 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   header_edit_label.set_margin_top(5);
   header_edit_label.set_margin_bottom(5);
 
-  name_label.set_halign(Gtk::Align::ALIGN_END);
-  folder_name_label.set_halign(Gtk::Align::ALIGN_END);
-  windows_version_label.set_halign(Gtk::Align::ALIGN_END);
-  audio_driver_label.set_halign(Gtk::Align::ALIGN_END);
-  virtual_desktop_resolution_label.set_halign(Gtk::Align::ALIGN_END);
-  log_level_label.set_halign(Gtk::Align::ALIGN_END);
-  environment_variables_label.set_halign(Gtk::Align::ALIGN_END);
-  description_label.set_halign(Gtk::Align::ALIGN_START);
+  name_label.set_halign(Gtk::Align::END);
+  folder_name_label.set_halign(Gtk::Align::END);
+  windows_version_label.set_halign(Gtk::Align::END);
+  audio_driver_label.set_halign(Gtk::Align::END);
+  virtual_desktop_resolution_label.set_halign(Gtk::Align::END);
+  log_level_label.set_halign(Gtk::Align::END);
+  environment_variables_label.set_halign(Gtk::Align::END);
+  description_label.set_halign(Gtk::Align::START);
   name_label.set_tooltip_text("Change the machine name");
   folder_name_label.set_tooltip_text("Change the folder. NOTE: This break your shortcuts!");
   windows_version_label.set_tooltip_text("Change the Windows version");

@@ -56,7 +56,7 @@ find_package(Threads REQUIRED)
 
 # Use the package PkgConfig to detect (any version) of GTK+ headers/library files
 find_package(PkgConfig REQUIRED)
-PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
+PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-4.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 

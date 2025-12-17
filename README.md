@@ -48,14 +48,14 @@ Please, read the dedicated [contributing page](CONTRIBUTING.md).
 
 ### Requirements
 
-WineGUI is created by using [GTK3 toolkit](https://www.gtk.org/) (Gtkmm C++-interface) and C++ code.
+WineGUI is created by using [GTK4 toolkit](https://www.gtk.org/) (Gtkmm C++-interface) and C++ code.
 
 Dependencies should be met before build:
 
-- gcc/g++ (advised: v8 or later)
-- cmake (advised: v3.10 or later)
+- gcc/g++ (advised: v13 or later) or clang (advised: v18 or later)
+- cmake (advised: v3.25 or newer)
 - ninja-build
-- libgtkmm-3.0-dev (implicit dependency with libgtk-3-dev)
+- libgtkmm-4.0-dev (implicit dependency with libgtk-4-dev and other dev packages)
 - libjson-glib-dev
 - pkg-config
 
@@ -118,6 +118,14 @@ Or just: `ninja` within the build directory.
 Clean the build via: `ninja clean`.
 
 _Hint:_ Run `ninja help` for all available targets.
+
+### Installation
+
+If you would like to install the build targets (when build from source) on your machine, you can execute:
+
+```bash
+cmake --install ./build
+```
 
 ### Debug
 

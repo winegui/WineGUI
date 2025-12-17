@@ -38,12 +38,13 @@ AboutDialog::AboutDialog(Gtk::Window& parent)
   set_transient_for(parent);
   set_program_name("WineGUI");
   set_comments("The most user-friendly WINE manager.");
-  set_logo(logo.get_pixbuf());
+
+  set_logo(logo.get_paintable());
   set_authors(devs);
   set_artists(devs);
   set_version(PROJECT_VER);
   set_copyright("Copyright © 2019-2025 Melroy van den Berg");
-  set_license_type(Gtk::LICENSE_AGPL_3_0);
+  set_license_type(Gtk::License::AGPL_3_0);
 
   Gtk::Box* vbox = get_vbox();
   vbox->pack_start(visit_gitlab_project_link_button, Gtk::PackOptions::PACK_SHRINK);

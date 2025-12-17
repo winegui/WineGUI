@@ -42,29 +42,29 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
   configure_grid.set_row_spacing(8);
 
   first_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  first_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  first_toolbar.set_valign(Gtk::ALIGN_CENTER);
+  first_toolbar.set_halign(Gtk::Align::CENTER);
+  first_toolbar.set_valign(Gtk::Align::CENTER);
   first_toolbar.set_hexpand(true);
   first_toolbar.set_vexpand(true);
   second_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  second_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  second_toolbar.set_valign(Gtk::ALIGN_CENTER);
+  second_toolbar.set_halign(Gtk::Align::CENTER);
+  second_toolbar.set_valign(Gtk::Align::CENTER);
   second_toolbar.set_hexpand(true);
   second_toolbar.set_vexpand(true);
   third_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  third_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  third_toolbar.set_valign(Gtk::ALIGN_CENTER);
+  third_toolbar.set_halign(Gtk::Align::CENTER);
+  third_toolbar.set_valign(Gtk::Align::CENTER);
   third_toolbar.set_hexpand(true);
   third_toolbar.set_vexpand(true);
   fourth_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  fourth_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  fourth_toolbar.set_valign(Gtk::ALIGN_CENTER);
+  fourth_toolbar.set_halign(Gtk::Align::CENTER);
+  fourth_toolbar.set_valign(Gtk::Align::CENTER);
   fourth_toolbar.set_hexpand(true);
   fourth_toolbar.set_vexpand(true);
 
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
-  fd_label.set_weight(Pango::WEIGHT_BOLD);
+  fd_label.set_weight(Pango::Weight::BOLD);
   auto font_label = Pango::Attribute::create_attr_font_desc(fd_label);
   Pango::AttrList attr_list_label;
   attr_list_label.insert(font_label);
@@ -75,16 +75,16 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
 
   first_row_label.set_text("Graphics packages");
   first_row_label.set_attributes(attr_list_label);
-  first_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
+  first_row_label.set_halign(Gtk::Align::CENTER);
   second_row_label.set_text("Font packages");
   second_row_label.set_attributes(attr_list_label);
-  second_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
+  second_row_label.set_halign(Gtk::Align::CENTER);
   third_row_label.set_text("Visual C++ packages");
   third_row_label.set_attributes(attr_list_label);
-  third_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
+  third_row_label.set_halign(Gtk::Align::CENTER);
   fourth_row_label.set_text(".NET packages");
   fourth_row_label.set_attributes(attr_list_label);
-  fourth_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
+  fourth_row_label.set_halign(Gtk::Align::CENTER);
 
   configure_grid.attach(hint_label, 0, 0, 2, 1);
   configure_grid.attach(first_row_label, 0, 1);
