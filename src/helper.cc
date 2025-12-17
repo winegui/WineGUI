@@ -57,7 +57,7 @@ static const string WinetricksExecutable =
 // Reg files
 static const string SystemReg = "system.reg";
 static const string UserReg = "user.reg";
-static const string UserdefReg = "userdef.reg";
+// static const string UserdefReg = "userdef.reg";
 
 // Reg keys
 static const string RegKeyName9x = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion]";
@@ -73,7 +73,7 @@ static const string RegKeyMenuFiles = "[Software\\\\Wine\\\\MenuFiles]";
 
 // Reg names
 static const string RegNameNTVersion = "CurrentVersion";
-static const string RegNameNTBuild = "CurrentBuild";
+// static const string RegNameNTBuild = "CurrentBuild";
 static const string RegNameNTBuildNumber = "CurrentBuildNumber";
 static const string RegName9xVersion = "VersionNumber";
 static const string RegNameProductType = "ProductType";
@@ -87,7 +87,6 @@ static const string RegValueMenu = "\\Start Menu\\";
 static const string RegValueDesktop = "\\Desktop\\";
 
 // Other files
-static const string WineGuiMetaFile = ".winegui.conf";
 static const string UpdateTimestamp = ".update-timestamp";
 
 /**
