@@ -257,7 +257,7 @@ BottleNewAssistant::Result BottleNewAssistant::get_result()
 void BottleNewAssistant::bottle_created()
 {
   // Grap a copy of the bottle name
-  Glib::ustring created_bottle_name = name_entry.get_text();
+  const Glib::ustring created_bottle_name = name_entry.get_text();
 
   // Reset defaults (including timer_.disconnect())
   set_default_values();

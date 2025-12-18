@@ -94,7 +94,8 @@ void SignalController::dispatch_signals()
   // Menu buttons
   // menu_.preferences.connect(sigc::mem_fun(preferences_window_, &PreferencesWindow::show));
   // menu_.quit.connect(
-  //     sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefore closes the app */
+  //     sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefore closes the app
+  //     */
   // menu_.refresh_view.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
   // menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
   // menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
@@ -176,7 +177,7 @@ void SignalController::dispatch_signals()
 
   // Settings gaming package buttons
   configure_window_.directx9.connect(sigc::mem_fun(manager_, &BottleManager::install_d3dx9));
-  configure_window_.dxvk.connect(sigc::mem_fun(manager_, &BottleManager::install_dxvk));
+  // configure_window_.dxvk.connect(sigc::mem_fun(manager_, &BottleManager::install_dxvk));
   configure_window_.vkd3d.connect(sigc::mem_fun(manager_, &BottleManager::install_vkd3d));
   // Settings additional package buttons
   configure_window_.liberation_fonts.connect(sigc::mem_fun(manager_, &BottleManager::install_liberation));

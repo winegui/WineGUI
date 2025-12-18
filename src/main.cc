@@ -62,13 +62,14 @@ int main(int argc, char* argv[])
   else
   {
     auto app = Gtk::Application::create("org.melroy.winegui");
-    app->signal_activate().connect([app]()
-    {
-      // Setup
-      MainWindow& main_window = setupApplication();
-      app->add_window(main_window);
-      main_window.show();
-    });
+    app->signal_activate().connect(
+        [app]()
+        {
+          // Setup
+          MainWindow& main_window = setupApplication();
+          app->add_window(main_window);
+          main_window.show();
+        });
     // Start main loop of GTK
     return app->run(argc, argv);
   }

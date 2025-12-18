@@ -229,7 +229,7 @@ void BottleManager::update_config_and_bottles(const Glib::ustring& select_bottle
       {
         // Check if there is a bottle with the same name and select as active bottle
         auto it = std::find_if(bottles_.begin(), bottles_.end(),
-                               [&select_bottle_name](const BottleItem& bottle) { return bottle.name() == select_bottle_name; });
+                               [&select_bottle_name](const BottleItem& bottle) { return bottle.name().compare(select_bottle_name) == 0; });
         if (it != bottles_.end())
         {
           main_window_.select_row_bottle(*it);
@@ -450,12 +450,12 @@ void BottleManager::update_bottle(SignalController* caller,
     BottleConfigData bottle_config;
     std::map<int, ApplicationData> app_list; // App list is never dirty, so no need to check
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
-    if (active_bottle_->name() != name)
+    if (active_bottle_->name().compare(name) != 0)
     {
       bottle_config.name = name;
       need_update_bottle_config_file = true;
     }
-    if (active_bottle_->description() != description)
+    if (active_bottle_->description().compare(description) != 0)
     {
       bottle_config.description = description;
       need_update_bottle_config_file = true;
@@ -497,7 +497,7 @@ void BottleManager::update_bottle(SignalController* caller,
       }
     }
 
-    if (active_bottle_->virtual_desktop() != virtual_desktop_resolution)
+    if (active_bottle_->virtual_desktop().compare(virtual_desktop_resolution) != 0)
     {
       if (!virtual_desktop_resolution.empty())
       {
@@ -554,7 +554,7 @@ void BottleManager::update_bottle(SignalController* caller,
 
     // LAST but not least, rename Wine bottle folder
     // Do this after the wait on wineserver, since otherwise renaming may break the Wine installation during update
-    if (active_bottle_->folder_name() != folder_name)
+    if (active_bottle_->folder_name().compare(folder_name) != 0)
     {
       // Build new prefix
       std::vector<string> dirs{bottle_location_, folder_name};
@@ -976,7 +976,7 @@ void BottleManager::kill_processes()
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of additional DirectX 9 DLLs, eg. 26 (for default use: "")
  */
-void BottleManager::install_d3dx9(Gtk::Window& parent, const string& version)
+void BottleManager::install_d3dx9(Gtk::Window* parent, const string& version)
 {
   if (is_bottle_not_null())
   {
@@ -1022,7 +1022,7 @@ void BottleManager::install_d3dx9(Gtk::Window& parent, const string& version)
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of DXVK, eg. 151 (for default use: "latest")
  */
-void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
+void BottleManager::install_dxvk(Gtk::Window* parent, const string& version)
 {
   if (is_bottle_not_null())
   {
@@ -1066,7 +1066,7 @@ void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
  * \brief Install vkd3d-proton (Vulkan based DirectX 12)
  * \param[in] parent Parent GTK window were the request is coming from
  */
-void BottleManager::install_vkd3d(Gtk::Window& parent)
+void BottleManager::install_vkd3d(Gtk::Window* parent)
 {
   if (is_bottle_not_null())
   {
@@ -1107,7 +1107,7 @@ void BottleManager::install_vkd3d(Gtk::Window& parent)
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of Visual C++, eg. 6, 2010, 2013, 2015, 2019 (no default)
  */
-void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string& version)
+void BottleManager::install_visual_cpp_package(Gtk::Window* parent, const string& version)
 {
   if (is_bottle_not_null())
   {
@@ -1149,7 +1149,7 @@ void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of .NET, eg. '35' for 3.5, '471' for 4.7.1 or '35sp1' for 3.5 SP1 (no default)
  */
-void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
+void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
 {
   if (is_bottle_not_null())
   {
@@ -1222,7 +1222,7 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
  * \brief Install core fonts (which is often enough)
  * \param[in] parent Parent GTK window were the request is coming from
  */
-void BottleManager::install_core_fonts(Gtk::Window& parent)
+void BottleManager::install_core_fonts(Gtk::Window* parent)
 {
   if (is_bottle_not_null())
   {
@@ -1261,7 +1261,7 @@ void BottleManager::install_core_fonts(Gtk::Window& parent)
  * \brief Install liberation fonts, open-source (which is often enough)
  * \param[in] parent Parent GTK window were the request is coming from
  */
-void BottleManager::install_liberation(Gtk::Window& parent)
+void BottleManager::install_liberation(Gtk::Window* parent)
 {
   if (is_bottle_not_null())
   {

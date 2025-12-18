@@ -45,13 +45,13 @@ class MainWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void(Glib::ustring&)> finished_new_bottle; /*!< Finished signal after the bottle is created, with the new bottle name */
-  sigc::signal<void(BottleItem*)> active_bottle;          /*!< Set the active bottle in manager, based on the selected bottle */
-  sigc::signal<void()> show_edit_window;                  /*!< show Edit window signal */
-  sigc::signal<void()> show_clone_window;                 /*!< show Clone window signal */
-  sigc::signal<void()> show_configure_window;             /*!< show Settings window signal */
-  sigc::signal<void()> show_add_app_window;               /*!< show add application window signal */
-  sigc::signal<void()> show_remove_app_window;            /*!< show remove application window signal */
+  sigc::signal<void(const Glib::ustring&)> finished_new_bottle; /*!< Finished signal after the bottle is created, with the new bottle name */
+  sigc::signal<void(BottleItem*)> active_bottle;                /*!< Set the active bottle in manager, based on the selected bottle */
+  sigc::signal<void()> show_edit_window;                        /*!< show Edit window signal */
+  sigc::signal<void()> show_clone_window;                       /*!< show Clone window signal */
+  sigc::signal<void()> show_configure_window;                   /*!< show Settings window signal */
+  sigc::signal<void()> show_add_app_window;                     /*!< show add application window signal */
+  sigc::signal<void()> show_remove_app_window;                  /*!< show remove application window signal */
   sigc::signal<void(Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, Glib::ustring&, bool&, BottleTypes::AudioDriver)>
       new_bottle;                                  /*!< Create new Wine Bottle Signal */
   sigc::signal<void(string, bool)> run_executable; /*!< Run an EXE or MSI application in Wine with provided filename */
@@ -76,7 +76,7 @@ public:
   void show_error_message(const Glib::ustring& message, bool markup = false);
   Gtk::MessageDialog* show_confirm_dialog(const Glib::ustring& message, bool markup = false);
   void show_busy_install_dialog(const Glib::ustring& message);
-  void show_busy_install_dialog(Gtk::Window& parent, const Glib::ustring& message);
+  void show_busy_install_dialog(Gtk::Window* parent, const Glib::ustring& message);
   void close_busy_dialog();
 
   // Signal handlers

@@ -300,10 +300,10 @@ void MainWindow::show_busy_install_dialog(const Glib::ustring& message)
  * \param[in] parent Parent GTK Window (set to be the GTK transient for)
  * \param[in] message Given the user more information what is going on
  */
-void MainWindow::show_busy_install_dialog(Gtk::Window& parent, const Glib::ustring& message)
+void MainWindow::show_busy_install_dialog(Gtk::Window* parent, const Glib::ustring& message)
 {
   busy_dialog_.set_message("Installing software", message);
-  busy_dialog_.set_transient_for(parent);
+  busy_dialog_.set_transient_for(*parent);
   busy_dialog_.show();
 }
 
@@ -589,8 +589,7 @@ bool MainWindow::on_delete_window()
     window_settings->set_int("width", get_width());
     window_settings->set_int("height", get_height());
     window_settings->set_boolean("maximized", is_maximized());
-    // Fullscreen will be available with gtkmm-4.0
-    window_settings->set_boolean("fullscreen", is_fullscreen());
+    // window_settings->set_boolean("fullscreen", is_fullscreen());
     if (paned.get_position() > 0)
       window_settings->set_int("position-divider-paned", paned.get_position());
     if (container_paned.get_position() > 0)
@@ -953,13 +952,17 @@ void MainWindow::load_stored_window_settings()
 {
   // Load schema settings file
   auto schema_source = Gio::SettingsSchemaSource::get_default()->lookup("org.melroy.winegui", true);
+  // Can we find it?
   if (schema_source)
   {
     window_settings = Gio::Settings::create("org.melroy.winegui");
+
     // Apply global settings
     set_default_size(window_settings->get_int("width"), window_settings->get_int("height"));
     if (window_settings->get_boolean("maximized"))
       maximize();
+    // if (window_settings->get_boolean("fullscreen"))
+    //   fullscreen();
     int position_divider_paned = window_settings->get_int("position-divider-paned");
     paned.set_position(position_divider_paned);
     int position_divider_container_paned = window_settings->get_int("position-divider-container-paned");
@@ -1135,7 +1138,7 @@ void MainWindow::create_right_panel()
 
   // Windows version + bit os
   Gtk::Label("Windows:", Gtk::Align::START, Gtk::Align::CENTER);
-  Gtk::Label* window_version_text_label = Gtk::manage(new Gtk::Label("Windows:",  Gtk::Align::START, Gtk::Align::CENTER));
+  Gtk::Label* window_version_text_label = Gtk::manage(new Gtk::Label("Windows:", Gtk::Align::START, Gtk::Align::CENTER));
   // Label consumes 2 columns
   detail_grid.attach(*window_version_text_label, 0, 5, 2, 1);
   detail_grid.attach_next_to(window_version_label, *window_version_text_label, Gtk::PositionType::RIGHT, 1, 1);
@@ -1246,7 +1249,7 @@ void MainWindow::create_right_panel()
   // TODO: Migrate away from TreeView and use Gtk::ColumnView instead?
   // ColumnView should also give use cell data rendering functions support.?..
   // Gtk::TreeViewColumn::SlotTreeCellData cellDataSlot = sigc::bind(sigc::mem_fun(*this, &MainWindow::treeview_set_cell_data_name_desc));
-  //name_desc_column.set_cell_data_func(name_desc_renderer_text, cellDataSlot);
+  // name_desc_column.set_cell_data_func(name_desc_renderer_text, cellDataSlot);
 
   application_list_treeview.set_headers_visible(false);
   application_list_treeview.set_hover_selection(true);

@@ -13,6 +13,10 @@
       <default>false</default>
       <summary>Is window maximized</summary>
     </key>
+    <key name="fullscreen" type="b">
+      <default>false</default>
+      <summary>Is window fullscreen</summary>
+    </key>
     <key name="position-divider-paned" type="i">
       <default>320</default>
       <summary>The paned position</summary>
