@@ -30,7 +30,7 @@
 #include "bottle_manager.h"
 #include "helper.h"
 #include "main_window.h"
-#include "menu.h"
+// #include "menu.h"
 #include "preferences_window.h"
 #include "remove_app_window.h"
 
@@ -38,7 +38,7 @@
  * \brief Signal Dispatcher Constructor
  */
 SignalController::SignalController(BottleManager& manager,
-                                   Menu& menu,
+                                   /*Menu& menu,*/
                                    PreferencesWindow& preferences_window,
                                    AboutDialog& about_dialog,
                                    BottleEditWindow& edit_window,
@@ -49,7 +49,7 @@ SignalController::SignalController(BottleManager& manager,
                                    RemoveAppWindow& remove_app_window)
     : main_window_(nullptr),
       manager_(manager),
-      menu_(menu),
+      // menu_(menu), // For now disabled, until we know how to handle menu in GTK4
       preferences_window_(preferences_window),
       about_dialog_(about_dialog),
       edit_window_(edit_window),
@@ -92,22 +92,22 @@ void SignalController::set_main_window(MainWindow* main_window)
 void SignalController::dispatch_signals()
 {
   // Menu buttons
-  menu_.preferences.connect(sigc::mem_fun(preferences_window_, &PreferencesWindow::show));
-  menu_.quit.connect(
-      sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefore closes the app */
-  menu_.refresh_view.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
-  menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
-  menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
-  menu_.edit_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
-  menu_.clone_bottle.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::show));
-  menu_.configure_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::show));
-  menu_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
-  menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
-  menu_.open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
-  menu_.give_feedback.connect(sigc::mem_fun(*main_window_, &MainWindow::on_give_feedback));
-  menu_.list_issues.connect(sigc::mem_fun(*main_window_, &MainWindow::on_issue_tickets));
-  menu_.check_version.connect(sigc::mem_fun(main_window_, &MainWindow::on_check_version));
-  menu_.show_about.connect(sigc::mem_fun(about_dialog_, &AboutDialog::run_dialog));
+  // menu_.preferences.connect(sigc::mem_fun(preferences_window_, &PreferencesWindow::show));
+  // menu_.quit.connect(
+  //     sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefore closes the app */
+  // menu_.refresh_view.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
+  // menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
+  // menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
+  // menu_.edit_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
+  // menu_.clone_bottle.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::show));
+  // menu_.configure_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::show));
+  // menu_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
+  // menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
+  // menu_.open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
+  // menu_.give_feedback.connect(sigc::mem_fun(*main_window_, &MainWindow::on_give_feedback));
+  // menu_.list_issues.connect(sigc::mem_fun(*main_window_, &MainWindow::on_issue_tickets));
+  // menu_.check_version.connect(sigc::mem_fun(main_window_, &MainWindow::on_check_version));
+  // menu_.show_about.connect(sigc::mem_fun(about_dialog_, &AboutDialog::run_dialog));
   about_dialog_.signal_hide().connect(sigc::mem_fun(about_dialog_, &AboutDialog::hide_dialog));
 
   // Distribute the active bottle signal from Main Window
@@ -159,7 +159,7 @@ void SignalController::dispatch_signals()
   clone_window_.clone_bottle.connect(sigc::mem_fun(*this, &SignalController::on_clone_bottle));
 
   // Right click menu in listbox
-  main_window_->right_click_menu.connect(sigc::mem_fun(*this, &SignalController::on_mouse_button_pressed));
+  // main_window_->right_click_menu.connect(sigc::mem_fun(*this, &SignalController::on_mouse_button_pressed));
 
   // When bottle created, the finish (or error message) event is called
   bottle_created_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_new_bottle_created));
@@ -273,22 +273,22 @@ void SignalController::cleanup_bottle_manager_thread()
  * Dispatch events from Main Window *
  ************************************/
 
-bool SignalController::on_mouse_button_pressed(GdkEventButton* event)
-{
-  // Single click with right mouse button?
-  if (event->type == GDK_BUTTON_PRESS && event->button == 3)
-  {
-    Gtk::Menu* popup = menu_.get_machine_menu();
-    if (popup)
-    {
-      popup->popup(event->button, event->time);
-    }
-    return true;
-  }
+// bool SignalController::on_mouse_button_pressed(GdkEventButton* event)
+// {
+//   // Single click with right mouse button?
+//   if (event->type == GDK_BUTTON_PRESS && event->button == 3)
+//   {
+//     Gtk::Menu* popup = menu_.get_machine_menu();
+//     if (popup)
+//     {
+//       popup->popup(event->button, event->time);
+//     }
+//     return true;
+//   }
 
-  // Event has not been handled
-  return false;
-}
+//   // Event has not been handled
+//   return false;
+// }
 
 /**
  * \brief New Bottle signal, starting new_bottle() within thread

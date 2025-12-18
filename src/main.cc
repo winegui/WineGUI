@@ -26,7 +26,7 @@
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
 #include "main_window.h"
-#include "menu.h"
+// #include "menu.h"
 #include "preferences_window.h"
 #include "remove_app_window.h"
 #include "signal_controller.h"
@@ -62,18 +62,23 @@ int main(int argc, char* argv[])
   else
   {
     auto app = Gtk::Application::create("org.melroy.winegui");
-    // Setup
-    MainWindow& main_window = setupApplication();
+    app->signal_activate().connect([app]()
+    {
+      // Setup
+      MainWindow& main_window = setupApplication();
+      app->add_window(main_window);
+      main_window.show();
+    });
     // Start main loop of GTK
-    return app->run(main_window, argc, argv);
+    return app->run(argc, argv);
   }
 }
 
 static MainWindow& setupApplication()
 {
   // Constructing the top level objects:
-  static Menu menu;
-  static MainWindow main_window(menu);
+  // static Menu menu;
+  static MainWindow main_window; // menu
   static BottleManager manager(main_window);
   static PreferencesWindow preferences_window(main_window);
   static AboutDialog about_dialog(main_window);
@@ -83,7 +88,7 @@ static MainWindow& setupApplication()
   static BottleConfigureWindow settings_window(main_window);
   static AddAppWindow add_app_window(main_window);
   static RemoveAppWindow remove_app_window(main_window);
-  static SignalController signal_controller(manager, menu, preferences_window, about_dialog, edit_window, clone_window, settings_env_var_window,
+  static SignalController signal_controller(manager, /*menu,*/ preferences_window, about_dialog, edit_window, clone_window, settings_env_var_window,
                                             settings_window, add_app_window, remove_app_window);
 
   signal_controller.set_main_window(&main_window);

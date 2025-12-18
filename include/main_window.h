@@ -26,7 +26,7 @@
 #include "bottle_new_assistant.h"
 #include "busy_dialog.h"
 #include "general_config_struct.h"
-#include "menu.h"
+// #include "menu.h"
 #include <gtkmm.h>
 #include <iostream>
 #include <list>
@@ -63,7 +63,7 @@ public:
   sigc::signal<void()> kill_running_processes;     /*!< Kill all running processes signal */
   // sigc::signal<bool(GdkEventButton*)> right_click_menu; /*!< Right-mouse click in list box signal */
 
-  explicit MainWindow(Menu& menu);
+  explicit MainWindow(/*Menu& menu*/);
   virtual ~MainWindow();
 
   void set_wine_bottles(std::list<BottleItem>& bottles);
@@ -74,7 +74,7 @@ public:
   void show_info_message(const Glib::ustring& message, bool markup = false);
   void show_warning_message(const Glib::ustring& message, bool markup = false);
   void show_error_message(const Glib::ustring& message, bool markup = false);
-  bool show_confirm_dialog(const Glib::ustring& message, bool markup = false);
+  Gtk::MessageDialog* show_confirm_dialog(const Glib::ustring& message, bool markup = false);
   void show_busy_install_dialog(const Glib::ustring& message);
   void show_busy_install_dialog(Gtk::Window& parent, const Glib::ustring& message);
   void close_busy_dialog();
@@ -95,7 +95,7 @@ protected:
   void on_error_message_check_version();
   void on_info_message_check_version();
   void on_new_version_available();
-  bool on_delete_window(GdkEventAny* any_event);
+  bool on_delete_window();
 
   Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
   AppListModelColumns app_list_columns;        /*!< Application list model columns for app tree view */
@@ -116,7 +116,7 @@ protected:
   Gtk::Paned container_paned;                             /*!< Main container horizontal paned panel */
   Glib::RefPtr<Gtk::ListStore> app_list_tree_model;       /*!< Application list tree model (using a liststore)  */
   Glib::RefPtr<Gtk::TreeModelFilter> app_list_filter;     /*!< Tree model filter for app list  */
-  Gtk::Toolbar toolbar;                                   /*!< Toolbar at top */
+  Gtk::Box toolbar;                                       /*!< Toolbar at top */
   Gtk::Separator separator1;                              /*!< Separator */
   Gtk::Grid detail_grid;                                  /*!< Grid layout container to have multiple rows & columns below the toolbar */
   Gtk::TreeView application_list_treeview;                /*!< List of applications put inside a tree view */
@@ -139,16 +139,16 @@ protected:
   Gtk::Label description_label;       /*!< description text */
 
   // Toolbar buttons
-  Gtk::ToolButton new_button;            /*!< New toolbar button */
-  Gtk::ToolButton edit_button;           /*!< Edit toolbar button */
-  Gtk::ToolButton clone_button;          /*!< Clone toolbar button */
-  Gtk::ToolButton configure_button;      /*!< Configure toolbar button */
-  Gtk::ToolButton run_button;            /*!< Run... toolbar button */
-  Gtk::ToolButton open_c_driver_button;  /*!< Open C:\ drive toolbar button */
-  Gtk::ToolButton reboot_button;         /*!< Reboot toolbar button */
-  Gtk::ToolButton update_button;         /*!< Update toolbar button */
-  Gtk::ToolButton open_log_file_button;  /*!< Open log file toolbar button */
-  Gtk::ToolButton kill_processes_button; /*!< Kill processes toolbar button */
+  Gtk::Button new_button;            /*!< New toolbar button */
+  Gtk::Button edit_button;           /*!< Edit toolbar button */
+  Gtk::Button clone_button;          /*!< Clone toolbar button */
+  Gtk::Button configure_button;      /*!< Configure toolbar button */
+  Gtk::Button run_button;            /*!< Run... toolbar button */
+  Gtk::Button open_c_driver_button;  /*!< Open C:\ drive toolbar button */
+  Gtk::Button reboot_button;         /*!< Reboot toolbar button */
+  Gtk::Button update_button;         /*!< Update toolbar button */
+  Gtk::Button open_log_file_button;  /*!< Open log file toolbar button */
+  Gtk::Button kill_processes_button; /*!< Kill processes toolbar button */
 
   // Other various buttons
   Gtk::Button add_app_list_button;     /*!< Button that add shortcut item to application list */

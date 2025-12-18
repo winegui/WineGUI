@@ -51,10 +51,10 @@ BottleManager::BottleManager(MainWindow& main_window)
       error_message_winetricks_()
 {
   // Connect internal dispatcher(s)
-  update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(this, &BottleManager::update_config_and_bottles), "", false));
-  write_log_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::write_log_to_file));
-  error_message_winetricks_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::on_error_winetricks));
-  winetricks_finished_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::cleanup_install_update_winetricks_thread));
+  update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(*this, &BottleManager::update_config_and_bottles), "", false));
+  write_log_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::write_log_to_file));
+  error_message_winetricks_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::on_error_winetricks));
+  winetricks_finished_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::cleanup_install_update_winetricks_thread));
 }
 
 /**
@@ -669,17 +669,22 @@ void BottleManager::delete_bottle()
       Glib::ustring confirm_message = "Are you sure you want to <b>PERMANENTLY</b> remove machine named '" +
                                       Glib::Markup::escape_text(Helper::get_folder_name(prefix_path)) + "' running " + windows +
                                       "?\n\n<i>Note:</i> This action cannot be undone!";
-      if (main_window_.show_confirm_dialog(confirm_message, true))
-      {
-        // Signal that bottle is removed
-        bottle_removed.emit();
-        Helper::remove_wine_bottle(prefix_path);
-        this->update_config_and_bottles("", false);
-      }
-      else
-      {
-        // Nothing, canceled
-      }
+      auto dialog = main_window_.show_confirm_dialog(confirm_message, true);
+      dialog->signal_response().connect(
+          [this](int result)
+          {
+            if (result == Gtk::ResponseType::YES)
+            {
+              // Signal that bottle is removed
+              bottle_removed.emit();
+              Helper::remove_wine_bottle(active_bottle_->wine_location());
+              this->update_config_and_bottles("", false);
+            }
+            else
+            {
+              // no/canceled/closed, do nothing
+            }
+          });
     }
     catch (const std::runtime_error& error)
     {
@@ -1148,57 +1153,68 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
 {
   if (is_bottle_not_null())
   {
-    if (main_window_.show_confirm_dialog("<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
+    auto dialog =
+        main_window_.show_confirm_dialog("<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
                                          "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
-                                         true))
-    {
-      // Before we execute the install, show busy dialog
-      main_window_.show_busy_install_dialog(parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time!\n");
-
-      string deinstall_command = this->get_deinstall_mono_command();
-
-      string package = "dotnet" + version;
-      string wine_prefix = active_bottle_->wine_location();
-      bool is_debug_logging = active_bottle_->is_debug_logging();
-      int debug_log_level = active_bottle_->debug_log_level();
-      // I can't use -q with .NET installs
-      string install_command = Helper::get_winetricks_location() + " " + package;
-      string program = "";
-      if (!deinstall_command.empty())
-      {
-        // First deinstall Mono then install native .NET
-        program = deinstall_command + "; " + install_command;
-      }
-      else
-      {
-        program = install_command;
-      }
-      // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
-      std::thread t(
-          [wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
-           output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
-           output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
-           finish_dispatcher = &finished_package_install_dispatcher]
+                                         true);
+    dialog->signal_response().connect(
+        [this, &parent, version](int result)
+        {
+          switch (result)
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", {}, true, logging_stderr);
-            if (debug_logging && !output.empty())
+          case (Gtk::ResponseType::YES):
+          {
+            // Before we execute the install, show busy dialog
+            main_window_.show_busy_install_dialog(parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time!\n");
+
+            string deinstall_command = this->get_deinstall_mono_command();
+
+            string package = "dotnet" + version;
+            string wine_prefix = active_bottle_->wine_location();
+            bool is_debug_logging = active_bottle_->is_debug_logging();
+            int debug_log_level = active_bottle_->debug_log_level();
+            // I can't use -q with .NET installs
+            string install_command = Helper::get_winetricks_location() + " " + package;
+            string program = "";
+            if (!deinstall_command.empty())
             {
-              {
-                std::lock_guard<std::mutex> lock(output_logging_mutex);
-                logging_bottle_prefix.get() = wine_prefix;
-                output_logging.get() = output;
-              }
-              write_log_dispatcher->emit();
+              // First deinstall Mono then install native .NET
+              program = deinstall_command + "; " + install_command;
             }
-            Helper::wait_until_wineserver_is_terminated(wine_prefix);
-            finish_dispatcher->emit();
-          });
-      t.detach();
-    }
-    else
-    {
-      // Nothing, canceled
-    }
+            else
+            {
+              program = install_command;
+            }
+            // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
+            std::thread t(
+                [wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+                 output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+                 output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+                 finish_dispatcher = &finished_package_install_dispatcher]
+                {
+                  string output = Helper::run_program(wine_prefix, debug_log_level, program, "", {}, true, logging_stderr);
+                  if (debug_logging && !output.empty())
+                  {
+                    {
+                      std::lock_guard<std::mutex> lock(output_logging_mutex);
+                      logging_bottle_prefix.get() = wine_prefix;
+                      output_logging.get() = output;
+                    }
+                    write_log_dispatcher->emit();
+                  }
+                  Helper::wait_until_wineserver_is_terminated(wine_prefix);
+                  finish_dispatcher->emit();
+                });
+            t.detach();
+
+            // TODO: do something
+            break;
+          }
+          default:
+            // No or close, do nothing
+            break;
+          }
+        });
   }
 }
 

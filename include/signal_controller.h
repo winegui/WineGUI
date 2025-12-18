@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    signal_controller.h
  * \brief   Handles different GTK signals and dispatch or connect them to other methods/handlers within WineGUI
@@ -49,7 +49,7 @@ class SignalController : public Gtk::Window
 
 public:
   SignalController(BottleManager& manager,
-                   Menu& menu,
+                   /*Menu& menu,*/
                    PreferencesWindow& preferences_window,
                    AboutDialog& about_dialog,
                    BottleEditWindow& edit_window,
@@ -78,7 +78,7 @@ private:
   void cleanup_bottle_manager_thread();
 
   // slots
-  virtual bool on_mouse_button_pressed(GdkEventButton* event);
+  // virtual bool on_mouse_button_pressed(GdkEventButton* event);
   virtual void on_new_bottle(Glib::ustring& name,
                              BottleTypes::Windows windows_version,
                              BottleTypes::Bit bit,
@@ -96,7 +96,7 @@ private:
 
   MainWindow* main_window_;
   BottleManager& manager_;
-  Menu& menu_;
+  // Menu& menu_;
   PreferencesWindow& preferences_window_;
   AboutDialog& about_dialog_;
   BottleEditWindow& edit_window_;

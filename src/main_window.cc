@@ -34,7 +34,7 @@
 /**
  * \brief Constructor
  */
-MainWindow::MainWindow(Menu& menu)
+MainWindow::MainWindow(/*Menu& menu*/)
     : window_settings(),
       vbox(Gtk::Orientation::VERTICAL),
       paned(Gtk::Orientation::HORIZONTAL),
@@ -63,11 +63,25 @@ MainWindow::MainWindow(Menu& menu)
   // }
 
   // Add menu to box (top), no expand/fill
-  vbox.prepend(menu);
+  // There is no GTK::MenuBar anymore ;(
+  // vbox.prepend(menu);
 
   // Add paned to box (below menu)
   // NOTE: expand/fill = true
   vbox.append(paned);
+
+  // Label alignments
+  name_label.set_halign(Gtk::Align::START);
+  folder_name_label.set_halign(Gtk::Align::START);
+  window_version_label.set_halign(Gtk::Align::START);
+  c_drive_location_label.set_halign(Gtk::Align::START);
+  wine_version_label.set_halign(Gtk::Align::START);
+  wine_location_label.set_halign(Gtk::Align::START);
+  debug_log_level_label.set_halign(Gtk::Align::START);
+  wine_last_changed_label.set_halign(Gtk::Align::START);
+  audio_driver_label.set_halign(Gtk::Align::START);
+  virtual_desktop_label.set_halign(Gtk::Align::START);
+  description_label.set_halign(Gtk::Align::START);
 
   // Create rest to vbox
   create_left_panel();
@@ -130,8 +144,7 @@ MainWindow::MainWindow(Menu& menu)
   // Check for update without (error) messages, when app is idle
   Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &MainWindow::check_version_update), false), Glib::PRIORITY_DEFAULT_IDLE);
   // Window closed signal
-  // TODO: There is no close signal anymore on a window...
-  // signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::on_delete_window));
+  signal_close_request().connect(sigc::mem_fun(*this, &MainWindow::on_delete_window), false);
 }
 
 /**
@@ -258,43 +271,18 @@ void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
  * \brief Confirm dialog (Yes/No message)
  * \param[in] message Show this message during confirmation
  * \param[in] markup Support markup in message text (default: false)
- * \return True if user pressed confirm (yes), otherwise False
+ * \return Pointer to a newly allocated Gtk::MessageDialog that the caller must manage
  */
-bool MainWindow::show_confirm_dialog(const Glib::ustring& message, bool markup)
+Gtk::MessageDialog* MainWindow::show_confirm_dialog(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MessageType::QUESTION, Gtk::ButtonsType::YES_NO);
-  dialog.set_title("Are you sure?");
-  dialog.set_modal(true);
+  Gtk::MessageDialog* dialog = Gtk::manage(new Gtk::MessageDialog(*this, message, markup, Gtk::MessageType::QUESTION, Gtk::ButtonsType::YES_NO));
+  dialog->set_title("Are you sure?");
+  dialog->set_modal(true);
   // Non-blocking show
-  dialog.present();
+  dialog->present();
 
-  // Connect the response signal
-  dialog.signal_response().connect(
-      [this, &dialog](int result)
-      {
-        // Handle the response:
-        switch (result)
-        {
-        case (Gtk::ResponseType::YES):
-        {
-          // TODO: do something
-          break;
-        }
-        case (Gtk::ResponseType::NO):
-        {
-          // TODO: do something
-          break;
-        }
-        default:
-        {
-          // Unexpected button, ignore
-          break;
-        }
-        }
-      });
-
-  // TODO: Should we return the dialog itself?!?
-  return false;
+  // Return the dialog pointer
+  return dialog;
 }
 
 /**
@@ -593,7 +581,7 @@ void MainWindow::on_new_version_available()
 /**
  * \brief Called when Window is closed/exited
  */
-bool MainWindow::on_delete_window(GdkEventAny* any_event __attribute__((unused)))
+bool MainWindow::on_delete_window()
 {
   if (window_settings)
   {
@@ -1010,88 +998,92 @@ void MainWindow::create_right_panel()
    * Toolbar section
    * TODO: Make it configurable to only show icons, text or both using preferences
    */
-  toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
+  toolbar.set_spacing(2);
+  toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
 
   // Buttons in toolbar
-  Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
-  new_image->set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // TODO: Comment out the images for now, and see if set_icon_name works good enough.
+  // Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
+  // new_image->set_from_icon_name("list-add");
+  // new_image->set_icon_size(Gtk::IconSize::LARGE);
   new_button.set_label("New");
   new_button.set_tooltip_text("Create a new machine!");
-  new_button.set_icon_widget(*new_image);
-  new_button.set_homogeneous(false);
-  toolbar.insert(new_button, 0);
+  new_button.set_icon_name("list-add");
+  // THis is not possible anymore, if set_icon_name is not ideal, we can try to use set_child to set the GTK::Image?
+  // new_button.set_icon_widget(*new_image);
+  toolbar.append(new_button);
 
-  Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
-  edit_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
+  // edit_image->set_from_icon_name("document-edit");
+  // edit_image->set_icon_size(Gtk::IconSize::LARGE);
   edit_button.set_label("Edit");
   edit_button.set_tooltip_text("Edit Wine Machine");
-  edit_button.set_icon_widget(*edit_image);
-  edit_button.set_homogeneous(false);
-  toolbar.insert(edit_button, 1);
+  edit_button.set_icon_name("document-edit");
+  toolbar.append(edit_button);
 
-  Gtk::Image* clone_image = Gtk::manage(new Gtk::Image());
-  clone_image->set_from_icon_name("edit-copy", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* clone_image = Gtk::manage(new Gtk::Image());
+  // clone_image->set_from_icon_name("edit-copy");
+  // clone_image->set_icon_size(Gtk::IconSize::LARGE);
   clone_button.set_label("Clone");
+  clone_button.set_icon_name("edit-copy");
   clone_button.set_tooltip_text("Clone Wine Machine");
-  clone_button.set_icon_widget(*clone_image);
-  clone_button.set_homogeneous(false);
-  toolbar.insert(clone_button, 2);
+  toolbar.append(clone_button);
 
-  Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
-  manage_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
+  // manage_image->set_from_icon_name("preferences-other");
+  // manage_image->set_icon_size(Gtk::IconSize::LARGE);
   configure_button.set_label("Configure");
+  clone_button.set_icon_name("preferences-other");
   configure_button.set_tooltip_text("Install additional packages");
-  configure_button.set_icon_widget(*manage_image);
-  configure_button.set_homogeneous(false);
-  toolbar.insert(configure_button, 3);
+  toolbar.append(configure_button);
 
-  Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
-  run_image->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
+  // run_image->set_from_icon_name("media-playback-start");
+  // run_image->set_icon_size(Gtk::IconSize::LARGE);
   run_button.set_label("Run Program...");
+  clone_button.set_icon_name("media-playback-start");
   run_button.set_tooltip_text("Run exe or msi in Wine Machine");
-  run_button.set_icon_widget(*run_image);
-  run_button.set_homogeneous(false);
-  toolbar.insert(run_button, 4);
+  toolbar.append(run_button);
 
-  Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
-  open_c_drive_image->set_from_icon_name("drive-harddisk", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
+  // open_c_drive_image->set_from_icon_name("drive-harddisk");
+  // open_c_drive_image->set_icon_size(Gtk::IconSize::LARGE);
   open_c_driver_button.set_label("Open C: Drive");
+  clone_button.set_icon_name("drive-harddisk");
   open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
-  open_c_driver_button.set_icon_widget(*open_c_drive_image);
-  open_c_driver_button.set_homogeneous(false);
-  toolbar.insert(open_c_driver_button, 5);
+  toolbar.append(open_c_driver_button);
 
-  Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
-  reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
+  // reboot_image->set_from_icon_name("view-refresh");
+  // reboot_image->set_icon_size(Gtk::IconSize::LARGE);
   reboot_button.set_label("Reboot");
+  clone_button.set_icon_name("view-refresh");
   reboot_button.set_tooltip_text("Simulate Machine Reboot");
-  reboot_button.set_icon_widget(*reboot_image);
-  reboot_button.set_homogeneous(false);
-  toolbar.insert(reboot_button, 6);
+  toolbar.append(reboot_button);
 
-  Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
-  update_image->set_from_icon_name("system-software-update", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
+  // update_image->set_from_icon_name("system-software-update");
+  // update_image->set_icon_size(Gtk::IconSize::LARGE);
   update_button.set_label("Update Config");
+  clone_button.set_icon_name("system-software-update");
   update_button.set_tooltip_text("Update the Wine Machine configuration");
-  update_button.set_icon_widget(*update_image);
-  update_button.set_homogeneous(false);
-  toolbar.insert(update_button, 7);
+  toolbar.append(update_button);
 
-  Gtk::Image* open_log_file_image = Gtk::manage(new Gtk::Image());
-  open_log_file_image->set_from_icon_name("text-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* open_log_file_image = Gtk::manage(new Gtk::Image());
+  // open_log_file_image->set_from_icon_name("text-x-generic");
+  // open_log_file_image->set_icon_size(Gtk::IconSize::LARGE);
   open_log_file_button.set_label("Open Log");
+  clone_button.set_icon_name("text-x-generic");
   open_log_file_button.set_tooltip_text("Open debug logging file");
-  open_log_file_button.set_icon_widget(*open_log_file_image);
-  open_log_file_button.set_homogeneous(false);
-  toolbar.insert(open_log_file_button, 8);
+  toolbar.append(open_log_file_button);
 
-  Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
-  kill_processes_image->set_from_icon_name("process-stop", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
+  // kill_processes_image->set_from_icon_name("process-stop");
+  // kill_processes_image->set_icon_size(Gtk::IconSize::LARGE);
   kill_processes_button.set_label("Kill Processes");
+  clone_button.set_icon_name("process-stop");
   kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
-  kill_processes_button.set_icon_widget(*kill_processes_image);
-  kill_processes_button.set_homogeneous(false);
-  toolbar.insert(kill_processes_button, 9);
+  toolbar.append(kill_processes_button);
 
   // Add toolbar to right box
   right_vbox.append(toolbar);
@@ -1111,21 +1103,21 @@ void MainWindow::create_right_panel()
 
   // General heading
   Gtk::Image* general_icon = Gtk::manage(new Gtk::Image());
-  general_icon->set_from_icon_name("dialog-information", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  // TODO:  Gtk::IconSize(Gtk::ICON_SIZE_MENU) is just removed from set_from_icon_name in gtkmm-4.0
+  general_icon->set_from_icon_name("dialog-information");
+  general_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* general_label = Gtk::manage(new Gtk::Label());
   general_label->set_markup("<b>General</b>");
   detail_grid.attach(*general_icon, 0, 0, 1, 1);
   detail_grid.attach_next_to(*general_label, *general_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Bottle Name
-  Gtk::Label* name_text_label = Gtk::manage(new Gtk::Label("Name:", 0.0, -1));
-  name_label.set_halign(Gtk::Align::START);
+  Gtk::Label* name_text_label = Gtk::manage(new Gtk::Label("Name:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*name_text_label, 0, 1, 2, 1);
   detail_grid.attach_next_to(name_label, *name_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Folder Name
-  Gtk::Label* folder_name_text_label = Gtk::manage(new Gtk::Label("Folder Name:", 0.0, -1));
-  folder_name_label.set_halign(Gtk::Align::START);
+  Gtk::Label* folder_name_text_label = Gtk::manage(new Gtk::Label("Folder Name:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*folder_name_text_label, 0, 2, 2, 1);
   detail_grid.attach_next_to(folder_name_label, *folder_name_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End General
@@ -1133,22 +1125,23 @@ void MainWindow::create_right_panel()
 
   // System heading
   Gtk::Image* system_icon = Gtk::manage(new Gtk::Image());
-  system_icon->set_from_icon_name("computer", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  // TODO:  Gtk::IconSize(Gtk::ICON_SIZE_MENU) is just removed from set_from_icon_name in gtkmm-4.0
+  system_icon->set_from_icon_name("computer");
+  system_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* system_label = Gtk::manage(new Gtk::Label());
   system_label->set_markup("<b>System</b>");
   detail_grid.attach(*system_icon, 0, 4, 1, 1);
   detail_grid.attach_next_to(*system_label, *system_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Windows version + bit os
-  Gtk::Label* window_version_text_label = Gtk::manage(new Gtk::Label("Windows:", 0.0, -1));
-  window_version_label.set_halign(Gtk::Align::START);
+  Gtk::Label("Windows:", Gtk::Align::START, Gtk::Align::CENTER);
+  Gtk::Label* window_version_text_label = Gtk::manage(new Gtk::Label("Windows:",  Gtk::Align::START, Gtk::Align::CENTER));
   // Label consumes 2 columns
   detail_grid.attach(*window_version_text_label, 0, 5, 2, 1);
   detail_grid.attach_next_to(window_version_label, *window_version_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // C:\ drive location
-  Gtk::Label* c_drive_location_text_label = Gtk::manage(new Gtk::Label("C: Drive Location:", 0.0, -1));
-  c_drive_location_label.set_halign(Gtk::Align::START);
+  Gtk::Label* c_drive_location_text_label = Gtk::manage(new Gtk::Label("C: Drive Location:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*c_drive_location_text_label, 0, 6, 2, 1);
   detail_grid.attach_next_to(c_drive_location_label, *c_drive_location_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End system
@@ -1156,34 +1149,31 @@ void MainWindow::create_right_panel()
 
   // Wine heading
   Gtk::Image* wine_icon = Gtk::manage(new Gtk::Image());
-  wine_icon->set_from_icon_name("dialog-information", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  wine_icon->set_from_icon_name("dialog-information");
+  wine_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* wine_label = Gtk::manage(new Gtk::Label());
   wine_label->set_markup("<b>Wine details</b>");
   detail_grid.attach(*wine_icon, 0, 8, 1, 1);
   detail_grid.attach_next_to(*wine_label, *wine_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine version
-  Gtk::Label* wine_version_text_label = Gtk::manage(new Gtk::Label("Wine Version:", 0.0, -1));
-  wine_version_label.set_halign(Gtk::Align::START);
+  Gtk::Label* wine_version_text_label = Gtk::manage(new Gtk::Label("Wine Version:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*wine_version_text_label, 0, 9, 2, 1);
   detail_grid.attach_next_to(wine_version_label, *wine_version_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine debug log level
-  Gtk::Label* wine_log_level_text_label = Gtk::manage(new Gtk::Label("Log level:", 0.0, -1));
-  debug_log_level_label.set_halign(Gtk::Align::START);
+  Gtk::Label* wine_log_level_text_label = Gtk::manage(new Gtk::Label("Log level:", Gtk::Align::START, Gtk::Align::CENTER));
   debug_log_level_label.set_tooltip_text("Enable debug logging in Edit Window");
   detail_grid.attach(*wine_log_level_text_label, 0, 10, 2, 1);
   detail_grid.attach_next_to(debug_log_level_label, *wine_log_level_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine location
-  Gtk::Label* wine_location_text_label = Gtk::manage(new Gtk::Label("Wine Location:", 0.0, -1));
-  wine_location_label.set_halign(Gtk::Align::START);
+  Gtk::Label* wine_location_text_label = Gtk::manage(new Gtk::Label("Wine Location:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*wine_location_text_label, 0, 11, 2, 1);
   detail_grid.attach_next_to(wine_location_label, *wine_location_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine last changed
-  Gtk::Label* wine_last_changed_text_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", 0.0, -1));
-  wine_last_changed_label.set_halign(Gtk::Align::START);
+  Gtk::Label* wine_last_changed_text_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*wine_last_changed_text_label, 0, 12, 2, 1);
   detail_grid.attach_next_to(wine_last_changed_label, *wine_last_changed_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Wine
@@ -1191,15 +1181,15 @@ void MainWindow::create_right_panel()
 
   // Audio heading
   Gtk::Image* audio_icon = Gtk::manage(new Gtk::Image());
-  audio_icon->set_from_icon_name("audio-speakers", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  audio_icon->set_from_icon_name("audio-speakers");
+  audio_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* audio_text_label = Gtk::manage(new Gtk::Label());
   audio_text_label->set_markup("<b>Audio</b>");
   detail_grid.attach(*audio_icon, 0, 14, 1, 1);
   detail_grid.attach_next_to(*audio_text_label, *audio_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Audio driver
-  Gtk::Label* audio_driver_text_label = Gtk::manage(new Gtk::Label("Audio Driver:", 0.0, -1));
-  audio_driver_label.set_halign(Gtk::Align::START);
+  Gtk::Label* audio_driver_text_label = Gtk::manage(new Gtk::Label("Audio Driver:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*audio_driver_text_label, 0, 15, 2, 1);
   detail_grid.attach_next_to(audio_driver_label, *audio_driver_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Audio driver
@@ -1207,15 +1197,15 @@ void MainWindow::create_right_panel()
 
   // Display heading
   Gtk::Image* display_icon = Gtk::manage(new Gtk::Image());
-  display_icon->set_from_icon_name("view-fullscreen", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  display_icon->set_from_icon_name("view-fullscreen");
+  display_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* display_text_label = Gtk::manage(new Gtk::Label());
   display_text_label->set_markup("<b>Display</b>");
   detail_grid.attach(*display_icon, 0, 17, 1, 1);
   detail_grid.attach_next_to(*display_text_label, *display_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Virtual Desktop
-  Gtk::Label* virtual_desktop_text_label = Gtk::manage(new Gtk::Label("Virtual Desktop\n(Windowed Mode):", 0.0, -1));
-  virtual_desktop_label.set_halign(Gtk::Align::START);
+  Gtk::Label* virtual_desktop_text_label = Gtk::manage(new Gtk::Label("Virtual Desktop\n(Windowed Mode):", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*virtual_desktop_text_label, 0, 18, 2, 1);
   detail_grid.attach_next_to(virtual_desktop_label, *virtual_desktop_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Display
@@ -1223,14 +1213,14 @@ void MainWindow::create_right_panel()
 
   // Description heading
   Gtk::Image* description_icon = Gtk::manage(new Gtk::Image());
-  description_icon->set_from_icon_name("user-available", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  description_icon->set_from_icon_name("user-available");
+  description_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* description_text_label = Gtk::manage(new Gtk::Label());
   description_text_label->set_markup("<b>Description</b>");
   detail_grid.attach(*description_icon, 0, 20, 1, 1);
   detail_grid.attach_next_to(*description_text_label, *description_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Description text
-  description_label.set_halign(Gtk::Align::START);
   detail_grid.attach(description_label, 0, 21, 3, 1);
   // End Description
 
@@ -1252,7 +1242,11 @@ void MainWindow::create_right_panel()
   name_desc_column.pack_start(name_desc_renderer_text);
   application_list_treeview.append_column("icon", app_list_columns.icon); // TODO: Add spacing, maybe also use a custom method like below
   application_list_treeview.append_column(name_desc_column);
-  name_desc_column.set_cell_data_func(name_desc_renderer_text, sigc::mem_fun(*this, &MainWindow::treeview_set_cell_data_name_desc));
+
+  // TODO: Migrate away from TreeView and use Gtk::ColumnView instead?
+  // ColumnView should also give use cell data rendering functions support.?..
+  // Gtk::TreeViewColumn::SlotTreeCellData cellDataSlot = sigc::bind(sigc::mem_fun(*this, &MainWindow::treeview_set_cell_data_name_desc));
+  //name_desc_column.set_cell_data_func(name_desc_renderer_text, cellDataSlot);
 
   application_list_treeview.set_headers_visible(false);
   application_list_treeview.set_hover_selection(true);
@@ -1274,7 +1268,8 @@ void MainWindow::create_right_panel()
 
   // Add application header text
   Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
-  application_icon->set_from_icon_name("application-x-executable", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  application_icon->set_from_icon_name("application-x-executable");
+  application_icon->set_icon_size(Gtk::IconSize::NORMAL);
   application_icon->set_margin_bottom(6);
   Gtk::Label* application_label = Gtk::manage(new Gtk::Label());
   application_label->set_markup("<b>Applications</b>");
@@ -1286,28 +1281,32 @@ void MainWindow::create_right_panel()
   application_box->set_halign(Gtk::Align::FILL);
 
   // App list add shortcut button
-  Gtk::Image* add_app_list_image = Gtk::manage(new Gtk::Image());
-  add_app_list_image->set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // TODO: Lets see if set_icon_name is good enough or we need to use set_child with a GTK::Image again.
+  // Gtk::Image* add_app_list_image = Gtk::manage(new Gtk::Image());
+  // add_app_list_image->set_from_icon_name("list-add");
+  // add_app_list_image->set_icon_size(Gtk::IconSize::LARGE);
   add_app_list_button.set_tooltip_text("Add shortcut to application list");
-  add_app_list_button.set_image(*add_app_list_image);
+  add_app_list_button.set_icon_name("list-add");
   add_app_list_button.set_margin_top(6);
   add_app_list_button.set_margin_bottom(6);
   add_app_list_button.set_margin_end(6);
 
   // App list remove shortcut button
-  Gtk::Image* remove_app_list_image = Gtk::manage(new Gtk::Image());
-  remove_app_list_image->set_from_icon_name("list-remove", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* remove_app_list_image = Gtk::manage(new Gtk::Image());
+  // remove_app_list_image->set_from_icon_name("list-remove");
+  // remove_app_list_image->set_icon_size(Gtk::IconSize::LARGE);
   remove_app_list_button.set_tooltip_text("Remove shortcut from application list");
-  remove_app_list_button.set_image(*remove_app_list_image);
+  remove_app_list_button.set_icon_name("list-remove");
   remove_app_list_button.set_margin_top(6);
   remove_app_list_button.set_margin_bottom(6);
   remove_app_list_button.set_margin_end(6);
 
   // App list refresh button
-  Gtk::Image* refresh_app_list_image = Gtk::manage(new Gtk::Image());
-  refresh_app_list_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
+  // Gtk::Image* refresh_app_list_image = Gtk::manage(new Gtk::Image());
+  // refresh_app_list_image->set_from_icon_name("view-refresh");
+  // refresh_app_list_image->set_icon_size(Gtk::IconSize::LARGE);
   refresh_app_list_button.set_tooltip_text("Refresh application list");
-  refresh_app_list_button.set_image(*refresh_app_list_image);
+  refresh_app_list_button.set_icon_name("view-refresh");
   refresh_app_list_button.set_margin_top(6);
   refresh_app_list_button.set_margin_bottom(6);
   refresh_app_list_button.set_margin_end(6);
@@ -1375,7 +1374,8 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
   if (current == NULL)
   {
     current = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
-    gtk_widget_show(current);
+    // TODO: It shows automatically in gtk4?
+    // gtk_widget_show(current);
     gtk_list_box_row_set_header(row, current);
   }
 }
@@ -1404,10 +1404,10 @@ bool MainWindow::app_list_visible_func(const Gtk::TreeModel::const_iterator& ite
 /**
  * \brief Render name + description text
  */
-void MainWindow::treeview_set_cell_data_name_desc(Gtk::CellRenderer* renderer, const Gtk::TreeModel::iterator& iter)
+void MainWindow::treeview_set_cell_data_name_desc(Gtk::CellRenderer* cell, const Gtk::TreeModel::iterator& iter)
 {
   // cppcheck-suppress dangerousTypeCast
-  Gtk::CellRendererText* text_renderer = (Gtk::CellRendererText*)renderer;
+  Gtk::CellRendererText* text_renderer = (Gtk::CellRendererText*)cell;
   Glib::ustring name = "<b>" + (*iter)[app_list_columns.name] + "</b>\n";
   name += (*iter)[app_list_columns.description];
   text_renderer->property_markup().set_value(name);
