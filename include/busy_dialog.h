@@ -25,10 +25,10 @@
 using std::string;
 
 /**
- * \class BusyDialog
- * \brief GTK+ Window class for the settings
+ * \class Busy Dialog
+ * \brief GTK Window class for the busy dialog, which shows a loading bar and a message
  */
-class BusyDialog : public Gtk::Dialog
+class BusyDialog : public Gtk::Window
 {
 public:
   explicit BusyDialog(Gtk::Window& parent);

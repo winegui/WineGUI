@@ -24,8 +24,9 @@
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), default_parent_(parent)
+BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Window(), default_parent_(parent)
 {
+  set_title("Applying Changes...");
   set_transient_for(parent);
   set_default_size(400, 120);
   set_modal(true);
@@ -37,17 +38,25 @@ BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), d
   loading_bar.set_pulse_step(0.3);
   loading_bar.set_hexpand(true);
 
-  // create a vbox on the fly and add it to the dialog content area
-  Gtk::Box* box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
-  box->set_margin_top(10);
-  box->set_margin_start(10);
-  box->set_margin_bottom(10);
-  box->set_margin_end(10);
+  Gtk::Box* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
+  vbox->set_margin_top(10);
+  vbox->set_margin_start(10);
+  vbox->set_margin_bottom(10);
+  vbox->set_margin_end(10);
 
-  box->prepend(heading_label);
-  box->prepend(message_label);
-  box->prepend(loading_bar);
-  set_child(*box);
+  vbox->prepend(heading_label);
+  vbox->prepend(message_label);
+  vbox->prepend(loading_bar);
+  set_child(*vbox);
+
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        close();
+        return true; // stop default destroy
+      },
+      false);
 }
 
 /**
@@ -80,11 +89,11 @@ void BusyDialog::show()
 
   int time_interval = 200;
   timer_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BusyDialog::pulsing), time_interval);
-  Gtk::Dialog::present();
+  present();
 }
 
 /**
- * \brief Close the busy dialog (override the close(), calls parent close())
+ * \brief Close the busy dialog (override the close(), calls parent hide())
  */
 void BusyDialog::close()
 {
@@ -96,7 +105,7 @@ void BusyDialog::close()
   {
     timer_.disconnect();
   }
-  Gtk::Dialog::close();
+  hide();
 }
 
 /**

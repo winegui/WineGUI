@@ -47,8 +47,16 @@ BottleNewAssistant::BottleNewAssistant()
   set_modal(true);
 
   vbox.set_margin(8);
+  vbox.set_hexpand(true);
+  vbox.set_vexpand(true);
   vbox2.set_margin(8);
+  vbox2.set_hexpand(true);
+  vbox2.set_vexpand(true);
   vbox3.set_margin(8);
+  vbox3.set_hexpand(true);
+  vbox3.set_vexpand(true);
+  vbox3.set_halign(Gtk::Align::CENTER);
+  vbox3.set_valign(Gtk::Align::CENTER);
 
   // Create pages
   create_first_page();
@@ -186,9 +194,6 @@ void BottleNewAssistant::create_second_page()
  */
 void BottleNewAssistant::create_third_page()
 {
-  vbox3.set_halign(Gtk::Align::CENTER);
-  vbox3.set_valign(Gtk::Align::CENTER);
-
   vbox3.append(apply_label);
   vbox3.append(loading_bar);
   append_page(vbox3);

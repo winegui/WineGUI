@@ -272,7 +272,7 @@ void BottleEditWindow::reset_active_bottle()
  */
 void BottleEditWindow::bottle_removed()
 {
-  hide(); // Close the edit window
+  hide(); // Hide the edit window
 }
 
 /**
@@ -281,7 +281,7 @@ void BottleEditWindow::bottle_removed()
 void BottleEditWindow::on_bottle_updated()
 {
   busy_dialog.hide();
-  hide(); // Close the edit Window
+  hide(); // Hide the edit Window
 }
 
 /**

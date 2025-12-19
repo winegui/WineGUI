@@ -25,6 +25,7 @@
 #include "bottle_item.h"
 #include "bottle_new_assistant.h"
 #include "busy_dialog.h"
+#include "dialog_window.h"
 #include "general_config_struct.h"
 // #include "menu.h"
 #include <gtkmm.h>
@@ -74,7 +75,7 @@ public:
   void show_info_message(const Glib::ustring& message, bool markup = false);
   void show_warning_message(const Glib::ustring& message, bool markup = false);
   void show_error_message(const Glib::ustring& message, bool markup = false);
-  Gtk::MessageDialog* show_confirm_dialog(const Glib::ustring& message, bool markup = false);
+  DialogWindow* show_confirm_dialog(const Glib::ustring& message, bool markup = false);
   void show_busy_install_dialog(const Glib::ustring& message);
   void show_busy_install_dialog(Gtk::Window* parent, const Glib::ustring& message);
   void close_busy_dialog();
@@ -155,9 +156,13 @@ protected:
   Gtk::Button remove_app_list_button;  /*!< Button that remove shortcut item to application list */
   Gtk::Button refresh_app_list_button; /*!< Button that refreshes the application list */
 
-  // Busy dialog
-  BusyDialog busy_dialog_; /*!< Busy dialog, when the user should wait until install is finished */
 private:
+  // Dialogs
+  BusyDialog busy_dialog_;                 /*!< Busy dialog, when the user should wait until install is finished */
+  DialogWindow info_dialog_;               /*!< Info dialog, showing an info message */
+  DialogWindow warning_dialog_;            /*!< Warning dialog, showing a warning message */
+  DialogWindow error_dialog_;              /*!< Error dialog, showing an error message */
+  DialogWindow question_dialog_;           /*!< Question dialog, showing a question message (yes/no) */
   mutable std::mutex info_message_mutex_;  /*!< Synchronizes access to info message using mutex */
   mutable std::mutex error_message_mutex_; /*!< Synchronizes access to error message using mutex */
   mutable std::mutex new_version_mutex_;   /*!< Synchronizes access to new version using mutex */

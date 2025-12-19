@@ -44,6 +44,10 @@ MainWindow::MainWindow(/*Menu& menu*/)
       container_paned(Gtk::Orientation::HORIZONTAL),
       separator1(Gtk::Orientation::HORIZONTAL),
       busy_dialog_(*this),
+      info_dialog_(*this, DialogWindow::DialogType::INFO),
+      warning_dialog_(*this, DialogWindow::DialogType::WARNING),
+      error_dialog_(*this, DialogWindow::DialogType::ERROR),
+      question_dialog_(*this, DialogWindow::DialogType::QUESTION),
       unknown_menu_item_name_("- Unknown menu item -"),
       unknown_desktop_item_name_("- Unknown desktop item -"),
       thread_check_version_(nullptr)
@@ -235,10 +239,9 @@ void MainWindow::set_general_config(const GeneralConfigData& config_data)
  */
 void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MessageType::INFO, Gtk::ButtonsType::OK);
-  dialog.set_title("Information message");
-  dialog.set_modal(true);
-  dialog.present();
+  info_dialog_.set_message(message, markup);
+  // Non-blocking show
+  info_dialog_.present();
 }
 
 /**
@@ -248,10 +251,9 @@ void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
  */
 void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MessageType::WARNING, Gtk::ButtonsType::OK);
-  dialog.set_title("Warning message");
-  dialog.set_modal(true);
-  dialog.present();
+  warning_dialog_.set_message(message, markup);
+  // Non-blocking show
+  warning_dialog_.present();
 }
 
 /**
@@ -261,10 +263,9 @@ void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
  */
 void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
-  dialog.set_title("An error has occurred!");
-  dialog.set_modal(true);
-  dialog.present();
+  error_dialog_.set_message(message, markup);
+  // Non-blocking show
+  error_dialog_.present();
 }
 
 /**
@@ -273,16 +274,14 @@ void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
  * \param[in] markup Support markup in message text (default: false)
  * \return Pointer to a newly allocated Gtk::MessageDialog that the caller must manage
  */
-Gtk::MessageDialog* MainWindow::show_confirm_dialog(const Glib::ustring& message, bool markup)
+DialogWindow* MainWindow::show_confirm_dialog(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog* dialog = Gtk::manage(new Gtk::MessageDialog(*this, message, markup, Gtk::MessageType::QUESTION, Gtk::ButtonsType::YES_NO));
-  dialog->set_title("Are you sure?");
-  dialog->set_modal(true);
+  question_dialog_.set_message(message, markup);
+  question_dialog_.set_title("Are you sure?");
+  question_dialog_.set_modal(true);
   // Non-blocking show
-  dialog->present();
-
-  // Return the dialog pointer
-  return dialog;
+  question_dialog_.present();
+  return &question_dialog_;
 }
 
 /**
@@ -292,7 +291,7 @@ Gtk::MessageDialog* MainWindow::show_confirm_dialog(const Glib::ustring& message
 void MainWindow::show_busy_install_dialog(const Glib::ustring& message)
 {
   busy_dialog_.set_message("Installing software", message);
-  busy_dialog_.show();
+  busy_dialog_.present();
 }
 
 /**
@@ -304,7 +303,7 @@ void MainWindow::show_busy_install_dialog(Gtk::Window* parent, const Glib::ustri
 {
   busy_dialog_.set_message("Installing software", message);
   busy_dialog_.set_transient_for(*parent);
-  busy_dialog_.show();
+  busy_dialog_.present();
 }
 
 /**

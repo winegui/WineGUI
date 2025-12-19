@@ -83,6 +83,7 @@ set(HEADERS
   include/bottle_configure_env_var_window.h
   include/bottle_configure_window.h
   include/busy_dialog.h
+  include/dialog_window.h
   include/bottle_manager.h
   include/bottle_config_file.h
   include/bottle_item.h
@@ -105,6 +106,7 @@ set(SOURCES
   src/bottle_configure_env_var_window.cc
   src/bottle_configure_window.cc
   src/busy_dialog.cc
+  src/dialog_window.cc
   src/bottle_manager.cc
   src/bottle_config_file.cc
   src/bottle_item.cc
