@@ -669,25 +669,18 @@ void BottleManager::delete_bottle()
       Glib::ustring confirm_message = "Are you sure you want to <b>PERMANENTLY</b> remove machine named '" +
                                       Glib::Markup::escape_text(Helper::get_folder_name(prefix_path)) + "' running " + windows +
                                       "?\n\n<i>Note:</i> This action cannot be undone!";
-      auto dialog = main_window_.show_confirm_dialog(confirm_message, true);
-      // TODO: DO not subscribe multiple times to the same signal... we need to deal with this differnetly.. or create a managed dialog.. and close it
-      // fully (instead of hide).
+      auto dialog = main_window_.show_question_dialog(confirm_message, true);
       dialog->signal_response.connect(
           [this, prefix_path](DialogWindow::ResponseType result)
           {
             if (result == DialogWindow::ResponseType::YES)
             {
-              std::cout << "Removing bottle.. " << bottle_location_ << "/" << Helper::get_folder_name(prefix_path) << std::endl;
               // Signal that bottle is removed (which only closes the edit window)
               bottle_removed.emit();
               // Remove the actual bottle
               Helper::remove_wine_bottle(prefix_path);
               // Update the config and bottles listing
               this->update_config_and_bottles("", false);
-            }
-            else
-            {
-              // no/canceled/closed, do nothing
             }
           });
     }
@@ -1159,15 +1152,13 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
   if (is_bottle_not_null())
   {
     auto dialog =
-        main_window_.show_confirm_dialog("<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
-                                         "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
-                                         true);
+        main_window_.show_question_dialog("<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
+                                          "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
+                                          true);
     dialog->signal_response.connect(
         [this, &parent, version](DialogWindow::ResponseType result)
         {
-          switch (result)
-          {
-          case (DialogWindow::ResponseType::YES):
+          if (result == DialogWindow::ResponseType::YES)
           {
             // Before we execute the install, show busy dialog
             main_window_.show_busy_install_dialog(parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time!\n");
@@ -1211,11 +1202,6 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
                   finish_dispatcher->emit();
                 });
             t.detach();
-            break;
-          }
-          default:
-            // No or close, do nothing
-            break;
           }
         });
   }

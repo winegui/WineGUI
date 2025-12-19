@@ -21,7 +21,16 @@
 #include "dialog_window.h"
 #include "gtkmm/enums.h"
 
-DialogWindow::DialogWindow(Gtk::Window& parent, DialogType type)
+/**
+ * Constructor, creates a dialog window with a title, message, icon and an OK button.
+ * Important: In case of a dialog type QUESTION the dialog will close (destroy) itself.
+ *
+ * \param[in] parent - The parent window
+ * \param[in] type - The dialog type (if type is QUESTION, only yes/no buttons are shown)
+ * \param[in] message - The message to display (default is empty string)
+ * \param[in] markup - Whether to use markup (default is false)
+ */
+DialogWindow::DialogWindow(Gtk::Window& parent, DialogType type, const Glib::ustring& message, bool markup)
     : vbox(Gtk::Orientation::VERTICAL, 12),
       hbox_icon_and_text(Gtk::Orientation::HORIZONTAL, 18),
       hbox_buttons(Gtk::Orientation::HORIZONTAL, 6),
@@ -33,6 +42,7 @@ DialogWindow::DialogWindow(Gtk::Window& parent, DialogType type)
 {
   set_default_size(520, 180);
 
+  set_message(message, markup);
   set_transient_for(parent);
   set_modal(true);
 
@@ -44,15 +54,15 @@ DialogWindow::DialogWindow(Gtk::Window& parent, DialogType type)
   icon.set_halign(Gtk::Align::CENTER);
   icon.set_valign(Gtk::Align::CENTER);
 
-  message_label.set_xalign(0.0);
-  message_label.set_wrap(true);
-  message_label.set_wrap_mode(Pango::WrapMode::WORD_CHAR);
-  message_label.set_valign(Gtk::Align::CENTER);
-  message_label.set_halign(Gtk::Align::FILL);
-  message_label.set_hexpand(true);
-  message_label.set_vexpand(true);
+  message_text.set_xalign(0.0);
+  message_text.set_wrap(true);
+  message_text.set_wrap_mode(Pango::WrapMode::WORD_CHAR);
+  message_text.set_valign(Gtk::Align::CENTER);
+  message_text.set_halign(Gtk::Align::FILL);
+  message_text.set_hexpand(true);
+  message_text.set_vexpand(true);
 
-  text_vbox.append(message_label);
+  text_vbox.append(message_text);
   text_vbox.set_halign(Gtk::Align::FILL);
 
   hbox_icon_and_text.append(icon);
@@ -94,18 +104,27 @@ DialogWindow::~DialogWindow()
 {
 }
 
+/**
+ * Set the message text and markup.
+ *
+ * \param[in] message - The message text
+ * \param[in] markup - Whether to use markup
+ */
 void DialogWindow::set_message(const Glib::ustring& message, bool markup)
 {
   if (markup)
   {
-    message_label.set_markup(message);
+    message_text.set_markup(message);
   }
   else
   {
-    message_label.set_text(message);
+    message_text.set_text(message);
   }
 }
 
+/**
+ * Update the title, icon and button(s) based on the type.
+ */
 void DialogWindow::update_title_and_icon_and_button_()
 {
   const char* icon_name = "dialog-information";
@@ -153,18 +172,18 @@ void DialogWindow::update_title_and_icon_and_button_()
 
 void DialogWindow::on_ok_button_clicked()
 {
-  hide();
+  hide(); // hide instead of destroy in case of OK button
   signal_response.emit(ResponseType::OK);
 }
 
 void DialogWindow::on_yes_button_clicked()
 {
-  hide();
+  close(); // Question dialog will destroy itself
   signal_response.emit(ResponseType::YES);
 }
 
 void DialogWindow::on_no_button_clicked()
 {
-  hide();
+  close(); // Question dialog will destroy itself
   signal_response.emit(ResponseType::NO);
 }

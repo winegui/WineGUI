@@ -46,7 +46,7 @@ public:
 
   sigc::signal<void(ResponseType)> signal_response;
 
-  explicit DialogWindow(Gtk::Window& parent, DialogType type);
+  explicit DialogWindow(Gtk::Window& parent, DialogType type, const Glib::ustring& message = "", bool markup = false);
   virtual ~DialogWindow();
 
   void set_message(const Glib::ustring& message, bool markup = false);
@@ -58,7 +58,7 @@ protected:
 
   Gtk::Image icon;
   Gtk::Box text_vbox;
-  Gtk::Label message_label;
+  Gtk::Label message_text;
 
   Gtk::Button ok_button;
   Gtk::Button yes_button;

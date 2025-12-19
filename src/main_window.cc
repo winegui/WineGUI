@@ -19,7 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "main_window.h"
+#include "dialog_window.h"
 #include "gtkmm/enums.h"
+#include "gtkmm/object.h"
 #include "helper.h"
 #include "project_config.h"
 #include <algorithm>
@@ -240,7 +242,7 @@ void MainWindow::set_general_config(const GeneralConfigData& config_data)
 void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 {
   info_dialog_.set_message(message, markup);
-  // Non-blocking show
+  // Non-blocking present
   info_dialog_.present();
 }
 
@@ -252,7 +254,7 @@ void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
 {
   warning_dialog_.set_message(message, markup);
-  // Non-blocking show
+  // Non-blocking present
   warning_dialog_.present();
 }
 
@@ -264,24 +266,23 @@ void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
 void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
 {
   error_dialog_.set_message(message, markup);
-  // Non-blocking show
+  // Non-blocking present
   error_dialog_.present();
 }
 
 /**
- * \brief Confirm dialog (Yes/No message)
+ * \brief Question dialog (Yes/No message)
  * \param[in] message Show this message during confirmation
  * \param[in] markup Support markup in message text (default: false)
- * \return Pointer to a newly allocated Gtk::MessageDialog that the caller must manage
+ * \return Pointer to a newly allocated DialogWindow object, it will close itself (destroy) when the user clicks 'Yes' or 'No'
  */
-DialogWindow* MainWindow::show_confirm_dialog(const Glib::ustring& message, bool markup)
+DialogWindow* MainWindow::show_question_dialog(const Glib::ustring& message, bool markup)
 {
-  question_dialog_.set_message(message, markup);
-  question_dialog_.set_title("Are you sure?");
-  question_dialog_.set_modal(true);
-  // Non-blocking show
-  question_dialog_.present();
-  return &question_dialog_;
+  // new gtk::manage DialogWindow wit hquestion dialog and return the pointer
+  DialogWindow* dialog = Gtk::manage(new DialogWindow(*this, DialogWindow::DialogType::QUESTION, message, markup));
+  // Non-blocking present
+  dialog->present();
+  return dialog;
 }
 
 /**
