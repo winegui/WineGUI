@@ -130,42 +130,35 @@ void PreferencesWindow::show()
  */
 void PreferencesWindow::on_select_folder()
 {
-  auto folder = Gio::File::create_for_path(default_folder_entry.get_text());
 
-  auto* folder_chooser = new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER);
-  folder_chooser->set_modal(true);
-  folder_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &PreferencesWindow::on_select_dialog_response), folder_chooser));
-  folder_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
-  folder_chooser->add_button("_Select folder", Gtk::ResponseType::OK);
-  folder_chooser->set_current_folder(folder);
-  folder_chooser->show();
-}
+  auto dialog = Gtk::FileDialog::create();
+  dialog->set_title("Choose a folder");
+  dialog->set_modal(true);
+  {
+    auto folder = Gio::File::create_for_path(default_folder_entry.get_text());
+    if (!folder->get_path().empty())
+    {
+      dialog->set_initial_folder(folder);
+    }
+  }
 
-/**
- * \brief when folder is selected
- */
-void PreferencesWindow::on_select_dialog_response(int response_id, Gtk::FileChooserDialog* dialog)
-{
-  switch (response_id)
-  {
-  case Gtk::ResponseType::OK:
-  {
-    // Get current older and update folder entry
-    auto folder = dialog->get_current_folder();
-    default_folder_entry.set_text(folder->get_path()); // TODO: or file->basename(); ?
-    break;
-  }
-  case Gtk::ResponseType::CANCEL:
-  {
-    break; // ignore
-  }
-  default:
-  {
-    std::cout << "Error: Unexpected button clicked." << std::endl;
-    break;
-  }
-  }
-  delete dialog;
+  dialog->select_folder(*this,
+                        [this, dialog](const Glib::RefPtr<Gio::AsyncResult>& result)
+                        {
+                          try
+                          {
+                            const auto folder = dialog->open_finish(result);
+                            default_folder_entry.set_text(folder->get_path());
+                          }
+                          catch (const Gtk::DialogError& err)
+                          {
+                            // Do nothing
+                          }
+                          catch (const Glib::Error& err)
+                          {
+                            // Do nothing
+                          }
+                        });
 }
 
 /**

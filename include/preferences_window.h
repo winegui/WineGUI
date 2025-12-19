@@ -58,7 +58,6 @@ protected:
 private:
   // Signal handlers
   void on_select_folder();
-  void on_select_dialog_response(int response_id, Gtk::FileChooserDialog* dialog);
   void on_cancel_button_clicked();
   void on_save_button_clicked();
 };

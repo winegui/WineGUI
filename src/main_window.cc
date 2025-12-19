@@ -338,76 +338,66 @@ void MainWindow::on_new_bottle_created()
  */
 void MainWindow::on_run_button_clicked()
 {
-  Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FileChooser::Action::OPEN);
-  dialog.set_modal(true);
-  dialog.set_transient_for(*this);
+  auto dialog = Gtk::FileDialog::create();
+  dialog->set_title("Please choose a file");
+  dialog->set_modal(true);
+  {
+    auto folder = Gio::File::create_for_path(c_drive_location_label.get_text());
+    if (!folder->get_path().empty())
+    {
+      dialog->set_initial_folder(folder);
+    }
+  }
 
-  // Add response buttons the the dialog:
-  dialog.add_button("_Cancel", Gtk::ResponseType::CANCEL);
-  dialog.add_button("_Open", Gtk::ResponseType::OK);
-
+  // Filters
+  const auto filters = Gio::ListStore<Gtk::FileFilter>::create();
   auto filter_win = Gtk::FileFilter::create();
   filter_win->set_name("Windows Executable/MSI Installer");
   filter_win->add_mime_type("application/x-ms-dos-executable");
   filter_win->add_mime_type("application/x-msi");
-  dialog.add_filter(filter_win);
-
-  auto folder = Gio::File::create_for_path(c_drive_location_label.get_text());
+  filters->append(filter_win);
   auto filter_any = Gtk::FileFilter::create();
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
-  dialog.add_filter(filter_any);
-  dialog.set_current_folder(folder);
+  filters->append(filter_any);
+  // Set the filters
+  dialog->set_filters(filters);
 
-  // Show the dialog (non blocking)
-  dialog.present();
-
-  // Connect the response signal
-  dialog.signal_response().connect(
-      [this, &dialog](int result)
-      {
-        // Handle the response:
-        switch (result)
-        {
-        case (Gtk::ResponseType::OK):
-        {
-          Glib::RefPtr<Gio::File> file = dialog.get_file();
-          if (file)
-          {
-            // Just guess based on extension
-            string filename = file->get_basename(); // TODO: or file->get_path(); ?
-            string ext = filename.substr(filename.find_last_of(".") + 1);
-            // To lower case
-            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
-            if (ext == "exe")
-            {
-              run_executable.emit(filename, false);
-            }
-            else if (ext == "msi")
-            {
-              // Run as MSI (true=MSI)
-              run_executable.emit(filename, true);
-            }
-            else
-            {
-              // fall-back: try run as Exe
-              run_executable.emit(filename, false);
-            }
-            break;
-          }
-        }
-        case (Gtk::ResponseType::CANCEL):
-        {
-          // Cancelled, do nothing
-          break;
-        }
-        default:
-        {
-          // Unexpected button, ignore
-          break;
-        }
-        }
-      });
+  dialog->open(*this,
+               [this, dialog](const Glib::RefPtr<Gio::AsyncResult>& result)
+               {
+                 try
+                 {
+                   const auto file = dialog->open_finish(result);
+                   string path = file->get_path();
+                   // Just guess based on extension
+                   string ext = path.substr(path.find_last_of(".") + 1);
+                   // To lower case
+                   std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+                   if (ext == "exe")
+                   {
+                     run_executable.emit(path, false);
+                   }
+                   else if (ext == "msi")
+                   {
+                     // Run as MSI (true=MSI)
+                     run_executable.emit(path, true);
+                   }
+                   else
+                   {
+                     // fall-back: try run as Exe
+                     run_executable.emit(path, false);
+                   }
+                 }
+                 catch (const Gtk::DialogError& err)
+                 {
+                   // Do nothing
+                 }
+                 catch (const Glib::Error& err)
+                 {
+                   // Do nothing
+                 }
+               });
 }
 
 /**

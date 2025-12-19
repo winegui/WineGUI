@@ -148,59 +148,51 @@ void AddAppWindow::set_default_values()
  */
 void AddAppWindow::on_select_file()
 {
+  auto dialog = Gtk::FileDialog::create();
+  dialog->set_title("Please choose a file");
+  dialog->set_modal(true);
+  {
+    if (active_bottle_ != nullptr)
+    {
+      auto folder = Gio::File::create_for_path(active_bottle_->wine_c_drive());
+      if (!folder->get_path().empty())
+      {
+        dialog->set_initial_folder(folder);
+      }
+    }
+  }
+
+  // Filters
+  const auto filters = Gio::ListStore<Gtk::FileFilter>::create();
   auto filter_win = Gtk::FileFilter::create();
   filter_win->set_name("Windows Executable/MSI Installer");
   filter_win->add_mime_type("application/x-ms-dos-executable");
   filter_win->add_mime_type("application/x-msi");
+  filters->append(filter_win);
   auto filter_any = Gtk::FileFilter::create();
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
+  filters->append(filter_any);
+  // Set the filters
+  dialog->set_filters(filters);
 
-  auto folder = Gio::File::create_for_path(active_bottle_->wine_c_drive());
-
-  auto* file_chooser = new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::OPEN);
-  file_chooser->set_modal(true);
-  file_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &AddAppWindow::on_select_dialog_response), file_chooser));
-  file_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
-  file_chooser->add_button("_Select file", Gtk::ResponseType::OK);
-  if (active_bottle_ != nullptr)
-  {
-    file_chooser->set_current_folder(folder);
-  }
-  file_chooser->add_filter(filter_win);
-  file_chooser->add_filter(filter_any);
-  file_chooser->show();
-}
-
-/**
- * \brief when file is selected
- */
-void AddAppWindow::on_select_dialog_response(int response_id, Gtk::FileChooserDialog* dialog)
-{
-  switch (response_id)
-  {
-  case Gtk::ResponseType::OK:
-  {
-    // Update the command entry
-    auto file = dialog->get_file();
-    if (file)
-    {
-      auto filename = file->get_basename(); // TODO: or file->get_path(); ?
-      command_entry.set_text(filename);
-    }
-    break;
-  }
-  case Gtk::ResponseType::CANCEL:
-  {
-    break; // ignore
-  }
-  default:
-  {
-    std::cout << "Error: Unexpected button clicked." << std::endl;
-    break;
-  }
-  }
-  delete dialog;
+  dialog->open(*this,
+               [this, dialog](const Glib::RefPtr<Gio::AsyncResult>& result)
+               {
+                 try
+                 {
+                   const auto file = dialog->open_finish(result);
+                   command_entry.set_text(file->get_path());
+                 }
+                 catch (const Gtk::DialogError& err)
+                 {
+                   // Do nothing
+                 }
+                 catch (const Glib::Error& err)
+                 {
+                   // Do nothing
+                 }
+               });
 }
 
 /**

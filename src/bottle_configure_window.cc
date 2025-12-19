@@ -20,6 +20,7 @@
  */
 #include "bottle_configure_window.h"
 #include "bottle_item.h"
+#include "dll_override_types.h"
 #include "helper.h"
 #include <iostream>
 

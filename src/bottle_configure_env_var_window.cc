@@ -61,16 +61,18 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   remove_button.set_margin_bottom(5);
   add_button.set_halign(Gtk::Align::FILL);
   add_button.set_margin_bottom(5);
-  // Horizontal buttons
+  // Add / remove buttons
   hbox_buttons.set_homogeneous(true);
   hbox_buttons.set_margin(6);
-  hbox_buttons.set_margin_bottom(5);
+  hbox_buttons.set_margin_bottom(2);
   hbox_buttons.set_halign(Gtk::Align::FILL);
   hbox_buttons.prepend(remove_button);
   hbox_buttons.prepend(add_button);
-  // Second row of buttons
+  // Save / Cancel buttons
   hbox_2_buttons.append(save_button);
   hbox_2_buttons.append(cancel_button);
+  hbox_2_buttons.set_halign(Gtk::Align::END);
+  hbox_2_buttons.set_margin(6);
 
   // Add treeview to a scrolled window
   m_ScrolledWindow.set_child(m_TreeView);
@@ -109,6 +111,14 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_save_button_clicked));
   // On show signal, load the environment variables from the config file
   signal_show().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::load_environment_variables_from_config));
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        hide();
+        return true; // stop default destroy
+      },
+      false);
 }
 
 /**
@@ -234,7 +244,7 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
     }
     else
     {
-      set_visible(false); // Close the window
+      set_visible(false); // Hide the window
 
       // Trigger update config signal (so the bottle config file will be re-read)
       config_saved.emit();

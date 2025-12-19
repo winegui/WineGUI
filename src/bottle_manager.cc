@@ -21,14 +21,12 @@
 #include "bottle_manager.h"
 #include "bottle_config_file.h"
 #include "bottle_item.h"
-#include "dll_override_types.h"
 #include "general_config_file.h"
 #include "helper.h"
 #include "main_window.h"
 #include "signal_controller.h"
 #include "wine_defaults.h"
 
-#include <chrono>
 #include <stdexcept>
 
 /*************************************************************
