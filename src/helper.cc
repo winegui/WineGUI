@@ -34,7 +34,6 @@
 #include <iostream>
 #include <memory>
 #include <pwd.h>
-#include <regex>
 #include <stdexcept>
 #include <stdio.h>
 #include <sys/types.h>

@@ -20,6 +20,7 @@
  */
 #include "bottle_edit_window.h"
 #include "bottle_item.h"
+#include "gtkmm/window.h"
 #include "wine_defaults.h"
 
 /**
@@ -226,8 +227,8 @@ void BottleEditWindow::show()
   {
     set_title("Edit Machine (Unknown machine)");
   }
-  // Call parent show
-  Gtk::Widget::show();
+  // Call parent present
+  present();
 }
 
 /**

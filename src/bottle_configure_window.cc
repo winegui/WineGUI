@@ -169,8 +169,8 @@ void BottleConfigureWindow::show()
               ((!active_bottle_->name().empty()) ? active_bottle_->name() : active_bottle_->folder_name())); // Fall-back to folder name
   else
     set_title("Configure machine (Unknown machine)");
-  // Call parent show
-  Gtk::Widget::show();
+  // Call parent present
+  present();
 }
 
 /**

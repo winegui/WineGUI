@@ -111,8 +111,8 @@ void PreferencesWindow::show()
   default_folder_entry.set_text(general_config.default_folder);
   display_default_wine_machine_check.set_active(general_config.display_default_wine_machine);
   enable_logging_stderr_check.set_active(general_config.enable_logging_stderr);
-  // Call parent show
-  Gtk::Widget::show();
+  // Call parent present
+  present();
 }
 
 /**

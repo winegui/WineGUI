@@ -19,11 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "main_window.h"
+#include "gtkmm/enums.h"
 #include "helper.h"
 #include "project_config.h"
 #include <algorithm>
 #include <cctype>
-#include <locale>
 #include <set>
 #include <utility>
 
@@ -1137,7 +1137,6 @@ void MainWindow::create_right_panel()
   detail_grid.attach_next_to(*system_label, *system_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Windows version + bit os
-  Gtk::Label("Windows:", Gtk::Align::START, Gtk::Align::CENTER);
   Gtk::Label* window_version_text_label = Gtk::manage(new Gtk::Label("Windows:", Gtk::Align::START, Gtk::Align::CENTER));
   // Label consumes 2 columns
   detail_grid.attach(*window_version_text_label, 0, 5, 2, 1);
@@ -1260,28 +1259,33 @@ void MainWindow::create_right_panel()
   app_list_scrolled_window.set_margin_start(6);
   app_list_scrolled_window.set_margin_end(6);
   app_list_scrolled_window.set_margin_bottom(6);
+  app_list_scrolled_window.set_halign(Gtk::Align::FILL);
+  app_list_scrolled_window.set_valign(Gtk::Align::FILL);
+  app_list_scrolled_window.set_hexpand(true);
+  app_list_scrolled_window.set_vexpand(true);
   app_list_scrolled_window.set_child(application_list_treeview);
-
-  app_list_search_entry.set_margin_start(6);
-  app_list_search_entry.set_margin_end(2);
-  app_list_search_entry.set_margin_top(6);
-  app_list_search_entry.set_margin_bottom(6);
-  app_list_search_entry.set_hexpand(true);
-  app_list_search_entry.set_halign(Gtk::Align::FILL);
 
   // Add application header text
   Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
   application_icon->set_from_icon_name("application-x-executable");
   application_icon->set_icon_size(Gtk::IconSize::NORMAL);
-  application_icon->set_margin_bottom(6);
   Gtk::Label* application_label = Gtk::manage(new Gtk::Label());
   application_label->set_markup("<b>Applications</b>");
-  application_label->set_margin_bottom(20);
+  application_label->set_margin_start(10);
   Gtk::Box* application_box = Gtk::manage(new Gtk::Box());
   application_box->append(*application_icon);
   application_box->append(*application_label);
-  application_box->set_margin_bottom(10);
+  application_box->set_margin_start(6);
+  application_box->set_margin_end(6);
+  application_box->set_margin_top(6);
   application_box->set_halign(Gtk::Align::FILL);
+
+  // Search entry
+  app_list_search_entry.set_margin_start(6);
+  app_list_search_entry.set_margin_end(6);
+  app_list_search_entry.set_margin_top(6);
+  app_list_search_entry.set_hexpand(true);
+  app_list_search_entry.set_halign(Gtk::Align::FILL);
 
   // App list add shortcut button
   // TODO: Lets see if set_icon_name is good enough or we need to use set_child with a GTK::Image again.
@@ -1291,7 +1295,6 @@ void MainWindow::create_right_panel()
   add_app_list_button.set_tooltip_text("Add shortcut to application list");
   add_app_list_button.set_icon_name("list-add");
   add_app_list_button.set_margin_top(6);
-  add_app_list_button.set_margin_bottom(6);
   add_app_list_button.set_margin_end(6);
 
   // App list remove shortcut button
@@ -1301,7 +1304,6 @@ void MainWindow::create_right_panel()
   remove_app_list_button.set_tooltip_text("Remove shortcut from application list");
   remove_app_list_button.set_icon_name("list-remove");
   remove_app_list_button.set_margin_top(6);
-  remove_app_list_button.set_margin_bottom(6);
   remove_app_list_button.set_margin_end(6);
 
   // App list refresh button
@@ -1311,32 +1313,31 @@ void MainWindow::create_right_panel()
   refresh_app_list_button.set_tooltip_text("Refresh application list");
   refresh_app_list_button.set_icon_name("view-refresh");
   refresh_app_list_button.set_margin_top(6);
-  refresh_app_list_button.set_margin_bottom(6);
   refresh_app_list_button.set_margin_end(6);
 
   // Preparing the horizontal box above the app list (containing the search entry & refresh button)
-  app_list_top_hbox.prepend(app_list_search_entry);
-  app_list_top_hbox.append(refresh_app_list_button);
-  app_list_top_hbox.append(remove_app_list_button);
+  app_list_top_hbox.append(app_list_search_entry);
   app_list_top_hbox.append(add_app_list_button);
+  app_list_top_hbox.append(remove_app_list_button);
+  app_list_top_hbox.append(refresh_app_list_button);
   app_list_top_hbox.set_halign(Gtk::Align::FILL);
   app_list_top_hbox.set_margin_bottom(6);
 
   // Add heading (label + icon)
-  app_list_vbox.prepend(*application_box);
+  app_list_vbox.append(*application_box);
   // Add horizontal box (search entry + refresh button)
-  app_list_vbox.prepend(app_list_top_hbox);
+  app_list_vbox.append(app_list_top_hbox);
   // Add application list (in scrolled window)
   app_list_vbox.append(app_list_scrolled_window);
   // Add to container
   container_paned.set_end_child(app_list_vbox);
-  container_paned.set_vexpand(true);
-  container_paned.set_hexpand(true);
   container_paned.set_halign(Gtk::Align::FILL);
   container_paned.set_valign(Gtk::Align::FILL);
+  container_paned.set_vexpand(true);
+  container_paned.set_hexpand(true);
 
   // Add container to right box
-  right_vbox.prepend(container_paned);
+  right_vbox.append(container_paned);
 
   // Add right box to paned
   paned.set_end_child(right_vbox);

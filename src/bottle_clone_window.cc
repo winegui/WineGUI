@@ -133,8 +133,8 @@ void BottleCloneWindow::show()
   {
     set_title("Clone Machine (Unknown machine)");
   }
-  // Call parent show
-  Gtk::Widget::show();
+  // Call parent present
+  present();
 }
 
 /**

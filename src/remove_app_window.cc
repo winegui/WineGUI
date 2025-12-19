@@ -124,8 +124,8 @@ void RemoveAppWindow::show()
       app_list_box.append(*label);
     }
   }
-  // Call parent show
-  Gtk::Widget::show();
+  // Call parent present
+  present();
   // Unselect items by default
   app_list_box.unselect_all();
 }
