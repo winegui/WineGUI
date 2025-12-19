@@ -93,6 +93,7 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   set_child(vbox);
 
   // Create the Tree model
+  // TODO: Migrate to ColumnView
   m_refTreeModel = Gtk::ListStore::create(m_Columns);
   m_TreeView.set_model(m_refTreeModel);
 

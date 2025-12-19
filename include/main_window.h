@@ -93,13 +93,13 @@ public:
 
 protected:
   // Signal handlers
+  void on_bind_icon_and_name(const Glib::RefPtr<Gtk::ListItem>& list_item);
   void on_error_message_check_version();
   void on_info_message_check_version();
   void on_new_version_available();
   bool on_delete_window();
 
   Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
-  AppListModelColumns app_list_columns;        /*!< Application list model columns for app tree view */
 
   // Child widgets
   Gtk::Box vbox;    /*!< The main vertical box */
@@ -108,23 +108,22 @@ protected:
   Gtk::ScrolledWindow scrolled_window_listbox; /*!< Scrolled Window container, which contains the listbox */
   Gtk::ListBox listbox;                        /*!< Listbox in the left panel */
   // Right widgets
-  Gtk::ScrolledWindow detail_grid_scrolled_window_detail; /*!< Scrolled Window container for the detail grid */
-  Gtk::ScrolledWindow app_list_scrolled_window;           /*!< Scrolled Window container for app list */
-  Gtk::Box right_vbox;                                    /*!< Right panel vertical box */
-  Gtk::Box app_list_vbox;                                 /*!< Application list vertical box */
-  Gtk::Box app_list_top_hbox;                             /*!< Horizontal box above the app list */
-  Gtk::SearchEntry app_list_search_entry;                 /*!< Application list search entry */
-  Gtk::Paned container_paned;                             /*!< Main container horizontal paned panel */
-  Glib::RefPtr<Gtk::ListStore> app_list_tree_model;       /*!< Application list tree model (using a liststore)  */
-  Glib::RefPtr<Gtk::TreeModelFilter> app_list_filter;     /*!< Tree model filter for app list  */
-  Gtk::Box toolbar;                                       /*!< Toolbar at top */
-  Gtk::Separator separator1;                              /*!< Separator */
-  Gtk::Grid detail_grid;                                  /*!< Grid layout container to have multiple rows & columns below the toolbar */
-  Gtk::ColumnView application_list_treeview;                /*!< List of applications put inside a tree view */
-
-  // Test
-  Gtk::CellRendererText name_desc_renderer_text;
-  Gtk::TreeView::Column name_desc_column;
+  Gtk::ScrolledWindow detail_grid_scrolled_window_detail;           /*!< Scrolled Window container for the detail grid */
+  Gtk::Box right_vbox;                                              /*!< Right panel vertical box */
+  Gtk::Box app_list_vbox;                                           /*!< Application list vertical box */
+  Gtk::Box app_list_top_hbox;                                       /*!< Horizontal box above the app list */
+  Gtk::SearchEntry app_list_search_entry;                           /*!< Application list search entry */
+  Gtk::Paned container_paned;                                       /*!< Main container horizontal paned panel */
+  Glib::RefPtr<Gio::ListStore<AppListModelColumns>> app_list_store; /*!< Application list store */
+  Glib::RefPtr<Gtk::SingleSelection> app_list_selection_model;      /*!< Application list selection model */
+  Glib::RefPtr<Gtk::SignalListItemFactory> app_list_factory;        /*!< Application list factory */
+  // TODO: Implement a filter again
+  // Glib::RefPtr<Gtk::TreeModelFilter> app_list_filter; /*!< Tree model filter for app list  */
+  Gtk::Box toolbar;                             /*!< Toolbar at top */
+  Gtk::Separator separator1;                    /*!< Separator */
+  Gtk::Grid detail_grid;                        /*!< Grid layout container to have multiple rows & columns below the toolbar */
+  Gtk::ScrolledWindow app_list_scrolled_window; /*!< Scrolled Window container for app list */
+  Gtk::ListView app_list_list_view;             /*!< List of applications put inside a list view */
 
   // Detailed info labels on the right panel
   Gtk::Label name_label;              /*!< Bottle name */
@@ -183,10 +182,11 @@ private:
   // Signal handlers
   virtual void on_bottle_row_clicked(Gtk::ListBoxRow* row);
   virtual void on_app_list_changed();
-  virtual void on_application_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* /* column */);
+  virtual void on_application_row_activated(unsigned int position);
   virtual void on_new_bottle_apply();
 
   // Private methods
+  void on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item);
   void set_detailed_info(const BottleItem& bottle);
   void set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_List);
   void add_application(const string& name, const string& description, const string& command, const string& icon_name, bool is_icon_full_path = false);
@@ -198,6 +198,5 @@ private:
   void create_right_panel();
   void set_sensitive_toolbar_buttons(bool sensitive);
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, Gtk::ListBoxRow* before);
-  bool app_list_visible_func(const Gtk::TreeModel::const_iterator& iter);
-  void treeview_set_cell_data_name_desc(Gtk::CellRenderer* renderer, const Gtk::TreeModel::iterator& iter);
+  // bool app_list_visible_func(const Gtk::TreeModel::const_iterator& iter);
 };

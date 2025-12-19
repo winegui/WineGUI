@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "main_window.h"
+#include "app_list_model_column.h"
 #include "dialog_window.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/object.h"
@@ -122,8 +123,7 @@ MainWindow::MainWindow(/*Menu& menu*/)
   app_list_search_entry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::on_app_list_changed));
 
   // Trigger row activated signal on a single click
-  application_list_treeview.set_activate_on_single_click(true);
-  application_list_treeview.signal_row_activated().connect(sigc::mem_fun(*this, &MainWindow::on_application_row_activated));
+  app_list_list_view.signal_activate().connect(sigc::mem_fun(*this, &MainWindow::on_application_row_activated));
 
   // Toolbar buttons
   run_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
@@ -221,7 +221,7 @@ void MainWindow::reset_detailed_info()
  */
 void MainWindow::reset_application_list()
 {
-  app_list_tree_model->clear();
+  app_list_store->remove_all();
   app_list_search_entry.set_text("");
 }
 
@@ -493,18 +493,18 @@ void MainWindow::on_bottle_row_clicked(Gtk::ListBoxRow* row)
 void MainWindow::on_app_list_changed()
 {
   // Refilter
-  app_list_filter->refilter();
+  // TODO: Implement filter
+  // app_list_filter->refilter();
 }
 
-void MainWindow::on_application_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* /* column */)
+void MainWindow::on_application_row_activated(unsigned int position)
 {
-  const auto iter = app_list_tree_model->get_iter(path);
-  if (iter)
-  {
-    const auto row = *iter;
-    // Run the command
-    run_program.emit(row[app_list_columns.command]);
-  }
+  auto col = app_list_store->get_item(position);
+  if (!col)
+    return;
+
+  // Run the command
+  run_program.emit(col->command);
 }
 
 /**
@@ -649,7 +649,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   // Temporally store the list of menu item names,
   // used for checking for duplicates when adding desktop items
   std::set<std::string> menu_item_names;
-  // Fill the application list (TreeView model)
+  // Fill the application list (list view)
   // First the start menu apps/games (if present)
   try
   {
@@ -834,21 +834,22 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
  */
 void MainWindow::add_application(const string& name, const string& description, const string& command, const string& icon, bool is_icon_full_path)
 {
-  auto row = *(app_list_tree_model->append());
-  row[app_list_columns.name] = Helper::encode_text(name);
-  row[app_list_columns.description] = Helper::encode_text(description);
-  row[app_list_columns.command] = command;
+  auto pixbuf = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/unknown_file.png"));
   try
   {
     if (!is_icon_full_path)
-      row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/" + icon + ".png"));
+      pixbuf = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/" + icon + ".png"));
     else
-      row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(icon); // Use icon as full path
+      pixbuf = Gdk::Pixbuf::create_from_file(icon); // Use icon as full path
   }
   catch (const Glib::Error& error)
   {
     std::cerr << "ERROR: Could not find icon (" << icon << ") for app " << name << ": " << error.what() << std::endl;
   }
+
+  auto item =
+      AppListModelColumns::create(Helper::encode_text(name), Helper::encode_text(description), Gdk::Texture::create_for_pixbuf(pixbuf), command);
+  app_list_store->append(item);
 }
 
 /**
@@ -1256,24 +1257,21 @@ void MainWindow::create_right_panel()
    * Application list section
    */
 
-  app_list_tree_model = Gtk::ListStore::create(app_list_columns);
-  app_list_filter = Gtk::TreeModelFilter::create(app_list_tree_model);
-  app_list_filter->set_visible_func(sigc::mem_fun(*this, &MainWindow::app_list_visible_func));
-  application_list_treeview.set_model(app_list_filter);
+  app_list_store = Gio::ListStore<AppListModelColumns>::create();
 
-  name_desc_column.pack_start(name_desc_renderer_text);
-  application_list_treeview.append_column("icon", app_list_columns.icon); // TODO: Add spacing, maybe also use a custom method like below
-  application_list_treeview.append_column(name_desc_column);
+  app_list_selection_model = Gtk::SingleSelection::create(app_list_store);
+  app_list_selection_model->set_autoselect(false);
+  app_list_selection_model->set_can_unselect(true);
+  // TODO: Maybe add custom css?
+  // app_list_column_view.add_css_class("my-data-table");
 
-  // TODO: Migrate away from TreeView and use Gtk::ColumnView instead?
-  // ColumnView should also give use cell data rendering functions support.?..
-  // Gtk::TreeViewColumn::SlotTreeCellData cellDataSlot = sigc::bind(sigc::mem_fun(*this, &MainWindow::treeview_set_cell_data_name_desc));
-  // name_desc_column.set_cell_data_func(name_desc_renderer_text, cellDataSlot);
+  // Icon + name column
+  app_list_factory = Gtk::SignalListItemFactory::create();
+  app_list_factory->signal_setup().connect(sigc::mem_fun(*this, &MainWindow::on_setup_label));
+  app_list_factory->signal_bind().connect(sigc::mem_fun(*this, &MainWindow::on_bind_icon_and_name));
 
-  application_list_treeview.set_headers_visible(false);
-  application_list_treeview.set_hover_selection(true);
-  application_list_treeview.set_show_expanders(false);
-  application_list_treeview.get_selection()->set_mode(Gtk::SelectionMode::SINGLE);
+  app_list_list_view.set_model(app_list_selection_model);
+  app_list_list_view.set_factory(app_list_factory);
 
   app_list_scrolled_window.set_margin_top(6);
   app_list_scrolled_window.set_margin_start(6);
@@ -1281,9 +1279,15 @@ void MainWindow::create_right_panel()
   app_list_scrolled_window.set_margin_bottom(6);
   app_list_scrolled_window.set_halign(Gtk::Align::FILL);
   app_list_scrolled_window.set_valign(Gtk::Align::FILL);
-  app_list_scrolled_window.set_hexpand(true);
-  app_list_scrolled_window.set_vexpand(true);
-  app_list_scrolled_window.set_child(application_list_treeview);
+  app_list_scrolled_window.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+  app_list_scrolled_window.set_expand();
+  app_list_scrolled_window.set_child(app_list_list_view);
+
+  // OLD:
+  // app_list_filter->set_visible_func(sigc::mem_fun(*this, &MainWindow::app_list_visible_func));
+  // name_desc_column.pack_start(name_desc_renderer_text);
+  // application_list_treeview.append_column("icon", app_list_columns.icon); // TODO: Add spacing, maybe also use a custom method like below
+  // application_list_treeview.append_column(name_desc_column);
 
   // Add application header text
   Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
@@ -1363,6 +1367,52 @@ void MainWindow::create_right_panel()
   paned.set_end_child(right_vbox);
 }
 
+void MainWindow::on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item)
+{
+  Gtk::Box* hbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL);
+  Gtk::Box* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL);
+  Gtk::Picture* icon = Gtk::make_managed<Gtk::Picture>();
+  icon->set_can_shrink(false);
+  icon->set_halign(Gtk::Align::CENTER);
+  icon->set_valign(Gtk::Align::CENTER);
+  hbox->append(*icon);
+
+  Gtk::Label* name = Gtk::make_managed<Gtk::Label>("", Gtk::Align::START);
+  Gtk::Label* description = Gtk::make_managed<Gtk::Label>("", Gtk::Align::START);
+  vbox->append(*name);
+  vbox->append(*description);
+  hbox->append(*vbox);
+
+  list_item->set_child(*hbox);
+}
+
+void MainWindow::on_bind_icon_and_name(const Glib::RefPtr<Gtk::ListItem>& list_item)
+{
+  auto col = std::dynamic_pointer_cast<AppListModelColumns>(list_item->get_item());
+  if (!col)
+    return;
+  Gtk::Box* hbox = dynamic_cast<Gtk::Box*>(list_item->get_child());
+  if (!hbox)
+    return;
+  auto icon = dynamic_cast<Gtk::Picture*>(hbox->get_first_child());
+  if (!icon)
+    return;
+  Gtk::Box* vbox = dynamic_cast<Gtk::Box*>(icon->get_next_sibling());
+  if (!vbox)
+    return;
+  Gtk::Label* name = dynamic_cast<Gtk::Label*>(vbox->get_first_child());
+  if (!name)
+    return;
+  Gtk::Label* description = dynamic_cast<Gtk::Label*>(name->get_next_sibling());
+  if (!description)
+    return;
+
+  // Set all fields
+  icon->set_paintable(col->icon);
+  name->set_markup("<b>" + col->name + "</b>");
+  description->set_markup(col->description);
+}
+
 /**
  * \brief set sensitive toolbar buttons (eg. when a bottle is active)
  * \param sensitive Set toolbar buttons sensitivity (true is enabled, false is disabled)
@@ -1408,31 +1458,21 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
  * \brief Filter application list
  * \param iter Tree model iterator
  * \return true if application should be visible, otherwise false
+ *
+ * TODO: Add filter again in list store?
  */
-bool MainWindow::app_list_visible_func(const Gtk::TreeModel::const_iterator& iter)
-{
-  auto row = *iter;
-  Glib::ustring name = row[app_list_columns.name];
-  Glib::ustring description = row[app_list_columns.description];
-  if (name.lowercase().find(app_list_search_entry.get_text().lowercase()) != Glib::ustring::npos)
-  {
-    return true;
-  }
-  if (description.lowercase().find(app_list_search_entry.get_text().lowercase()) != Glib::ustring::npos)
-  {
-    return true;
-  }
-  return false;
-}
-
-/**
- * \brief Render name + description text
- */
-void MainWindow::treeview_set_cell_data_name_desc(Gtk::CellRenderer* cell, const Gtk::TreeModel::iterator& iter)
-{
-  // cppcheck-suppress dangerousTypeCast
-  Gtk::CellRendererText* text_renderer = (Gtk::CellRendererText*)cell;
-  Glib::ustring name = "<b>" + (*iter)[app_list_columns.name] + "</b>\n";
-  name += (*iter)[app_list_columns.description];
-  text_renderer->property_markup().set_value(name);
-}
+// bool MainWindow::app_list_visible_func(const Gtk::TreeModel::const_iterator& iter)
+// {
+//   auto row = *iter;
+//   Glib::ustring name = row[app_list_columns.name];
+//   Glib::ustring description = row[app_list_columns.description];
+//   if (name.lowercase().find(app_list_search_entry.get_text().lowercase()) != Glib::ustring::npos)
+//   {
+//     return true;
+//   }
+//   if (description.lowercase().find(app_list_search_entry.get_text().lowercase()) != Glib::ustring::npos)
+//   {
+//     return true;
+//   }
+//   return false;
+// }
