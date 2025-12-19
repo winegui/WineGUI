@@ -120,7 +120,7 @@ protected:
   Gtk::Box toolbar;                                       /*!< Toolbar at top */
   Gtk::Separator separator1;                              /*!< Separator */
   Gtk::Grid detail_grid;                                  /*!< Grid layout container to have multiple rows & columns below the toolbar */
-  Gtk::TreeView application_list_treeview;                /*!< List of applications put inside a tree view */
+  Gtk::ColumnView application_list_treeview;                /*!< List of applications put inside a tree view */
 
   // Test
   Gtk::CellRendererText name_desc_renderer_text;

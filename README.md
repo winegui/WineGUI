@@ -46,6 +46,8 @@ Please, read the dedicated [contributing page](CONTRIBUTING.md).
 
 ## Development
 
+More information about Gtkmm4 can be found on the official [documentation site](https://gtkmm.gnome.org/en/documentation.html).
+
 ### Requirements
 
 WineGUI is created by using [GTK4 toolkit](https://www.gtk.org/) (Gtkmm C++-interface) and C++ code.
