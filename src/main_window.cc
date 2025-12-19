@@ -64,7 +64,7 @@ MainWindow::MainWindow(/*Menu& menu*/)
 
   // Add menu to box (top), no expand/fill
   // There is no GTK::MenuBar anymore ;(
-  // vbox.prepend(menu);
+  // vbox.append(menu);
 
   // Add paned to box (below menu)
   // NOTE: expand/fill = true
@@ -321,7 +321,7 @@ void MainWindow::close_busy_dialog()
 void MainWindow::on_new_bottle_button_clicked()
 {
   new_bottle_assistant_.set_transient_for(*this);
-  new_bottle_assistant_.show();
+  new_bottle_assistant_.present();
 }
 
 /**
@@ -1001,94 +1001,124 @@ void MainWindow::create_right_panel()
    * Toolbar section
    * TODO: Make it configurable to only show icons, text or both using preferences
    */
-  toolbar.set_spacing(2);
+  toolbar.set_margin_start(16);
+  toolbar.set_margin_top(6);
+  toolbar.set_margin_bottom(6);
+  toolbar.set_spacing(6);
   toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
 
   // Buttons in toolbar
-  // TODO: Comment out the images for now, and see if set_icon_name works good enough.
-  // Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
-  // new_image->set_from_icon_name("list-add");
-  // new_image->set_icon_size(Gtk::IconSize::LARGE);
-  new_button.set_label("New");
+  Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
+  new_image->set_from_icon_name("list-add");
+  Gtk::Label* new_label = Gtk::manage(new Gtk::Label("New"));
+  Gtk::Box* new_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  new_box->append(*new_image);
+  new_box->append(*new_label);
+
   new_button.set_tooltip_text("Create a new machine!");
-  new_button.set_icon_name("list-add");
-  // THis is not possible anymore, if set_icon_name is not ideal, we can try to use set_child to set the GTK::Image?
-  // new_button.set_icon_widget(*new_image);
+  new_button.set_child(*new_box);
   toolbar.append(new_button);
 
-  // Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
-  // edit_image->set_from_icon_name("document-edit");
-  // edit_image->set_icon_size(Gtk::IconSize::LARGE);
-  edit_button.set_label("Edit");
+  Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
+  edit_image->set_from_icon_name("document-edit");
+  Gtk::Label* edit_label = Gtk::manage(new Gtk::Label("Edit"));
+  Gtk::Box* edit_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  edit_box->append(*edit_image);
+  edit_box->append(*edit_label);
+
+  edit_button.set_child(*edit_box);
   edit_button.set_tooltip_text("Edit Wine Machine");
-  edit_button.set_icon_name("document-edit");
   toolbar.append(edit_button);
 
-  // Gtk::Image* clone_image = Gtk::manage(new Gtk::Image());
-  // clone_image->set_from_icon_name("edit-copy");
-  // clone_image->set_icon_size(Gtk::IconSize::LARGE);
-  clone_button.set_label("Clone");
-  clone_button.set_icon_name("edit-copy");
+  Gtk::Image* clone_image = Gtk::manage(new Gtk::Image());
+  clone_image->set_from_icon_name("edit-copy");
+  Gtk::Label* clone_label = Gtk::manage(new Gtk::Label("Clone"));
+  Gtk::Box* clone_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  clone_box->append(*clone_image);
+  clone_box->append(*clone_label);
+
+  clone_button.set_child(*clone_box);
   clone_button.set_tooltip_text("Clone Wine Machine");
   toolbar.append(clone_button);
 
-  // Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
-  // manage_image->set_from_icon_name("preferences-other");
-  // manage_image->set_icon_size(Gtk::IconSize::LARGE);
-  configure_button.set_label("Configure");
-  clone_button.set_icon_name("preferences-other");
+  Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
+  manage_image->set_from_icon_name("preferences-other");
+  Gtk::Label* manage_label = Gtk::manage(new Gtk::Label("Configure"));
+  Gtk::Box* manage_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  manage_box->append(*manage_image);
+  manage_box->append(*manage_label);
+
+  configure_button.set_child(*manage_box);
   configure_button.set_tooltip_text("Install additional packages");
   toolbar.append(configure_button);
 
-  // Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
-  // run_image->set_from_icon_name("media-playback-start");
-  // run_image->set_icon_size(Gtk::IconSize::LARGE);
-  run_button.set_label("Run Program...");
-  clone_button.set_icon_name("media-playback-start");
+  Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
+  run_image->set_from_icon_name("media-playback-start");
+  Gtk::Label* run_label = Gtk::manage(new Gtk::Label("Run Program..."));
+  Gtk::Box* run_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  run_box->append(*run_image);
+  run_box->append(*run_label);
+
+  run_button.set_child(*run_box);
   run_button.set_tooltip_text("Run exe or msi in Wine Machine");
   toolbar.append(run_button);
 
-  // Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
-  // open_c_drive_image->set_from_icon_name("drive-harddisk");
-  // open_c_drive_image->set_icon_size(Gtk::IconSize::LARGE);
-  open_c_driver_button.set_label("Open C: Drive");
-  clone_button.set_icon_name("drive-harddisk");
+  Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
+  open_c_drive_image->set_from_icon_name("drive-harddisk");
+  Gtk::Label* open_c_drive_label = Gtk::manage(new Gtk::Label("Open C: Drive"));
+  Gtk::Box* open_c_drive_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  open_c_drive_box->append(*open_c_drive_image);
+  open_c_drive_box->append(*open_c_drive_label);
+
+  open_c_driver_button.set_child(*open_c_drive_box);
   open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
   toolbar.append(open_c_driver_button);
 
-  // Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
-  // reboot_image->set_from_icon_name("view-refresh");
-  // reboot_image->set_icon_size(Gtk::IconSize::LARGE);
-  reboot_button.set_label("Reboot");
-  clone_button.set_icon_name("view-refresh");
+  Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
+  reboot_image->set_from_icon_name("view-refresh");
+  Gtk::Label* reboot_label = Gtk::manage(new Gtk::Label("Reboot"));
+  Gtk::Box* reboot_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  reboot_box->append(*reboot_image);
+  reboot_box->append(*reboot_label);
+
+  reboot_button.set_child(*reboot_box);
   reboot_button.set_tooltip_text("Simulate Machine Reboot");
   toolbar.append(reboot_button);
 
-  // Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
-  // update_image->set_from_icon_name("system-software-update");
-  // update_image->set_icon_size(Gtk::IconSize::LARGE);
-  update_button.set_label("Update Config");
-  clone_button.set_icon_name("system-software-update");
+  Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
+  update_image->set_from_icon_name("system-software-update");
+  Gtk::Label* update_label = Gtk::manage(new Gtk::Label("Update Config"));
+  Gtk::Box* update_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  update_box->append(*update_image);
+  update_box->append(*update_label);
+
+  update_button.set_child(*update_box);
   update_button.set_tooltip_text("Update the Wine Machine configuration");
   toolbar.append(update_button);
 
-  // Gtk::Image* open_log_file_image = Gtk::manage(new Gtk::Image());
-  // open_log_file_image->set_from_icon_name("text-x-generic");
-  // open_log_file_image->set_icon_size(Gtk::IconSize::LARGE);
-  open_log_file_button.set_label("Open Log");
-  clone_button.set_icon_name("text-x-generic");
+  Gtk::Image* open_log_file_image = Gtk::manage(new Gtk::Image());
+  open_log_file_image->set_from_icon_name("text-x-generic");
+  Gtk::Label* open_log_file_label = Gtk::manage(new Gtk::Label("Open Log"));
+  Gtk::Box* open_log_file_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  open_log_file_box->append(*open_log_file_image);
+  open_log_file_box->append(*open_log_file_label);
+
+  open_log_file_button.set_child(*open_log_file_box);
   open_log_file_button.set_tooltip_text("Open debug logging file");
   toolbar.append(open_log_file_button);
 
-  // Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
-  // kill_processes_image->set_from_icon_name("process-stop");
-  // kill_processes_image->set_icon_size(Gtk::IconSize::LARGE);
-  kill_processes_button.set_label("Kill Processes");
-  clone_button.set_icon_name("process-stop");
+  Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
+  kill_processes_image->set_from_icon_name("process-stop");
+  Gtk::Label* kill_processes_label = Gtk::manage(new Gtk::Label("Kill Processes"));
+  Gtk::Box* kill_processes_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  kill_processes_box->append(*kill_processes_image);
+  kill_processes_box->append(*kill_processes_label);
+
+  kill_processes_button.set_child(*kill_processes_box);
   kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
   toolbar.append(kill_processes_button);
 
-  // Add toolbar to right box
+  // Add toolbar to right vbox
   right_vbox.append(toolbar);
   right_vbox.append(separator1);
 

@@ -85,7 +85,7 @@ void BottleManager::prepare()
   // Start the initial read from disk to fetch the bottles & update GUI
   // "" - during startup (no bottle name to select)
   // true - during startup
-  // TODO: Run in thread, not blocking the main thread
+  // TODO: Run in separate thread, thus not blocking the main thread
   update_config_and_bottles("", true);
 }
 
@@ -671,7 +671,7 @@ void BottleManager::delete_bottle()
                                       "?\n\n<i>Note:</i> This action cannot be undone!";
       auto dialog = main_window_.show_confirm_dialog(confirm_message, true);
       dialog->signal_response().connect(
-          [this](int result)
+          [this, dialog](int result)
           {
             if (result == Gtk::ResponseType::YES)
             {
@@ -684,6 +684,8 @@ void BottleManager::delete_bottle()
             {
               // no/canceled/closed, do nothing
             }
+            // Hide dialog
+            dialog->hide();
           });
     }
     catch (const std::runtime_error& error)
@@ -1158,7 +1160,7 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
                                          "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
                                          true);
     dialog->signal_response().connect(
-        [this, &parent, version](int result)
+        [this, dialog, &parent, version](int result)
         {
           switch (result)
           {
@@ -1206,14 +1208,14 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
                   finish_dispatcher->emit();
                 });
             t.detach();
-
-            // TODO: do something
             break;
           }
           default:
             // No or close, do nothing
             break;
           }
+          // Hide dialog
+          dialog->hide();
         });
   }
 }

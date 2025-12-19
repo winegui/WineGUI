@@ -21,6 +21,7 @@
 #include "add_app_window.h"
 #include "bottle_config_file.h"
 #include "bottle_item.h"
+#include "gtkmm/enums.h"
 #include <iostream>
 
 /**
@@ -46,6 +47,32 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
 
   set_default_values();
 
+  create_layout();
+
+  // Signals
+  select_executable_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_select_file));
+  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_cancel_button_clicked));
+  save_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_save_button_clicked));
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        hide();
+        set_default_values();
+        return true; // stop default destroy
+      },
+      false);
+}
+
+/**
+ * \brief Destructor
+ */
+AddAppWindow::~AddAppWindow()
+{
+}
+
+void AddAppWindow::create_layout()
+{
   add_app_grid.set_margin_top(5);
   add_app_grid.set_margin_end(5);
   add_app_grid.set_margin_bottom(6);
@@ -81,25 +108,15 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
   add_app_grid.set_vexpand(true);
   add_app_grid.set_halign(Gtk::Align::FILL);
 
+  hbox_buttons.set_halign(Gtk::Align::END);
+  hbox_buttons.set_margin(6);
   hbox_buttons.append(save_button);
   hbox_buttons.append(cancel_button);
 
-  vbox.prepend(header_add_app_label);
-  vbox.prepend(add_app_grid);
-  vbox.prepend(hbox_buttons);
+  vbox.append(header_add_app_label);
+  vbox.append(add_app_grid);
+  vbox.append(hbox_buttons);
   set_child(vbox);
-
-  // Signals
-  select_executable_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_select_file));
-  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_cancel_button_clicked));
-  save_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_save_button_clicked));
-}
-
-/**
- * \brief Destructor
- */
-AddAppWindow::~AddAppWindow()
-{
 }
 
 /**

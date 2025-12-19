@@ -90,17 +90,27 @@ BottleCloneWindow::BottleCloneWindow(Gtk::Window& parent)
   clone_grid.set_valign(Gtk::Align::FILL);
   clone_grid.set_margin_bottom(5);
 
+  hbox_buttons.set_halign(Gtk::Align::END);
+  hbox_buttons.set_margin(6);
   hbox_buttons.append(clone_button);
   hbox_buttons.append(cancel_button);
 
-  vbox.prepend(header_clone_label);
-  vbox.prepend(clone_grid);
-  vbox.prepend(hbox_buttons);
+  vbox.append(header_clone_label);
+  vbox.append(clone_grid);
+  vbox.append(hbox_buttons);
   set_child(vbox);
 
   // Signals
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleCloneWindow::on_cancel_button_clicked));
   clone_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleCloneWindow::on_clone_button_clicked));
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        hide();
+        return true; // stop default destroy
+      },
+      false);
 }
 
 /**

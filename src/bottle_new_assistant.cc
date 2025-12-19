@@ -20,8 +20,8 @@
  */
 #include "bottle_new_assistant.h"
 #include "bottle_types.h"
+#include "gtkmm/enums.h"
 #include "wine_defaults.h"
-#include <iostream>
 
 #define LOADING_PAGE_INDEX 2 /*!< The loading page, 3rd page (2 when start counting from zero) */
 
@@ -42,10 +42,13 @@ BottleNewAssistant::BottleNewAssistant()
       virtual_desktop_check("Enable Virtual Desktop Window"),
       disable_gecko_mono_check("Disable Gecko & Mono")
 {
-  set_margin(8);
   set_default_size(640, 400);
   // Only focus on assistant, disable interaction with other windows in app
   set_modal(true);
+
+  vbox.set_margin(8);
+  vbox2.set_margin(8);
+  vbox3.set_margin(8);
 
   // Create pages
   create_first_page();
@@ -57,11 +60,18 @@ BottleNewAssistant::BottleNewAssistant()
 
   signal_apply().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_apply));
   signal_cancel().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_cancel));
-  signal_close().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_close));
   signal_prepare().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_assistant_prepare));
-
-  // By default hide resolution label & entry
-  hbox_virtual_desktop.hide();
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        hide();
+        set_default_values();
+        // Move to first page
+        set_current_page(0);
+        return true; // stop default destroy
+      },
+      false);
 }
 
 /**
@@ -85,6 +95,9 @@ void BottleNewAssistant::set_default_values()
   disable_gecko_mono_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("1024x768");
   loading_bar.set_fraction(0.0);
+  // Hide resolution label & entry
+  hbox_virtual_desktop.hide();
+
   // TODO: Unable to reset the cancel button after previous commit()?
 
   if (timer_)
@@ -100,15 +113,15 @@ void BottleNewAssistant::create_first_page()
 {
   // Intro page
   intro_label.set_markup("<big><b>Create a New Machine</b></big>\n"
-                         "Please use a descriptive name for the Windows machine, and select which Windows version you want to use.");
+                         "Please use a descriptive name for the Windows machine,"
+                         "and select which Windows version you want to use.");
   intro_label.set_halign(Gtk::Align::START);
   intro_label.set_margin_bottom(25);
-  vbox.prepend(intro_label);
+  vbox.append(intro_label);
 
-  name_label.set_halign(Gtk::Align::FILL);
-  hbox_name.prepend(name_label);
-  hbox_name.prepend(name_entry);
-  vbox.prepend(hbox_name);
+  hbox_name.append(name_label);
+  hbox_name.append(name_entry);
+  vbox.append(hbox_name);
 
   // Fill-in Windows versions in combobox
   for (std::vector<BottleTypes::WindowsAndBit>::iterator it = BottleTypes::SupportedWindowsVersions.begin();
@@ -118,10 +131,9 @@ void BottleNewAssistant::create_first_page()
     windows_version_combobox.append(std::to_string(index), BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
   }
 
-  windows_version_label.set_halign(Gtk::Align::FILL);
-  hbox_win.prepend(windows_version_label);
-  hbox_win.prepend(windows_version_combobox);
-  vbox.prepend(hbox_win);
+  hbox_win.append(windows_version_label);
+  hbox_win.append(windows_version_combobox);
+  vbox.append(hbox_win);
 
   name_entry.signal_changed().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_entry_changed));
 
@@ -141,7 +153,7 @@ void BottleNewAssistant::create_second_page()
                               "know what these settings mean, <b><i>do NOT</i></b> change the settings (keep the default values).");
   additional_label.set_halign(Gtk::Align::START);
   additional_label.set_margin_bottom(25);
-  vbox2.prepend(additional_label);
+  vbox2.append(additional_label);
 
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
@@ -149,20 +161,19 @@ void BottleNewAssistant::create_second_page()
     audio_driver_combobox.append(std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
 
-  audio_driver_label.set_halign(Gtk::Align::FILL);
+  audio_driver_label.set_margin_end(6);
+  hbox_audio.append(audio_driver_label);
+  hbox_audio.append(audio_driver_combobox);
+  vbox2.append(hbox_audio);
 
-  hbox_audio.prepend(audio_driver_label);
-  hbox_audio.prepend(audio_driver_combobox);
-  vbox2.prepend(hbox_audio);
-
-  vbox2.prepend(virtual_desktop_check);
+  vbox2.append(virtual_desktop_check);
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_virtual_desktop_toggle));
 
-  hbox_virtual_desktop.prepend(virtual_desktop_resolution_label);
-  hbox_virtual_desktop.prepend(virtual_desktop_resolution_entry);
-  vbox2.prepend(hbox_virtual_desktop);
+  hbox_virtual_desktop.append(virtual_desktop_resolution_label);
+  hbox_virtual_desktop.append(virtual_desktop_resolution_entry);
+  vbox2.append(hbox_virtual_desktop);
 
-  vbox2.prepend(disable_gecko_mono_check);
+  vbox2.append(disable_gecko_mono_check);
 
   append_page(vbox2);
   set_page_complete(vbox2, true);
@@ -178,8 +189,8 @@ void BottleNewAssistant::create_third_page()
   vbox3.set_halign(Gtk::Align::CENTER);
   vbox3.set_valign(Gtk::Align::CENTER);
 
-  vbox3.prepend(apply_label);
-  vbox3.prepend(loading_bar);
+  vbox3.append(apply_label);
+  vbox3.append(loading_bar);
   append_page(vbox3);
 
   // Wait before we close the window
@@ -312,11 +323,6 @@ void BottleNewAssistant::on_assistant_apply()
 }
 
 void BottleNewAssistant::on_assistant_cancel()
-{
-  hide();
-}
-
-void BottleNewAssistant::on_assistant_close()
 {
   hide();
 }

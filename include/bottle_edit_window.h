@@ -104,6 +104,7 @@ private:
   void on_debug_logging_toggle();
 
   // Member functions
+  void create_layout();
   void virtual_desktop_resolution_sensitive(bool sensitive);
   void log_level_sensitive(bool sensitive);
 

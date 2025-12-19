@@ -68,5 +68,6 @@ private:
   void on_save_button_clicked();
 
   // Member functions
+  void create_layout();
   void set_default_values();
 };

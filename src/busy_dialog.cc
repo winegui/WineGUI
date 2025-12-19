@@ -80,7 +80,7 @@ void BusyDialog::show()
 
   int time_interval = 200;
   timer_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BusyDialog::pulsing), time_interval);
-  Gtk::Dialog::show();
+  Gtk::Dialog::present();
 }
 
 /**

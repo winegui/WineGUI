@@ -89,6 +89,7 @@ protected:
 private:
   BottleItem* active_bottle_; /*!< Current active bottle */
 
+  void create_layout();
   bool is_d3dx9_installed();
   bool is_dxvk_installed();
   bool is_vkd3d_installed();

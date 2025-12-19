@@ -42,6 +42,28 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
 
   set_child(configure_grid);
 
+  create_layout();
+
+  // Signals
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        hide();
+        return true; // stop default destroy
+      },
+      false);
+}
+
+/**
+ * \brief Destructor
+ */
+BottleConfigureWindow::~BottleConfigureWindow()
+{
+}
+
+void BottleConfigureWindow::create_layout()
+{
   first_toolbar.set_halign(Gtk::Align::CENTER);
   first_toolbar.set_valign(Gtk::Align::CENTER);
 
@@ -148,13 +170,6 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
   install_dotnet6_button.signal_clicked().connect(sigc::bind(dotnet, this, "6"));
   install_dotnet6_button.set_tooltip_text("Installs .NET 6.0 from 2023");
   fourth_toolbar.append(install_dotnet6_button);
-}
-
-/**
- * \brief Destructor
- */
-BottleConfigureWindow::~BottleConfigureWindow()
-{
 }
 
 /**

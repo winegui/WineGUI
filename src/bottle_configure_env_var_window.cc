@@ -63,10 +63,11 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   add_button.set_margin_bottom(5);
   // Horizontal buttons
   hbox_buttons.set_homogeneous(true);
-  hbox_buttons.prepend(remove_button);
-  hbox_buttons.prepend(add_button);
+  hbox_buttons.set_margin(6);
   hbox_buttons.set_margin_bottom(5);
   hbox_buttons.set_halign(Gtk::Align::FILL);
+  hbox_buttons.prepend(remove_button);
+  hbox_buttons.prepend(add_button);
   // Second row of buttons
   hbox_2_buttons.append(save_button);
   hbox_2_buttons.append(cancel_button);
@@ -81,11 +82,11 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   m_ScrolledWindow.set_halign(Gtk::Align::FILL);
   m_ScrolledWindow.set_valign(Gtk::Align::FILL);
 
-  vbox.prepend(header_configure_env_var_label);
-  vbox.prepend(environment_variables_label);
-  vbox.prepend(m_ScrolledWindow);
-  vbox.prepend(hbox_buttons);
-  vbox.prepend(hbox_2_buttons);
+  vbox.append(header_configure_env_var_label);
+  vbox.append(environment_variables_label);
+  vbox.append(m_ScrolledWindow);
+  vbox.append(hbox_buttons);
+  vbox.append(hbox_2_buttons);
 
   set_child(vbox);
 

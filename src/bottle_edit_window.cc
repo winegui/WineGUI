@@ -20,6 +20,7 @@
  */
 #include "bottle_edit_window.h"
 #include "bottle_item.h"
+#include "gtkmm/enums.h"
 #include "gtkmm/window.h"
 #include "wine_defaults.h"
 
@@ -59,6 +60,34 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   edit_grid.set_column_spacing(6);
   edit_grid.set_row_spacing(8);
 
+  create_layout();
+
+  // Signals
+  configure_environment_variables_button.signal_clicked().connect(configure_environment_variables);
+  delete_button.signal_clicked().connect(remove_bottle);
+  virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
+  enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
+  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
+  save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_save_button_clicked));
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        hide();
+        return true; // stop default destroy
+      },
+      false);
+}
+
+/**
+ * \brief Destructor
+ */
+BottleEditWindow::~BottleEditWindow()
+{
+}
+
+void BottleEditWindow::create_layout()
+{
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
   fd_label.set_weight(Pango::Weight::BOLD);
@@ -144,33 +173,23 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   edit_grid.set_halign(Gtk::Align::FILL);
   edit_grid.set_margin_end(5);
 
+  hbox_buttons.set_margin(6);
+  delete_button.set_halign(Gtk::Align::START);
+  delete_button.set_hexpand(true);
+  save_button.set_halign(Gtk::Align::END);
+  cancel_button.set_halign(Gtk::Align::END);
   hbox_buttons.prepend(delete_button);
   hbox_buttons.append(save_button);
   hbox_buttons.append(cancel_button);
 
-  vbox.prepend(header_edit_label);
-  vbox.prepend(edit_grid);
-  vbox.prepend(hbox_buttons);
+  vbox.append(header_edit_label);
+  vbox.append(edit_grid);
+  vbox.append(hbox_buttons);
   set_child(vbox);
 
   // Gray-out virtual desktop & log level by default
   virtual_desktop_resolution_sensitive(false);
   log_level_sensitive(false);
-
-  // Signals
-  configure_environment_variables_button.signal_clicked().connect(configure_environment_variables);
-  delete_button.signal_clicked().connect(remove_bottle);
-  virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
-  enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
-  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
-  save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_save_button_clicked));
-}
-
-/**
- * \brief Destructor
- */
-BottleEditWindow::~BottleEditWindow()
-{
 }
 
 /**

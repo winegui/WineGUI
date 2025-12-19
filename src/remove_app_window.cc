@@ -71,15 +71,17 @@ RemoveAppWindow::RemoveAppWindow(Gtk::Window& parent)
   unselect_all_button.set_margin_end(5);
   app_list_box.set_halign(Gtk::Align::FILL);
 
+  hbox_buttons.set_halign(Gtk::Align::END);
+  hbox_buttons.set_margin(6);
   hbox_buttons.append(remove_selected_button);
   hbox_buttons.append(cancel_button);
 
-  vbox.prepend(header_remove_app_label);
-  vbox.prepend(header_remove_description_label);
-  vbox.prepend(app_list_box);
-  vbox.prepend(select_all_button);
-  vbox.prepend(unselect_all_button);
-  vbox.prepend(hbox_buttons);
+  vbox.append(header_remove_app_label);
+  vbox.append(header_remove_description_label);
+  vbox.append(app_list_box);
+  vbox.append(select_all_button);
+  vbox.append(unselect_all_button);
+  vbox.append(hbox_buttons);
   set_child(vbox);
 
   // Signals
@@ -87,6 +89,14 @@ RemoveAppWindow::RemoveAppWindow(Gtk::Window& parent)
   unselect_all_button.signal_clicked().connect(sigc::mem_fun(app_list_box, &Gtk::ListBox::unselect_all));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &RemoveAppWindow::on_cancel_button_clicked));
   remove_selected_button.signal_clicked().connect(sigc::mem_fun(*this, &RemoveAppWindow::on_remove_selected_button_clicked));
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        hide();
+        return true; // stop default destroy
+      },
+      false);
 }
 
 /**

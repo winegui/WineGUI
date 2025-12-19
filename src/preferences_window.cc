@@ -81,18 +81,28 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
   settings_grid.attach(logging_stderr_label, 0, 6);
   settings_grid.attach(enable_logging_stderr_check, 1, 6, 2);
 
+  hbox_buttons.set_halign(Gtk::Align::END);
+  hbox_buttons.set_margin(6);
   hbox_buttons.append(save_button);
   hbox_buttons.append(cancel_button);
 
-  vbox.prepend(header_preferences_label);
-  vbox.prepend(settings_grid);
-  vbox.prepend(hbox_buttons);
+  vbox.append(header_preferences_label);
+  vbox.append(settings_grid);
+  vbox.append(hbox_buttons);
   set_child(vbox);
 
   // Signals
   select_folder_button.signal_clicked().connect(sigc::mem_fun(*this, &PreferencesWindow::on_select_folder));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &PreferencesWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &PreferencesWindow::on_save_button_clicked));
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        hide();
+        return true; // stop default destroy
+      },
+      false);
 }
 
 /**

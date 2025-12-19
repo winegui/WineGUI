@@ -79,7 +79,6 @@ private:
   // Signal handlers
   void on_assistant_apply();
   void on_assistant_cancel();
-  void on_assistant_close();
   void on_assistant_prepare(Gtk::Widget* widget);
   void on_entry_changed();
   void on_virtual_desktop_toggle();
