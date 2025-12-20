@@ -59,16 +59,6 @@ MainWindow::MainWindow(/*Menu& menu*/)
   set_title("WineGUI - WINE Manager");
   set_default_size(1120, 675);
 
-  // TODO: No more icon via set_icon_from_file.. How to set a icon now using .res resource files?
-  // try
-  // {
-  //   set_icon_from_file(Helper::get_image_location("logo.png"));
-  // }
-  // catch (Glib::FileError& e)
-  // {
-  //   cout << "Error: couldn't load our logo: " << e.what() << endl;
-  // }
-
   // Add menu to box (top), no expand/fill
   // There is no GTK::MenuBar anymore ;(
   // vbox.append(menu);
@@ -89,6 +79,22 @@ MainWindow::MainWindow(/*Menu& menu*/)
   audio_driver_label.set_halign(Gtk::Align::START);
   virtual_desktop_label.set_halign(Gtk::Align::START);
   description_label.set_halign(Gtk::Align::START);
+
+  // Add custom css
+  auto css = Gtk::CssProvider::create();
+  // @theme_selected_bg_color
+  css->load_from_data(R"(
+  .app-list row:hover {
+    background-color: transparent;
+  }
+  .app-list row:selected {
+    background-color: transparent;
+  }
+  .app-list row:selected:hover {
+    background-color: transparent;
+  }
+  )");
+  Gtk::StyleContext::add_provider_for_display(Gdk::Display::get_default(), css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
   // Create rest to vbox
   create_left_panel();
@@ -126,6 +132,7 @@ MainWindow::MainWindow(/*Menu& menu*/)
   app_list_list_view.set_single_click_activate(true);
   app_list_list_view.set_focus_on_click(false);
   app_list_list_view.set_can_focus(false);
+  app_list_list_view.add_css_class("app-list");
   app_list_list_view.signal_activate().connect(sigc::mem_fun(*this, &MainWindow::on_application_row_activated));
 
   // Toolbar buttons
