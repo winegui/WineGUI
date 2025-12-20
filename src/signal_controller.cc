@@ -162,7 +162,7 @@ void SignalController::dispatch_signals()
   // Right click menu in listbox
   // main_window_->right_click_menu.connect(sigc::mem_fun(*this, &SignalController::on_mouse_button_pressed));
 
-  // When bottle created, the finish (or error message) event is called
+  // When bottle created or updated or cloned, the finish (or error message) event is called
   bottle_created_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_new_bottle_created));
   bottle_updated_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_bottle_updated));
   bottle_cloned_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_bottle_cloned));

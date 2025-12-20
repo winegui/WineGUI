@@ -35,7 +35,7 @@ public:
   virtual ~BusyDialog();
 
   void present();
-  void close();
+  void hide(); /**< Hide the busy dialog (stop the timer and calls parent set_visible()) */
 
   void set_message(const Glib::ustring& heading_text, const Glib::ustring& message);
 

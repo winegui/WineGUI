@@ -20,6 +20,7 @@
  */
 #include "busy_dialog.h"
 #include "gtkmm/window.h"
+#include <iostream>
 
 /**
  * \brief Constructor
@@ -94,10 +95,11 @@ void BusyDialog::present()
 }
 
 /**
- * \brief Close the busy dialog (override the close(), calls parent set_visible())
+ * \brief Hide the busy dialog (stop the timer and calls parent set_visible())
  */
-void BusyDialog::close()
+void BusyDialog::hide()
 {
+  std::cout << "Hiding busy dialog" << std::endl;
   // Reset default parent
   set_transient_for(default_parent_);
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2024 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    bottle_clone_window.h
  * \brief   Wine bottle clone window

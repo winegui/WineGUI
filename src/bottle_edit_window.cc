@@ -280,7 +280,7 @@ void BottleEditWindow::bottle_removed()
  */
 void BottleEditWindow::on_bottle_updated()
 {
-  busy_dialog.set_visible(false);
+  busy_dialog.hide();
   set_visible(false); // Hide the edit Window
 }
 
@@ -335,6 +335,13 @@ void BottleEditWindow::on_cancel_button_clicked()
  */
 void BottleEditWindow::on_save_button_clicked()
 {
+  // First disable save button (avoid multiple presses)
+  save_button.set_sensitive(false);
+
+  // Show busy dialog
+  busy_dialog.set_message("Updating Windows Machine", "Busy applying all your changes currently.");
+  busy_dialog.present();
+
   std::string::size_type sz;
 
   UpdateBottleStruct update_bottle_struct;
@@ -342,13 +349,6 @@ void BottleEditWindow::on_save_button_clicked()
   update_bottle_struct.audio = WineDefaults::AudioDriver;         // Fallback
   update_bottle_struct.virtual_desktop_resolution = "";           // Empty string default (= disabled windowed mode)
   update_bottle_struct.debug_log_level = 1;                       // // 1 = Default wine debug logging
-
-  // First disable save button (avoid multiple presses)
-  save_button.set_sensitive(false);
-
-  // Show busy dialog
-  busy_dialog.set_message("Updating Windows Machine", "Busy applying all your changes currently.");
-  busy_dialog.present();
 
   update_bottle_struct.name = name_entry.get_text();
   update_bottle_struct.folder_name = folder_name_entry.get_text();

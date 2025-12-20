@@ -318,7 +318,7 @@ void MainWindow::show_busy_install_dialog(Gtk::Window* parent, const Glib::ustri
  */
 void MainWindow::hide_busy_dialog()
 {
-  busy_dialog_.set_visible(false);
+  busy_dialog_.hide();
 }
 
 /**

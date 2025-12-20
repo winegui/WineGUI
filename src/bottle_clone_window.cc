@@ -165,12 +165,13 @@ void BottleCloneWindow::reset_active_bottle()
 }
 
 /**
- * \brief Handler when the bottle is cloned. Return just cloned bottle name
+ * \brief Handler when the bottle is cloned.
+ * \return The name of the cloned bottle
  */
 Glib::ustring BottleCloneWindow::on_bottle_cloned()
 {
-  busy_dialog.set_visible(false);
-  set_visible(false); // Close the clone Window
+  busy_dialog.hide();
+  set_visible(false); // Hide the clone Window
   return name_entry.get_text();
 }
 
@@ -187,10 +188,10 @@ void BottleCloneWindow::on_cancel_button_clicked()
  */
 void BottleCloneWindow::on_clone_button_clicked()
 {
-  CloneBottleStruct clone_bottle_struct;
-
   // First disable save button (avoid multiple presses)
   clone_button.set_sensitive(false);
+
+  CloneBottleStruct clone_bottle_struct;
 
   // Show busy dialog
   busy_dialog.set_message("Clone Windows Machine",
