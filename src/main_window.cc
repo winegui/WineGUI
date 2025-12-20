@@ -120,7 +120,7 @@ MainWindow::MainWindow(/*Menu& menu*/)
   new_bottle_assistant_.new_bottle_finished.connect(finished_new_bottle);
 
   // Application search
-  app_list_search_entry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::on_app_list_changed));
+  app_list_search_entry.signal_search_changed().connect(sigc::mem_fun(*this, &MainWindow::on_app_list_search));
 
   // Trigger row activated signal on a single click
   app_list_list_view.signal_activate().connect(sigc::mem_fun(*this, &MainWindow::on_application_row_activated));
@@ -490,11 +490,19 @@ void MainWindow::on_bottle_row_clicked(Gtk::ListBoxRow* row)
   }
 }
 
-void MainWindow::on_app_list_changed()
+void MainWindow::on_app_list_search()
 {
-  // Refilter
-  // TODO: Implement filter
-  // app_list_filter->refilter();
+  string search_text = app_list_search_entry.get_text();
+  if (!search_text.empty())
+  {
+    app_list_filter->set_search(search_text);
+    app_list_selection_model->set_model(app_list_filter_list_model);
+  }
+  else
+  {
+    // Show all
+    app_list_selection_model->set_model(app_list_store);
+  }
 }
 
 void MainWindow::on_application_row_activated(unsigned int position)
@@ -1256,23 +1264,36 @@ void MainWindow::create_right_panel()
   /**
    * Application list section
    */
-
+  // Create list model
   app_list_store = Gio::ListStore<AppListModelColumns>::create();
 
+  // Create the filter model
+  auto expression = Gtk::ClosureExpression<Glib::ustring>::create(
+      [](const Glib::RefPtr<Glib::ObjectBase>& item) -> Glib::ustring
+      {
+        const auto col = std::dynamic_pointer_cast<AppListModelColumns>(item);
+        return col ? col->name : "";
+      });
+  app_list_filter = Gtk::StringFilter::create(expression);
+  app_list_filter->set_ignore_case(true);
+  app_list_filter->set_match_mode(Gtk::StringFilter::MatchMode::SUBSTRING);
+  app_list_filter_list_model = Gtk::FilterListModel::create(app_list_store, app_list_filter);
+
+  // Set selection model
   app_list_selection_model = Gtk::SingleSelection::create(app_list_store);
   app_list_selection_model->set_autoselect(false);
   app_list_selection_model->set_can_unselect(true);
-  // TODO: Maybe add custom css?
-  // app_list_column_view.add_css_class("my-data-table");
 
-  // Icon + name column
+  // Create factory
   app_list_factory = Gtk::SignalListItemFactory::create();
   app_list_factory->signal_setup().connect(sigc::mem_fun(*this, &MainWindow::on_setup_label));
   app_list_factory->signal_bind().connect(sigc::mem_fun(*this, &MainWindow::on_bind_icon_and_name));
 
+  // Set list model and factory
   app_list_list_view.set_model(app_list_selection_model);
   app_list_list_view.set_factory(app_list_factory);
 
+  // Set scrolled window properties
   app_list_scrolled_window.set_margin_top(6);
   app_list_scrolled_window.set_margin_start(6);
   app_list_scrolled_window.set_margin_end(6);
@@ -1282,12 +1303,6 @@ void MainWindow::create_right_panel()
   app_list_scrolled_window.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
   app_list_scrolled_window.set_expand();
   app_list_scrolled_window.set_child(app_list_list_view);
-
-  // OLD:
-  // app_list_filter->set_visible_func(sigc::mem_fun(*this, &MainWindow::app_list_visible_func));
-  // name_desc_column.pack_start(name_desc_renderer_text);
-  // application_list_treeview.append_column("icon", app_list_columns.icon); // TODO: Add spacing, maybe also use a custom method like below
-  // application_list_treeview.append_column(name_desc_column);
 
   // Add application header text
   Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
@@ -1312,29 +1327,22 @@ void MainWindow::create_right_panel()
   app_list_search_entry.set_halign(Gtk::Align::FILL);
 
   // App list add shortcut button
-  // TODO: Lets see if set_icon_name is good enough or we need to use set_child with a GTK::Image again.
-  // Gtk::Image* add_app_list_image = Gtk::manage(new Gtk::Image());
-  // add_app_list_image->set_from_icon_name("list-add");
-  // add_app_list_image->set_icon_size(Gtk::IconSize::LARGE);
   add_app_list_button.set_tooltip_text("Add shortcut to application list");
+  add_app_list_button.set_label("Add");
   add_app_list_button.set_icon_name("list-add");
   add_app_list_button.set_margin_top(6);
   add_app_list_button.set_margin_end(6);
 
   // App list remove shortcut button
-  // Gtk::Image* remove_app_list_image = Gtk::manage(new Gtk::Image());
-  // remove_app_list_image->set_from_icon_name("list-remove");
-  // remove_app_list_image->set_icon_size(Gtk::IconSize::LARGE);
   remove_app_list_button.set_tooltip_text("Remove shortcut from application list");
+  remove_app_list_button.set_label("Remove");
   remove_app_list_button.set_icon_name("list-remove");
   remove_app_list_button.set_margin_top(6);
   remove_app_list_button.set_margin_end(6);
 
   // App list refresh button
-  // Gtk::Image* refresh_app_list_image = Gtk::manage(new Gtk::Image());
-  // refresh_app_list_image->set_from_icon_name("view-refresh");
-  // refresh_app_list_image->set_icon_size(Gtk::IconSize::LARGE);
   refresh_app_list_button.set_tooltip_text("Refresh application list");
+  refresh_app_list_button.set_label("Refresh");
   refresh_app_list_button.set_icon_name("view-refresh");
   refresh_app_list_button.set_margin_top(6);
   refresh_app_list_button.set_margin_end(6);
@@ -1345,7 +1353,6 @@ void MainWindow::create_right_panel()
   app_list_top_hbox.append(remove_app_list_button);
   app_list_top_hbox.append(refresh_app_list_button);
   app_list_top_hbox.set_halign(Gtk::Align::FILL);
-  app_list_top_hbox.set_margin_bottom(6);
 
   // Add heading (label + icon)
   app_list_vbox.append(*application_box);
@@ -1375,6 +1382,7 @@ void MainWindow::on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item)
   icon->set_can_shrink(false);
   icon->set_halign(Gtk::Align::CENTER);
   icon->set_valign(Gtk::Align::CENTER);
+  icon->set_margin_end(8);
   hbox->append(*icon);
 
   Gtk::Label* name = Gtk::make_managed<Gtk::Label>("", Gtk::Align::START);

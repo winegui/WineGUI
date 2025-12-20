@@ -117,13 +117,13 @@ protected:
   Glib::RefPtr<Gio::ListStore<AppListModelColumns>> app_list_store; /*!< Application list store */
   Glib::RefPtr<Gtk::SingleSelection> app_list_selection_model;      /*!< Application list selection model */
   Glib::RefPtr<Gtk::SignalListItemFactory> app_list_factory;        /*!< Application list factory */
-  // TODO: Implement a filter again
-  // Glib::RefPtr<Gtk::TreeModelFilter> app_list_filter; /*!< Tree model filter for app list  */
-  Gtk::Box toolbar;                             /*!< Toolbar at top */
-  Gtk::Separator separator1;                    /*!< Separator */
-  Gtk::Grid detail_grid;                        /*!< Grid layout container to have multiple rows & columns below the toolbar */
-  Gtk::ScrolledWindow app_list_scrolled_window; /*!< Scrolled Window container for app list */
-  Gtk::ListView app_list_list_view;             /*!< List of applications put inside a list view */
+  Glib::RefPtr<Gtk::FilterListModel> app_list_filter_list_model;    /*!< Application list filter list model */
+  Glib::RefPtr<Gtk::StringFilter> app_list_filter;                  /*!< Application list filter */
+  Gtk::Box toolbar;                                                 /*!< Toolbar at top */
+  Gtk::Separator separator1;                                        /*!< Separator */
+  Gtk::Grid detail_grid;                                            /*!< Grid layout container to have multiple rows & columns below the toolbar */
+  Gtk::ScrolledWindow app_list_scrolled_window;                     /*!< Scrolled Window container for app list */
+  Gtk::ListView app_list_list_view;                                 /*!< List of applications put inside a list view */
 
   // Detailed info labels on the right panel
   Gtk::Label name_label;              /*!< Bottle name */
@@ -181,7 +181,7 @@ private:
 
   // Signal handlers
   virtual void on_bottle_row_clicked(Gtk::ListBoxRow* row);
-  virtual void on_app_list_changed();
+  virtual void on_app_list_search();
   virtual void on_application_row_activated(unsigned int position);
   virtual void on_new_bottle_apply();
 
