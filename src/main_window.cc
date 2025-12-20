@@ -84,15 +84,10 @@ MainWindow::MainWindow(/*Menu& menu*/)
   auto css = Gtk::CssProvider::create();
   // @theme_selected_bg_color
   css->load_from_data(R"(
-  .app-list row:hover {
-    background-color: transparent;
-  }
-  .app-list row:selected {
-    background-color: transparent;
-  }
-  .app-list row:selected:hover {
-    background-color: transparent;
-  }
+    .app-list:not(:hover) row:selected,
+    .app-list:not(:hover) listitem:selected {
+      background-color: transparent;
+    }
   )");
   Gtk::StyleContext::add_provider_for_display(Gdk::Display::get_default(), css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
