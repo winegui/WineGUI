@@ -73,7 +73,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   signal_close_request().connect(
       [this]() -> bool
       {
-        hide();
+        set_visible(false);
         return true; // stop default destroy
       },
       false);
@@ -178,7 +178,7 @@ void BottleEditWindow::create_layout()
   delete_button.set_hexpand(true);
   save_button.set_halign(Gtk::Align::END);
   cancel_button.set_halign(Gtk::Align::END);
-  hbox_buttons.prepend(delete_button);
+  hbox_buttons.append(delete_button);
   hbox_buttons.append(save_button);
   hbox_buttons.append(cancel_button);
 
@@ -272,7 +272,7 @@ void BottleEditWindow::reset_active_bottle()
  */
 void BottleEditWindow::bottle_removed()
 {
-  hide(); // Hide the edit window
+  set_visible(false); // Hide the edit window
 }
 
 /**
@@ -280,8 +280,8 @@ void BottleEditWindow::bottle_removed()
  */
 void BottleEditWindow::on_bottle_updated()
 {
-  busy_dialog.hide();
-  hide(); // Hide the edit Window
+  busy_dialog.set_visible(false);
+  set_visible(false); // Hide the edit Window
 }
 
 /**
@@ -327,7 +327,7 @@ void BottleEditWindow::on_debug_logging_toggle()
  */
 void BottleEditWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
@@ -348,7 +348,7 @@ void BottleEditWindow::on_save_button_clicked()
 
   // Show busy dialog
   busy_dialog.set_message("Updating Windows Machine", "Busy applying all your changes currently.");
-  busy_dialog.show();
+  busy_dialog.present();
 
   update_bottle_struct.name = name_entry.get_text();
   update_bottle_struct.folder_name = folder_name_entry.get_text();

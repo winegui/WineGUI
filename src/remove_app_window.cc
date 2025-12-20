@@ -93,7 +93,7 @@ RemoveAppWindow::RemoveAppWindow(Gtk::Window& parent)
   signal_close_request().connect(
       [this]() -> bool
       {
-        hide();
+        set_visible(false);
         return true; // stop default destroy
       },
       false);
@@ -162,7 +162,7 @@ void RemoveAppWindow::reset_active_bottle()
  */
 void RemoveAppWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
@@ -196,7 +196,7 @@ void RemoveAppWindow::on_remove_selected_button_clicked()
       else
       {
         // Hide remove application window
-        hide();
+        set_visible(false);
         // Trigger manager update & UI update
         config_saved.emit();
       }

@@ -297,6 +297,7 @@ DialogWindow* MainWindow::show_question_dialog(const Glib::ustring& message, boo
 void MainWindow::show_busy_install_dialog(const Glib::ustring& message)
 {
   busy_dialog_.set_message("Installing software", message);
+  busy_dialog_.set_transient_for(*this);
   busy_dialog_.present();
 }
 
@@ -313,11 +314,11 @@ void MainWindow::show_busy_install_dialog(Gtk::Window* parent, const Glib::ustri
 }
 
 /**
- * \brief Close the busy dialog again
+ * \brief Hide the busy dialog again
  */
-void MainWindow::close_busy_dialog()
+void MainWindow::hide_busy_dialog()
 {
-  busy_dialog_.hide();
+  busy_dialog_.set_visible(false);
 }
 
 /**
@@ -424,7 +425,7 @@ void MainWindow::on_refresh_app_list_button_clicked()
  */
 void MainWindow::on_hide_window()
 {
-  hide();
+  set_visible(false);
 }
 
 /**

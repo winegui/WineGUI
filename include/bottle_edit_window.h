@@ -93,9 +93,7 @@ protected:
   Gtk::Button save_button;                            /*!< save button */
   Gtk::Button cancel_button;                          /*!< cancel button */
   Gtk::Button delete_button;                          /*!< delete button */
-
-  // Busy dialog
-  BusyDialog busy_dialog; /*!< Busy dialog, when the user should wait until install is finished */
+  BusyDialog busy_dialog;                             /*!< Busy dialog, when the user should wait until install is finished */
 private:
   // Signal handlers
   void on_cancel_button_clicked();

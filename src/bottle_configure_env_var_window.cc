@@ -66,8 +66,8 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   hbox_buttons.set_margin(6);
   hbox_buttons.set_margin_bottom(2);
   hbox_buttons.set_halign(Gtk::Align::FILL);
-  hbox_buttons.prepend(remove_button);
-  hbox_buttons.prepend(add_button);
+  hbox_buttons.append(add_button);
+  hbox_buttons.append(remove_button);
   // Save / Cancel buttons
   hbox_2_buttons.append(save_button);
   hbox_2_buttons.append(cancel_button);
@@ -116,7 +116,7 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   signal_close_request().connect(
       [this]() -> bool
       {
-        hide();
+        set_visible(false);
         return true; // stop default destroy
       },
       false);
@@ -201,7 +201,7 @@ void BottleConfigureEnvVarWindow::on_remove_button_clicked()
  */
 void BottleConfigureEnvVarWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**

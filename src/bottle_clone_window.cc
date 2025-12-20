@@ -107,7 +107,7 @@ BottleCloneWindow::BottleCloneWindow(Gtk::Window& parent)
   signal_close_request().connect(
       [this]() -> bool
       {
-        hide();
+        set_visible(false);
         return true; // stop default destroy
       },
       false);
@@ -195,7 +195,7 @@ void BottleCloneWindow::on_clone_button_clicked()
   // Show busy dialog
   busy_dialog.set_message("Clone Windows Machine",
                           "Currently cloning the Windows Machine.\nThis can take a while, depending on the size of the machine.");
-  busy_dialog.show();
+  busy_dialog.present();
 
   // Set the new bottle configuration data for the clone
   clone_bottle_struct.name = name_entry.get_text();

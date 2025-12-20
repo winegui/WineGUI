@@ -99,7 +99,7 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
   signal_close_request().connect(
       [this]() -> bool
       {
-        hide();
+        set_visible(false);
         return true; // stop default destroy
       },
       false);
@@ -166,7 +166,7 @@ void PreferencesWindow::on_select_folder()
  */
 void PreferencesWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
@@ -189,7 +189,7 @@ void PreferencesWindow::on_save_button_clicked()
   else
   {
     // Hide preferences window
-    hide();
+    set_visible(false);
     // Trigger manager update & UI update
     config_saved.emit();
   }

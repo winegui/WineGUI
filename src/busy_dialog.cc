@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "busy_dialog.h"
+#include "gtkmm/window.h"
 
 /**
  * \brief Constructor
@@ -44,16 +45,16 @@ BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Window(), default_parent_(par
   vbox->set_margin_bottom(10);
   vbox->set_margin_end(10);
 
-  vbox->prepend(heading_label);
-  vbox->prepend(message_label);
-  vbox->prepend(loading_bar);
+  vbox->append(heading_label);
+  vbox->append(message_label);
+  vbox->append(loading_bar);
   set_child(*vbox);
 
-  // Hide window instead of destroy
+  // Hide window instead of destroy (although set deletable is set to false)
   signal_close_request().connect(
       [this]() -> bool
       {
-        close();
+        set_visible(false);
         return true; // stop default destroy
       },
       false);
@@ -78,9 +79,9 @@ void BusyDialog::set_message(const Glib::ustring& heading_text, const Glib::ustr
 }
 
 /**
- * \brief Show the busy dialog (override the show(), calls parent show())
+ * \brief Present the busy dialog (override the present(), calls parent present())
  */
-void BusyDialog::show()
+void BusyDialog::present()
 {
   if (!timer_.empty() && timer_.connected())
   {
@@ -89,11 +90,11 @@ void BusyDialog::show()
 
   int time_interval = 200;
   timer_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BusyDialog::pulsing), time_interval);
-  present();
+  Gtk::Window::present();
 }
 
 /**
- * \brief Close the busy dialog (override the close(), calls parent hide())
+ * \brief Close the busy dialog (override the close(), calls parent set_visible())
  */
 void BusyDialog::close()
 {
@@ -105,7 +106,7 @@ void BusyDialog::close()
   {
     timer_.disconnect();
   }
-  hide();
+  set_visible(false);
 }
 
 /**

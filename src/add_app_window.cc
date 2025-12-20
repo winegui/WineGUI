@@ -57,7 +57,7 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
   signal_close_request().connect(
       [this]() -> bool
       {
-        hide();
+        set_visible(false);
         set_default_values();
         return true; // stop default destroy
       },
@@ -200,7 +200,7 @@ void AddAppWindow::on_select_file()
  */
 void AddAppWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
@@ -246,7 +246,7 @@ void AddAppWindow::on_save_button_clicked()
       else
       {
         // Hide new application window
-        hide();
+        set_visible(false);
         // Reset entry fields
         set_default_values();
         // Trigger manager update & UI update

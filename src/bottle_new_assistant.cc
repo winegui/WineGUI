@@ -73,7 +73,7 @@ BottleNewAssistant::BottleNewAssistant()
   signal_close_request().connect(
       [this]() -> bool
       {
-        hide();
+        set_visible(false);
         set_default_values();
         // Move to first page
         set_current_page(0);
@@ -104,7 +104,7 @@ void BottleNewAssistant::set_default_values()
   virtual_desktop_resolution_entry.set_text("1024x768");
   loading_bar.set_fraction(0.0);
   // Hide resolution label & entry
-  hbox_virtual_desktop.hide();
+  hbox_virtual_desktop.set_visible(false);
 
   // TODO: Unable to reset the cancel button after previous commit()?
 
@@ -279,7 +279,7 @@ void BottleNewAssistant::bottle_created()
   set_default_values();
 
   // Close Assistant
-  this->hide();
+  this->set_visible(false);
 
   // Inform UI, emit signal new_bottle_finished (causes the GUI to refresh)
   // pass along the name of the created bottle
@@ -329,7 +329,7 @@ void BottleNewAssistant::on_assistant_apply()
 
 void BottleNewAssistant::on_assistant_cancel()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
@@ -369,7 +369,7 @@ void BottleNewAssistant::on_virtual_desktop_toggle()
     // Show resolution label & input field
     hbox_virtual_desktop.show();
   else
-    hbox_virtual_desktop.hide();
+    hbox_virtual_desktop.set_visible(false);
 }
 
 /**

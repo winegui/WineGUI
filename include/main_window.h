@@ -79,7 +79,7 @@ public:
   DialogWindow* show_question_dialog(const Glib::ustring& message, bool markup = false);
   void show_busy_install_dialog(const Glib::ustring& message);
   void show_busy_install_dialog(Gtk::Window* parent, const Glib::ustring& message);
-  void close_busy_dialog();
+  void hide_busy_dialog();
 
   // Signal handlers
   virtual void on_new_bottle_button_clicked();

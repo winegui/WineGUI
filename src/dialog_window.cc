@@ -94,7 +94,7 @@ DialogWindow::DialogWindow(Gtk::Window& parent, DialogType type, const Glib::ust
   signal_close_request().connect(
       [this]() -> bool
       {
-        hide();
+        set_visible(false);
         return true; // stop default destroy
       },
       false);
@@ -172,7 +172,7 @@ void DialogWindow::update_title_and_icon_and_button_()
 
 void DialogWindow::on_ok_button_clicked()
 {
-  hide(); // hide instead of destroy in case of OK button
+  set_visible(false); // hide instead of destroy in case of OK button
   signal_response.emit(ResponseType::OK);
 }
 

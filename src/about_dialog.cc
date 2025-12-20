@@ -47,8 +47,8 @@ AboutDialog::AboutDialog(Gtk::Window& parent)
   set_license_type(Gtk::License::AGPL_3_0);
 
   Gtk::Box* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 5);
-  vbox->prepend(visit_gitlab_project_link_button);
-  vbox->prepend(visit_github_project_link_button);
+  vbox->append(visit_gitlab_project_link_button);
+  vbox->append(visit_github_project_link_button);
   set_child(*vbox);
 }
 
@@ -65,7 +65,7 @@ void AboutDialog::run_dialog()
 }
 
 /**
- * \brief Close the about dialog window
+ * \brief Hide the about dialog window
  */
 void AboutDialog::hide_dialog()
 {
