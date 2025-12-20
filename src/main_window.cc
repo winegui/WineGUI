@@ -38,7 +38,8 @@
  * \brief Constructor
  */
 MainWindow::MainWindow(/*Menu& menu*/)
-    : window_settings(),
+    : Gtk::ApplicationWindow(),
+      window_settings(),
       vbox(Gtk::Orientation::VERTICAL),
       paned(Gtk::Orientation::HORIZONTAL),
       right_vbox(Gtk::Orientation::VERTICAL),

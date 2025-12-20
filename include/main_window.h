@@ -40,9 +40,9 @@ using std::string;
 
 /**
  * \class MainWindow
- * \brief Main GTK App Window class
+ * \brief Main GTK Application Window class
  */
-class MainWindow : public Gtk::Window
+class MainWindow : public Gtk::ApplicationWindow
 {
 public:
   // Signals
@@ -94,12 +94,14 @@ public:
 
 protected:
   // Signal handlers
+  void on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item);
   void on_bind_icon_and_name(const Glib::RefPtr<Gtk::ListItem>& list_item);
   void on_error_message_check_version();
   void on_info_message_check_version();
   void on_new_version_available();
   bool on_delete_window();
 
+  Glib::RefPtr<Gtk::Builder> m_refBuilder;
   Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
 
   // Child widgets
@@ -187,7 +189,6 @@ private:
   virtual void on_new_bottle_apply();
 
   // Private methods
-  void on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item);
   void set_detailed_info(const BottleItem& bottle);
   void set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_List);
   void add_application(const string& name, const string& description, const string& command, const string& icon_name, bool is_icon_full_path = false);

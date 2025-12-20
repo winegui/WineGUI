@@ -74,6 +74,7 @@ configure_file(include/project_config.h.in ${CMAKE_BINARY_DIR}/project_config.h)
 set(HEADERS
   include/app_list_model_column.h
   include/app_list_struct.h
+  include/application.h
   include/main_window.h
   include/add_app_window.h
   include/remove_app_window.h
@@ -96,6 +97,7 @@ set(HEADERS
 
 # src/menu.cc
 set(SOURCES
+  src/application.cc
   src/main.cc
   src/main_window.cc
   src/add_app_window.cc
