@@ -123,6 +123,9 @@ MainWindow::MainWindow(/*Menu& menu*/)
   app_list_search_entry.signal_search_changed().connect(sigc::mem_fun(*this, &MainWindow::on_app_list_search));
 
   // Trigger row activated signal on a single click
+  app_list_list_view.set_single_click_activate(true);
+  app_list_list_view.set_focus_on_click(false);
+  app_list_list_view.set_can_focus(false);
   app_list_list_view.signal_activate().connect(sigc::mem_fun(*this, &MainWindow::on_application_row_activated));
 
   // Toolbar buttons
