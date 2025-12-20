@@ -45,7 +45,11 @@ void Application::on_startup()
     auto file_menu = Gio::Menu::create();
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("New _Standard", "app.newstandard"));
+      auto item = Gio::MenuItem::create("New _Standard", "app.newstandard");
+      // Create a Gicon
+      auto icon = Gio::Icon::create("edit-cut");
+      item->set_icon(icon);
+      section->append_item(item);
       section->append_item(Gio::MenuItem::create("New _Foo", "app.newfoo"));
       section->append_item(Gio::MenuItem::create("New _Goo", "app.newgoo"));
       section->append_item(Gio::MenuItem::create("_Preferences", "app.preferences"));
