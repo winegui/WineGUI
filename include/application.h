@@ -22,9 +22,6 @@
 
 #include <gtkmm.h>
 
-// Forward declare
-class MainWindow;
-
 class Application : public Gtk::Application
 {
 protected:
