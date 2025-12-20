@@ -37,11 +37,10 @@
 /**
  * \brief Constructor
  */
-MainWindow::MainWindow(/*Menu& menu*/)
+MainWindow::MainWindow()
     : Gtk::ApplicationWindow(),
       window_settings(),
-      vbox(Gtk::Orientation::VERTICAL),
-      paned(Gtk::Orientation::HORIZONTAL),
+      main_paned(Gtk::Orientation::HORIZONTAL),
       right_vbox(Gtk::Orientation::VERTICAL),
       app_list_vbox(Gtk::Orientation::VERTICAL),
       app_list_top_hbox(Gtk::Orientation::HORIZONTAL),
@@ -60,13 +59,12 @@ MainWindow::MainWindow(/*Menu& menu*/)
   set_title("WineGUI - WINE Manager");
   set_default_size(1120, 675);
 
-  // Add menu to box (top), no expand/fill
-  // There is no GTK::MenuBar anymore ;(
-  // vbox.append(menu);
-
-  // Add paned to box (below menu)
-  // NOTE: expand/fill = true
-  vbox.append(paned);
+  // Menu actions
+  add_action("copy", [] { std::cout << "win.copy" << std::endl; });
+  add_action("something", [] { std::cout << "win.something" << std::endl; });
+  add_action("about", [] { std::cout << "win.about" << std::endl; });
+  // Can be mapped to a function of course:
+  add_action("new", sigc::mem_fun(*this, &MainWindow::on_new_bottle_button_clicked));
 
   // Label alignments
   name_label.set_halign(Gtk::Align::START);
@@ -96,8 +94,8 @@ MainWindow::MainWindow(/*Menu& menu*/)
   create_left_panel();
   create_right_panel();
 
-  // Using a Vertical box container
-  set_child(vbox);
+  // Set the main paned as the main window child
+  set_child(main_paned);
 
   // Reset the right panel to default values
   reset_detailed_info();
@@ -595,8 +593,8 @@ bool MainWindow::on_delete_window()
     window_settings->set_int("height", get_height());
     window_settings->set_boolean("maximized", is_maximized());
     // window_settings->set_boolean("fullscreen", is_fullscreen());
-    if (paned.get_position() > 0)
-      window_settings->set_int("position-divider-paned", paned.get_position());
+    if (main_paned.get_position() > 0)
+      window_settings->set_int("position-divider-paned", main_paned.get_position());
     if (container_paned.get_position() > 0)
       window_settings->set_int("position-divider-container-paned", container_paned.get_position());
   }
@@ -970,7 +968,7 @@ void MainWindow::load_stored_window_settings()
     // if (window_settings->get_boolean("fullscreen"))
     //   fullscreen();
     int position_divider_paned = window_settings->get_int("position-divider-paned");
-    paned.set_position(position_divider_paned);
+    main_paned.set_position(position_divider_paned);
     int position_divider_container_paned = window_settings->get_int("position-divider-container-paned");
     container_paned.set_position(position_divider_container_paned);
   }
@@ -978,7 +976,7 @@ void MainWindow::load_stored_window_settings()
   {
     std::cerr << "Error: Gsettings schema file could not be found." << std::endl;
     // Fallback values
-    paned.set_position(320);
+    main_paned.set_position(320);
     container_paned.set_position(480);
   }
 }
@@ -989,7 +987,7 @@ void MainWindow::load_stored_window_settings()
 void MainWindow::create_left_panel()
 {
   // Add scrolled window with listbox to paned
-  paned.set_start_child(scrolled_window_listbox);
+  main_paned.set_start_child(scrolled_window_listbox);
 
   // Set function that will add separators between each item
   listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
@@ -1391,7 +1389,7 @@ void MainWindow::create_right_panel()
   right_vbox.append(container_paned);
 
   // Add right box to paned
-  paned.set_end_child(right_vbox);
+  main_paned.set_end_child(right_vbox);
 }
 
 void MainWindow::on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item)

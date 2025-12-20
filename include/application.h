@@ -39,9 +39,6 @@ private:
   void create_window();
 
   void on_action_preferences();
-  void on_menu_file_quit();
   void on_menu_help_about();
   void on_action_quit();
-
-  Glib::RefPtr<Gtk::Builder> m_refBuilder;
 };

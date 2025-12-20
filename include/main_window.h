@@ -27,7 +27,6 @@
 #include "busy_dialog.h"
 #include "dialog_window.h"
 #include "general_config_struct.h"
-// #include "menu.h"
 #include <gtkmm.h>
 #include <iostream>
 #include <list>
@@ -62,10 +61,10 @@ public:
   sigc::signal<void()> update_bottle;              /*!< Update Wine bottle signal */
   sigc::signal<void()> open_log_file;              /*!< Open log file signal */
   sigc::signal<void()> kill_running_processes;     /*!< Kill all running processes signal */
-  // TODO: Right click menu won't work anymore in GTK4
+  // TODO: Right menu click won't work anymore in GTK4
   // sigc::signal<bool(GdkEventButton*)> right_click_menu; /*!< Right-mouse click in list box signal */
 
-  explicit MainWindow(/*Menu& menu*/);
+  explicit MainWindow();
   virtual ~MainWindow();
 
   void set_wine_bottles(std::list<BottleItem>& bottles);
@@ -100,13 +99,10 @@ protected:
   void on_info_message_check_version();
   void on_new_version_available();
   bool on_delete_window();
-
-  Glib::RefPtr<Gtk::Builder> m_refBuilder;
   Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
 
   // Child widgets
-  Gtk::Box vbox;    /*!< The main vertical box */
-  Gtk::Paned paned; /*!< The main paned panel (horizontal) */
+  Gtk::Paned main_paned; /*!< The main paned panel */
   // Left widgets
   Gtk::ScrolledWindow scrolled_window_listbox; /*!< Scrolled Window container, which contains the listbox */
   Gtk::ListBox listbox;                        /*!< Listbox in the left panel */
