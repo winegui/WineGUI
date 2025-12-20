@@ -20,7 +20,6 @@
  */
 #include "busy_dialog.h"
 #include "gtkmm/window.h"
-#include <iostream>
 
 /**
  * \brief Constructor
@@ -99,7 +98,6 @@ void BusyDialog::present()
  */
 void BusyDialog::hide()
 {
-  std::cout << "Hiding busy dialog" << std::endl;
   // Reset default parent
   set_transient_for(default_parent_);
 
@@ -108,7 +106,10 @@ void BusyDialog::hide()
   {
     timer_.disconnect();
   }
-  set_visible(false);
+
+  // Dispatch the set_visible in the main thread, to avoid weird behavior when the dialog is open and closed too fast.
+  // Typical GTK non sense issues.
+  Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &BusyDialog::set_visible), false), Glib::PRIORITY_DEFAULT_IDLE);
 }
 
 /**
