@@ -137,6 +137,35 @@ void BottleConfigureEnvVarWindow::on_setup_env_var_cell(const Glib::RefPtr<Gtk::
 {
   auto entry = Gtk::make_managed<Gtk::Entry>();
   entry->set_hexpand(true);
+
+  // Ensure the row gets selected when the user interacts with the Entry.
+  // Otherwise SingleSelection may remain unselected because the Entry consumes the click.
+  {
+    auto click = Gtk::GestureClick::create();
+    click->signal_pressed().connect(
+        [this, list_item](int /*n_press*/, double /*x*/, double /*y*/)
+        {
+          if (!env_var_selection_model_)
+            return;
+          const auto pos = list_item->get_position();
+          if (pos != static_cast<guint>(-1))
+            env_var_selection_model_->set_selected(pos);
+        });
+    entry->add_controller(click);
+
+    auto focus = Gtk::EventControllerFocus::create();
+    focus->signal_enter().connect(
+        [this, list_item]()
+        {
+          if (!env_var_selection_model_)
+            return;
+          const auto pos = list_item->get_position();
+          if (pos != static_cast<guint>(-1))
+            env_var_selection_model_->set_selected(pos);
+        });
+    entry->add_controller(focus);
+  }
+
   entry->signal_changed().connect(
       [list_item, entry, is_name]()
       {

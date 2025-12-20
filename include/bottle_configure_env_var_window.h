@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024 WineGUI
+ * Copyright (c) 2024-2025 WineGUI
  *
  * \file    bottle_configure_env_var_window.h
  * \brief   Configure bottle environment variables
