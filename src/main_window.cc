@@ -1272,7 +1272,17 @@ void MainWindow::create_right_panel()
       [](const Glib::RefPtr<Glib::ObjectBase>& item) -> Glib::ustring
       {
         const auto col = std::dynamic_pointer_cast<AppListModelColumns>(item);
-        return col ? col->name : "";
+        if (!col)
+        {
+          return "";
+        }
+
+        if (col->description.empty())
+        {
+          return col->name;
+        }
+
+        return col->name + " " + col->description;
       });
   app_list_filter = Gtk::StringFilter::create(expression);
   app_list_filter->set_ignore_case(true);
