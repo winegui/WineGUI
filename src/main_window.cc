@@ -1001,6 +1001,13 @@ void MainWindow::create_left_panel()
  */
 void MainWindow::create_right_panel()
 {
+  // Generic container panel preferences
+  container_paned.set_halign(Gtk::Align::FILL);
+  container_paned.set_valign(Gtk::Align::FILL);
+  container_paned.set_expand();
+  container_paned.set_shrink_end_child(false);
+  container_paned.set_resize_end_child(false);
+
   /***
    * Toolbar section
    * TODO: Make it configurable to only show icons, text or both using preferences
@@ -1377,10 +1384,6 @@ void MainWindow::create_right_panel()
   app_list_vbox.append(app_list_scrolled_window);
   // Add to container
   container_paned.set_end_child(app_list_vbox);
-  container_paned.set_halign(Gtk::Align::FILL);
-  container_paned.set_valign(Gtk::Align::FILL);
-  container_paned.set_vexpand(true);
-  container_paned.set_hexpand(true);
 
   // Add container to right box
   right_vbox.append(container_paned);
