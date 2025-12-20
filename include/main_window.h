@@ -40,7 +40,7 @@ using std::string;
 
 /**
  * \class MainWindow
- * \brief Main GTK+ Window class
+ * \brief Main GTK App Window class
  */
 class MainWindow : public Gtk::Window
 {
@@ -62,6 +62,7 @@ public:
   sigc::signal<void()> update_bottle;              /*!< Update Wine bottle signal */
   sigc::signal<void()> open_log_file;              /*!< Open log file signal */
   sigc::signal<void()> kill_running_processes;     /*!< Kill all running processes signal */
+  // TODO: Right click menu won't work anymore in GTK4
   // sigc::signal<bool(GdkEventButton*)> right_click_menu; /*!< Right-mouse click in list box signal */
 
   explicit MainWindow(/*Menu& menu*/);
