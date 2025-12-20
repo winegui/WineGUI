@@ -1461,26 +1461,3 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
     gtk_list_box_row_set_header(row, current);
   }
 }
-
-/**
- * \brief Filter application list
- * \param iter Tree model iterator
- * \return true if application should be visible, otherwise false
- *
- * TODO: Add filter again in list store?
- */
-// bool MainWindow::app_list_visible_func(const Gtk::TreeModel::const_iterator& iter)
-// {
-//   auto row = *iter;
-//   Glib::ustring name = row[app_list_columns.name];
-//   Glib::ustring description = row[app_list_columns.description];
-//   if (name.lowercase().find(app_list_search_entry.get_text().lowercase()) != Glib::ustring::npos)
-//   {
-//     return true;
-//   }
-//   if (description.lowercase().find(app_list_search_entry.get_text().lowercase()) != Glib::ustring::npos)
-//   {
-//     return true;
-//   }
-//   return false;
-// }

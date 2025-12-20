@@ -198,5 +198,4 @@ private:
   void create_right_panel();
   void set_sensitive_toolbar_buttons(bool sensitive);
   static void cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, Gtk::ListBoxRow* before);
-  // bool app_list_visible_func(const Gtk::TreeModel::const_iterator& iter);
 };
