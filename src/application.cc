@@ -46,7 +46,6 @@ void Application::on_startup()
     {
       auto section = Gio::Menu::create();
       auto item = Gio::MenuItem::create("New _Standard", "app.newstandard");
-      // Create a Gicon
       auto icon = Gio::Icon::create("edit-cut");
       item->set_icon(icon);
       section->append_item(item);
