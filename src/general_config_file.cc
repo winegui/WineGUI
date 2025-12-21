@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "general_config_file.h"
+#include "project_config.h"
 #include <giomm.h>
 #include <glibmm.h>
 #include <iostream>
@@ -98,7 +99,15 @@ GeneralConfigData GeneralConfigFile::read_config_file()
   general_config.default_folder = final_default_prefix_folder;
   general_config.display_default_wine_machine = true;
   general_config.enable_logging_stderr = true;
-  general_config.check_for_updates_startup = true;
+  // Set check for updates to false if CHECK_FOR_UPDATE is set to OFF
+  if (std::string(CHECK_FOR_UPDATE) == "OFF")
+  {
+    general_config.check_for_updates_startup = false;
+  }
+  else
+  {
+    general_config.check_for_updates_startup = true;
+  }
 
   // Check if config file exists
   if (!Glib::file_test(config_file_path, Glib::FileTest::IS_REGULAR))

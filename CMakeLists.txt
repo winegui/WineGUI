@@ -5,6 +5,7 @@ set(PROJECT_TARGET winegui)
 
 option(DOXYGEN "Build Documentation" OFF)
 option(PACKAGE "Build packages in release mode" OFF)
+option(CHECK_FOR_UPDATE "Check for updates during startup" ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 

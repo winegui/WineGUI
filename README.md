@@ -145,7 +145,7 @@ gdb -ex=run bin/winegui
 
 For production build and DEB file package, you can run: `./scripts/build_prod.sh`
 
-Or use:
+Or build manually:
 
 ```sh
 cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -DPACKAGE -DCMAKE_BUILD_TYPE=Release -B build_prod
@@ -153,6 +153,8 @@ cmake --build ./build_prod --config Release
 cd build_prod
 cpack -C Release -G "DEB"
 ```
+
+_Hint:_ You can disable the automatic startup version check by setting the `-DCHECK_FOR_UPDATE=OFF` variable. This will write the config init file with `CheckForUpdatesStartup` set to `false` (instead of `true`). Which is used for *rolling release* Linux distros.
 
 ### Build Doxygen
 
