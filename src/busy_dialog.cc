@@ -32,10 +32,11 @@ BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Window(), default_parent_(par
   set_modal(true);
   set_resizable(false);
   set_deletable(false);
-  set_default_size(400, 180);
+  set_default_size(400, 140);
 
   heading_label.set_xalign(0.0);
   message_label.set_xalign(0.0);
+  message_label.set_halign(Gtk::Align::START);
   message_label.set_hexpand(true);
   loading_bar.set_pulse_step(0.3);
   loading_bar.set_hexpand(true);
@@ -76,7 +77,7 @@ BusyDialog::~BusyDialog()
 void BusyDialog::set_message(const Glib::ustring& heading_text, const Glib::ustring& message)
 {
   this->heading_label.set_markup("<big><b>" + Glib::Markup::escape_text(heading_text) + "</b></big>");
-  this->message_label.set_text(message + " Please wait...");
+  this->message_label.set_text(message.empty() ? "Please wait..." : message + "\nPlease wait...");
 }
 
 /**
