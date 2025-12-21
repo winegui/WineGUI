@@ -20,19 +20,8 @@
  */
 #include "main_window.h"
 #include "app_list_model_column.h"
-#include "dialog_window.h"
-#include "gtkmm/enums.h"
-#include "gtkmm/object.h"
 #include "helper.h"
 #include "project_config.h"
-#include <algorithm>
-#include <cctype>
-#include <set>
-#include <utility>
-
-/************************
- * Public methods       *
- ************************/
 
 /**
  * \brief Constructor

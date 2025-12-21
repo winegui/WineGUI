@@ -20,7 +20,6 @@
  */
 #include "bottle_new_assistant.h"
 #include "bottle_types.h"
-#include "gtkmm/enums.h"
 #include "wine_defaults.h"
 
 #define LOADING_PAGE_INDEX 2 /*!< The loading page, 3rd page (2 when start counting from zero) */

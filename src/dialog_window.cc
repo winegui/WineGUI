@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "dialog_window.h"
-#include "gtkmm/enums.h"
 
 /**
  * Constructor, creates a dialog window with a title, message, icon and an OK button.

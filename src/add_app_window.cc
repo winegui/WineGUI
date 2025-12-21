@@ -21,8 +21,6 @@
 #include "add_app_window.h"
 #include "bottle_config_file.h"
 #include "bottle_item.h"
-#include "gtkmm/enums.h"
-#include <iostream>
 
 /**
  * \brief Constructor
@@ -261,6 +259,5 @@ void AddAppWindow::on_save_button_clicked()
     dialog.set_title("Error during new application saving");
     dialog.set_modal(true);
     dialog.present();
-    std::cout << "Error: No current Windows machine is set. Change won't be saved." << std::endl;
   }
 }

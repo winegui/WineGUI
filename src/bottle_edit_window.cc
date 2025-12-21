@@ -20,8 +20,6 @@
  */
 #include "bottle_edit_window.h"
 #include "bottle_item.h"
-#include "gtkmm/enums.h"
-#include "gtkmm/window.h"
 #include "wine_defaults.h"
 
 /**
