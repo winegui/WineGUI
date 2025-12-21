@@ -20,6 +20,7 @@
  */
 #include "main_window.h"
 #include "app_list_model_column.h"
+#include "general_config_file.h"
 #include "helper.h"
 #include "project_config.h"
 
@@ -42,6 +43,7 @@ MainWindow::MainWindow()
       question_dialog_(*this, DialogWindow::DialogType::QUESTION),
       unknown_menu_item_name_("- Unknown menu item -"),
       unknown_desktop_item_name_("- Unknown desktop item -"),
+      general_config_data_(GeneralConfigFile::read_config_file()),
       thread_check_version_(nullptr)
 {
   // Set some Window properties
@@ -141,7 +143,8 @@ MainWindow::MainWindow()
   check_version_finished_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::cleanup_check_version_thread));
 
   // Check for update without (error) messages, when app is idle
-  Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &MainWindow::check_version_update), false), Glib::PRIORITY_DEFAULT_IDLE);
+  if (general_config_data_.check_for_updates_startup)
+    Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &MainWindow::check_version_update), false), Glib::PRIORITY_DEFAULT_IDLE);
   // Window closed signal
   signal_close_request().connect(sigc::mem_fun(*this, &MainWindow::on_delete_window), false);
 }

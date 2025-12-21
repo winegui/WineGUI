@@ -177,7 +177,7 @@ void BottleManager::update_config_and_bottles(const Glib::ustring& select_bottle
 {
   // Read general & save config in bottle manager
   GeneralConfigData config_data = load_and_save_general_config();
-  // Set/update main window about the latest general config data
+  // Set/update main window with the latest general config data
   main_window_.set_general_config(config_data);
 
   bool try_to_restore = (active_bottle_ != nullptr);
