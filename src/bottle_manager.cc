@@ -1155,7 +1155,7 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
                                           "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
                                           true);
     dialog->signal_response.connect(
-        [this, &parent, version](DialogWindow::ResponseType result)
+        [this, parent, version](DialogWindow::ResponseType result)
         {
           if (result == DialogWindow::ResponseType::YES)
           {
