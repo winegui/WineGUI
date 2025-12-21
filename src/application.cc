@@ -29,8 +29,8 @@ Application::Application() : Gtk::Application("org.melroy.winegui", Gio::Applica
     configure_window_ = new BottleConfigureWindow(*main_window_);
     add_app_window_ = new AddAppWindow(*main_window_);
     remove_app_window_ = new RemoveAppWindow(*main_window_);
-    signal_controller_ = new SignalController(main_window_, *manager_, *edit_window_, *clone_window_, *configure_env_var_window_, *configure_window_,
-                                              *add_app_window_, *remove_app_window_);
+    signal_controller_ = new SignalController(main_window_, *manager_, *preferences_window_, *edit_window_, *clone_window_,
+                                              *configure_env_var_window_, *configure_window_, *add_app_window_, *remove_app_window_);
   }
   else
   {

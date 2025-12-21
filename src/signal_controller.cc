@@ -28,6 +28,7 @@
 #include "bottle_manager.h"
 #include "helper.h"
 #include "main_window.h"
+#include "preferences_window.h"
 #include "remove_app_window.h"
 
 /**
@@ -35,6 +36,7 @@
  */
 SignalController::SignalController(MainWindow* main_window,
                                    BottleManager& manager,
+                                   PreferencesWindow& preferences_window,
                                    BottleEditWindow& edit_window,
                                    BottleCloneWindow& clone_window,
                                    BottleConfigureEnvVarWindow& configure_env_var_window,
@@ -43,6 +45,7 @@ SignalController::SignalController(MainWindow* main_window,
                                    RemoveAppWindow& remove_app_window)
     : main_window_(main_window),
       manager_(manager),
+      preferences_window_(preferences_window),
       edit_window_(edit_window),
       clone_window_(clone_window),
       configure_env_var_window_(configure_env_var_window),
@@ -149,6 +152,9 @@ void SignalController::dispatch_signals()
 
   // Remove application Window
   remove_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
+
+  // Preference Window
+  preferences_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 }
 
 /**
