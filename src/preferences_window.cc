@@ -20,7 +20,9 @@
  */
 #include "preferences_window.h"
 #include "general_config_file.h"
+#include "gtkmm/enums.h"
 #include "gtkmm/filedialog.h"
+#include "gtkmm/object.h"
 
 /**
  * \brief Constructor
@@ -30,29 +32,19 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
     : vbox(Gtk::Orientation::VERTICAL, 4),
       hbox_buttons(Gtk::Orientation::HORIZONTAL, 4),
       header_preferences_label("Preferences"),
-      default_folder_label("Machine folder location: "),
-      display_default_wine_machine_label("Show default Wine machine: "),
-      logging_stderr_label("Log standard error:"),
-      display_default_wine_machine_check("Display default Wine prefix bottle (at: ~/.wine)"),
-      enable_logging_stderr_check("Also log standard error (if logging is enabled)"),
+      default_wine_location_header("Machine folder location"),
+      logging_stderr_header("Log standard error"),
+      default_wine_machine_header("Default Wine machine"),
       select_folder_button("Select folder..."),
       save_button("Save"),
       cancel_button("Cancel")
 {
   set_transient_for(parent);
   set_title("WineGUI Preferences");
-  set_default_size(560, 300);
+  set_default_size(580, 420);
   set_modal(true);
 
-  settings_grid.set_margin_top(5);
-  settings_grid.set_margin_end(5);
-  settings_grid.set_margin_bottom(6);
-  settings_grid.set_margin_start(6);
-  settings_grid.set_column_spacing(6);
-  settings_grid.set_row_spacing(8);
-  settings_grid.set_hexpand(true);
-  settings_grid.set_vexpand(true);
-  settings_grid.set_halign(Gtk::Align::FILL);
+  vbox.set_margin(10);
 
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
@@ -63,32 +55,98 @@ PreferencesWindow::PreferencesWindow(Gtk::Window& parent)
   header_preferences_label.set_attributes(attr_list_header_label);
   header_preferences_label.set_margin_top(5);
   header_preferences_label.set_margin_bottom(5);
+  vbox.append(header_preferences_label);
 
-  logging_label_heading.set_markup("<big><b>Logging</b></big>");
-  default_folder_label.set_halign(Gtk::Align::END);
-  display_default_wine_machine_label.set_halign(Gtk::Align::END);
-  logging_stderr_label.set_halign(Gtk::Align::END);
+  check_for_updates_switch.set_halign(Gtk::Align::END);
+
+  select_folder_button.set_tooltip_text("Change storage location of Wine prefixes");
   default_folder_entry.set_hexpand(true);
+  // If needed we can always add a separate row with big headers, like with width 3:
+  // blbla_heading.set_markup("<big><b>Wow</b></big>");
 
-  settings_grid.attach(default_folder_label, 0, 0);
-  settings_grid.attach(default_folder_entry, 1, 0);
-  settings_grid.attach(select_folder_button, 2, 0);
-  settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 1, 3);
-  settings_grid.attach(display_default_wine_machine_label, 0, 2);
-  settings_grid.attach(display_default_wine_machine_check, 1, 2, 2);
-  settings_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 4, 3);
-  settings_grid.attach(logging_label_heading, 0, 5, 3);
-  settings_grid.attach(logging_stderr_label, 0, 6);
-  settings_grid.attach(enable_logging_stderr_check, 1, 6, 2);
+  // Switch headers
+  default_wine_location_header.set_halign(Gtk::Align::START);
+  default_wine_location_header.set_markup("<b>Default storage location</b>");
+  default_wine_machine_header.set_halign(Gtk::Align::START);
+  default_wine_machine_header.set_markup("<b>Default Wine machine</b>");
+  logging_stderr_header.set_halign(Gtk::Align::START);
+  logging_stderr_header.set_markup("<b>Log Standard Error</b>");
+  check_for_updates_header.set_halign(Gtk::Align::START);
+  check_for_updates_header.set_markup("<b>Check for Updates</b>");
 
+  // Default Wine storage location
+  Gtk::Box* default_folder_vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
+  default_folder_vbox->set_hexpand(true);
+  default_folder_vbox->set_halign(Gtk::Align::FILL);
+  default_folder_vbox->append(default_wine_location_header);
+  auto default_folder_label = Gtk::make_managed<Gtk::Label>("Default Windows machines (Wine prefixes) storage location on disk.");
+  default_folder_label->set_halign(Gtk::Align::START);
+  default_folder_vbox->append(*default_folder_label);
+  Gtk::Box* default_folder_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+  default_folder_box->set_hexpand(true);
+  default_folder_box->append(default_folder_entry);
+  default_folder_box->append(select_folder_button);
+  default_folder_vbox->append(*default_folder_box);
+  default_folder_vbox->set_margin_bottom(10);
+  vbox.append(*default_folder_vbox);
+
+  vbox.append(*Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::HORIZONTAL));
+
+  // Display default Wine machine
+  Gtk::Box* default_wine_machine_vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
+  default_wine_machine_vbox->set_hexpand(true);
+  default_wine_machine_vbox->set_halign(Gtk::Align::START);
+  default_wine_machine_vbox->append(default_wine_machine_header);
+  default_wine_machine_vbox->append(
+      *Gtk::make_managed<Gtk::Label>("If enabled, the default Wine machine will be displayed in the list. Located at: ~/.wine"));
+  Gtk::Box* default_wine_machine_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+  default_wine_machine_box->append(*default_wine_machine_vbox);
+  default_wine_machine_box->append(display_default_wine_machine_switch);
+  default_wine_machine_box->set_margin_top(10);
+  default_wine_machine_box->set_margin_bottom(10);
+  vbox.append(*default_wine_machine_box);
+
+  vbox.append(*Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::HORIZONTAL));
+
+  // Log standard error
+  Gtk::Box* logging_stderr_vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
+  logging_stderr_vbox->set_hexpand(true);
+  logging_stderr_vbox->set_halign(Gtk::Align::START);
+  logging_stderr_vbox->append(logging_stderr_header);
+  logging_stderr_vbox->append(*Gtk::make_managed<Gtk::Label>("If logging is enabled, also log standard error to log file."));
+  Gtk::Box* logging_stderr_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+  logging_stderr_box->append(*logging_stderr_vbox);
+  logging_stderr_box->append(enable_logging_stderr_switch);
+  logging_stderr_box->set_margin_top(10);
+  logging_stderr_box->set_margin_bottom(10);
+  vbox.append(*logging_stderr_box);
+
+  vbox.append(*Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::HORIZONTAL));
+
+  // Check for updates
+  Gtk::Box* check_updates_vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
+  check_updates_vbox->set_hexpand(true);
+  check_updates_vbox->set_halign(Gtk::Align::START);
+  check_updates_vbox->append(check_for_updates_header);
+  check_updates_vbox->append(*Gtk::make_managed<Gtk::Label>("Check automatically for updates during application startup."));
+  Gtk::Box* check_updates_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+  check_updates_box->append(*check_updates_vbox);
+  check_updates_box->append(check_for_updates_switch);
+  check_updates_box->set_margin_top(10);
+  check_updates_box->set_margin_bottom(10);
+  vbox.append(*check_updates_box);
+
+  vbox.append(*Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::HORIZONTAL));
+
+  // Save/cancel buttons
   hbox_buttons.set_halign(Gtk::Align::END);
+  hbox_buttons.set_valign(Gtk::Align::END);
+  hbox_buttons.set_expand(true);
   hbox_buttons.set_margin(6);
   hbox_buttons.append(save_button);
   hbox_buttons.append(cancel_button);
-
-  vbox.append(header_preferences_label);
-  vbox.append(settings_grid);
   vbox.append(hbox_buttons);
+
   set_child(vbox);
 
   // Signals
@@ -119,8 +177,9 @@ void PreferencesWindow::show()
 {
   GeneralConfigData general_config = GeneralConfigFile::read_config_file();
   default_folder_entry.set_text(general_config.default_folder);
-  display_default_wine_machine_check.set_active(general_config.display_default_wine_machine);
-  enable_logging_stderr_check.set_active(general_config.enable_logging_stderr);
+  display_default_wine_machine_switch.set_active(general_config.display_default_wine_machine);
+  enable_logging_stderr_switch.set_active(general_config.enable_logging_stderr);
+  check_for_updates_switch.set_active(general_config.check_for_updates_startup);
   // Call parent present
   present();
 }
@@ -180,8 +239,9 @@ void PreferencesWindow::on_save_button_clicked()
   // Save preferences to disk
   GeneralConfigData general_config;
   general_config.default_folder = default_folder_entry.get_text();
-  general_config.display_default_wine_machine = display_default_wine_machine_check.get_active();
-  general_config.enable_logging_stderr = enable_logging_stderr_check.get_active();
+  general_config.display_default_wine_machine = display_default_wine_machine_switch.get_active();
+  general_config.enable_logging_stderr = enable_logging_stderr_switch.get_active();
+  general_config.check_for_updates_startup = check_for_updates_switch.get_active();
   if (!GeneralConfigFile::write_config_file(general_config))
   {
     Gtk::MessageDialog dialog(*this, "Error occurred during saving generic config file.", false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);

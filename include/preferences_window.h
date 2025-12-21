@@ -39,21 +39,21 @@ public:
 
 protected:
   // Child widgets
-  Gtk::Box vbox;           /*!< main vertical box */
-  Gtk::Box hbox_buttons;   /*!< box for buttons */
-  Gtk::Grid settings_grid; /*!< grid layout for settings */
+  Gtk::Box vbox;         /*!< main vertical box */
+  Gtk::Box hbox_buttons; /*!< box for buttons */
 
-  Gtk::Label header_preferences_label;                 /*!< header preferences label */
-  Gtk::Label default_folder_label;                     /*!< default folder label */
-  Gtk::Label display_default_wine_machine_label;       /*!< display default Wine machine label */
-  Gtk::Label logging_label_heading;                    /*!< Logging header label */
-  Gtk::Label logging_stderr_label;                     /*!< logging stderr label */
-  Gtk::Entry default_folder_entry;                     /*!< default folder input field */
-  Gtk::CheckButton display_default_wine_machine_check; /*!< display default Wine machine checkbox */
-  Gtk::CheckButton enable_logging_stderr_check;        /*!< debug logging checkbox */
-  Gtk::Button select_folder_button;                    /*!< select folder button */
-  Gtk::Button save_button;                             /*!< save button */
-  Gtk::Button cancel_button;                           /*!< cancel button */
+  Gtk::Label header_preferences_label;             /*!< Preferences header label */
+  Gtk::Label default_wine_location_header;         /*!< Default Wine storage location header */
+  Gtk::Label logging_stderr_header;                /*!< Logging stderr header */
+  Gtk::Label default_wine_machine_header;          /*!< Default Wine machine header */
+  Gtk::Label check_for_updates_header;             /*!< Check for updates header */
+  Gtk::Entry default_folder_entry;                 /*!< Default Wine storage location input field */
+  Gtk::Switch display_default_wine_machine_switch; /*!< Display default Wine machine switch */
+  Gtk::Switch enable_logging_stderr_switch;        /*!< Debug logging switch */
+  Gtk::Switch check_for_updates_switch;            /*!< Check for updates during startup switch */
+  Gtk::Button select_folder_button;                /*!< Select folder button */
+  Gtk::Button save_button;                         /*!< Save button */
+  Gtk::Button cancel_button;                       /*!< Cancel button */
 
 private:
   // Signal handlers

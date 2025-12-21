@@ -29,9 +29,10 @@ BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Window(), default_parent_(par
 {
   set_title("Applying Changes...");
   set_transient_for(parent);
-  set_default_size(400, 120);
   set_modal(true);
+  set_resizable(false);
   set_deletable(false);
+  set_default_size(400, 180);
 
   heading_label.set_xalign(0.0);
   message_label.set_xalign(0.0);

@@ -57,11 +57,12 @@ bool GeneralConfigFile::write_config_file(const GeneralConfigData& general_confi
     keyfile->set_string("General", "DefaultFolder", general_config.default_folder);
     keyfile->set_boolean("General", "DisplayDefaultWineMachine", general_config.display_default_wine_machine);
     keyfile->set_boolean("General", "EnableLoggingStderr", general_config.enable_logging_stderr);
+    keyfile->set_boolean("General", "CheckForUpdatesStartup", general_config.check_for_updates_startup);
     success = keyfile->save_to_file(config_file_path);
   }
   catch (const Glib::Error& ex)
   {
-    std::cerr << "Error: Exception while loading key file: " << ex.what() << std::endl;
+    std::cerr << "Error: Exception while writing key file: " << ex.what() << std::endl;
     // will return default values
   }
   return success;
@@ -97,6 +98,7 @@ GeneralConfigData GeneralConfigFile::read_config_file()
   general_config.default_folder = final_default_prefix_folder;
   general_config.display_default_wine_machine = true;
   general_config.enable_logging_stderr = true;
+  general_config.check_for_updates_startup = true;
 
   // Check if config file exists
   if (!Glib::file_test(config_file_path, Glib::FileTest::IS_REGULAR))
@@ -114,10 +116,11 @@ GeneralConfigData GeneralConfigFile::read_config_file()
       general_config.default_folder = keyfile->get_string("General", "DefaultFolder");
       general_config.display_default_wine_machine = keyfile->get_boolean("General", "DisplayDefaultWineMachine");
       general_config.enable_logging_stderr = keyfile->get_boolean("General", "EnableLoggingStderr");
+      general_config.check_for_updates_startup = keyfile->get_boolean("General", "CheckForUpdatesStartup");
     }
     catch (const Glib::Error& ex)
     {
-      std::cerr << "Error: Exception while loading config file: " << ex.what() << std::endl;
+      std::cerr << "Error: Exception while reading config file: " << ex.what() << std::endl;
       // Lets write a new config file and return the default values below
       GeneralConfigFile::write_config_file(general_config);
     }

@@ -39,14 +39,12 @@ DialogWindow::DialogWindow(Gtk::Window& parent, DialogType type, const Glib::ust
       no_button("No"),
       type_(type)
 {
+  set_transient_for(parent);
+  set_modal(true);
+  set_deletable(true);
   set_default_size(520, 180);
 
   set_message(message, markup);
-  set_transient_for(parent);
-  set_modal(true);
-
-  set_resizable(false);
-  set_deletable(true);
 
   vbox.set_margin(6);
   icon.set_pixel_size(100);

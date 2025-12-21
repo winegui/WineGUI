@@ -27,4 +27,5 @@ struct GeneralConfigData
   std::string default_folder;
   bool display_default_wine_machine;
   bool enable_logging_stderr;
+  bool check_for_updates_startup;
 };
