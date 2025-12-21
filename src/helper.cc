@@ -103,7 +103,7 @@ static const struct
   const string buildNumber;
   const string productType;
 } WindowsVersions[] = {{BottleTypes::Windows::Windows11, "win11", "10.0", "22000", "WinNT"},
-                       {BottleTypes::Windows::Windows10, "win10", "10.0", "19043", "WinNT"},
+                       {BottleTypes::Windows::Windows10, "win10", "10.0", "19045", "WinNT"},
                        {BottleTypes::Windows::Windows81, "win81", "6.3", "9600", "WinNT"},
                        {BottleTypes::Windows::Windows8, "win8", "6.2", "9200", "WinNT"},
                        {BottleTypes::Windows::Windows2008R2, "win2008r2", "6.1", "7601", "ServerNT"},
