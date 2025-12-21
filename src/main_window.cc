@@ -1358,6 +1358,7 @@ void MainWindow::create_right_panel()
   app_list_top_hbox.set_halign(Gtk::Align::FILL);
 
   // Add heading (label + icon)
+  app_list_vbox.set_margin_start(5); // Additional left margin
   app_list_vbox.append(*application_box);
   // Add horizontal box (search entry + refresh button)
   app_list_vbox.append(app_list_top_hbox);
