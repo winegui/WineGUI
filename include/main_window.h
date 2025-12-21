@@ -104,7 +104,7 @@ protected:
   Gtk::Paned main_paned; /*!< The main paned panel */
   // Left widgets
   Gtk::ScrolledWindow scrolled_window_listbox; /*!< Scrolled Window container, which contains the listbox */
-  Gtk::ListBox listbox;                        /*!< Listbox in the left panel */
+  Gtk::ListBox bottles_listbox;                /*!< Listbox of Wine bottles in the left panel */
   // Right widgets
   Gtk::ScrolledWindow detail_grid_scrolled_window_detail;           /*!< Scrolled Window container for the detail grid */
   Gtk::Box right_vbox;                                              /*!< Right panel vertical box */

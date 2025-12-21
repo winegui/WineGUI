@@ -97,10 +97,10 @@ MainWindow::MainWindow()
   // By default disable the toolbar buttons
   set_sensitive_toolbar_buttons(false);
 
-  // Left side (listbox)
-  listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_bottle_row_clicked));
+  // Left side (listbox of wine bottles)
+  bottles_listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_bottle_row_clicked));
   // Disabled right-click menu for now, since it doesn't activate the right-clicked bottle as active
-  // listbox.signal_button_press_event().connect(right_click_menu);
+  // bottles_listbox.signal_button_press_event().connect(right_click_menu);
 
   // Right panel toolbar menu buttons
   // New button pressed signal
@@ -165,17 +165,17 @@ MainWindow::~MainWindow()
 void MainWindow::set_wine_bottles(std::list<BottleItem>& bottles)
 {
   // Clear whole listbox
-  auto child = listbox.get_first_child();
+  auto child = bottles_listbox.get_first_child();
   while (child != nullptr)
   {
     auto next = child->get_next_sibling();
-    listbox.remove(*child);
+    bottles_listbox.remove(*child);
     child = next;
   }
 
   for (BottleItem& bottle : bottles)
   {
-    listbox.append(bottle);
+    bottles_listbox.append(bottle);
   }
   // Enable/disable toolbar buttons depending on listbox
   set_sensitive_toolbar_buttons(bottles.size() > 0);
@@ -188,7 +188,7 @@ void MainWindow::set_wine_bottles(std::list<BottleItem>& bottles)
 void MainWindow::select_row_bottle(BottleItem& bottle)
 {
   if (!bottle.is_selected())
-    this->listbox.select_row(bottle);
+    this->bottles_listbox.select_row(bottle);
 }
 
 /**
@@ -391,7 +391,7 @@ void MainWindow::on_run_button_clicked()
  */
 void MainWindow::on_refresh_app_list_button_clicked()
 {
-  Gtk::ListBoxRow* selected_row = listbox.get_selected_row();
+  Gtk::ListBoxRow* selected_row = bottles_listbox.get_selected_row();
   if (selected_row)
   {
     // Refresh the current app list
@@ -971,10 +971,10 @@ void MainWindow::create_left_panel()
   main_paned.set_start_child(scrolled_window_listbox);
 
   // Set function that will add separators between each item
-  listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
+  bottles_listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
 
   // Add list box to scrolled window
-  scrolled_window_listbox.set_child(listbox);
+  scrolled_window_listbox.set_child(bottles_listbox);
 }
 
 /**
