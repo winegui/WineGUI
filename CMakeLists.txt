@@ -70,7 +70,6 @@ endif()
 
 configure_file(include/project_config.h.in ${CMAKE_BINARY_DIR}/project_config.h)
 
-# include/menu.h
 set(HEADERS
   include/app_list_model_column.h
   include/app_list_struct.h
@@ -95,7 +94,6 @@ set(HEADERS
   include/signal_controller.h
 )
 
-# src/menu.cc
 set(SOURCES
   src/application.cc
   src/main.cc

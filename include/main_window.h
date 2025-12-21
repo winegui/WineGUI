@@ -86,7 +86,7 @@ public:
   virtual void on_run_button_clicked();
   virtual void on_refresh_app_list_button_clicked();
   virtual void on_hide_window();
-  virtual void on_give_feedback();
+  virtual void on_report_issue();
   virtual void on_issue_tickets();
   virtual void on_check_version();
   virtual void on_exec_failure();

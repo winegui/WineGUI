@@ -27,9 +27,6 @@
 // Forward declaration
 class MainWindow;
 class BottleManager;
-class Menu;
-class PreferencesWindow;
-class AboutDialog;
 class BottleEditWindow;
 class BottleCloneWindow;
 class BottleConfigureEnvVarWindow;
@@ -48,10 +45,8 @@ class SignalController : public Gtk::Window
   friend class MainWindow;
 
 public:
-  SignalController(BottleManager& manager,
-                   /*Menu& menu,*/
-                   PreferencesWindow& preferences_window,
-                   AboutDialog& about_dialog,
+  SignalController(MainWindow* main_window,
+                   BottleManager& manager,
                    BottleEditWindow& edit_window,
                    BottleCloneWindow& clone_window,
                    BottleConfigureEnvVarWindow& configure_env_var_window,
@@ -59,7 +54,6 @@ public:
                    AddAppWindow& add_app_window,
                    RemoveAppWindow& remove_app_window);
   virtual ~SignalController();
-  void set_main_window(MainWindow* main_window);
   void dispatch_signals();
 
   // Signal handlers
@@ -96,9 +90,6 @@ private:
 
   MainWindow* main_window_;
   BottleManager& manager_;
-  // Menu& menu_;
-  PreferencesWindow& preferences_window_;
-  AboutDialog& about_dialog_;
   BottleEditWindow& edit_window_;
   BottleCloneWindow& clone_window_;
   BottleConfigureEnvVarWindow& configure_env_var_window_;

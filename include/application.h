@@ -20,7 +20,20 @@
  */
 #pragma once
 
+#include "signal_controller.h"
 #include <gtkmm.h>
+
+class MainWindow;
+class BottleManager;
+class PreferencesWindow;
+class AboutDialog;
+class BottleEditWindow;
+class BottleCloneWindow;
+class BottleConfigureEnvVarWindow;
+class BottleConfigureWindow;
+class AddAppWindow;
+class RemoveAppWindow;
+class SignalController;
 
 class Application : public Gtk::Application
 {
@@ -36,7 +49,17 @@ protected:
   void on_shutdown() override;
 
 private:
-  void create_window();
+  MainWindow* main_window_;
+  BottleManager* manager_;
+  PreferencesWindow* preferences_window_;
+  AboutDialog* about_dialog_;
+  BottleEditWindow* edit_window_;
+  BottleCloneWindow* clone_window_;
+  BottleConfigureEnvVarWindow* configure_env_var_window_;
+  BottleConfigureWindow* configure_window_;
+  AddAppWindow* add_app_window_;
+  RemoveAppWindow* remove_app_window_;
+  SignalController* signal_controller_;
 
   void on_action_preferences();
   void on_menu_help_about();

@@ -20,7 +20,7 @@
  */
 #include "preferences_window.h"
 #include "general_config_file.h"
-#include <iostream>
+#include "gtkmm/filedialog.h"
 
 /**
  * \brief Constructor
@@ -135,7 +135,10 @@ void PreferencesWindow::on_select_folder()
   dialog->set_title("Choose a folder");
   dialog->set_modal(true);
   {
-    auto folder = Gio::File::create_for_path(default_folder_entry.get_text());
+    // Grep the default gnome application configuration folder (like the .local/share/winegui)
+    static const std::vector<std::string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"};
+    static const std::string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
+    auto folder = Gio::File::create_for_path(WineGuiDataDir);
     if (!folder->get_path().empty())
     {
       dialog->set_initial_folder(folder);
@@ -147,7 +150,7 @@ void PreferencesWindow::on_select_folder()
                         {
                           try
                           {
-                            const auto folder = dialog->open_finish(result);
+                            auto folder = dialog->select_folder_finish(result);
                             default_folder_entry.set_text(folder->get_path());
                           }
                           catch (const Gtk::DialogError& err)

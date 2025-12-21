@@ -60,11 +60,11 @@ MainWindow::MainWindow()
   set_default_size(1120, 675);
 
   // Menu actions
-  add_action("copy", [] { std::cout << "win.copy" << std::endl; });
-  add_action("something", [] { std::cout << "win.something" << std::endl; });
-  add_action("about", [] { std::cout << "win.about" << std::endl; });
-  // Can be mapped to a function of course:
-  add_action("new", sigc::mem_fun(*this, &MainWindow::on_new_bottle_button_clicked));
+  add_action("new_bottle", sigc::mem_fun(*this, &MainWindow::on_new_bottle_button_clicked));
+  add_action("run", sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
+  add_action("report_issue", sigc::mem_fun(*this, &MainWindow::on_report_issue));
+  add_action("list_issues", sigc::mem_fun(*this, &MainWindow::on_issue_tickets));
+  add_action("check_version", sigc::mem_fun(*this, &MainWindow::on_check_version));
 
   // Label alignments
   name_label.set_halign(Gtk::Align::START);
@@ -428,9 +428,9 @@ void MainWindow::on_hide_window()
 }
 
 /**
- * \brief When the feedback button is pressed
+ * \brief When the report issue button is pressed
  */
-void MainWindow::on_give_feedback()
+void MainWindow::on_report_issue()
 {
   if (!Gio::AppInfo::launch_default_for_uri("https://github.com/winegui/WineGUI/issues/new"))
   {

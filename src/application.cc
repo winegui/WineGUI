@@ -12,9 +12,30 @@
 #include "signal_controller.h"
 #include <iostream>
 
-Application::Application() : Gtk::Application("org.melroy.winegui", Gio::Application::Flags::HANDLES_OPEN)
+Application::Application() : Gtk::Application("org.melroy.winegui", Gio::Application::Flags::DEFAULT_FLAGS)
 {
   Glib::set_application_name("WineGUI");
+
+  // Create all objects
+  main_window_ = new MainWindow();
+  if (main_window_)
+  {
+    manager_ = new BottleManager(*main_window_);
+    preferences_window_ = new PreferencesWindow(*main_window_);
+    about_dialog_ = new AboutDialog(*main_window_);
+    edit_window_ = new BottleEditWindow(*main_window_);
+    clone_window_ = new BottleCloneWindow(*main_window_);
+    configure_env_var_window_ = new BottleConfigureEnvVarWindow(*edit_window_);
+    configure_window_ = new BottleConfigureWindow(*main_window_);
+    add_app_window_ = new AddAppWindow(*main_window_);
+    remove_app_window_ = new RemoveAppWindow(*main_window_);
+    signal_controller_ = new SignalController(main_window_, *manager_, *edit_window_, *clone_window_, *configure_env_var_window_, *configure_window_,
+                                              *add_app_window_, *remove_app_window_);
+  }
+  else
+  {
+    g_error("Something really strange is going on with creating the main window!");
+  }
 }
 
 Glib::RefPtr<Application> Application::create()
@@ -27,57 +48,95 @@ void Application::on_startup()
   Gtk::Application::on_startup();
 
   // Add actions and keyboard accelerators for the menu.
-  add_action("about", sigc::mem_fun(*this, &Application::on_menu_help_about));
-
-  add_action("newstandard", [] { std::cout << "app.newstandard" << std::endl; });
-  add_action("newfoo", [] { std::cout << "app.newfoo" << std::endl; });
-  add_action("newgoo", [] { std::cout << "app.newgoo" << std::endl; });
-  add_action("preferences", sigc::mem_fun(*this, &Application::on_action_preferences));
+  add_action("preferences", sigc::mem_fun(*preferences_window_, &PreferencesWindow::show));
   add_action("quit", sigc::mem_fun(*this, &Application::on_action_quit));
+  add_action("refresh_view", sigc::bind(sigc::mem_fun(*manager_, &BottleManager::update_config_and_bottles), "", false));
+  add_action("remove_bottle", sigc::mem_fun(*manager_, &BottleManager::delete_bottle));
+  add_action("open_c_drive", sigc::mem_fun(*manager_, &BottleManager::open_c_drive));
+  add_action("open_log_file", sigc::mem_fun(*manager_, &BottleManager::open_log_file));
+  add_action("edit_bottle", sigc::mem_fun(*edit_window_, &BottleEditWindow::show));
+  add_action("clone_bottle", sigc::mem_fun(*clone_window_, &BottleCloneWindow::show));
+  add_action("configure_bottle", sigc::mem_fun(*configure_window_, &BottleConfigureWindow::show));
+  add_action("about", sigc::mem_fun(*about_dialog_, &AboutDialog::run_dialog));
 
-  set_accel_for_action("app.newstandard", "<Ctrl>N");
-  set_accel_for_action("win.copy", "<Ctrl>C");
-  set_accel_for_action("win.new", "<Ctrl>V");
+  // Add accelerators
+  set_accel_for_action("app.preferences", "<Ctrl>P");
   set_accel_for_action("app.quit", "<Ctrl>Q");
+  set_accel_for_action("app.refresh_view", "<Ctrl><Alt>R");
+  set_accel_for_action("app.remove_bottle", "<Ctrl>Delete");
+  set_accel_for_action("app.open_c_drive", "<Ctrl>O");
+  set_accel_for_action("app.open_log_file", "<Ctrl>L");
+  set_accel_for_action("app.edit_bottle", "<Ctrl>E");
+  set_accel_for_action("app.clone_bottle", "<Ctrl>C");
+  set_accel_for_action("app.configure_bottle", "<Ctrl>U");
+  set_accel_for_action("app.about", "<Ctrl>A");
+
+  set_accel_for_action("win.new_bottle", "<Ctrl>N");
+  set_accel_for_action("win.run", "<Ctrl>R");
+  set_accel_for_action("win.check_version", "<Ctrl>V");
 
   auto menubar = Gio::Menu::create();
   {
     auto file_menu = Gio::Menu::create();
     {
       auto section = Gio::Menu::create();
-      auto item = Gio::MenuItem::create("New _Standard", "app.newstandard");
+      auto item = Gio::MenuItem::create("Preferences", "app.preferences");
       auto icon = Gio::Icon::create("edit-cut");
-      item->set_icon(icon);
+      item->set_icon(icon); // This is not working ;(
       section->append_item(item);
-      section->append_item(Gio::MenuItem::create("New _Foo", "app.newfoo"));
-      section->append_item(Gio::MenuItem::create("New _Goo", "app.newgoo"));
-      section->append_item(Gio::MenuItem::create("_Preferences", "app.preferences"));
       file_menu->append_section(section);
     }
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("_Quit", "app.quit"));
+      section->append_item(Gio::MenuItem::create("Exit", "app.quit"));
       file_menu->append_section(section);
     }
-    menubar->append_submenu("_File", file_menu);
+    menubar->append_submenu("File", file_menu);
   }
-
   {
-    auto edit_menu = Gio::Menu::create();
-    auto section = Gio::Menu::create();
-    section->append_item(Gio::MenuItem::create("_Copy", "win.copy"));
-    section->append_item(Gio::MenuItem::create("_New", "win.new"));
-    section->append_item(Gio::MenuItem::create("_Something", "win.something"));
-    edit_menu->append_section(section);
-    menubar->append_submenu("_Edit", edit_menu);
+    auto view_menu = Gio::Menu::create();
+    view_menu->append_item(Gio::MenuItem::create("Refresh", "app.refresh_view"));
+    menubar->append_submenu("View", view_menu);
+  }
+  {
+    auto machine_menu = Gio::Menu::create();
+    {
+      auto section = Gio::Menu::create();
+      section->append_item(Gio::MenuItem::create("New", "win.new_bottle"));
+      machine_menu->append_section(section);
+    }
+    {
+      auto section = Gio::Menu::create();
+      section->append_item(Gio::MenuItem::create("Edit", "app.edit_bottle"));
+      section->append_item(Gio::MenuItem::create("Run...", "win.run"));
+      section->append_item(Gio::MenuItem::create("Remove", "app.remove_bottle"));
+      section->append_item(Gio::MenuItem::create("Clone", "app.clone_bottle"));
+      section->append_item(Gio::MenuItem::create("Configure", "app.configure_bottle"));
+      machine_menu->append_section(section);
+    }
+    {
+      auto section = Gio::Menu::create();
+      section->append_item(Gio::MenuItem::create("Open C Drive", "app.open_c_drive"));
+      section->append_item(Gio::MenuItem::create("Open Log File", "app.open_log_file"));
+      machine_menu->append_section(section);
+    }
+    menubar->append_submenu("Machine", machine_menu);
   }
   {
     auto help_menu = Gio::Menu::create();
-    auto section = Gio::Menu::create();
-    section->append_item(Gio::MenuItem::create("_About Window", "win.about"));
-    section->append_item(Gio::MenuItem::create("_About App", "app.about"));
-    help_menu->append_section(section);
-    menubar->append_submenu("_Help", help_menu);
+    {
+      auto section = Gio::Menu::create();
+      section->append_item(Gio::MenuItem::create("Issue List", "win.list_issues"));
+      section->append_item(Gio::MenuItem::create("Report an Issue", "win.report_issue"));
+      section->append_item(Gio::MenuItem::create("Check for Updates", "win.check_version"));
+      help_menu->append_section(section);
+    }
+    {
+      auto section = Gio::Menu::create();
+      section->append_item(Gio::MenuItem::create("About WineGUI", "app.about"));
+      help_menu->append_section(section);
+    }
+    menubar->append_submenu("Help", help_menu);
   }
 
   set_menubar(menubar);
@@ -85,42 +144,35 @@ void Application::on_startup()
 
 void Application::on_activate()
 {
-  create_window();
-}
-
-void Application::create_window()
-{
-  static MainWindow main_window; // menu
-  static BottleManager manager(main_window);
-  static PreferencesWindow preferences_window(main_window);
-  static AboutDialog about_dialog(main_window);
-  static BottleEditWindow edit_window(main_window);
-  static BottleCloneWindow clone_window(main_window);
-  static BottleConfigureEnvVarWindow settings_env_var_window(edit_window);
-  static BottleConfigureWindow settings_window(main_window);
-  static AddAppWindow add_app_window(main_window);
-  static RemoveAppWindow remove_app_window(main_window);
-  static SignalController signal_controller(manager, /*menu,*/ preferences_window, about_dialog, edit_window, clone_window, settings_env_var_window,
-                                            settings_window, add_app_window, remove_app_window);
-
-  signal_controller.set_main_window(&main_window);
-  // Do all the signal connections of the life-time of the app
-  signal_controller.dispatch_signals();
+  // Configure the signal controller signals
+  signal_controller_->dispatch_signals();
 
   // Call the Bottle Manager prepare method,
-  // it will prepare Winetricks & retrieve Wine Bottles
-  manager.prepare();
+  // it will prepare Winetricks & retrieve Wine Bottles from disk
+  manager_->prepare();
 
   // Make sure that the application runs for as long this window is still open.
-  add_window(main_window);
+  add_window(*main_window_);
 
-  main_window.set_show_menubar();
-  main_window.set_visible(true);
+  // Show the main window
+  main_window_->set_show_menubar();
+  main_window_->set_visible(true);
 }
 
 void Application::on_shutdown()
 {
-  // TODO: Write config file to disk here
+  // Remove the pointer
+  delete main_window_;
+  delete manager_;
+  delete preferences_window_;
+  delete about_dialog_;
+  delete edit_window_;
+  delete clone_window_;
+  delete configure_env_var_window_;
+  delete configure_window_;
+  delete add_app_window_;
+  delete remove_app_window_;
+  delete signal_controller_;
 
   // Call the base class's implementation.
   Gtk::Application::on_shutdown();

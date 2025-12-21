@@ -26,8 +26,6 @@
  * \brief Constructor
  */
 AboutDialog::AboutDialog(Gtk::Window& parent)
-    : visit_gitlab_project_link_button("https://gitlab.melroy.org/melroy/winegui", "Visit the Official GitLab Project"),
-      visit_github_project_link_button("https://github.com/winegui/WineGUI", "Visit the mirror GitHub Project")
 {
   // Set logo
   logo.set(Helper::get_image_location("logo.png"));
@@ -45,11 +43,16 @@ AboutDialog::AboutDialog(Gtk::Window& parent)
   set_version(PROJECT_VER);
   set_copyright("Copyright © 2019-2025 Melroy van den Berg");
   set_license_type(Gtk::License::AGPL_3_0);
+  set_website_label("Official GitLab Project");
+  set_website("https://gitlab.melroy.org/melroy/winegui");
 
-  Gtk::Box* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 5);
-  vbox->append(visit_gitlab_project_link_button);
-  vbox->append(visit_github_project_link_button);
-  set_child(*vbox);
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        set_visible(false);
+        return true; // stop default destroy
+      },
+      false);
 }
 
 AboutDialog::~AboutDialog()
@@ -62,14 +65,6 @@ AboutDialog::~AboutDialog()
 void AboutDialog::run_dialog()
 {
   present();
-}
-
-/**
- * \brief Hide the about dialog window
- */
-void AboutDialog::hide_dialog()
-{
-  set_visible(false);
 }
 
 /**
