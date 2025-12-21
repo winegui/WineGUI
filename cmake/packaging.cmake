@@ -1,5 +1,5 @@
 
-# Example: https://github.com/MariaDB/server/tree/10.5/cmake
+# Example: https://github.com/MariaDB/server/tree/12.2/cmake
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "WineGUI is a user-friendly WINE graphical interface")
 set(CPACK_PACKAGE_VENDOR "Melroy van den Berg")
 set(CPACK_PACKAGE_CONTACT "Melroy van den Berg <melroy@melroy.org>")
