@@ -719,7 +719,9 @@ std::tuple<bool, BottleTypes::Windows, std::string> Helper::get_bottle_status_an
     {
       return std::make_tuple(false, BottleTypes::Windows::Unknown, error.what());
     }
-  } else {
+  }
+  else
+  {
     return std::make_tuple(false, BottleTypes::Windows::Unknown, "Required files/directories are missing in the Wine bottle.");
   }
 }

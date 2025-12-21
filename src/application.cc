@@ -102,21 +102,21 @@ void Application::on_startup()
     auto machine_menu = Gio::Menu::create();
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("New", "win.new_bottle"));// Icon: list-add
+      section->append_item(Gio::MenuItem::create("New", "win.new_bottle")); // Icon: list-add
       machine_menu->append_section(section);
     }
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("Edit", "app.edit_bottle")); // Icon: document-edit
-      section->append_item(Gio::MenuItem::create("Run...", "win.run")); // Icon: media-playback-start
-      section->append_item(Gio::MenuItem::create("Remove", "app.remove_bottle")); // Icon: edit-delete
-      section->append_item(Gio::MenuItem::create("Clone", "app.clone_bottle")); // Icon: edit-copy
+      section->append_item(Gio::MenuItem::create("Edit", "app.edit_bottle"));           // Icon: document-edit
+      section->append_item(Gio::MenuItem::create("Run...", "win.run"));                 // Icon: media-playback-start
+      section->append_item(Gio::MenuItem::create("Remove", "app.remove_bottle"));       // Icon: edit-delete
+      section->append_item(Gio::MenuItem::create("Clone", "app.clone_bottle"));         // Icon: edit-copy
       section->append_item(Gio::MenuItem::create("Configure", "app.configure_bottle")); // Icon: preferences-other
       machine_menu->append_section(section);
     }
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("Open C Drive", "app.open_c_drive")); // Icon: drive-harddisk
+      section->append_item(Gio::MenuItem::create("Open C Drive", "app.open_c_drive"));   // Icon: drive-harddisk
       section->append_item(Gio::MenuItem::create("Open Log File", "app.open_log_file")); // Icon: text-x-generic
       machine_menu->append_section(section);
     }
@@ -126,8 +126,8 @@ void Application::on_startup()
     auto help_menu = Gio::Menu::create();
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("Issue List", "win.list_issues")); // Icon: emblem-package
-      section->append_item(Gio::MenuItem::create("Report an Issue", "win.report_issue")); // Icon: emblem-package
+      section->append_item(Gio::MenuItem::create("Issue List", "win.list_issues"));          // Icon: emblem-package
+      section->append_item(Gio::MenuItem::create("Report an Issue", "win.report_issue"));    // Icon: emblem-package
       section->append_item(Gio::MenuItem::create("Check for Updates", "win.check_version")); // Icon: system-software-update
       help_menu->append_section(section);
     }
