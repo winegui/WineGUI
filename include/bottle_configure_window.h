@@ -90,6 +90,7 @@ private:
   BottleItem* active_bottle_; /*!< Current active bottle */
 
   void create_layout();
+  void add_name_and_icon_to_button(Gtk::Button& button, const std::string& label, bool is_installed);
   bool is_d3dx9_installed();
   bool is_dxvk_installed();
   bool is_vkd3d_installed();
