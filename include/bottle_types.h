@@ -37,7 +37,8 @@ namespace BottleTypes
    */
   enum class Windows
   {
-    Windows20 = 0,
+    Unknown = 0,
+    Windows20,
     Windows30,
     Windows31,
     WindowsNT351,
@@ -131,6 +132,8 @@ namespace BottleTypes
   {
     switch (win)
     {
+    case Windows::Unknown:
+      return "- Unknown Windows OS -";
     case Windows::Windows20:
       return "Windows 2.0";
     case Windows::Windows30:

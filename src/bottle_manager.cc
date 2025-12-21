@@ -1458,14 +1458,14 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
     {
       main_window_.show_error_message(error.what());
     }
-    try
     {
-      windows = Helper::get_windows_version(prefix);
-      status = Helper::get_bottle_status(prefix);
-    }
-    catch (const std::runtime_error& error)
-    {
-      main_window_.show_error_message(error.what());
+      std::tuple<bool, BottleTypes::Windows, std::string> result = Helper::get_bottle_status_and_windows_version(prefix);
+      status = std::get<0>(result);
+      windows = std::get<1>(result);
+      if (!status)
+      {
+        main_window_.show_error_message(std::get<2>(result));
+      }
     }
     try
     {
