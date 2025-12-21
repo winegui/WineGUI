@@ -88,7 +88,7 @@ void Application::on_startup()
     }
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("Exit", "app.quit"));
+      section->append_item(Gio::MenuItem::create("Exit", "app.quit")); // Icon: application-exit
       file_menu->append_section(section);
     }
     menubar->append_submenu("File", file_menu);
@@ -102,22 +102,22 @@ void Application::on_startup()
     auto machine_menu = Gio::Menu::create();
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("New", "win.new_bottle"));
+      section->append_item(Gio::MenuItem::create("New", "win.new_bottle"));// Icon: list-add
       machine_menu->append_section(section);
     }
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("Edit", "app.edit_bottle"));
-      section->append_item(Gio::MenuItem::create("Run...", "win.run"));
-      section->append_item(Gio::MenuItem::create("Remove", "app.remove_bottle"));
-      section->append_item(Gio::MenuItem::create("Clone", "app.clone_bottle"));
-      section->append_item(Gio::MenuItem::create("Configure", "app.configure_bottle"));
+      section->append_item(Gio::MenuItem::create("Edit", "app.edit_bottle")); // Icon: document-edit
+      section->append_item(Gio::MenuItem::create("Run...", "win.run")); // Icon: media-playback-start
+      section->append_item(Gio::MenuItem::create("Remove", "app.remove_bottle")); // Icon: edit-delete
+      section->append_item(Gio::MenuItem::create("Clone", "app.clone_bottle")); // Icon: edit-copy
+      section->append_item(Gio::MenuItem::create("Configure", "app.configure_bottle")); // Icon: preferences-other
       machine_menu->append_section(section);
     }
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("Open C Drive", "app.open_c_drive"));
-      section->append_item(Gio::MenuItem::create("Open Log File", "app.open_log_file"));
+      section->append_item(Gio::MenuItem::create("Open C Drive", "app.open_c_drive")); // Icon: drive-harddisk
+      section->append_item(Gio::MenuItem::create("Open Log File", "app.open_log_file")); // Icon: text-x-generic
       machine_menu->append_section(section);
     }
     menubar->append_submenu("Machine", machine_menu);
@@ -126,14 +126,14 @@ void Application::on_startup()
     auto help_menu = Gio::Menu::create();
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("Issue List", "win.list_issues"));
-      section->append_item(Gio::MenuItem::create("Report an Issue", "win.report_issue"));
-      section->append_item(Gio::MenuItem::create("Check for Updates", "win.check_version"));
+      section->append_item(Gio::MenuItem::create("Issue List", "win.list_issues")); // Icon: emblem-package
+      section->append_item(Gio::MenuItem::create("Report an Issue", "win.report_issue")); // Icon: emblem-package
+      section->append_item(Gio::MenuItem::create("Check for Updates", "win.check_version")); // Icon: system-software-update
       help_menu->append_section(section);
     }
     {
       auto section = Gio::Menu::create();
-      section->append_item(Gio::MenuItem::create("About WineGUI", "app.about"));
+      section->append_item(Gio::MenuItem::create("About WineGUI", "app.about")); // Icon: help-about
       help_menu->append_section(section);
     }
     menubar->append_submenu("Help", help_menu);
@@ -176,16 +176,6 @@ void Application::on_shutdown()
 
   // Call the base class's implementation.
   Gtk::Application::on_shutdown();
-}
-
-void Application::on_menu_help_about()
-{
-  std::cout << "Help|About App was selected." << std::endl;
-}
-
-void Application::on_action_preferences()
-{
-  std::cout << "Preferences was selected." << std::endl;
 }
 
 void Application::on_action_quit()

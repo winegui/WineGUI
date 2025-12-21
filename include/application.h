@@ -61,7 +61,5 @@ private:
   RemoveAppWindow* remove_app_window_;
   SignalController* signal_controller_;
 
-  void on_action_preferences();
-  void on_menu_help_about();
   void on_action_quit();
 };
