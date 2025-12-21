@@ -51,7 +51,7 @@ void Application::on_startup()
   add_action("preferences", sigc::mem_fun(*preferences_window_, &PreferencesWindow::show));
   add_action("quit", sigc::mem_fun(*this, &Application::on_action_quit));
   add_action("refresh_view", sigc::bind(sigc::mem_fun(*manager_, &BottleManager::update_config_and_bottles), "", false));
-  add_action("remove_bottle", sigc::mem_fun(*manager_, &BottleManager::delete_bottle));
+  add_action("remove_bottle", sigc::bind(sigc::mem_fun(*manager_, &BottleManager::delete_bottle), main_window_));
   add_action("open_c_drive", sigc::mem_fun(*manager_, &BottleManager::open_c_drive));
   add_action("open_log_file", sigc::mem_fun(*manager_, &BottleManager::open_log_file));
   add_action("edit_bottle", sigc::mem_fun(*edit_window_, &BottleEditWindow::show));

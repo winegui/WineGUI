@@ -655,7 +655,7 @@ void BottleManager::clone_bottle(SignalController* caller,
 /**
  * \brief Remove the current active Wine bottle
  */
-void BottleManager::delete_bottle()
+void BottleManager::delete_bottle(Gtk::Window* parent)
 {
   if (active_bottle_ != nullptr)
   {
@@ -667,7 +667,7 @@ void BottleManager::delete_bottle()
       Glib::ustring confirm_message = "Are you sure you want to <b>PERMANENTLY</b> remove machine named '" +
                                       Glib::Markup::escape_text(Helper::get_folder_name(prefix_path)) + "' running " + windows +
                                       "?\n\n<i>Note:</i> This action cannot be undone!";
-      auto dialog = main_window_.show_question_dialog(confirm_message, true);
+      auto dialog = main_window_.show_question_dialog(parent, confirm_message, true);
       dialog->signal_response.connect(
           [this, prefix_path](DialogWindow::ResponseType result)
           {
@@ -977,7 +977,7 @@ void BottleManager::install_d3dx9(Gtk::Window* parent, const string& version)
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing D3DX9 (OpenGL implementation of DirectX 9).");
+    main_window_.show_busy_install_dialog(*parent, "Installing D3DX9 (OpenGL implementation of DirectX 9).");
 
     string package = "d3dx9";
     if (version != "")
@@ -1023,7 +1023,7 @@ void BottleManager::install_dxvk(Gtk::Window* parent, const string& version)
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
+    main_window_.show_busy_install_dialog(*parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
 
     string package = "dxvk";
     if (version != "latest")
@@ -1067,7 +1067,7 @@ void BottleManager::install_vkd3d(Gtk::Window* parent)
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing VKD3D (Vulkan-based implementation of DirectX 12).\n");
+    main_window_.show_busy_install_dialog(*parent, "Installing VKD3D (Vulkan-based implementation of DirectX 12).\n");
 
     string package = "vkd3d";
     string wine_prefix = active_bottle_->wine_location();
@@ -1108,7 +1108,7 @@ void BottleManager::install_visual_cpp_package(Gtk::Window* parent, const string
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing Visual C++ package (" + version + ").");
+    main_window_.show_busy_install_dialog(*parent, "Installing Visual C++ package (" + version + ").");
 
     string package = "vcrun" + version;
     string wine_prefix = active_bottle_->wine_location();
@@ -1150,7 +1150,8 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
   if (is_bottle_not_null())
   {
     auto dialog =
-        main_window_.show_question_dialog("<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
+        main_window_.show_question_dialog(parent,
+                                          "<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
                                           "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
                                           true);
     dialog->signal_response.connect(
@@ -1159,7 +1160,7 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
           if (result == DialogWindow::ResponseType::YES)
           {
             // Before we execute the install, show busy dialog
-            main_window_.show_busy_install_dialog(parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time!\n");
+            main_window_.show_busy_install_dialog(*parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time!\n");
 
             string deinstall_command = this->get_deinstall_mono_command();
 
@@ -1214,7 +1215,7 @@ void BottleManager::install_core_fonts(Gtk::Window* parent)
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing MS Core fonts.");
+    main_window_.show_busy_install_dialog(*parent, "Installing MS Core fonts.");
 
     string wine_prefix = active_bottle_->wine_location();
     bool is_debug_logging = active_bottle_->is_debug_logging();
@@ -1253,7 +1254,7 @@ void BottleManager::install_liberation(Gtk::Window* parent)
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing Liberation open-source fonts.");
+    main_window_.show_busy_install_dialog(*parent, "Installing Liberation open-source fonts.");
 
     string wine_prefix = active_bottle_->wine_location();
     bool is_debug_logging = active_bottle_->is_debug_logging();

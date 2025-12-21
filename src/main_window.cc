@@ -269,24 +269,13 @@ void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
  * \param[in] markup Support markup in message text (default: false)
  * \return Pointer to a newly allocated DialogWindow object, it will close itself (destroy) when the user clicks 'Yes' or 'No'
  */
-DialogWindow* MainWindow::show_question_dialog(const Glib::ustring& message, bool markup)
+DialogWindow* MainWindow::show_question_dialog(Gtk::Window* parent, const Glib::ustring& message, bool markup)
 {
-  // new gtk::manage DialogWindow wit hquestion dialog and return the pointer
-  DialogWindow* dialog = Gtk::manage(new DialogWindow(*this, DialogWindow::DialogType::QUESTION, message, markup));
+  // new gtk::manage DialogWindow with question dialog and return the pointer
+  DialogWindow* dialog = Gtk::manage(new DialogWindow(*parent, DialogWindow::DialogType::QUESTION, message, markup));
   // Non-blocking present
   dialog->present();
   return dialog;
-}
-
-/**
- * \brief Show busy indicator (like busy installing corefonts in Wine bottle)
- * \param[in] message Given the user more information what is going on
- */
-void MainWindow::show_busy_install_dialog(const Glib::ustring& message)
-{
-  busy_dialog_.set_message("Installing software", message);
-  busy_dialog_.set_transient_for(*this);
-  busy_dialog_.present();
 }
 
 /**
@@ -294,10 +283,10 @@ void MainWindow::show_busy_install_dialog(const Glib::ustring& message)
  * \param[in] parent Parent GTK Window (set to be the GTK transient for)
  * \param[in] message Given the user more information what is going on
  */
-void MainWindow::show_busy_install_dialog(Gtk::Window* parent, const Glib::ustring& message)
+void MainWindow::show_busy_install_dialog(Gtk::Window& parent, const Glib::ustring& message)
 {
   busy_dialog_.set_message("Installing software", message);
-  busy_dialog_.set_transient_for(*parent);
+  busy_dialog_.set_transient_for(parent);
   busy_dialog_.present();
 }
 

@@ -62,7 +62,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
 
   // Signals
   configure_environment_variables_button.signal_clicked().connect(configure_environment_variables);
-  delete_button.signal_clicked().connect(remove_bottle);
+  delete_button.signal_clicked().connect(sigc::bind(remove_bottle, this));
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
   enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));

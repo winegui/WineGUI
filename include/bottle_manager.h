@@ -71,7 +71,7 @@ public:
                      bool is_debug_logging,
                      int debug_log_level);
   void clone_bottle(SignalController* caller, const Glib::ustring& name, const Glib::ustring& folder_name, const Glib::ustring& description);
-  void delete_bottle();
+  void delete_bottle(Gtk::Window* parent);
   void set_active_bottle(BottleItem* bottle);
   const Glib::ustring& get_error_message() const;
 

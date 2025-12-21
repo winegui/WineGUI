@@ -51,7 +51,7 @@ public:
   // Signals
   sigc::signal<void()> configure_environment_variables;  /*!< configure environment variables signal */
   sigc::signal<void(UpdateBottleStruct&)> update_bottle; /*!< save button clicked signal */
-  sigc::signal<void()> remove_bottle;                    /*!< remove button clicked signal */
+  sigc::signal<void(Gtk::Window*)> remove_bottle;        /*!< remove button clicked signal */
 
   explicit BottleEditWindow(Gtk::Window& parent);
   virtual ~BottleEditWindow();

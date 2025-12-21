@@ -75,9 +75,8 @@ public:
   void show_info_message(const Glib::ustring& message, bool markup = false);
   void show_warning_message(const Glib::ustring& message, bool markup = false);
   void show_error_message(const Glib::ustring& message, bool markup = false);
-  DialogWindow* show_question_dialog(const Glib::ustring& message, bool markup = false);
-  void show_busy_install_dialog(const Glib::ustring& message);
-  void show_busy_install_dialog(Gtk::Window* parent, const Glib::ustring& message);
+  DialogWindow* show_question_dialog(Gtk::Window* parent, const Glib::ustring& message, bool markup = false);
+  void show_busy_install_dialog(Gtk::Window& parent, const Glib::ustring& message);
   void hide_busy_dialog();
 
   // Signal handlers
