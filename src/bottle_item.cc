@@ -146,7 +146,7 @@ void BottleItem::CreateUI()
 
   // Set left side of the GUI
   image.set(Helper::get_image_location("windows/" + filename_str));
-  image.set_size_request(32, 32);
+  image.set_pixel_size(32);
   image.set_margin_start(6);
   image.set_halign(Gtk::Align::START);
 
