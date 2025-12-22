@@ -65,7 +65,6 @@ BottleConfigureWindow::~BottleConfigureWindow()
 
 void BottleConfigureWindow::create_layout()
 {
-
   first_toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
   first_toolbar.set_halign(Gtk::Align::CENTER);
   first_toolbar.set_valign(Gtk::Align::CENTER);
@@ -126,71 +125,72 @@ void BottleConfigureWindow::create_layout()
 
   // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
+  static const int button_height = 85;
   // First row buttons, graphics packages
   install_d3dx9_button.signal_clicked().connect(sigc::bind(directx9, this, ""));
-  install_d3dx9_button.set_size_request(-1, 100);
+  install_d3dx9_button.set_size_request(-1, button_height);
   install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL API");
   first_toolbar.append(install_d3dx9_button);
   install_dxvk_button.signal_clicked().connect(sigc::bind(dxvk, this, "latest"));
-  install_dxvk_button.set_size_request(-1, 100);
+  install_dxvk_button.set_size_request(-1, button_height);
   install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9, 10 or 11 games, by using Vulkan API");
   first_toolbar.append(install_dxvk_button);
   install_vkd3d_button.signal_clicked().connect(sigc::bind(vkd3d, this));
-  install_vkd3d_button.set_size_request(-1, 100);
+  install_vkd3d_button.set_size_request(-1, button_height);
   install_vkd3d_button.set_tooltip_text("Installs VKD3D-Proton: Ideal for DirectX 12 games, by using Vulkan API");
   first_toolbar.append(install_vkd3d_button);
 
   // // Second row, Font packages
   install_liberation_fonts_button.signal_clicked().connect(sigc::bind(liberation_fonts, this));
-  install_liberation_fonts_button.set_size_request(-1, 100);
+  install_liberation_fonts_button.set_size_request(-1, button_height);
   install_liberation_fonts_button.set_tooltip_text("Installs Liberation open-source Fonts, alternative for Core fonts");
   second_toolbar.append(install_liberation_fonts_button);
   install_core_fonts_button.signal_clicked().connect(sigc::bind(corefonts, this));
-  install_core_fonts_button.set_size_request(-1, 100);
+  install_core_fonts_button.set_size_request(-1, button_height);
   install_core_fonts_button.set_tooltip_text("Installs Microsoft Core Fonts");
   second_toolbar.append(install_core_fonts_button);
 
   // // Third row, Visual C++ packages
   install_visual_cpp_2013_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2013"));
-  install_visual_cpp_2013_button.set_size_request(-1, 100);
+  install_visual_cpp_2013_button.set_size_request(-1, button_height);
   install_visual_cpp_2013_button.set_tooltip_text("Installs Visual C++ 2013");
   third_toolbar.append(install_visual_cpp_2013_button);
   install_visual_cpp_2015_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2015"));
-  install_visual_cpp_2015_button.set_size_request(-1, 100);
+  install_visual_cpp_2015_button.set_size_request(-1, button_height);
   install_visual_cpp_2015_button.set_tooltip_text("Installs Visual C++ 2015");
   third_toolbar.append(install_visual_cpp_2015_button);
   install_visual_cpp_2017_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2017"));
-  install_visual_cpp_2017_button.set_size_request(-1, 100);
+  install_visual_cpp_2017_button.set_size_request(-1, button_height);
   install_visual_cpp_2017_button.set_tooltip_text("Installs Visual C++ 2017");
   third_toolbar.append(install_visual_cpp_2017_button);
   install_visual_cpp_2019_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2019"));
-  install_visual_cpp_2019_button.set_size_request(-1, 100);
+  install_visual_cpp_2019_button.set_size_request(-1, button_height);
   install_visual_cpp_2019_button.set_tooltip_text("Installs Visual C++ 2015-2019");
   third_toolbar.append(install_visual_cpp_2019_button);
   install_visual_cpp_2022_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2022"));
-  install_visual_cpp_2022_button.set_size_request(-1, 100);
+  install_visual_cpp_2022_button.set_size_request(-1, button_height);
   install_visual_cpp_2022_button.set_tooltip_text("Installs Visual C++ 2015-2022");
   third_toolbar.append(install_visual_cpp_2022_button);
 
   // // Fourth row, .NET packages
   install_dotnet4_0_button.signal_clicked().connect(sigc::bind(dotnet, this, "40"));
-  install_dotnet4_0_button.set_size_request(-1, 100);
+  install_dotnet4_0_button.set_size_request(-1, button_height);
   install_dotnet4_0_button.set_tooltip_text("Installs .NET 4.0 from 2011");
   fourth_toolbar.append(install_dotnet4_0_button);
   install_dotnet4_5_2_button.signal_clicked().connect(sigc::bind(dotnet, this, "452"));
-  install_dotnet4_5_2_button.set_size_request(-1, 100);
+  install_dotnet4_5_2_button.set_size_request(-1, button_height);
   install_dotnet4_5_2_button.set_tooltip_text("Installs .NET 4.5.2 from 2012");
   fourth_toolbar.append(install_dotnet4_5_2_button);
   install_dotnet4_7_2_button.signal_clicked().connect(sigc::bind(dotnet, this, "472"));
-  install_dotnet4_7_2_button.set_size_request(-1, 100);
+  install_dotnet4_7_2_button.set_size_request(-1, button_height);
   install_dotnet4_7_2_button.set_tooltip_text("Installs .NET 4.7.2 from 2018");
   fourth_toolbar.append(install_dotnet4_7_2_button);
   install_dotnet4_8_button.signal_clicked().connect(sigc::bind(dotnet, this, "48"));
-  install_dotnet4_8_button.set_size_request(-1, 100);
+  install_dotnet4_8_button.set_size_request(-1, button_height);
   install_dotnet4_8_button.set_tooltip_text("Installs .NET 4.8 from 2019");
   fourth_toolbar.append(install_dotnet4_8_button);
   install_dotnet6_button.signal_clicked().connect(sigc::bind(dotnet, this, "6"));
-  install_dotnet6_button.set_size_request(-1, 100);
+  install_dotnet6_button.set_size_request(-1, button_height);
   install_dotnet6_button.set_tooltip_text("Installs .NET 6.0 from 2023");
   fourth_toolbar.append(install_dotnet6_button);
 }
