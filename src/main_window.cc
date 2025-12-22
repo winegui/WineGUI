@@ -1397,9 +1397,10 @@ void MainWindow::on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item)
   vbox->set_hexpand(true);
   Gtk::Picture* icon = Gtk::make_managed<Gtk::Picture>();
   icon->set_can_shrink(false);
-  icon->set_halign(Gtk::Align::START);
+  icon->set_halign(Gtk::Align::CENTER);
   icon->set_valign(Gtk::Align::CENTER);
-  icon->set_margin_end(8);
+  icon->set_size_request(42, -1);
+  icon->set_margin_end(4);
   hbox->append(*icon);
 
   Gtk::Label* name = Gtk::make_managed<Gtk::Label>("", Gtk::Align::START);
