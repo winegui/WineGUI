@@ -968,13 +968,13 @@ void MainWindow::load_stored_window_settings()
 void MainWindow::create_left_panel()
 {
   // Add scrolled window with listbox to paned
-  main_paned.set_start_child(scrolled_window_listbox);
+  main_paned.set_start_child(scrolled_window_bottles_listbox);
 
   // Set function that will add separators between each item
   bottles_listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
 
   // Add list box to scrolled window
-  scrolled_window_listbox.set_child(bottles_listbox);
+  scrolled_window_bottles_listbox.set_child(bottles_listbox);
 }
 
 /**
