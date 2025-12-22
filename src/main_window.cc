@@ -77,6 +77,7 @@ MainWindow::MainWindow()
     .app-list:not(:hover) row:selected,
     .app-list:not(:hover) listitem:selected {
       background-color: transparent;
+      color: @theme_text_color;
     }
   )");
   Gtk::StyleContext::add_provider_for_display(Gdk::Display::get_default(), css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
