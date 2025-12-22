@@ -1395,12 +1395,11 @@ void MainWindow::on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item)
   hbox->set_hexpand(true);
   Gtk::Box* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL);
   vbox->set_hexpand(true);
-  Gtk::Picture* icon = Gtk::make_managed<Gtk::Picture>();
-  icon->set_can_shrink(false);
+  Gtk::Image* icon = Gtk::make_managed<Gtk::Image>();
+  icon->set_pixel_size(32);
   icon->set_halign(Gtk::Align::CENTER);
   icon->set_valign(Gtk::Align::CENTER);
-  icon->set_size_request(42, -1);
-  icon->set_margin_end(4);
+  icon->set_margin_end(8);
   hbox->append(*icon);
 
   Gtk::Label* name = Gtk::make_managed<Gtk::Label>("", Gtk::Align::START);
@@ -1423,7 +1422,7 @@ void MainWindow::on_bind_icon_and_name(const Glib::RefPtr<Gtk::ListItem>& list_i
   Gtk::Box* hbox = dynamic_cast<Gtk::Box*>(list_item->get_child());
   if (!hbox)
     return;
-  auto icon = dynamic_cast<Gtk::Picture*>(hbox->get_first_child());
+  auto icon = dynamic_cast<Gtk::Image*>(hbox->get_first_child());
   if (!icon)
     return;
   Gtk::Box* vbox = dynamic_cast<Gtk::Box*>(icon->get_next_sibling());
@@ -1437,7 +1436,7 @@ void MainWindow::on_bind_icon_and_name(const Glib::RefPtr<Gtk::ListItem>& list_i
     return;
 
   // Set all fields
-  icon->set_paintable(col->icon);
+  icon->set(col->icon);
   name->set_markup("<b>" + col->name + "</b>");
   description->set_markup(col->description);
 }
