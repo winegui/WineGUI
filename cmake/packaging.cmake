@@ -26,11 +26,11 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND EXISTS "/etc/os-release")
 endif ()
 
 if(${LINUX_DISTRO} MATCHES "openSUSE")
-  # OpenSuse/Leap
-  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm4, cabextract, unzip, p7zip, wget")
+  # OpenSuse (Leap, Tumbleweed)
+  set(CPACK_RPM_PACKAGE_REQUIRES "libgtkmm-4_0-0, cabextract, unzip, p7zip, wget")
 else()
   # Redhat/CentOS/Fedora/etc.
-  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm4.0-4, cabextract, unzip, p7zip, wget")
+  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm4.0, cabextract, unzip, p7zip, wget")
 endif()
 # Optional RPM packages
 set(CPACK_RPM_PACKAGE_SUGGESTS "vulkan, vulkan-loader")
