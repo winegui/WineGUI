@@ -70,7 +70,7 @@ MainWindow::MainWindow()
   virtual_desktop_label.set_halign(Gtk::Align::START);
   description_label.set_halign(Gtk::Align::START);
 
-  // Add custom css
+  // Add custom css (to fix the listview hover bg issue)
   auto css = Gtk::CssProvider::create();
   // @theme_selected_bg_color
   css->load_from_data(R"(
@@ -145,6 +145,8 @@ MainWindow::MainWindow()
   // Check for update without (error) messages, when app is idle
   if (general_config_data_.check_for_updates_startup)
     Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &MainWindow::check_version_update), false), Glib::PRIORITY_DEFAULT_IDLE);
+  // Check once if it can find the wine binary during start-up
+  Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::check_wine_binary), Glib::PRIORITY_DEFAULT_IDLE);
   // Window closed signal
   signal_close_request().connect(sigc::mem_fun(*this, &MainWindow::on_delete_window), false);
 }
@@ -857,6 +859,18 @@ void MainWindow::cleanup_check_version_thread()
       thread_check_version_->join();
     delete thread_check_version_;
     thread_check_version_ = nullptr;
+  }
+}
+
+/**
+ * \brief Check if Wine is installed
+ */
+void MainWindow::check_wine_binary()
+{
+  int wineStatus = Helper::determine_wine_executable();
+  if (wineStatus == -1)
+  {
+    show_error_message("Could not find the 'wine' binary in your system PATH.\n\nPlease install Wine and try again.");
   }
 }
 

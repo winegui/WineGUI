@@ -47,7 +47,9 @@ DialogWindow::DialogWindow(Gtk::Window& parent, DialogType type, const Glib::ust
   set_message(message, markup);
 
   vbox.set_margin(6);
-  icon.set_pixel_size(100);
+  icon.set_pixel_size(85);
+  icon.set_margin_start(6);
+  icon.set_margin_end(6);
   icon.set_halign(Gtk::Align::CENTER);
   icon.set_valign(Gtk::Align::CENTER);
 

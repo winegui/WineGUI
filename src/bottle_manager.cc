@@ -301,7 +301,7 @@ void BottleManager::new_bottle(SignalController* caller,
   {
     {
       std::lock_guard<std::mutex> lock(error_message_mutex_);
-      error_message_ = "Could not find wine binary. Please first install wine on your machine.";
+      error_message_ = "Could not find wine binary. Please install Wine on your machine and try again.";
     }
     caller->signal_error_message_during_create();
     return; // Stop thread prematurely
