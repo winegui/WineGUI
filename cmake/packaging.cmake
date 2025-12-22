@@ -2,7 +2,6 @@
 # Example: https://github.com/MariaDB/server/tree/12.2/cmake
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "WineGUI is a user-friendly WINE graphical interface")
 set(CPACK_PACKAGE_VENDOR "Melroy van den Berg")
-set(CPACK_RPM_PACKAGE_VENDOR "Melroy van den Berg")
 set(CPACK_PACKAGE_CONTACT "Melroy van den Berg <melroy@melroy.org>")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://winegui.melroy.org")
 set(CPACK_RPM_PACKAGE_URL "https://winegui.melroy.org")
@@ -12,7 +11,7 @@ set(CPACK_RPM_PACKAGE_LICENSE "GPLv3")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_TARGET}-${CPACK_PACKAGE_VERSION}")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
-set(CPACK_RPM_PACKAGE_GROUP      "Applications/Productivity")
+set(CPACK_RPM_PACKAGE_GROUP "Applications/Productivity")
 set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-v${CPACK_PACKAGE_VERSION}") # Without '-Linux' suffix
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND EXISTS "/etc/os-release")
