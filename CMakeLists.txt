@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 set(PROJECT_NAME WineGUI)
 set(PROJECT_TARGET winegui)
+set(PROJECT_SPDX_LICENSE "AGPL-3.0-only")
 
 option(DOXYGEN "Build Documentation" OFF)
 option(PACKAGE "Build packages in release mode" OFF)
