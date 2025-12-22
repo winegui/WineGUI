@@ -27,6 +27,10 @@
 #include <glibmm/ustring.h>
 #include <string>
 
+/**
+ * \class AppListModelColumns
+ * \brief List model for the application list, just based on Glib Object.
+ */
 class AppListModelColumns : public Glib::Object
 {
 public:

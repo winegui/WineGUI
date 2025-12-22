@@ -28,6 +28,10 @@ using std::string;
 // Forward declaration
 class BottleItem;
 
+/**
+ * \struct CloneBottleStruct
+ * \brief custom struct for bottle clone data information
+ */
 struct CloneBottleStruct
 {
   Glib::ustring name;

@@ -29,6 +29,10 @@ using std::string;
 // Forward declaration
 class BottleItem;
 
+/**
+ * \struct UpdateBottleStruct
+ * \brief Custom struct for bottle update data information
+ */
 struct UpdateBottleStruct
 {
   Glib::ustring name;

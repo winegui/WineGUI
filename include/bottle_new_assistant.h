@@ -32,7 +32,10 @@ class BottleNewAssistant : public Gtk::Assistant
 public:
   // Signal
   sigc::signal<void(const Glib::ustring&)> new_bottle_finished; /*!< Signal when New Bottle Assistant is finished with the just created bottle name */
-  // Result struct
+  /*
+   * \struct Result
+   * \brief Result struct for New Bottle Assistant
+   */
   struct Result
   {
     Glib::ustring name;

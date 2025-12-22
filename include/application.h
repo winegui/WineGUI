@@ -35,6 +35,10 @@ class AddAppWindow;
 class RemoveAppWindow;
 class SignalController;
 
+/**
+ * \class Application
+ * \brief The main application class starting point
+ */
 class Application : public Gtk::Application
 {
 protected:

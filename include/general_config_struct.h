@@ -22,6 +22,10 @@
 
 #include <string>
 
+/**
+ * \struct GeneralConfigData
+ * \brief Custom struct for general config data (stored in/retrieved from: ~/.config/winegui/config.ini)
+ */
 struct GeneralConfigData
 {
   std::string default_folder;

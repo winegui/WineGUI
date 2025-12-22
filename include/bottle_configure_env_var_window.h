@@ -25,6 +25,10 @@
 // Forward declaration
 class BottleItem;
 
+/**
+ * \class EnvVarModelRow
+ * \brief custom model row for bottle environment variable (key/value)
+ */
 class EnvVarModelRow : public Glib::Object
 {
 public:

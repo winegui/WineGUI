@@ -25,7 +25,7 @@
 using std::string;
 
 /**
- * \class Busy Dialog
+ * \class BusyDialog
  * \brief GTK Window class for the busy dialog, which shows a loading bar and a message
  */
 class BusyDialog : public Gtk::Window
