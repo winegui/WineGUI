@@ -18,7 +18,7 @@
       <summary>Is window fullscreen</summary>
     </key>
     <key name="position-divider-paned" type="i">
-      <default>320</default>
+      <default>280</default>
       <summary>The paned position</summary>
     </key>
     <key name="position-divider-container-paned" type="i">

@@ -957,7 +957,7 @@ void MainWindow::load_stored_window_settings()
   {
     std::cerr << "Error: Gsettings schema file could not be found." << std::endl;
     // Fallback values
-    main_paned.set_position(320);
+    main_paned.set_position(280);
     container_paned.set_position(480);
   }
 }
