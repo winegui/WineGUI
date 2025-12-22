@@ -1392,7 +1392,9 @@ void MainWindow::create_right_panel()
 void MainWindow::on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item)
 {
   Gtk::Box* hbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL);
+  hbox->set_hexpand(true);
   Gtk::Box* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL);
+  vbox->set_hexpand(true);
   Gtk::Picture* icon = Gtk::make_managed<Gtk::Picture>();
   icon->set_can_shrink(false);
   icon->set_halign(Gtk::Align::CENTER);
@@ -1401,7 +1403,10 @@ void MainWindow::on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item)
   hbox->append(*icon);
 
   Gtk::Label* name = Gtk::make_managed<Gtk::Label>("", Gtk::Align::START);
+  name->set_single_line_mode(true);
   Gtk::Label* description = Gtk::make_managed<Gtk::Label>("", Gtk::Align::START);
+  description->set_single_line_mode(true);
+  description->set_wrap(false);
   vbox->append(*name);
   vbox->append(*description);
   hbox->append(*vbox);
