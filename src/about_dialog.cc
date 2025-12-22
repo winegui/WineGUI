@@ -28,14 +28,14 @@
 AboutDialog::AboutDialog(Gtk::Window& parent)
 {
   // Set logo
-  logo.set(Helper::get_image_location("logo.png"));
+  logo.set(Helper::get_image_location("logo_big.png"));
   // Set version
   std::vector<Glib::ustring> devs;
   devs.emplace_back("Melroy van den Berg <melroy@melroy.org>");
 
   set_transient_for(parent);
   set_program_name("WineGUI");
-  set_comments("The most user-friendly WINE manager.");
+  set_comments("The most user-friendly Wine manager.");
 
   set_logo(logo.get_paintable());
   set_authors(devs);

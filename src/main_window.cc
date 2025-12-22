@@ -47,8 +47,8 @@ MainWindow::MainWindow()
       thread_check_version_(nullptr)
 {
   // Set some Window properties
-  set_title("WineGUI - WINE Manager");
-  set_default_size(1120, 675);
+  set_title("WineGUI - Wine Manager");
+  set_default_size(1120, 800);
 
   // Menu actions
   add_action("new_bottle", sigc::mem_fun(*this, &MainWindow::on_new_bottle_button_clicked));

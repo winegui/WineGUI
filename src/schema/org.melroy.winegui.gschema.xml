@@ -2,7 +2,7 @@
 <schemalist>
   <schema path="/org/melroy/winegui/" id="org.melroy.winegui">
     <key name="width" type="i">
-      <default>1000</default>
+      <default>1120</default>
       <summary>Window width</summary>
     </key>
     <key name="height" type="i">
