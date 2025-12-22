@@ -118,6 +118,8 @@ protected:
   Glib::RefPtr<Gtk::FilterListModel> app_list_filter_list_model;    /*!< Application list filter list model */
   Glib::RefPtr<Gtk::StringFilter> app_list_filter;                  /*!< Application list filter */
   Gtk::Box toolbar;                                                 /*!< Toolbar at top */
+  Gtk::MenuButton menu_button_toolbar;                              /*!< The more menu button in the toolbar */
+  Glib::RefPtr<Gio::Menu> toolbar_menu;                              /*!< The toolbar menu */
   Gtk::Separator separator1;                                        /*!< Separator */
   Gtk::Grid detail_grid;                                            /*!< Grid layout container to have multiple rows & columns below the toolbar */
   Gtk::ScrolledWindow app_list_scrolled_window;                     /*!< Scrolled Window container for app list */

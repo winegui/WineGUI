@@ -35,6 +35,7 @@ MainWindow::MainWindow()
       app_list_vbox(Gtk::Orientation::VERTICAL),
       app_list_top_hbox(Gtk::Orientation::HORIZONTAL),
       container_paned(Gtk::Orientation::HORIZONTAL),
+      toolbar_menu(Gio::Menu::create()),
       separator1(Gtk::Orientation::HORIZONTAL),
       busy_dialog_(*this),
       info_dialog_(*this, DialogWindow::DialogType::INFO),
@@ -94,6 +95,9 @@ MainWindow::MainWindow()
 
   // Load window settings from gsettings schema file
   load_stored_window_settings();
+
+  // By default hide the toolbar menu button
+  menu_button_toolbar.set_visible(false);
 
   // By default disable the toolbar buttons
   set_sensitive_toolbar_buttons(false);
@@ -1124,6 +1128,18 @@ void MainWindow::create_right_panel()
   kill_processes_button.set_child(*kill_processes_box);
   kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
   toolbar.append(kill_processes_button);
+
+  // Set the menu button icon + model + append to toolbar
+  menu_button_toolbar.set_icon_name("arrow-down");
+  menu_button_toolbar.set_menu_model(toolbar_menu);
+  toolbar.append(menu_button_toolbar);
+
+  // Currently a static placeholder
+  // TODO: Replace with a dynamic menu depending on which items disappear from the screen. And set the visibility of the toolbar menu if needed to true.
+  toolbar_menu->append("Item 1", "app.item1");
+  toolbar_menu->append("Item 2", "app.item2");
+  toolbar_menu->append("Item 3", "app.item3");
+  menu_button_toolbar.set_visible(true);
 
   // Add toolbar to right vbox
   right_vbox.append(toolbar);
