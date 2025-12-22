@@ -87,8 +87,8 @@ namespace BottleTypes
       std::pair(Windows::Windows11, Bit::win32),    std::pair(Windows::Windows11, Bit::win64),
   };
 
-  //// Default Windows version (Windows 10 32-bit) as WineGUI Bottle
-  static const int DefaultBottleIndex = 25;
+  //// Default Windows version (Windows 10 64-bit) as WineGUI Bottle
+  static const int DefaultBottleIndex = 26;
 
   /**
    * \enum AudioDriver
