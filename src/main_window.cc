@@ -1341,8 +1341,7 @@ void MainWindow::create_right_panel()
   app_list_search_entry.set_margin_start(6);
   app_list_search_entry.set_margin_end(6);
   app_list_search_entry.set_margin_top(6);
-  app_list_search_entry.set_hexpand(true);
-  app_list_search_entry.set_halign(Gtk::Align::FILL);
+  app_list_search_entry.set_halign(Gtk::Align::START);
 
   // App list add shortcut button
   add_app_list_button.set_tooltip_text("Add shortcut to application list");

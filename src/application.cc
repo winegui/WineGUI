@@ -67,13 +67,12 @@ void Application::on_startup()
   set_accel_for_action("app.open_c_drive", "<Ctrl>O");
   set_accel_for_action("app.open_log_file", "<Ctrl>L");
   set_accel_for_action("app.edit_bottle", "<Ctrl>E");
-  set_accel_for_action("app.clone_bottle", "<Ctrl>C");
+  set_accel_for_action("app.clone_bottle", "<Ctrl><Alt>C");
   set_accel_for_action("app.configure_bottle", "<Ctrl>U");
-  set_accel_for_action("app.about", "<Ctrl>A");
 
   set_accel_for_action("win.new_bottle", "<Ctrl>N");
   set_accel_for_action("win.run", "<Ctrl>R");
-  set_accel_for_action("win.check_version", "<Ctrl>V");
+  set_accel_for_action("win.check_version", "<Ctrl><Alt>V");
 
   auto menubar = Gio::Menu::create();
   {
