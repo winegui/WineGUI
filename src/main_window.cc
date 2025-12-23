@@ -1478,6 +1478,7 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
  * \brief Update toolbar button visibility based on available space
  * Hides buttons that don't fit and adds them to the overflow menu
  */
+// cppcheck-suppress unusedFunction
 void MainWindow::on_update_toolbar_overflow()
 {
   // Get available width of the right vbox (minus the toolbar margin at the start, there is no margin at the end)
