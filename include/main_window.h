@@ -32,10 +32,21 @@
 #include <list>
 #include <string>
 #include <thread>
+#include <vector>
 
 using std::cout;
 using std::endl;
 using std::string;
+
+// Toolbar overflow management
+struct ToolbarButtonData
+{
+  Gtk::Button* button;
+  Glib::ustring label;
+  Glib::ustring icon_name;
+  Glib::ustring tooltip_text;
+  Glib::ustring action_name;
+};
 
 /**
  * \class MainWindow
@@ -119,7 +130,7 @@ protected:
   Glib::RefPtr<Gtk::StringFilter> app_list_filter;                  /*!< Application list filter */
   Gtk::Box toolbar;                                                 /*!< Toolbar at top */
   Gtk::MenuButton menu_button_toolbar;                              /*!< The more menu button in the toolbar */
-  Glib::RefPtr<Gio::Menu> toolbar_menu;                              /*!< The toolbar menu */
+  Glib::RefPtr<Gio::Menu> toolbar_menu;                             /*!< The toolbar menu */
   Gtk::Separator separator1;                                        /*!< Separator */
   Gtk::Grid detail_grid;                                            /*!< Grid layout container to have multiple rows & columns below the toolbar */
   Gtk::ScrolledWindow app_list_scrolled_window;                     /*!< Scrolled Window container for app list */
@@ -178,12 +189,14 @@ private:
   Glib::Dispatcher info_message_check_version_dispatcher_;
   Glib::Dispatcher new_version_available_dispatcher_;
   Glib::Dispatcher check_version_finished_dispatcher_;
+  std::vector<ToolbarButtonData> toolbar_buttons_; /*!< Toolbar buttons for menu management */
 
   // Signal handlers
   virtual void on_bottle_row_clicked(Gtk::ListBoxRow* row);
   virtual void on_app_list_search();
   virtual void on_application_row_activated(unsigned int position);
   virtual void on_new_bottle_apply();
+  virtual void on_update_toolbar_overflow();
 
   // Private methods
   void set_detailed_info(const BottleItem& bottle);

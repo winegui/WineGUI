@@ -21,6 +21,7 @@
 #include "main_window.h"
 #include "app_list_model_column.h"
 #include "general_config_file.h"
+#include "gtkmm/enums.h"
 #include "helper.h"
 #include "project_config.h"
 
@@ -57,6 +58,15 @@ MainWindow::MainWindow()
   add_action("report_issue", sigc::mem_fun(*this, &MainWindow::on_report_issue));
   add_action("list_issues", sigc::mem_fun(*this, &MainWindow::on_issue_tickets));
   add_action("check_version", sigc::mem_fun(*this, &MainWindow::on_check_version));
+  // Toolbar button actions for menu
+  add_action("edit_bottle", [this]() { show_edit_window.emit(); });
+  add_action("clone_bottle", [this]() { show_clone_window.emit(); });
+  add_action("configure_bottle", [this]() { show_configure_window.emit(); });
+  add_action("open_c_drive", [this]() { open_c_drive.emit(); });
+  add_action("reboot_bottle", [this]() { reboot_bottle.emit(); });
+  add_action("update_bottle", [this]() { update_bottle.emit(); });
+  add_action("open_log_file", [this]() { open_log_file.emit(); });
+  add_action("kill_processes", [this]() { kill_running_processes.emit(); });
 
   // Label alignments
   name_label.set_halign(Gtk::Align::START);
@@ -1018,128 +1028,41 @@ void MainWindow::create_right_panel()
   toolbar.set_spacing(6);
   toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
 
-  // Buttons in toolbar
-  Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
-  new_image->set_from_icon_name("list-add");
-  Gtk::Label* new_label = Gtk::manage(new Gtk::Label("New"));
-  Gtk::Box* new_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  new_box->append(*new_image);
-  new_box->append(*new_label);
+  toolbar_buttons_ = {
+      {&new_button, "New", "list-add", "Create a new machine!", "win.new_bottle"},
+      {&edit_button, "Edit", "document-edit", "Edit Wine Machine", "win.edit_bottle"},
+      {&clone_button, "Clone", "edit-copy", "Clone Wine Machine", "win.clone_bottle"},
+      {&configure_button, "Configure", "preferences-other", "Install additional packages", "win.configure_bottle"},
+      {&run_button, "Run Program...", "media-playback-start", "Run exe or msi in Wine Machine", "win.run"},
+      {&open_c_driver_button, "Open C: Drive", "drive-harddisk", "Open the C: drive location in file manager", "win.open_c_drive"},
+      {&reboot_button, "Reboot", "view-refresh", "Simulate Machine Reboot", "win.reboot_bottle"},
+      {&update_button, "Update Config", "system-software-update", "Update the Wine Machine configuration", "win.update_bottle"},
+      {&open_log_file_button, "Open Log", "text-x-generic", "Open debug logging file", "win.open_log_file"},
+      {&kill_processes_button, "Kill Processes", "process-stop", "Kill all running processes in Wine Machine", "win.kill_processes"}};
 
-  new_button.set_tooltip_text("Create a new machine!");
-  new_button.set_child(*new_box);
-  toolbar.append(new_button);
+  // Create toolbar menu items
+  for (auto& toolbar_button_ : toolbar_buttons_)
+  {
+    Gtk::Image* image = Gtk::manage(new Gtk::Image());
+    image->set_from_icon_name(toolbar_button_.icon_name);
+    Gtk::Label* label = Gtk::manage(new Gtk::Label(toolbar_button_.label));
+    Gtk::Box* button_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+    button_box->append(*image);
+    button_box->append(*label);
 
-  Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
-  edit_image->set_from_icon_name("document-edit");
-  Gtk::Label* edit_label = Gtk::manage(new Gtk::Label("Edit"));
-  Gtk::Box* edit_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  edit_box->append(*edit_image);
-  edit_box->append(*edit_label);
-
-  edit_button.set_child(*edit_box);
-  edit_button.set_tooltip_text("Edit Wine Machine");
-  toolbar.append(edit_button);
-
-  Gtk::Image* clone_image = Gtk::manage(new Gtk::Image());
-  clone_image->set_from_icon_name("edit-copy");
-  Gtk::Label* clone_label = Gtk::manage(new Gtk::Label("Clone"));
-  Gtk::Box* clone_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  clone_box->append(*clone_image);
-  clone_box->append(*clone_label);
-
-  clone_button.set_child(*clone_box);
-  clone_button.set_tooltip_text("Clone Wine Machine");
-  toolbar.append(clone_button);
-
-  Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
-  manage_image->set_from_icon_name("preferences-other");
-  Gtk::Label* manage_label = Gtk::manage(new Gtk::Label("Configure"));
-  Gtk::Box* manage_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  manage_box->append(*manage_image);
-  manage_box->append(*manage_label);
-
-  configure_button.set_child(*manage_box);
-  configure_button.set_tooltip_text("Install additional packages");
-  toolbar.append(configure_button);
-
-  Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
-  run_image->set_from_icon_name("media-playback-start");
-  Gtk::Label* run_label = Gtk::manage(new Gtk::Label("Run Program..."));
-  Gtk::Box* run_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  run_box->append(*run_image);
-  run_box->append(*run_label);
-
-  run_button.set_child(*run_box);
-  run_button.set_tooltip_text("Run exe or msi in Wine Machine");
-  toolbar.append(run_button);
-
-  Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
-  open_c_drive_image->set_from_icon_name("drive-harddisk");
-  Gtk::Label* open_c_drive_label = Gtk::manage(new Gtk::Label("Open C: Drive"));
-  Gtk::Box* open_c_drive_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  open_c_drive_box->append(*open_c_drive_image);
-  open_c_drive_box->append(*open_c_drive_label);
-
-  open_c_driver_button.set_child(*open_c_drive_box);
-  open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
-  toolbar.append(open_c_driver_button);
-
-  Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
-  reboot_image->set_from_icon_name("view-refresh");
-  Gtk::Label* reboot_label = Gtk::manage(new Gtk::Label("Reboot"));
-  Gtk::Box* reboot_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  reboot_box->append(*reboot_image);
-  reboot_box->append(*reboot_label);
-
-  reboot_button.set_child(*reboot_box);
-  reboot_button.set_tooltip_text("Simulate Machine Reboot");
-  toolbar.append(reboot_button);
-
-  Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
-  update_image->set_from_icon_name("system-software-update");
-  Gtk::Label* update_label = Gtk::manage(new Gtk::Label("Update Config"));
-  Gtk::Box* update_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  update_box->append(*update_image);
-  update_box->append(*update_label);
-
-  update_button.set_child(*update_box);
-  update_button.set_tooltip_text("Update the Wine Machine configuration");
-  toolbar.append(update_button);
-
-  Gtk::Image* open_log_file_image = Gtk::manage(new Gtk::Image());
-  open_log_file_image->set_from_icon_name("text-x-generic");
-  Gtk::Label* open_log_file_label = Gtk::manage(new Gtk::Label("Open Log"));
-  Gtk::Box* open_log_file_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  open_log_file_box->append(*open_log_file_image);
-  open_log_file_box->append(*open_log_file_label);
-
-  open_log_file_button.set_child(*open_log_file_box);
-  open_log_file_button.set_tooltip_text("Open debug logging file");
-  toolbar.append(open_log_file_button);
-
-  Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
-  kill_processes_image->set_from_icon_name("process-stop");
-  Gtk::Label* kill_processes_label = Gtk::manage(new Gtk::Label("Kill Processes"));
-  Gtk::Box* kill_processes_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
-  kill_processes_box->append(*kill_processes_image);
-  kill_processes_box->append(*kill_processes_label);
-
-  kill_processes_button.set_child(*kill_processes_box);
-  kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
-  toolbar.append(kill_processes_button);
+    toolbar_button_.button->set_tooltip_text(toolbar_button_.tooltip_text);
+    toolbar_button_.button->set_child(*button_box);
+ 
+    toolbar.append(*toolbar_button_.button);
+  }
 
   // Set the menu button icon + model + append to toolbar
   menu_button_toolbar.set_icon_name("arrow-down");
   menu_button_toolbar.set_menu_model(toolbar_menu);
   toolbar.append(menu_button_toolbar);
 
-  // Currently a static placeholder
-  // TODO: Replace with a dynamic menu depending on which items disappear from the screen. And set the visibility of the toolbar menu if needed to true.
-  toolbar_menu->append("Item 1", "app.item1");
-  toolbar_menu->append("Item 2", "app.item2");
-  toolbar_menu->append("Item 3", "app.item3");
-  menu_button_toolbar.set_visible(true);
+  // Connect to window resize events - update toolbar overflow on resize
+  property_default_width().signal_changed().connect(sigc::mem_fun(*this, &MainWindow::on_update_toolbar_overflow));
 
   // Add toolbar to right vbox
   right_vbox.append(toolbar);
@@ -1398,6 +1321,8 @@ void MainWindow::create_right_panel()
   container_paned.set_end_child(app_list_vbox);
 
   // Add container to right box
+  right_vbox.set_halign(Gtk::Align::FILL);
+  right_vbox.set_hexpand(true);
   right_vbox.append(container_paned);
 
   // Add right box to paned
@@ -1495,4 +1420,98 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
     // gtk_widget_show(current);
     gtk_list_box_row_set_header(row, current);
   }
+}
+
+
+/**
+ * \brief Update toolbar button visibility based on available space
+ * Hides buttons that don't fit and adds them to the overflow menu
+ */
+void MainWindow::on_update_toolbar_overflow()
+{
+  // Get available width of the right vbox (minus the toolbar margin at the start, there is no margin at the end)
+  int available_width = right_vbox.get_width() - toolbar.get_margin_start();
+  if (available_width <= 0)
+    return;
+
+  // For faster calculation, we use some static values
+  static const int toolbar_spacing_both = 12; // 2 * 6 (left + right padding between the childeren of the toolbar items)
+  static const int menu_button_toolbar_width = 60; // from menu_button_toolbar
+
+  // First, show all buttons to get accurate measurements
+  for (auto& button : toolbar_buttons_)
+  {
+    button.button->set_visible(true);
+  }
+
+  // Clear the toolbar drop-down menu
+  toolbar_menu->remove_all();
+
+  // Calculate which buttons fit
+  int total_width = 0;
+  int visible_count = 0;
+
+  for (size_t i = 0; i < toolbar_buttons_.size(); ++i)
+  {
+    auto& button = toolbar_buttons_[i];
+
+    // Get button width - use allocated width if available, otherwise estimate
+    // We have spacing on both sides of the button
+    int button_width = button.button->get_allocated_width() + toolbar_spacing_both;
+    if (button_width <= 0)
+    {
+      // Estimate: label width * 8 pixels per character + 12 pixels padding + spacing on both sides
+      button_width = static_cast<int>(button.label.size() * 8) + 12 + toolbar_spacing_both;
+      if (button_width < 60)
+        button_width = 60;
+    }
+
+    // Calculate width needed including spacing
+    int width_needed = total_width + button_width;
+
+    // If there are more buttons after this, we need space for menu button
+    if (i < toolbar_buttons_.size() - 1)
+    {
+      width_needed += menu_button_toolbar_width + toolbar_spacing_both;
+    }
+
+    // Check if this button fits
+    if (width_needed > available_width && visible_count > 0)
+    {
+      // This button doesn't fit, stop here
+      break;
+    }
+
+    total_width = total_width + button_width;
+    visible_count++;
+  }
+
+  // Now hide/show buttons and populate menu
+  bool found_overflow = false;
+  for (size_t i = 0; i < toolbar_buttons_.size(); ++i)
+  {
+    auto& button_data = toolbar_buttons_[i];
+    
+    if (static_cast<int>(i) < visible_count)
+    {
+      // Button fits, keep it visible
+      button_data.button->set_visible(true);
+    }
+    else
+    {
+      // Button doesn't fit, hide it and add to menu
+      button_data.button->set_visible(false);
+      found_overflow = true;
+
+      auto menu_item = Gio::MenuItem::create(button_data.label, button_data.action_name);
+      if (!button_data.icon_name.empty())
+      {
+        menu_item->set_attribute_value("icon", Glib::Variant<Glib::ustring>::create(button_data.icon_name));
+      }
+      toolbar_menu->append_item(menu_item);
+    }
+  }
+
+  // Show menu button only if we have overflow
+  menu_button_toolbar.set_visible(found_overflow);
 }
