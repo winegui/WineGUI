@@ -109,10 +109,10 @@ protected:
   void on_info_message_check_version();
   void on_new_version_available();
   bool on_delete_window();
-  Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
 
   // Child widgets
-  Gtk::Paned main_paned; /*!< The main paned panel */
+  Gtk::Paned main_paned;                       /*!< The main paned panel */
+  Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
   // Left widgets
   Gtk::ScrolledWindow scrolled_window_bottles_listbox; /*!< Scrolled Window container, which contains the listbox of bottles */
   Gtk::ListBox bottles_listbox;                        /*!< Listbox of Wine bottles in the left panel */
@@ -192,11 +192,11 @@ private:
   std::vector<ToolbarButtonData> toolbar_buttons_; /*!< Toolbar buttons for menu management */
 
   // Signal handlers
-  virtual void on_bottle_row_clicked(Gtk::ListBoxRow* row);
-  virtual void on_app_list_search();
-  virtual void on_application_row_activated(unsigned int position);
-  virtual void on_new_bottle_apply();
-  virtual void on_update_toolbar_overflow();
+  void on_bottle_row_clicked(Gtk::ListBoxRow* row);
+  void on_app_list_search();
+  void on_application_row_activated(unsigned int position);
+  void on_new_bottle_apply();
+  void on_update_toolbar_overflow();
 
   // Private methods
   void set_detailed_info(const BottleItem& bottle);

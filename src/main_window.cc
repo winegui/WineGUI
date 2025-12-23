@@ -30,8 +30,8 @@
  */
 MainWindow::MainWindow()
     : Gtk::ApplicationWindow(),
-      window_settings(),
       main_paned(Gtk::Orientation::HORIZONTAL),
+      window_settings(),
       right_vbox(Gtk::Orientation::VERTICAL),
       app_list_vbox(Gtk::Orientation::VERTICAL),
       app_list_top_hbox(Gtk::Orientation::HORIZONTAL),
@@ -81,7 +81,8 @@ MainWindow::MainWindow()
   virtual_desktop_label.set_halign(Gtk::Align::START);
   description_label.set_halign(Gtk::Align::START);
 
-  // Add custom css (to fix the listview hover bg issue)
+  // Add custom css, fix the listview hover background issue,
+  // and add toolbar class (since not all GTK themes might have it)
   auto css = Gtk::CssProvider::create();
   // @theme_selected_bg_color
   css->load_from_data(R"(
@@ -89,6 +90,56 @@ MainWindow::MainWindow()
     .app-list:not(:hover) listitem:selected {
       background-color: transparent;
       color: @theme_text_color;
+    }
+
+    .toolbar {
+      margin: 0px;
+      margin-left: 10px;
+      padding: 0px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+        
+    .toolbar > button,
+    .toolbar > :not(.linked) > button {
+        background-color: transparent;
+        background-image: none;
+        border-color: transparent;
+        box-shadow: inset 0 1px transparentize(white, 1),
+        0 1px transparentize(white, 1);
+        text-shadow: none;
+        -gtk-icon-shadow: none;
+        transition: none;
+        margin-left: 4px;
+        margin-right: 4px;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .toolbar > button:hover,
+    .toolbar > :not(.linked) > button:hover {
+      color: @theme_text_color;
+      border-color: @theme_selected_bg_color;
+      background-color: @theme_selected_bg_color;
+      transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition-duration: 350ms;
+    }
+
+    .toolbar > button.keyboard-activating,
+    .toolbar > :not(.linked) > button.keyboard-activating,
+    .toolbar > button:checked,
+    .toolbar > :not(.linked) > button:checked {
+      color: @theme_text_color;
+      border-color: @borders;
+      background-color: @theme_text_color;
+      transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .toolbar > button:disabled,
+    .toolbar > :not(.linked) > button:disabled {
+      border-color: transparent;
+      background-color: transparent;
+      background-image: none; 
     }
   )");
   Gtk::StyleContext::add_provider_for_display(Gdk::Display::get_default(), css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -1022,23 +1073,19 @@ void MainWindow::create_right_panel()
    * Toolbar section
    * TODO: Make it configurable to only show icons, text or both using preferences
    */
-  toolbar.set_margin_start(16);
-  toolbar.set_margin_top(6);
-  toolbar.set_margin_bottom(6);
-  toolbar.set_spacing(6);
   toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
+  toolbar.add_css_class("toolbar");
 
-  toolbar_buttons_ = {
-      {&new_button, "New", "list-add", "Create a new machine!", "win.new_bottle"},
-      {&edit_button, "Edit", "document-edit", "Edit Wine Machine", "win.edit_bottle"},
-      {&clone_button, "Clone", "edit-copy", "Clone Wine Machine", "win.clone_bottle"},
-      {&configure_button, "Configure", "preferences-other", "Install additional packages", "win.configure_bottle"},
-      {&run_button, "Run Program...", "media-playback-start", "Run exe or msi in Wine Machine", "win.run"},
-      {&open_c_driver_button, "Open C: Drive", "drive-harddisk", "Open the C: drive location in file manager", "win.open_c_drive"},
-      {&reboot_button, "Reboot", "view-refresh", "Simulate Machine Reboot", "win.reboot_bottle"},
-      {&update_button, "Update Config", "system-software-update", "Update the Wine Machine configuration", "win.update_bottle"},
-      {&open_log_file_button, "Open Log", "text-x-generic", "Open debug logging file", "win.open_log_file"},
-      {&kill_processes_button, "Kill Processes", "process-stop", "Kill all running processes in Wine Machine", "win.kill_processes"}};
+  toolbar_buttons_ = {{&new_button, "New", "list-add", "Create a new machine!", "win.new_bottle"},
+                      {&edit_button, "Edit", "document-edit", "Edit Wine Machine", "win.edit_bottle"},
+                      {&clone_button, "Clone", "edit-copy", "Clone Wine Machine", "win.clone_bottle"},
+                      {&configure_button, "Configure", "preferences-other", "Install additional packages", "win.configure_bottle"},
+                      {&run_button, "Run Program...", "media-playback-start", "Run exe or msi in Wine Machine", "win.run"},
+                      {&open_c_driver_button, "Open C: Drive", "drive-harddisk", "Open the C: drive location in file manager", "win.open_c_drive"},
+                      {&reboot_button, "Reboot", "view-refresh", "Simulate Machine Reboot", "win.reboot_bottle"},
+                      {&update_button, "Update Config", "system-software-update", "Update the Wine Machine configuration", "win.update_bottle"},
+                      {&open_log_file_button, "Open Log", "text-x-generic", "Open debug logging file", "win.open_log_file"},
+                      {&kill_processes_button, "Kill Processes", "process-stop", "Kill all running processes in Wine Machine", "win.kill_processes"}};
 
   // Create toolbar menu items
   for (auto& toolbar_button_ : toolbar_buttons_)
@@ -1052,7 +1099,7 @@ void MainWindow::create_right_panel()
 
     toolbar_button_.button->set_tooltip_text(toolbar_button_.tooltip_text);
     toolbar_button_.button->set_child(*button_box);
- 
+
     toolbar.append(*toolbar_button_.button);
   }
 
@@ -1061,8 +1108,13 @@ void MainWindow::create_right_panel()
   menu_button_toolbar.set_menu_model(toolbar_menu);
   toolbar.append(menu_button_toolbar);
 
-  // Connect to window resize events - update toolbar overflow on resize
-  property_default_width().signal_changed().connect(sigc::mem_fun(*this, &MainWindow::on_update_toolbar_overflow));
+  // TODO: Currently disabled, this flicker too much ;(
+  // property_default_width().signal_changed().connect([this]() {
+  //   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_update_toolbar_overflow));
+  // });
+  // property_default_height().signal_changed().connect([this]() {
+  //   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_update_toolbar_overflow));
+  // });
 
   // Add toolbar to right vbox
   right_vbox.append(toolbar);
@@ -1422,7 +1474,6 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
   }
 }
 
-
 /**
  * \brief Update toolbar button visibility based on available space
  * Hides buttons that don't fit and adds them to the overflow menu
@@ -1435,14 +1486,8 @@ void MainWindow::on_update_toolbar_overflow()
     return;
 
   // For faster calculation, we use some static values
-  static const int toolbar_spacing_both = 12; // 2 * 6 (left + right padding between the childeren of the toolbar items)
+  static const int toolbar_spacing_both = 12;      // 2 * 6 (left + right padding between the childeren of the toolbar items)
   static const int menu_button_toolbar_width = 60; // from menu_button_toolbar
-
-  // First, show all buttons to get accurate measurements
-  for (auto& button : toolbar_buttons_)
-  {
-    button.button->set_visible(true);
-  }
 
   // Clear the toolbar drop-down menu
   toolbar_menu->remove_all();
@@ -1491,7 +1536,7 @@ void MainWindow::on_update_toolbar_overflow()
   for (size_t i = 0; i < toolbar_buttons_.size(); ++i)
   {
     auto& button_data = toolbar_buttons_[i];
-    
+
     if (static_cast<int>(i) < visible_count)
     {
       // Button fits, keep it visible
