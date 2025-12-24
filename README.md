@@ -63,13 +63,19 @@ Dependencies should be met before build:
 
 Optionally:
 
-- Ccache (optional, but recommended)
-- doxygen
-- graphviz
+- Ccache (optional, but much **recommended**)
 - rpm
+- clangd (v18 or higher, if clangd is used in your IDE)
+
+**Dependencies for testing:**
+
 - clang-format (v19)
 - cppcheck (v2.18 or higher)
-- clangd (v18 or higher, if clangd is used in your IDE)
+
+For generating docs:
+
+- doxygen
+- graphviz
 
 **Hint:** You could execute `./scripts/deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
 
