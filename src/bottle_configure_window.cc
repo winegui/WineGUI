@@ -478,10 +478,10 @@ bool BottleConfigureWindow::is_liberation_installed()
   bool is_installed = false;
   if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    BottleTypes::Bit bit = active_bottle_->bit();
     try
     {
+      Glib::ustring wine_prefix = active_bottle_->wine_location();
+      BottleTypes::Bit bit = active_bottle_->bit();
       string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Liberation Mono (TrueType)");
       is_installed = (fontFilename == "liberationmono-regular.ttf");
     }
@@ -502,10 +502,10 @@ bool BottleConfigureWindow::is_core_fonts_installed()
   bool is_installed = false;
   if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    BottleTypes::Bit bit = active_bottle_->bit();
     try
     {
+      Glib::ustring wine_prefix = active_bottle_->wine_location();
+      BottleTypes::Bit bit = active_bottle_->bit();
       string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Comic Sans MS (TrueType)");
       is_installed = (fontFilename == "comic.ttf");
     }
