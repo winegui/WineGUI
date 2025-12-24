@@ -1,5 +1,5 @@
 default:
-  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:4.0-trixie 
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:trixie 
 
 stages:
   - test
