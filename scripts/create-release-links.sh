@@ -11,7 +11,7 @@ if [ -z ${APP_VERSION} ]; then
     exit 1
 fi
 
-output=$(curl -s --header "JOB-TOKEN: $CI_DEPLOY_PASSWORD" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links")
+output=$(curl -s --header "JOB-TOKEN: $CI_JOB_TOKEN" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links")
 if [[ "$output" == "" ]]; then
     echo "ERROR: Retrieving links from API returns an empty request! Something is wrong."
     exit 1
@@ -22,25 +22,25 @@ if [[ "$output" == "[]" ]]; then
     echo "INFO: Creating new release links for WineGUI $APP_VERSION!"
 
     curl --request POST \
-        --header "JOB-TOKEN: $CI_DEPLOY_PASSWORD" \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data name="WineGUI Compressed Binary (tar.gz)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.tar.gz" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
-        --header "JOB-TOKEN: $CI_DEPLOY_PASSWORD" \
-        --data name="WineGUI RPM Package (Fedora/openSUSE/CentOS)" \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data name="WineGUI RPM Package (rpm)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.rpm" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
-        --header "JOB-TOKEN: $CI_DEPLOY_PASSWORD" \
-        --data name="WineGUI Debian Package (Debian/Ubuntu/Linux Mint)" \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data name="WineGUI Debian Package (deb)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
-        --header "JOB-TOKEN: $CI_DEPLOY_PASSWORD" \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data name="WineGUI Source Code Archive (tar.gz)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-Source-$APP_VERSION.tar.gz" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
