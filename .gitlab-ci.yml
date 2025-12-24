@@ -17,12 +17,14 @@ code_style_guidelines:
     - clang-format --version
     - ./scripts/check-format.sh
 
-# Build WineGUI + Doxygen
+# Test Build WineGUI + Doxygen
 test-build:
   stage: build
   only:
     - merge_requests
     - main
+  # Test build only builds for a deb for trixie
+  # (it most likely will not work on other Debian versions or Ubuntu/Linux Mint/... distros)
   script: ./scripts/build-prod.sh
   artifacts:
     name: "Packages + Documentation"
@@ -36,6 +38,8 @@ test-build:
 # Build Prd & Deploy new release on a new tag (deployment job),
 # which includes the deb, rpm and tar.gz file as well as the latest release txt file.
 # And will automatically create asset links to the existing GitLab release towards the deployment URL target files.
+# TODO: Use all Debian & Ubuntu Docker tags during the build, from: https://gitlab.melroy.org/melroy/docker-images/container_registry/19
+# Which should generate compatible binaries (Glibc and gtkmm4 compatible based on the distro).
 build-and-deploy:
   stage: build
   rules:
