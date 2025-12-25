@@ -3,7 +3,7 @@
 # Description: Release production build + create Debian package file (.deb), 
 #   RPM [Red Hat] Package Manager (.rpm) and compressed file (.tgz/.tar.gz)
 #
-#  Installs into /usr prefix directory under Linux.
+# Installs into /usr prefix directory under Linux.
 
 # Required input parameter check (used for the defining the CPack generators)
 if [ "$1" == "" ]; then
@@ -29,6 +29,6 @@ if [[ "$1" == *"DEB"* ]]; then
     # Use the version codename for the new file name prefix.
     # Make the package file name unique, by renaming WineGUI-*.deb to WineGUI-*-bookworm.deb for example.
     # Basically adding a postfix to the deb file name
-    mv libreweb-browser-*.deb "$(echo libreweb-browser-*.deb | sed "s/\.deb$/-${VERSION_CODENAME}.deb/")"
-    echo "Debian package renamed to $(echo libreweb-browser-*.deb)"
+    mv WineGUI-*.deb "$(echo WineGUI-*.deb | sed "s/\.deb$/-${VERSION_CODENAME}.deb/")"
+    echo "Debian package renamed to $(echo WineGUI-*.deb)"
 fi
