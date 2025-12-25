@@ -4,6 +4,20 @@ default:
 stages:
   - test
   - build
+  - release
+
+# Linux build template (debs only)
+.build_template: &build_definition
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy"'
+  script:
+    - ./scripts/build-prod.sh "DEB"
+  artifacts:
+    name: "Packages + Documentation"
+    expire_in: 3 months
+    paths:
+      - build_prod/WineGUI-*.deb
 
 static_code_analysis:
   stage: test
@@ -38,18 +52,17 @@ test-build:
 # Build Prd & Deploy new release on a new tag (deployment job),
 # which includes the deb, rpm and tar.gz file as well as the latest release txt file. Based on Trixie.
 # And will automatically create asset links to the existing GitLab release towards the deployment URL target files.
-# TODO: Use all Debian & Ubuntu Docker tags during the build, from: https://gitlab.melroy.org/melroy/docker-images/container_registry/19
-# Which should generate compatible binaries (Glibc and gtkmm4 compatible based on the distro).
-build-and-deploy:
+
+# Build trixie (deb + rpm + source archive)
+build:trixie:
   stage: build
   rules:
     - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy"'
+  variables:
   script:
     - ./scripts/build-prod.sh "TGZ;DEB;RPM"
     - export APP_VERSION=${CI_COMMIT_TAG}
     - ./scripts/create-source-archive.sh
-    - ./scripts/create-release-links.sh
-    - ./scripts/create-latest-release-file.sh
   environment:
     name: production
     url: https://winegui.melroy.org/downloads
@@ -58,11 +71,47 @@ build-and-deploy:
     expire_in: 3 months
     paths:
       - doc/doxygen/
-      - release/
       - build_prod/WineGUI-*.deb
       - build_prod/WineGUI-*.rpm
       - build_prod/WineGUI-*.tar.gz
       - build_prod/WineGUI-Source-*.tar.gz
+
+# Bookworm (debian)
+build:bookworm:
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:bookworm
+  <<: *build_definition
+
+# Forky (debian)
+build:forky:
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:forky
+  <<: *build_definition
+
+# Noble (ubuntu)
+build:noble:
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:noble
+  <<: *build_definition
+
+# Plucky (ubuntu)
+build:plucky:
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:plucky
+  <<: *build_definition
+
+# Create release links + release file (containing the version)
+release:
+  stage: release
+  image: curlimages/curl:latest
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy"'
+  scripts:
+    - export APP_VERSION=${CI_COMMIT_TAG}
+    - ./scripts/create-release-links.sh
+    - ./scripts/create-latest-release-file.sh
+  artifacts:
+    name: "Release"
+    expire_in: 1 month
+    paths:
+      - release/
+
 #unit_test:
 #  stage: test
 #  script: ./build_prod/bin/runTests

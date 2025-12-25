@@ -21,27 +21,61 @@ if [[ "$output" == "[]" ]]; then
     # Upload new links if the request returns an empty list of links
     echo "INFO: Creating new release links for WineGUI $APP_VERSION!"
 
+    # Deb packages
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data name="WineGUI Compressed Binary (tar.gz)" \
-        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.tar.gz" \
+        --data link_type="package" \
+        --data name="WineGUI - Debian 12 Bookworm/MX Linux 23 (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-bookworm.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data name="WineGUI RPM Package (rpm)" \
+        --data link_type="package" \
+        --data name="WineGUI - Debian 13 Trixie/MX Linux 25 (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-trixie.deb" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
+    curl --request POST \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data link_type="package" \
+        --data name="WineGUI - Debian 14 Forky/Kali Linux (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-forky.deb" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
+    curl --request POST \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data link_type="package" \
+        --data name="WineGUI - Ubuntu 24.04 (Noble Numbat)/Linux Mint 22/Zorin OS 18/elementary OS 8 (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-noble.deb" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
+    curl --request POST \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data link_type="package" \
+        --data name="WineGUI - Ubuntu 25.04 (Plucky Puffin) (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-plucky.deb" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
+    # Other packages
+    curl --request POST \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data link_type="package" \
+        --data name="WineGUI - Fedora/openSUSE/CentOS (.rpm)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.rpm" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data name="WineGUI Debian Package (deb)" \
-        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.deb" \
+        --data link_type="package" \
+        --data name="WineGUI - Compressed Binary (.tar.gz)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION.tar.gz" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data name="WineGUI Source Code Archive (tar.gz)" \
+        --data link_type="package" \
+        --data name="WineGUI - Source Code Archive (.tar.gz)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-Source-$APP_VERSION.tar.gz" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
