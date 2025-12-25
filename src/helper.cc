@@ -1408,8 +1408,8 @@ string Helper::string_to_icon(const std::string& filename)
 /**
  * \brief Execute command on terminal. Returns both the exit code as well as stdout output.
  * Note: Redirect stderr to stdout (2>&1), if you want stderr as well.
+ * Usage: const auto& [exit_code, output] = exec("echo 1");
  * \param[in] command The command to be executed
- * \example const auto& [exit_code, output] = exec("echo 1");
  * \throws runtime_error when popen failed (empty pipe pointer)
  * \return Exit code and terminal stdout output as a pair
  */
