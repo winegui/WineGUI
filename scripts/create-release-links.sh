@@ -48,22 +48,8 @@ if [[ "$output" == "[]" ]]; then
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data link_type="package" \
-        --data name="WineGUI - Ubuntu 25.04 (Plucky Puffin) (.deb)" \
-        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-plucky.deb" \
-        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
-
-    curl --request POST \
-        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data link_type="package" \
-        --data name="WineGUI - Ubuntu 24.04 (Noble Numbat)/Linux Mint 22/Zorin OS 18/elementary OS 8 (.deb)" \
-        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-noble.deb" \
-        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
-
-    curl --request POST \
-        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data link_type="package" \
-        --data name="WineGUI - Debian 14 Forky/Kali Linux (.deb)" \
-        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-forky.deb" \
+        --data name="WineGUI - Debian 12 Bookworm/MX Linux 23 (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-bookworm.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
@@ -76,8 +62,22 @@ if [[ "$output" == "[]" ]]; then
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data link_type="package" \
-        --data name="WineGUI - Debian 12 Bookworm/MX Linux 23 (.deb)" \
-        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-bookworm.deb" \
+        --data name="WineGUI - Debian 14 Forky/Kali Linux (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-forky.deb" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
+    curl --request POST \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data link_type="package" \
+        --data name="WineGUI - Ubuntu 24.04 (Noble Numbat)/Linux Mint 22/Zorin OS 18/elementary OS 8 (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-noble.deb" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
+    curl --request POST \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data link_type="package" \
+        --data name="WineGUI - Ubuntu 25.04 (Plucky Puffin) (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-plucky.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
 elif [[ "$output" == "{\"message\":\"404 Not found\"}" ]]; then
