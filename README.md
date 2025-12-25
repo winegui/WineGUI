@@ -36,6 +36,11 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 
 [![Star History Chart](https://api.star-history.com/svg?repos=winegui/WineGUI&type=Date)](https://star-history.com/#winegui/WineGUI&Date)
 
+
+---
+
+The sections below are mainly relevant for software developers, who want to contribute or help the WineGUI project.
+
 ---
 
 ## Contributing
@@ -46,13 +51,13 @@ Please, read the dedicated [contributing page](CONTRIBUTING.md).
 
 ## Development
 
-More information about Gtkmm4 can be found on the official [documentation site](https://gtkmm.gnome.org/en/documentation.html).
+More information about Gtkmm4 can be found on the official [GTK documentation site](https://gtkmm.gnome.org/en/documentation.html).
 
 ### Requirements
 
 WineGUI is created by using [GTK4 toolkit](https://www.gtk.org/) (Gtkmm C++-interface) and C++ code.
 
-Dependencies should be met before build:
+The following build dependencies should be met first:
 
 - gcc/g++ (advised: v13 or later) or clang (advised: v18 or later)
 - cmake (advised: v3.25 or newer)
@@ -63,7 +68,7 @@ Dependencies should be met before build:
 
 Optionally:
 
-- Ccache (optional, but much **recommended**)
+- Ccache (optional, but very much **recommended**)
 - rpm
 - clangd (v18 or higher, if clangd is used in your IDE)
 
