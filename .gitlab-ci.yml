@@ -31,33 +31,9 @@ code_style_guidelines:
     - clang-format --version
     - ./scripts/check-format.sh
 
-# Test Build WineGUI + Doxygen
-test-build:
-  stage: build
-  only:
-    - merge_requests
-    - main
-  # Test build only builds for a deb for trixie
-  # (it most likely will not work on other Debian versions or Ubuntu/Linux Mint/... distros)
-  script: ./scripts/build-prod.sh "TGZ;DEB;RPM"
-  artifacts:
-    name: "Packages + Documentation"
-    expire_in: 1 month
-    paths:
-      - doc/doxygen/
-      - build_prod/WineGUI-*.deb
-      - build_prod/WineGUI-*.rpm
-      - build_prod/WineGUI-*.tar.gz
-
-# Build Prd & Deploy new release on a new tag (deployment job),
-# which includes the deb, rpm and tar.gz file as well as the latest release txt file. Based on Trixie.
-# And will automatically create asset links to the existing GitLab release towards the deployment URL target files.
-
 # Build trixie (deb + rpm + source archive)
 build:trixie:
   stage: build
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy"'
   variables:
   script:
     - ./scripts/build-prod.sh "TGZ;DEB;RPM"
