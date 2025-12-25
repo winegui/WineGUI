@@ -37,7 +37,6 @@ build:trixie:
   variables:
   script:
     - ./scripts/build-prod.sh "TGZ;DEB;RPM"
-    - export APP_VERSION=${CI_COMMIT_TAG}
     - ./scripts/create-source-archive.sh
   artifacts:
     name: "Packages + Documentation"
