@@ -82,8 +82,8 @@ release:
     name: production
     url: https://winegui.melroy.org/downloads
   artifacts:
-    name: "Release"
-    expire_in: 1 month
+    name: "Packages + Documentation"
+    expire_in: 3 months
     paths:
       - release/
 
