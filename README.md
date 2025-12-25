@@ -92,6 +92,8 @@ cmake -GNinja -B build
 cmake --build ./build
 ```
 
+Optionally, use the VSCode `CMake Tools` extension to start the build or build with debug targets.
+
 #### Building from source
 
 Building from the source code archive files (eg. `tar.gz`) is just as easy, however be sure to download the **specially prepared** `WineGUI-Source-*.tar.gz` archive file (instead of the GitLab generated source archives).  
@@ -138,7 +140,7 @@ cmake --install ./build
 
 ### Debug
 
-You can use the helper script: `./scripts/build_debug.sh`
+You can use the helper script: `./scripts/build-debug.sh`
 
 Start debugging in [GDB (GNU Debugger)](https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf):
 
@@ -149,7 +151,13 @@ gdb -ex=run bin/winegui
 
 ### Production
 
-For production build and DEB file package, you can run: `./scripts/build_prod.sh`
+For production build DEB + RPM packages, you can run the script: 
+
+```sh
+./scripts/build-prod.sh "DEB;RPM"
+```
+
+Second parameter is required and should be a semicolon separated list of packages to build. Some valid options are: `TGZ`, `DEB`, `RPM`. See `cpack --help` for more information.
 
 Or build manually:
 
@@ -188,7 +196,7 @@ Next, check for memory leaks using `valgrind` by executing:
 Or to generate a memory usage plot in [massif format](https://valgrind.org/docs/manual/ms-manual.html), execute:
 
 ```sh
-./scripts/valgrind_plot.sh
+./scripts/valgrind-plot.sh
 ```
 
 ### Releasing

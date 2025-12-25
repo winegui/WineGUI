@@ -25,7 +25,7 @@ test-build:
     - main
   # Test build only builds for a deb for trixie
   # (it most likely will not work on other Debian versions or Ubuntu/Linux Mint/... distros)
-  script: ./scripts/build-prod.sh
+  script: ./scripts/build-prod.sh "TGZ;DEB;RPM"
   artifacts:
     name: "Packages + Documentation"
     expire_in: 1 month
@@ -45,7 +45,7 @@ build-and-deploy:
   rules:
     - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy"'
   script:
-    - ./scripts/build-prod.sh
+    - ./scripts/build-prod.sh "TGZ;DEB;RPM"
     - export APP_VERSION=${CI_COMMIT_TAG}
     - ./scripts/create-source-archive.sh
     - ./scripts/create-release-links.sh
