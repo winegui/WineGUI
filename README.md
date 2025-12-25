@@ -157,7 +157,7 @@ For production build DEB + RPM packages, you can run the script:
 ./scripts/build-prod.sh "DEB;RPM"
 ```
 
-Second parameter is required and should be a semicolon separated list of packages to build. Some valid options are: `TGZ`, `DEB`, `RPM`. See `cpack --help` for more information.
+First parameter is required and should be a semicolon separated list of packages to build. Some valid options are: `TGZ`, `DEB`, `RPM`. See `cpack --help` for more information.
 
 Or build manually:
 
