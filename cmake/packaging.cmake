@@ -31,7 +31,7 @@ if(${LINUX_DISTRO} MATCHES "openSUSE")
   # OpenSuse (Leap, Tumbleweed)
   set(CPACK_RPM_PACKAGE_REQUIRES "libgtkmm-4_0-0, cabextract, unzip, p7zip, wget")
 else()
-  # Redhat/CentOS/Fedora/etc.
+  # Fedora/CentOS/Redhat/etc.
   set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm4.0, cabextract, unzip, p7zip, wget")
 endif()
 # Optional RPM packages

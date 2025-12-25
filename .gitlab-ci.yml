@@ -36,7 +36,7 @@ test-build:
       - build_prod/WineGUI-*.tar.gz
 
 # Build Prd & Deploy new release on a new tag (deployment job),
-# which includes the deb, rpm and tar.gz file as well as the latest release txt file.
+# which includes the deb, rpm and tar.gz file as well as the latest release txt file. Based on Trixie.
 # And will automatically create asset links to the existing GitLab release towards the deployment URL target files.
 # TODO: Use all Debian & Ubuntu Docker tags during the build, from: https://gitlab.melroy.org/melroy/docker-images/container_registry/19
 # Which should generate compatible binaries (Glibc and gtkmm4 compatible based on the distro).

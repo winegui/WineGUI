@@ -20,3 +20,15 @@ echo "INFO: Building packages..."
 cd build_prod
 # Requires root
 cpack -C Release -G "$1"
+
+# Check if deb is in the generator names
+if [[ "$1" == *"DEB"* ]]; then
+    echo "Debian package found in generator names, renaming..."
+    # Load os-release
+    . /etc/os-release
+    # Use the version codename for the new file name prefix.
+    # Make the package file name unique, by renaming WineGUI-*.deb to WineGUI-*-bookworm.deb for example.
+    # Basically adding a postfix to the deb file name
+    mv libreweb-browser-*.deb "$(echo libreweb-browser-*.deb | sed "s/\.deb$/-${VERSION_CODENAME}.deb/")"
+    echo "Debian package renamed to $(echo libreweb-browser-*.deb)"
+fi
