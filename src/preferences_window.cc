@@ -20,9 +20,6 @@
  */
 #include "preferences_window.h"
 #include "general_config_file.h"
-#include "gtkmm/enums.h"
-#include "gtkmm/filedialog.h"
-#include "gtkmm/object.h"
 
 /**
  * \brief Constructor
