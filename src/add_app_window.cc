@@ -21,6 +21,8 @@
 #include "add_app_window.h"
 #include "bottle_config_file.h"
 #include "bottle_item.h"
+#include "gtkmm/filechooser.h"
+#include "gtkmm/filechooserdialog.h"
 
 /**
  * \brief Constructor
@@ -203,8 +205,7 @@ void AddAppWindow::on_select_file()
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
 
-  auto* file_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_OPEN, Gtk::DialogFlags::DIALOG_MODAL);
+  auto* file_chooser = new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER, true);
   file_chooser->set_modal(true);
   file_chooser->set_transient_for(*this);
 
@@ -214,30 +215,29 @@ void AddAppWindow::on_select_file()
       {
         switch (response_id)
         {
-        case Gtk::ResponseType::RESPONSE_OK:
+        case Gtk::ResponseType::OK:
         {
           // Update the command entry
-          auto filename = file_chooser->get_filename();
-          command_entry.set_text(filename);
+          auto filename = file_chooser->get_current_folder();
+          command_entry.set_text(filename->get_path());
           break;
         }
-        case Gtk::ResponseType::RESPONSE_CANCEL:
+        case Gtk::ResponseType::CANCEL:
         {
           break; // ignore
         }
         default:
         {
-          std::cout << "Error: Unexpected button clicked." << std::endl;
-          break;
+          break; // ignore
         }
         }
         delete file_chooser;
       });
-  file_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
-  file_chooser->add_button("_Select file", Gtk::ResponseType::RESPONSE_OK);
+  file_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
+  file_chooser->add_button("_Select file", Gtk::ResponseType::OK);
   if (active_bottle_ != nullptr)
   {
-    file_chooser->set_current_folder(active_bottle_->wine_c_drive());
+    file_chooser->set_current_folder(Gio::File::create_for_path(active_bottle_->wine_c_drive()));
   }
   file_chooser->add_filter(filter_win);
   file_chooser->add_filter(filter_any);

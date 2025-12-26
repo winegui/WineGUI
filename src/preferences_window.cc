@@ -220,8 +220,7 @@ void PreferencesWindow::on_select_folder()
                           }
                         });
 #else
-  auto* folder_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER, Gtk::DialogFlags::DIALOG_MODAL);
+  auto* folder_chooser = new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER, true);
   folder_chooser->set_modal(true);
   folder_chooser->set_transient_for(*this);
   folder_chooser->signal_response().connect(
@@ -229,28 +228,30 @@ void PreferencesWindow::on_select_folder()
       {
         switch (response_id)
         {
-        case Gtk::ResponseType::RESPONSE_OK:
+        case Gtk::ResponseType::OK:
         {
           // Get current older and update folder entry
           auto folder = folder_chooser->get_current_folder();
-          default_folder_entry.set_text(folder);
+          default_folder_entry.set_text(folder->get_path());
           break;
         }
-        case Gtk::ResponseType::RESPONSE_CANCEL:
+        case Gtk::ResponseType::CANCEL:
         {
           break; // ignore
         }
         default:
         {
-          std::cout << "Error: Unexpected button clicked." << std::endl;
-          break;
+          break; // ignore
         }
         }
         delete folder_chooser;
       });
-  folder_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
-  folder_chooser->add_button("_Select folder", Gtk::ResponseType::RESPONSE_OK);
-  folder_chooser->set_current_folder(default_folder_entry.get_text());
+  folder_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
+  folder_chooser->add_button("_Select folder", Gtk::ResponseType::OK);
+  static const std::vector<std::string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"};
+  static const std::string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
+  auto folder = Gio::File::create_for_path(WineGuiDataDir);
+  folder_chooser->set_current_folder(folder);
   folder_chooser->show();
 #endif
 }
