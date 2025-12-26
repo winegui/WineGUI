@@ -205,7 +205,7 @@ void AddAppWindow::on_select_file()
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
 
-  auto* file_chooser = new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER, true);
+  auto* file_chooser = new Gtk::FileChooserDialog(*this, "Choose a file", Gtk::FileChooser::Action::OPEN, true);
   file_chooser->set_modal(true);
   file_chooser->set_transient_for(*this);
 
@@ -218,8 +218,8 @@ void AddAppWindow::on_select_file()
         case Gtk::ResponseType::OK:
         {
           // Update the command entry
-          auto filename = file_chooser->get_current_folder();
-          command_entry.set_text(filename->get_path());
+          auto file = file_chooser->get_file();
+          command_entry.set_text(file->get_path());
           break;
         }
         case Gtk::ResponseType::CANCEL:
