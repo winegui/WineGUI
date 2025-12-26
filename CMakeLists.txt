@@ -136,6 +136,11 @@ target_include_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_INCLUDE_DIRS} ${PRO
 target_link_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_LIBRARY_DIRS})
 target_compile_options(${PROJECT_TARGET} PRIVATE ${GTKMM_CFLAGS_OTHER})
 
+# If we are using an old version of GTK, define OLD_GTK
+if(GTKMM_VERSION VERSION_LESS "4.10")
+  target_compile_definitions(${PROJECT_TARGET} PUBLIC OLD_GTK)
+endif()
+
 install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
 install(FILES misc/winegui.desktop DESTINATION ${DATADIR}/applications)
 install(FILES misc/winegui.png DESTINATION ${DATADIR}/icons/hicolor/48x48/apps)

@@ -392,6 +392,7 @@ void MainWindow::on_new_bottle_created()
  */
 void MainWindow::on_run_button_clicked()
 {
+  #ifndef OLD_GTK
   auto dialog = Gtk::FileDialog::create();
   dialog->set_title("Please choose a file");
   dialog->set_modal(true);
@@ -452,6 +453,67 @@ void MainWindow::on_run_button_clicked()
                    // Do nothing
                  }
                });
+  #else
+  Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_OPEN);
+  dialog.set_transient_for(*this);
+
+  // Add response buttons the the dialog:
+  dialog.add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
+  dialog.add_button("_Open", Gtk::ResponseType::RESPONSE_OK);
+
+  auto filter_win = Gtk::FileFilter::create();
+  filter_win->set_name("Windows Executable/MSI Installer");
+  filter_win->add_mime_type("application/x-ms-dos-executable");
+  filter_win->add_mime_type("application/x-msi");
+  dialog.add_filter(filter_win);
+
+  auto filter_any = Gtk::FileFilter::create();
+  filter_any->set_name("Any file");
+  filter_any->add_pattern("*");
+  dialog.add_filter(filter_any);
+  dialog.set_current_folder(c_drive_location_label.get_text().c_str());
+
+  // Show the dialog and wait for a user response:
+  int result = dialog.run();
+
+  // Handle the response:
+  switch (result)
+  {
+  case (Gtk::ResponseType::RESPONSE_OK):
+  {
+    string filename = dialog.get_filename();
+    // Just guess based on extension
+    string ext = filename.substr(filename.find_last_of(".") + 1);
+    // To lower case
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+    if (ext == "exe")
+    {
+      run_executable.emit(filename, false);
+    }
+    else if (ext == "msi")
+    {
+      // Run as MSI (true=MSI)
+      run_executable.emit(filename, true);
+    }
+    else
+    {
+      // fall-back: try run as Exe
+      run_executable.emit(filename, false);
+    }
+    break;
+  }
+  case (Gtk::ResponseType::RESPONSE_CANCEL):
+  {
+    // Cancelled, do nothing
+    break;
+  }
+  default:
+  {
+    // Unexpected button, ignore
+    break;
+  }
+  }
+  #endif
 }
 
 /**
