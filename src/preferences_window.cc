@@ -189,7 +189,7 @@ void PreferencesWindow::show()
  */
 void PreferencesWindow::on_select_folder()
 {
-  #ifndef OLD_GTK
+#ifndef OLD_GTK
   // New GTK4 version, using FileDialog
   auto dialog = Gtk::FileDialog::create();
   dialog->set_title("Choose a folder");
@@ -222,40 +222,40 @@ void PreferencesWindow::on_select_folder()
                             // Do nothing
                           }
                         });
-  #else
+#else
   auto* folder_chooser =
       new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER, Gtk::DialogFlags::DIALOG_MODAL);
   folder_chooser->set_modal(true);
   folder_chooser->set_transient_for(*this);
   folder_chooser->signal_response().connect(
-    [this, folder_chooser](int response_id)
-    {
-      switch (response_id)
+      [this, folder_chooser](int response_id)
       {
-      case Gtk::ResponseType::RESPONSE_OK:
-      {
-        // Get current older and update folder entry
-        auto folder = folder_chooser->get_current_folder();
-        default_folder_entry.set_text(folder);
-        break;
-      }
-      case Gtk::ResponseType::RESPONSE_CANCEL:
-      {
-        break; // ignore
-      }
-      default:
-      {
-        std::cout << "Error: Unexpected button clicked." << std::endl;
-        break;
-      }
-      }
-      delete folder_chooser;
-    });
+        switch (response_id)
+        {
+        case Gtk::ResponseType::RESPONSE_OK:
+        {
+          // Get current older and update folder entry
+          auto folder = folder_chooser->get_current_folder();
+          default_folder_entry.set_text(folder);
+          break;
+        }
+        case Gtk::ResponseType::RESPONSE_CANCEL:
+        {
+          break; // ignore
+        }
+        default:
+        {
+          std::cout << "Error: Unexpected button clicked." << std::endl;
+          break;
+        }
+        }
+        delete folder_chooser;
+      });
   folder_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
   folder_chooser->add_button("_Select folder", Gtk::ResponseType::RESPONSE_OK);
   folder_chooser->set_current_folder(default_folder_entry.get_text());
   folder_chooser->show();
-  #endif
+#endif
 }
 
 /**

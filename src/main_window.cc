@@ -392,7 +392,7 @@ void MainWindow::on_new_bottle_created()
  */
 void MainWindow::on_run_button_clicked()
 {
-  #ifndef OLD_GTK
+#ifndef OLD_GTK
   auto dialog = Gtk::FileDialog::create();
   dialog->set_title("Please choose a file");
   dialog->set_modal(true);
@@ -453,7 +453,7 @@ void MainWindow::on_run_button_clicked()
                    // Do nothing
                  }
                });
-  #else
+#else
   Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_OPEN);
   dialog.set_transient_for(*this);
 
@@ -513,7 +513,7 @@ void MainWindow::on_run_button_clicked()
     break;
   }
   }
-  #endif
+#endif
 }
 
 /**

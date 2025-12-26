@@ -146,7 +146,7 @@ void AddAppWindow::set_default_values()
  */
 void AddAppWindow::on_select_file()
 {
-  #ifndef OLD_GTK
+#ifndef OLD_GTK
   // New GTK4 version, using FileDialog
   auto dialog = Gtk::FileDialog::create();
   dialog->set_title("Please choose a file");
@@ -193,7 +193,7 @@ void AddAppWindow::on_select_file()
                    // Do nothing
                  }
                });
-  #else
+#else
   // Old GTK4 version, using FileChooserDialog
   auto filter_win = Gtk::FileFilter::create();
   filter_win->set_name("Windows Executable/MSI Installer");
@@ -242,7 +242,7 @@ void AddAppWindow::on_select_file()
   file_chooser->add_filter(filter_win);
   file_chooser->add_filter(filter_any);
   file_chooser->show();
-  #endif
+#endif
 }
 
 /**
