@@ -41,7 +41,7 @@ struct CloneBottleStruct;
  * \class SignalController
  * \brief Dispatch and manage GTK signals across the app
  */
-class SignalController : public Gtk::Window
+class SignalController
 {
   friend class MainWindow;
 

@@ -54,7 +54,6 @@ protected:
 
 private:
   MainWindow* main_window_;
-  BottleManager* manager_;
   PreferencesWindow* preferences_window_;
   AboutDialog* about_dialog_;
   BottleEditWindow* edit_window_;
@@ -63,7 +62,8 @@ private:
   BottleConfigureWindow* configure_window_;
   AddAppWindow* add_app_window_;
   RemoveAppWindow* remove_app_window_;
-  SignalController* signal_controller_;
+  std::shared_ptr<BottleManager> manager_;
+  std::shared_ptr<SignalController> signal_controller_;
 
   void on_action_quit();
 };

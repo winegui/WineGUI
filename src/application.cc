@@ -17,20 +17,20 @@ Application::Application() : Gtk::Application("org.melroy.winegui", Gio::Applica
   Glib::set_application_name("WineGUI");
 
   // Create all objects
-  main_window_ = new MainWindow();
+  main_window_ = Gtk::make_managed<MainWindow>();
   if (main_window_)
   {
-    manager_ = new BottleManager(*main_window_);
-    preferences_window_ = new PreferencesWindow(*main_window_);
-    about_dialog_ = new AboutDialog(*main_window_);
-    edit_window_ = new BottleEditWindow(*main_window_);
-    clone_window_ = new BottleCloneWindow(*main_window_);
-    configure_env_var_window_ = new BottleConfigureEnvVarWindow(*edit_window_);
-    configure_window_ = new BottleConfigureWindow(*main_window_);
-    add_app_window_ = new AddAppWindow(*main_window_);
-    remove_app_window_ = new RemoveAppWindow(*main_window_);
-    signal_controller_ = new SignalController(main_window_, *manager_, *preferences_window_, *edit_window_, *clone_window_,
-                                              *configure_env_var_window_, *configure_window_, *add_app_window_, *remove_app_window_);
+    preferences_window_ = Gtk::make_managed<PreferencesWindow>(*main_window_);
+    about_dialog_ = Gtk::make_managed<AboutDialog>(*main_window_);
+    edit_window_ = Gtk::make_managed<BottleEditWindow>(*main_window_);
+    clone_window_ = Gtk::make_managed<BottleCloneWindow>(*main_window_);
+    configure_env_var_window_ = Gtk::make_managed<BottleConfigureEnvVarWindow>(*edit_window_);
+    configure_window_ = Gtk::make_managed<BottleConfigureWindow>(*main_window_);
+    add_app_window_ = Gtk::make_managed<AddAppWindow>(*main_window_);
+    remove_app_window_ = Gtk::make_managed<RemoveAppWindow>(*main_window_);
+    manager_ = std::make_shared<BottleManager>(*main_window_);
+    signal_controller_ = std::make_shared<SignalController>(main_window_, *manager_, *preferences_window_, *edit_window_, *clone_window_,
+                                                            *configure_env_var_window_, *configure_window_, *add_app_window_, *remove_app_window_);
   }
   else
   {
@@ -160,20 +160,6 @@ void Application::on_activate()
 
 void Application::on_shutdown()
 {
-  // Remove the pointer
-  delete main_window_;
-  delete manager_;
-  delete preferences_window_;
-  delete about_dialog_;
-  delete edit_window_;
-  delete clone_window_;
-  delete configure_env_var_window_;
-  delete configure_window_;
-  delete add_app_window_;
-  delete remove_app_window_;
-  delete signal_controller_;
-
-  // Call the base class's implementation.
   Gtk::Application::on_shutdown();
 }
 
