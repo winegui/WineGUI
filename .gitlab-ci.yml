@@ -9,6 +9,8 @@ stages:
 # Linux build template (debs only)
 .build_template: &build_definition
   stage: build
+  rules:
+    - if: $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_TAG
   script:
     - ./scripts/build-prod.sh "DEB"
   artifacts:
@@ -16,6 +18,10 @@ stages:
     expire_in: 3 months
     paths:
       - build_prod/WineGUI-*.deb
+
+#unit_test:
+#  stage: test
+#  script: ./scripts/run-tests.sh
 
 static_code_analysis:
   stage: test
@@ -71,7 +77,7 @@ release:
   stage: deploy
   image: curlimages/curl:latest
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy"'
+    - if: $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_TAG
   script:
     - export APP_VERSION=${CI_COMMIT_TAG}
     - ./scripts/create-release-links.sh
@@ -84,12 +90,3 @@ release:
     expire_in: 3 months
     paths:
       - release/
-
-#unit_test:
-#  stage: test
-#  script: ./build_prod/bin/runTests
-#  cache:
-#      key: "$CI_PIPELINE_ID"
-#      policy: pull
-#      paths:
-#        - build_prod/bin/
