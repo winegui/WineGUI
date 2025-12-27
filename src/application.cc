@@ -155,7 +155,7 @@ void Application::on_activate()
 
   // Show the main window
   main_window_->set_show_menubar();
-  main_window_->set_visible(true);
+  main_window_->present();
 }
 
 void Application::on_shutdown()
