@@ -1176,7 +1176,14 @@ void MainWindow::create_right_panel()
   menu_button_toolbar.set_menu_model(toolbar_menu);
   toolbar.append(menu_button_toolbar);
 
-  // TODO: Currently disabled, this flicker too much ;(
+  // TODO: Implement overrides instead:
+  // https://gitlab.gnome.org/GNOME/gtkmm-documentation/-/blob/master/examples/book/custom/custom_container/mycontainer.cc
+  //   Gtk::SizeRequestMode get_request_mode_vfunc() const override;
+  // void measure_vfunc(Gtk::Orientation orientation, int for_size, int& minimum, int& natural,
+  //   int& minimum_baseline, int& natural_baseline) const override;
+  // void size_allocate_vfunc(int width, int height, int baseline) override;
+  //
+  // TODO: Disable this, since this will not work and flicker too much:
   // property_default_width().signal_changed().connect([this]() {
   //   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_update_toolbar_overflow));
   // });
