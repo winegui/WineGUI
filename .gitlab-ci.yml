@@ -21,16 +21,19 @@ stages:
 
 #unit_test:
 #  stage: test
+#  interruptible: true
 #  script: ./scripts/run-tests.sh
 
 static_code_analysis:
   stage: test
+  interruptible: true
   script:
     - cppcheck --version
     - ./scripts/cpp-check.sh
 
 code_style_guidelines:
   stage: test
+  interruptible: true
   script:
     - clang-format --version
     - ./scripts/check-format.sh
