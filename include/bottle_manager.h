@@ -128,7 +128,7 @@ private:
   GeneralConfigData load_and_save_general_config();
   bool is_bottle_not_null();
   string get_deinstall_mono_command();
-  string get_wine_version();
+  string get_wine_version(const string& wine_bin_path);
   std::vector<string> get_bottle_paths();
   std::list<BottleItem> create_wine_bottles(const std::vector<string>& bottle_dirs);
 };

@@ -247,7 +247,8 @@ string Helper::run_program(const string& prefix_path,
  * \param[in] env_vars Array of environment variables to set
  * \return Terminal stdout output
  */
-string Helper::run_program_under_wine(bool wine_64_bit,
+string Helper::run_program_under_wine(const string& wine_bin_path,
+                                      bool wine_64_bit,
                                       const string& prefix_path,
                                       int debug_log_level,
                                       const string& program,
@@ -256,7 +257,7 @@ string Helper::run_program_under_wine(bool wine_64_bit,
                                       bool give_error,
                                       bool stderr_output)
 {
-  return Helper::run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit) + " " + program, working_directory,
+  return Helper::run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) + " " + program, working_directory,
                              env_vars, give_error, stderr_output);
 }
 
@@ -311,7 +312,7 @@ int Helper::determine_wine_executable()
 {
   int return_status = -1;
   // Try wine 32-bit
-  const auto& [exit_code32, _] = exec("command -v " + Helper::get_wine_executable_location(false));
+  const auto& [exit_code32, _] = exec("command -v " + Helper::get_wine_executable_location("", false));
   if (exit_code32 == 0)
   {
     return_status = 0;
@@ -320,7 +321,7 @@ int Helper::determine_wine_executable()
   if (return_status != 0)
   {
     // cppcheck-suppress shadowVariable
-    const auto& [exit_code64, _] = exec("command -v " + Helper::get_wine_executable_location(true));
+    const auto& [exit_code64, _] = exec("command -v " + Helper::get_wine_executable_location("", true));
     if (exit_code64 == 0)
     {
       return_status = 1;
@@ -334,15 +335,16 @@ int Helper::determine_wine_executable()
  * \param bit64 Use Wine 64 bit or 32 bit binary
  * \return Wine binary location
  */
-string Helper::get_wine_executable_location(bool bit64)
+string Helper::get_wine_executable_location(const string& wine_bin_path, bool bit64)
 {
+  string separator = (wine_bin_path.length() > 0) ? "/" : "";
   if (bit64)
   {
-    return WineExecutable64;
+    return wine_bin_path + separator + WineExecutable64;
   }
   else
   {
-    return WineExecutable;
+    return wine_bin_path + separator + WineExecutable;
   }
 }
 
@@ -370,9 +372,9 @@ string Helper::get_winetricks_location()
  * \throws runtime_error we could not determine Wine version
  * \return Return the wine version
  */
-string Helper::get_wine_version(bool wine_64_bit)
+string Helper::get_wine_version(const string& wine_bin_path, bool wine_64_bit)
 {
-  const auto& [exit_code, output] = exec(Helper::get_wine_executable_location(wine_64_bit) + " --version 2>&1");
+  const auto& [exit_code, output] = exec(Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) + " --version 2>&1");
   if (exit_code == 0 && !output.empty())
   {
     vector<string> results = split(output, '-');
@@ -389,14 +391,14 @@ string Helper::get_wine_version(bool wine_64_bit)
       }
       else
       {
-        std::cerr << "Error: Couldn't determine Wine version. Using wine executable: " << Helper::get_wine_executable_location(wine_64_bit)
+        std::cerr << "Error: Couldn't determine Wine version. Using wine executable: " << Helper::get_wine_executable_location(wine_bin_path, wine_64_bit)
                   << ", output: " << output << std::endl;
         throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
       }
     }
     else
     {
-      std::cerr << "Error: Couldn't determine Wine version. Using wine executable: " << Helper::get_wine_executable_location(wine_64_bit)
+      std::cerr << "Error: Couldn't determine Wine version. Using wine executable: " << Helper::get_wine_executable_location(wine_bin_path, wine_64_bit)
                 << ", output: " << output << std::endl;
       throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
     }
@@ -404,7 +406,10 @@ string Helper::get_wine_version(bool wine_64_bit)
   else
   {
     std::cerr << "Error: Couldn't determine Wine version. No output." << std::endl;
-    throw std::runtime_error("Could not receive Wine version!\n\nIs Wine installed?");
+    std::cerr << "       WineBinaryPath=" << wine_bin_path << std::endl;
+    throw std::runtime_error("Could not determine Wine version for '" +
+                             Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) +
+                             "'!\n\nIs Wine installed correctly?");
   }
 }
 
@@ -443,7 +448,7 @@ string Helper::open_file_from_uri(const string& uri)
  * \param[in] disable_gecko_mono Do NOT install Mono & Gecko (by default should be false)
  * \throws runtime_error when we could not not create a new Wine bottle
  */
-void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
+void Helper::create_wine_bottle(const string &wine_bin_path, bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
 {
   string wine_arch = "";
   switch (bit)
@@ -457,7 +462,7 @@ void Helper::create_wine_bottle(bool wine_64_bit, const string& prefix_path, Bot
   }
   string wine_dll_overrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
   string command =
-      "WINEPREFIX=\"" + prefix_path + "\"" + wine_arch + wine_dll_overrides + " " + Helper::get_wine_executable_location(wine_64_bit) + " wineboot";
+      "WINEPREFIX=\"" + prefix_path + "\"" + wine_arch + wine_dll_overrides + " " + Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) + " wineboot";
   const auto& [exit_code, output] = exec(command + " 2>&1");
   if (exit_code != 0)
   {
@@ -1311,9 +1316,9 @@ string Helper::log_level_to_winedebug_string(int log_level)
  * \param[in] application_name Application name to search for
  * \return GUID or empty string when not installed/found
  */
-string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name)
+string Helper::get_wine_guid(const string& wine_bin_path, bool wine_64_bit, const string& prefix_path, const string& application_name)
 {
-  auto [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" " + Helper::get_wine_executable_location(wine_64_bit) +
+  auto [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" " + Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) +
                                   " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1 2>&1");
   if (exit_code == 0 && !output.empty())
   {

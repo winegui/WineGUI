@@ -128,6 +128,7 @@ protected:
   // Detailed info labels on the right panel
   Gtk::Label name_label;              /*!< Bottle name */
   Gtk::Label folder_name_label;       /*!< Folder name */
+  Gtk::Label wine_bin_path_label;     /*!< Wine binary path */
   Gtk::Label window_version_label;    /*!< Windows version text */
   Gtk::Label c_drive_location_label;  /*!< C:\ drive location text */
   Gtk::Label wine_version_label;      /*!< Wine version text */
