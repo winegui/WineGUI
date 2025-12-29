@@ -34,6 +34,7 @@ struct CloneBottleStruct
   Glib::ustring name;
   Glib::ustring folder_name;
   Glib::ustring description;
+  Glib::ustring wine_bin_path;
 };
 
 /**

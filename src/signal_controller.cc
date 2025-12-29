@@ -353,10 +353,9 @@ void SignalController::on_clone_bottle(const CloneBottleStruct& clone_bottle_str
   else
   {
     // Start a new manager thread
-    // TODO: also copy 'wine binary path' on clone
     thread_bottle_manager_ = std::make_unique<std::thread>(
         [this, clone_bottle_struct]
-        { manager_.clone_bottle(this, clone_bottle_struct.name, clone_bottle_struct.folder_name, clone_bottle_struct.description); });
+        { manager_.clone_bottle(this, clone_bottle_struct.name, clone_bottle_struct.folder_name, clone_bottle_struct.description, clone_bottle_struct.wine_bin_path); });
   }
 }
 

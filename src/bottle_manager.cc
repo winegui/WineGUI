@@ -605,7 +605,8 @@ void BottleManager::update_bottle(SignalController* caller,
 void BottleManager::clone_bottle(SignalController* caller,
                                  const Glib::ustring& name,
                                  const Glib::ustring& folder_name,
-                                 const Glib::ustring& description)
+                                 const Glib::ustring& description,
+                                 const Glib::ustring& wine_bin_path)
 {
   if (active_bottle_ != nullptr)
   {
@@ -636,6 +637,7 @@ void BottleManager::clone_bottle(SignalController* caller,
     // Set new cloned name (and description)
     bottle_config.name = name;
     bottle_config.description = description;
+    bottle_config.wine_bin_path = wine_bin_path;
     if (!BottleConfigFile::write_config_file(clone_prefix_path, bottle_config, app_list))
     {
       std::cout << "Error: Could not update bottle cloned config file." << std::endl;
