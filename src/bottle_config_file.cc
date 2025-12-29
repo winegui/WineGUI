@@ -57,6 +57,7 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
   {
     keyfile.set_string("General", "Name", bottle_config.name);
     keyfile.set_string("General", "Description", bottle_config.description);
+    keyfile.set_string("General", "WineBinaryPath", bottle_config.wine_bin_path);
     keyfile.set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
     keyfile.set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
     // Iterate over the key/value environment variable pairs (if present)
@@ -92,6 +93,7 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
  */
 std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::read_config_file(const std::string& prefix_path)
 {
+  bool keyfile_needs_save = false;
   Glib::KeyFile keyfile;
   std::string file_path = Glib::build_filename(prefix_path, "winegui.ini");
 
@@ -128,6 +130,19 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       bottle_config.description = keyfile.get_string("General", "Description");
       bottle_config.logging_enabled = keyfile.get_boolean("Logging", "Enabled");
       bottle_config.debug_log_level = keyfile.get_integer("Logging", "DebugLevel");
+      try
+      {
+        bottle_config.wine_bin_path = keyfile.get_string("General", "WineBinaryPath");
+      }
+      catch (const Glib::Error& ex)
+      {
+        // WineGUI <= 2.8.1 did not have the 'WineBinaryPath' property, so set to empty string
+        std::cerr << "Warning: Could not find 'General>WineBinaryPath' property in '"
+                  << file_path << "'! Setting it to an empty string." << std::endl;
+        std::cerr << "         This is probably a WineGUI <= 2.8.1 keyfile." << std::endl;
+        keyfile_needs_save = true;
+        bottle_config.wine_bin_path = "";
+      }
 
       // Retrieve environment variables (if present)
       if (keyfile.has_group("EnvironmentVariables"))
@@ -157,6 +172,12 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       // Lets write a new config file and return the default values below
       BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list);
     }
+  }
+
+  // Update if property is missing (due to keyfile created in older WineGUI version)
+  if (keyfile_needs_save)
+  {
+    write_config_file(prefix_path, bottle_config, app_list);
   }
 
   return std::make_tuple(bottle_config, app_list);

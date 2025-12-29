@@ -56,6 +56,7 @@ public:
     using std::swap;
     swap(a.name_, b.name_);
     swap(a.folder_name_, b.folder_name_);
+    swap(a.wine_bin_path_, b.wine_bin_path_);
     swap(a.description_, b.description_);
     swap(a.is_status_ok_, b.is_status_ok_);
     swap(a.win_, b.win_);
@@ -74,6 +75,7 @@ public:
 
   BottleItem(Glib::ustring& name,
              Glib::ustring& folder_name,
+             Glib::ustring& wine_bin_path,
              Glib::ustring& wine_version,
              bool is_wine64_bit,
              Glib::ustring& wine_location,
@@ -82,6 +84,7 @@ public:
 
   BottleItem(Glib::ustring& name,
              Glib::ustring& folder_name,
+             Glib::ustring& wine_bin_path,
              Glib::ustring& description,
              bool status,
              BottleTypes::Windows win,
@@ -125,6 +128,16 @@ public:
   const Glib::ustring& folder_name() const
   {
     return folder_name_;
+  };
+  /// set wine binary path
+  void wine_bin_path(const Glib::ustring& wine_bin_path)
+  {
+    wine_bin_path_ = wine_bin_path;
+  };
+  /// get wine binary path
+  const Glib::ustring& wine_bin_path() const
+  {
+    return wine_bin_path_;
   };
   /// set description
   void description(const Glib::ustring& description)
@@ -289,6 +302,7 @@ protected:
 private:
   Glib::ustring name_;
   Glib::ustring folder_name_;
+  Glib::ustring wine_bin_path_;
   Glib::ustring description_;
   bool is_status_ok_;
   BottleTypes::Windows win_;

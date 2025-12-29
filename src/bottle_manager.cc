@@ -435,6 +435,7 @@ void BottleManager::new_bottle(SignalController* caller,
 void BottleManager::update_bottle(SignalController* caller,
                                   const Glib::ustring& name,
                                   const Glib::ustring& folder_name,
+                                  const Glib::ustring& wine_bin_path,
                                   const Glib::ustring& description,
                                   BottleTypes::Windows windows_version,
                                   const Glib::ustring& virtual_desktop_resolution,
@@ -458,6 +459,11 @@ void BottleManager::update_bottle(SignalController* caller,
     if (active_bottle_->description() != description)
     {
       bottle_config.description = description;
+      need_update_bottle_config_file = true;
+    }
+    if (active_bottle_->wine_bin_path() != wine_bin_path)
+    {
+      bottle_config.wine_bin_path = wine_bin_path;
       need_update_bottle_config_file = true;
     }
     if (active_bottle_->is_debug_logging() != is_debug_logging)
@@ -1476,8 +1482,9 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
     // Convert to Glib ustrings
     Glib::ustring name(bottle_config.name);
     Glib::ustring description(bottle_config.description);
+    Glib::ustring wine_bin_path(bottle_config.wine_bin_path);
     Glib::ustring prefix_path(prefix);
-    BottleItem* bottle = new BottleItem(name, folder_name, description, status, windows, bit, wine_version, is_wine64_bit_, prefix_path,
+    BottleItem* bottle = new BottleItem(name, folder_name, wine_bin_path, description, status, windows, bit, wine_version, is_wine64_bit_, prefix_path,
                                         c_drive_location, last_time_wine_updated, audio_driver, virtual_desktop, bottle_config.logging_enabled,
                                         bottle_config.debug_log_level, bottle_config.env_vars, bottle_app_list);
     bottles.emplace_back(*bottle);

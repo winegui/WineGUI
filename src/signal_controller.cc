@@ -332,7 +332,7 @@ void SignalController::on_update_bottle(const UpdateBottleStruct& update_bottle_
     thread_bottle_manager_ = std::make_unique<std::thread>(
         [this, update_bottle_struct]
         {
-          manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.description,
+          manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.wine_bin_path, update_bottle_struct.description,
                                  update_bottle_struct.windows_version, update_bottle_struct.virtual_desktop_resolution, update_bottle_struct.audio,
                                  update_bottle_struct.is_debug_logging, update_bottle_struct.debug_log_level);
         });
@@ -353,6 +353,7 @@ void SignalController::on_clone_bottle(const CloneBottleStruct& clone_bottle_str
   else
   {
     // Start a new manager thread
+    // TODO: also copy 'wine binary path' on clone
     thread_bottle_manager_ = std::make_unique<std::thread>(
         [this, clone_bottle_struct]
         { manager_.clone_bottle(this, clone_bottle_struct.name, clone_bottle_struct.folder_name, clone_bottle_struct.description); });

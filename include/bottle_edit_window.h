@@ -34,6 +34,7 @@ struct UpdateBottleStruct
 {
   Glib::ustring name;
   Glib::ustring folder_name;
+  Glib::ustring wine_bin_path;
   Glib::ustring description;
   BottleTypes::Windows windows_version;
   Glib::ustring virtual_desktop_resolution;

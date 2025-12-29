@@ -42,6 +42,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
   {
     name_ = bottle_item.name();
     folder_name_ = bottle_item.folder_name();
+    wine_bin_path_ = bottle_item.wine_bin_path();
     description_ = bottle_item.description();
     is_status_ok_ = bottle_item.status();
     win_ = bottle_item.windows();
@@ -67,6 +68,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
  */
 BottleItem::BottleItem(Glib::ustring& name,
                        Glib::ustring& folder_name,
+                       Glib::ustring& wine_bin_path,
                        Glib::ustring& wine_version,
                        bool is_wine64_bit,
                        Glib::ustring& wine_location,
@@ -74,6 +76,7 @@ BottleItem::BottleItem(Glib::ustring& name,
                        Glib::ustring& wine_last_changed)
     : name_(name),
       folder_name_(folder_name),
+      wine_bin_path_(wine_bin_path),
       description_(""),
       is_status_ok_(true),
       win_(WineDefaults::WindowsOs),
@@ -95,6 +98,7 @@ BottleItem::BottleItem(Glib::ustring& name,
  */
 BottleItem::BottleItem(Glib::ustring& name,
                        Glib::ustring& folder_name,
+                       Glib::ustring& wine_bin_path,
                        Glib::ustring& description,
                        bool status,
                        BottleTypes::Windows win,
@@ -112,6 +116,7 @@ BottleItem::BottleItem(Glib::ustring& name,
                        std::map<int, ApplicationData>& app_list)
     : name_(name),
       folder_name_(folder_name),
+      wine_bin_path_(wine_bin_path),
       description_(description),
       is_status_ok_(status),
       win_(win),

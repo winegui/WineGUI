@@ -204,6 +204,10 @@ void BottleEditWindow::show()
     // Set description
     description_text_view.get_buffer()->set_text(active_bottle_->description());
 
+    // Set wine binary path
+    wine_bin_path_entry.set_text(active_bottle_->wine_bin_path());
+    system_wine_bin_path_check.set_active(active_bottle_->wine_bin_path().length() <= 0);
+
     // Clear list
     windows_version_combobox.remove_all();
     // Fill-in Windows versions in combobox
@@ -397,6 +401,7 @@ void BottleEditWindow::on_save_button_clicked()
   update_bottle_struct.windows_version = WineDefaults::WindowsOs; // Fallback
   update_bottle_struct.audio = WineDefaults::AudioDriver;         // Fallback
   update_bottle_struct.virtual_desktop_resolution = "";           // Empty string default (= disabled windowed mode)
+  update_bottle_struct.wine_bin_path = "";                        // Empty string default (= use system wine path)
   update_bottle_struct.debug_log_level = 1;                       // // 1 = Default wine debug logging
 
   // First disable save button (avoid multiple presses)
@@ -408,6 +413,12 @@ void BottleEditWindow::on_save_button_clicked()
 
   update_bottle_struct.name = name_entry.get_text();
   update_bottle_struct.folder_name = folder_name_entry.get_text();
+  if (! system_wine_bin_path_check.get_active())
+  {
+      // Set wine binary path only if checkbox is not selected (otherwise use default empty string)
+      update_bottle_struct.wine_bin_path = wine_bin_path_entry.get_text();
+  }
+
   update_bottle_struct.description = description_text_view.get_buffer()->get_text();
   bool is_desktop_enabled = virtual_desktop_check.get_active();
   if (is_desktop_enabled)
