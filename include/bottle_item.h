@@ -104,7 +104,7 @@ public:
   /**
    * \brief Destruct
    */
-  ~BottleItem() {};
+  ~BottleItem(){};
 
   /*
    *  Getters & setters

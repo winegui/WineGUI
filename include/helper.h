@@ -71,7 +71,8 @@ public:
   static string get_winetricks_location();
   static string get_wine_version(const string& wine_bin_path, bool wine_64_bit);
   static string open_file_from_uri(const string& uri);
-  static void create_wine_bottle(const string &wine_bin_path, bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
+  static void
+  create_wine_bottle(const string& wine_bin_path, bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
   static void remove_wine_bottle(const string& prefix_path);
   static void rename_wine_bottle_folder(const string& current_prefix_path, const string& new_prefix_path);
   static void copy_wine_bottle_folder(const string& source_prefix_path, const string& destination_prefix_path);

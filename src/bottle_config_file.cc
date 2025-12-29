@@ -137,8 +137,8 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       catch (const Glib::Error& ex)
       {
         // WineGUI <= 2.8.1 did not have the 'WineBinaryPath' property, so set to empty string
-        std::cerr << "Warning: Could not find 'General>WineBinaryPath' property in '"
-                  << file_path << "'! Setting it to an empty string." << std::endl;
+        std::cerr << "Warning: Could not find 'General>WineBinaryPath' property in '" << file_path << "'! Setting it to an empty string."
+                  << std::endl;
         std::cerr << "         This is probably a WineGUI <= 2.8.1 keyfile." << std::endl;
         keyfile_needs_save = true;
         bottle_config.wine_bin_path = "";

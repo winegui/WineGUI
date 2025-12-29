@@ -172,7 +172,8 @@ vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_de
   }
 
   // Sort alphabetically (case insensitive)
-  std::sort(list.begin(), list.end(), [](const string& a, const string& b)
+  std::sort(list.begin(), list.end(),
+            [](const string& a, const string& b)
             { return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), [](char x, char y) { return toupper(x) < toupper(y); }); });
 
   // Add default wine bottle to the end, if enabled by settings and if directory is present
@@ -257,8 +258,8 @@ string Helper::run_program_under_wine(const string& wine_bin_path,
                                       bool give_error,
                                       bool stderr_output)
 {
-  return Helper::run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) + " " + program, working_directory,
-                             env_vars, give_error, stderr_output);
+  return Helper::run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) + " " + program,
+                             working_directory, env_vars, give_error, stderr_output);
 }
 
 /**
@@ -391,15 +392,15 @@ string Helper::get_wine_version(const string& wine_bin_path, bool wine_64_bit)
       }
       else
       {
-        std::cerr << "Error: Couldn't determine Wine version. Using wine executable: " << Helper::get_wine_executable_location(wine_bin_path, wine_64_bit)
-                  << ", output: " << output << std::endl;
+        std::cerr << "Error: Couldn't determine Wine version. Using wine executable: "
+                  << Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) << ", output: " << output << std::endl;
         throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
       }
     }
     else
     {
-      std::cerr << "Error: Couldn't determine Wine version. Using wine executable: " << Helper::get_wine_executable_location(wine_bin_path, wine_64_bit)
-                << ", output: " << output << std::endl;
+      std::cerr << "Error: Couldn't determine Wine version. Using wine executable: "
+                << Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) << ", output: " << output << std::endl;
       throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
     }
   }
@@ -407,8 +408,7 @@ string Helper::get_wine_version(const string& wine_bin_path, bool wine_64_bit)
   {
     std::cerr << "Error: Couldn't determine Wine version. No output." << std::endl;
     std::cerr << "       WineBinaryPath=" << wine_bin_path << std::endl;
-    throw std::runtime_error("Could not determine Wine version for '" +
-                             Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) +
+    throw std::runtime_error("Could not determine Wine version for '" + Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) +
                              "'!\n\nIs Wine installed correctly?");
   }
 }
@@ -448,7 +448,8 @@ string Helper::open_file_from_uri(const string& uri)
  * \param[in] disable_gecko_mono Do NOT install Mono & Gecko (by default should be false)
  * \throws runtime_error when we could not not create a new Wine bottle
  */
-void Helper::create_wine_bottle(const string &wine_bin_path, bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
+void Helper::create_wine_bottle(
+    const string& wine_bin_path, bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono)
 {
   string wine_arch = "";
   switch (bit)
@@ -461,8 +462,8 @@ void Helper::create_wine_bottle(const string &wine_bin_path, bool wine_64_bit, c
     break;
   }
   string wine_dll_overrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
-  string command =
-      "WINEPREFIX=\"" + prefix_path + "\"" + wine_arch + wine_dll_overrides + " " + Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) + " wineboot";
+  string command = "WINEPREFIX=\"" + prefix_path + "\"" + wine_arch + wine_dll_overrides + " " +
+                   Helper::get_wine_executable_location(wine_bin_path, wine_64_bit) + " wineboot";
   const auto& [exit_code, output] = exec(command + " 2>&1");
   if (exit_code != 0)
   {

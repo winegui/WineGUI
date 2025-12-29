@@ -413,10 +413,10 @@ void BottleEditWindow::on_save_button_clicked()
 
   update_bottle_struct.name = name_entry.get_text();
   update_bottle_struct.folder_name = folder_name_entry.get_text();
-  if (! system_wine_bin_path_check.get_active())
+  if (!system_wine_bin_path_check.get_active())
   {
-      // Set wine binary path only if checkbox is not selected (otherwise use default empty string)
-      update_bottle_struct.wine_bin_path = wine_bin_path_entry.get_text();
+    // Set wine binary path only if checkbox is not selected (otherwise use default empty string)
+    update_bottle_struct.wine_bin_path = wine_bin_path_entry.get_text();
   }
 
   update_bottle_struct.description = description_text_view.get_buffer()->get_text();

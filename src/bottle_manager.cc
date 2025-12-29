@@ -748,8 +748,8 @@ void BottleManager::run_executable(string program, bool is_msi_file = false)
          output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output =
-              Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true, logging_stderr);
+          string output = Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, program, working_directory, env_vars,
+                                                         true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -803,8 +803,8 @@ void BottleManager::run_program(string program)
            output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
            output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
           {
-            string output =
-                Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true, logging_stderr);
+            string output = Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, program, working_directory, env_vars,
+                                                           true, logging_stderr);
             if (debug_logging && !output.empty())
             {
               {
@@ -872,7 +872,8 @@ void BottleManager::reboot()
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, "wineboot -r", "", {}, true, logging_stderr);
+          string output =
+              Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, "wineboot -r", "", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -905,7 +906,8 @@ void BottleManager::update()
          output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, "wineboot -u", "", {}, true, logging_stderr);
+          string output =
+              Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, "wineboot -u", "", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -964,7 +966,8 @@ void BottleManager::kill_processes()
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, "wineboot -k", "", {}, true, logging_stderr);
+          string output =
+              Helper::run_program_under_wine(wine_bin_path, wine64, wine_prefix, debug_log_level, "wineboot -k", "", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
           {
             {
@@ -1494,9 +1497,9 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
     std::string wine_bin_path_stdstr = wine_bin_path.c_str();
     Glib::ustring wine_version = get_wine_version(wine_bin_path_stdstr);
     Glib::ustring prefix_path(prefix);
-    BottleItem* bottle = new BottleItem(name, folder_name, wine_bin_path, description, status, windows, bit, wine_version, is_wine64_bit_, prefix_path,
-                                        c_drive_location, last_time_wine_updated, audio_driver, virtual_desktop, bottle_config.logging_enabled,
-                                        bottle_config.debug_log_level, bottle_config.env_vars, bottle_app_list);
+    BottleItem* bottle = new BottleItem(name, folder_name, wine_bin_path, description, status, windows, bit, wine_version, is_wine64_bit_,
+                                        prefix_path, c_drive_location, last_time_wine_updated, audio_driver, virtual_desktop,
+                                        bottle_config.logging_enabled, bottle_config.debug_log_level, bottle_config.env_vars, bottle_app_list);
     bottles.emplace_back(*bottle);
   }
   return bottles;
