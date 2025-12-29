@@ -32,15 +32,18 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       header_edit_label("Edit Machine"),
       name_label("Name: "),
       folder_name_label("Folder Name: "),
+      wine_bin_path_label("Wine Binary Path: "),
       windows_version_label("Windows Version: "),
       audio_driver_label("Audio Driver:"),
       virtual_desktop_resolution_label("Window Resolution:"),
       log_level_label("Log Level:"),
       description_label("Description:"),
       environment_variables_label("Environment Variables:"),
+      system_wine_bin_path_check("Use System Wine Binary Path"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
       enable_logging_check("Enable debug logging"),
       configure_environment_variables_button("Configure Environment Variables"),
+      wine_bin_path_button("Select folder..."),
       save_button("Save"),
       cancel_button("Cancel"),
       delete_button("Delete Machine"),
@@ -70,6 +73,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
 
   name_label.set_halign(Gtk::Align::ALIGN_END);
   folder_name_label.set_halign(Gtk::Align::ALIGN_END);
+  wine_bin_path_label.set_halign(Gtk::Align::ALIGN_END);
   windows_version_label.set_halign(Gtk::Align::ALIGN_END);
   audio_driver_label.set_halign(Gtk::Align::ALIGN_END);
   virtual_desktop_resolution_label.set_halign(Gtk::Align::ALIGN_END);
@@ -78,6 +82,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   description_label.set_halign(Gtk::Align::ALIGN_START);
   name_label.set_tooltip_text("Change the machine name");
   folder_name_label.set_tooltip_text("Change the folder. NOTE: This break your shortcuts!");
+  wine_bin_path_label.set_tooltip_text("Change the path to the 'wine' binary for this machine");
   windows_version_label.set_tooltip_text("Change the Windows version");
   audio_driver_label.set_tooltip_text("Change the audio driver");
   virtual_desktop_resolution_label.set_tooltip_text("Set the emulated desktop resolution");
@@ -90,6 +95,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   {
     audio_driver_combobox.append(std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
+  system_wine_bin_path_check.set_active(false);
   virtual_desktop_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("1024x768");
   enable_logging_check.set_active(false);
@@ -107,6 +113,8 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   log_level_combobox.set_tooltip_text("More info: https://wiki.winehq.org/Debug_Channels");
   name_entry.set_hexpand(true);
   folder_name_entry.set_hexpand(true);
+  wine_bin_path_entry.set_hexpand(true);
+  system_wine_bin_path_check.set_tooltip_text("Use system wine binary path");
   windows_version_combobox.set_hexpand(true);
   audio_driver_combobox.set_hexpand(true);
   log_level_combobox.set_hexpand(true);
@@ -123,21 +131,25 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   edit_grid.attach(name_entry, 1, 0);
   edit_grid.attach(folder_name_label, 0, 1);
   edit_grid.attach(folder_name_entry, 1, 1);
-  edit_grid.attach(windows_version_label, 0, 2);
-  edit_grid.attach(windows_version_combobox, 1, 2);
-  edit_grid.attach(audio_driver_label, 0, 3);
-  edit_grid.attach(audio_driver_combobox, 1, 3);
-  edit_grid.attach(virtual_desktop_check, 0, 4, 2);
-  edit_grid.attach(virtual_desktop_resolution_label, 0, 5);
-  edit_grid.attach(virtual_desktop_resolution_entry, 1, 5);
-  edit_grid.attach(enable_logging_check, 0, 6, 2);
-  edit_grid.attach(log_level_label, 0, 7);
-  edit_grid.attach(log_level_combobox, 1, 7);
-  edit_grid.attach(environment_variables_label, 0, 8);
-  edit_grid.attach(configure_environment_variables_button, 1, 8);
-  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 9, 2);
-  edit_grid.attach(description_label, 0, 10, 2);
-  edit_grid.attach(description_scrolled_window, 0, 11, 2);
+  edit_grid.attach(system_wine_bin_path_check, 0, 2);
+  edit_grid.attach(wine_bin_path_label, 0, 3);
+  edit_grid.attach(wine_bin_path_entry, 1, 3);
+  edit_grid.attach(wine_bin_path_button, 2, 3);
+  edit_grid.attach(windows_version_label, 0, 4);
+  edit_grid.attach(windows_version_combobox, 1, 4);
+  edit_grid.attach(audio_driver_label, 0, 5);
+  edit_grid.attach(audio_driver_combobox, 1, 5);
+  edit_grid.attach(virtual_desktop_check, 0, 6, 2);
+  edit_grid.attach(virtual_desktop_resolution_label, 0, 7);
+  edit_grid.attach(virtual_desktop_resolution_entry, 1, 7);
+  edit_grid.attach(enable_logging_check, 0, 8, 2);
+  edit_grid.attach(log_level_label, 0, 9);
+  edit_grid.attach(log_level_combobox, 1, 9);
+  edit_grid.attach(environment_variables_label, 0, 10);
+  edit_grid.attach(configure_environment_variables_button, 1, 10);
+  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 11, 3);
+  edit_grid.attach(description_label, 0, 12, 2);
+  edit_grid.attach(description_scrolled_window, 0, 13, 3);
 
   hbox_buttons.pack_start(delete_button, false, false, 4);
   hbox_buttons.pack_end(save_button, false, false, 4);
@@ -153,8 +165,10 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   log_level_sensitive(false);
 
   // Signals
+  wine_bin_path_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_select_wine_bin_path));
   configure_environment_variables_button.signal_clicked().connect(configure_environment_variables);
   delete_button.signal_clicked().connect(remove_bottle);
+  system_wine_bin_path_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_system_wine_bin_path_toggle));
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
   enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
@@ -265,6 +279,17 @@ void BottleEditWindow::on_bottle_updated()
 }
 
 /**
+ * \brief Enable/disable wine binary path fields.
+ * \param sensitive Set true to enable, false for disable
+ */
+void BottleEditWindow::system_wine_bin_path_sensitive(bool sensitive)
+{
+  wine_bin_path_label.set_sensitive(sensitive);
+  wine_bin_path_entry.set_sensitive(sensitive);
+  wine_bin_path_button.set_sensitive(sensitive);
+}
+
+/**
  * \brief Enable/disable desktop resolution fields.
  * \param sensitive Set true to enable, false for disable
  */
@@ -285,6 +310,15 @@ void BottleEditWindow::log_level_sensitive(bool sensitive)
 }
 
 /**
+ * \brief Signal handler when the 'Use System Wine Binary Path' checkbox is toggled.
+ * It will enable/disable the 'Wine Binary Path' text and button widgets.
+ */
+void BottleEditWindow::on_system_wine_bin_path_toggle()
+{
+  system_wine_bin_path_sensitive(!system_wine_bin_path_check.get_active());
+}
+
+/**
  * \brief Signal handler when the virtual desktop checkbox is checked.
  * It will show the additional resolution input field.
  */
@@ -300,6 +334,48 @@ void BottleEditWindow::on_virtual_desktop_toggle()
 void BottleEditWindow::on_debug_logging_toggle()
 {
   log_level_sensitive(enable_logging_check.get_active());
+}
+
+/**
+ * \brief Triggered when select folder button (next to 'Wine Binary Path') is clicked.
+ */
+void BottleEditWindow::on_select_wine_bin_path()
+{
+  auto* folder_chooser =
+      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER, Gtk::DialogFlags::DIALOG_MODAL);
+  folder_chooser->set_modal(true);
+  folder_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &BottleEditWindow::on_select_wine_bin_path_response), folder_chooser));
+  folder_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
+  folder_chooser->add_button("_Select folder", Gtk::ResponseType::RESPONSE_OK);
+  folder_chooser->set_current_folder(wine_bin_path_entry.get_text());
+  folder_chooser->show();
+}
+
+/**
+ * \brief Triggered when the 'on_select_wine_bin_path' dialog is ended.
+ */
+void BottleEditWindow::on_select_wine_bin_path_response(int response_id, Gtk::FileChooserDialog* dialog)
+{
+  switch (response_id)
+  {
+  case Gtk::ResponseType::RESPONSE_OK:
+  {
+    // Update wine binary path entry
+    auto folder = dialog->get_current_folder();
+    wine_bin_path_entry.set_text(folder);
+    break;
+  }
+  case Gtk::ResponseType::RESPONSE_CANCEL:
+  {
+    break; // ignore
+  }
+  default:
+  {
+    std::cout << "Error: Unexpected button clicked in 'BottleEditWindow::on_select_wine_bin_response'." << std::endl;
+    break;
+  }
+  }
+  delete dialog;
 }
 
 /**
