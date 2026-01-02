@@ -21,15 +21,16 @@
 #include "add_app_window.h"
 #include "bottle_config_file.h"
 #include "bottle_item.h"
-#include <iostream>
+#include "gtkmm/filechooser.h"
+#include "gtkmm/filechooserdialog.h"
 
 /**
  * \brief Constructor
  * \param parent Reference to parent GTK Window
  */
 AddAppWindow::AddAppWindow(Gtk::Window& parent)
-    : vbox(Gtk::ORIENTATION_VERTICAL, 4),
-      hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
+    : vbox(Gtk::Orientation::VERTICAL, 4),
+      hbox_buttons(Gtk::Orientation::HORIZONTAL, 4),
       header_add_app_label("Add Application shortcut"),
       name_label("Application name: "),
       description_label("Description: "),
@@ -46,6 +47,32 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
 
   set_default_values();
 
+  create_layout();
+
+  // Signals
+  select_executable_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_select_file));
+  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_cancel_button_clicked));
+  save_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_save_button_clicked));
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        set_visible(false);
+        set_default_values();
+        return true; // stop default destroy
+      },
+      false);
+}
+
+/**
+ * \brief Destructor
+ */
+AddAppWindow::~AddAppWindow()
+{
+}
+
+void AddAppWindow::create_layout()
+{
   add_app_grid.set_margin_top(5);
   add_app_grid.set_margin_end(5);
   add_app_grid.set_margin_bottom(6);
@@ -55,7 +82,7 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
 
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
-  fd_label.set_weight(Pango::WEIGHT_BOLD);
+  fd_label.set_weight(Pango::Weight::BOLD);
   auto font_label = Pango::Attribute::create_attr_font_desc(fd_label);
   Pango::AttrList attr_list_header_label;
   attr_list_header_label.insert(font_label);
@@ -63,9 +90,9 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
   header_add_app_label.set_margin_top(5);
   header_add_app_label.set_margin_bottom(5);
 
-  name_label.set_halign(Gtk::Align::ALIGN_END);
-  description_label.set_halign(Gtk::Align::ALIGN_END);
-  command_label.set_halign(Gtk::Align::ALIGN_END);
+  name_label.set_halign(Gtk::Align::END);
+  description_label.set_halign(Gtk::Align::END);
+  command_label.set_halign(Gtk::Align::END);
   name_entry.set_hexpand(true);
   description_entry.set_hexpand(true);
   command_entry.set_hexpand(true);
@@ -77,28 +104,19 @@ AddAppWindow::AddAppWindow(Gtk::Window& parent)
   add_app_grid.attach(command_label, 0, 2);
   add_app_grid.attach(command_entry, 1, 2);
   add_app_grid.attach(select_executable_button, 2, 2);
+  add_app_grid.set_hexpand(true);
+  add_app_grid.set_vexpand(true);
+  add_app_grid.set_halign(Gtk::Align::FILL);
 
-  hbox_buttons.pack_end(save_button, false, false, 4);
-  hbox_buttons.pack_end(cancel_button, false, false, 4);
+  hbox_buttons.set_halign(Gtk::Align::END);
+  hbox_buttons.set_margin(6);
+  hbox_buttons.append(save_button);
+  hbox_buttons.append(cancel_button);
 
-  vbox.pack_start(header_add_app_label, false, false, 4);
-  vbox.pack_start(add_app_grid, true, true, 4);
-  vbox.pack_start(hbox_buttons, false, false, 4);
-  add(vbox);
-
-  // Signals
-  select_executable_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_select_file));
-  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_cancel_button_clicked));
-  save_button.signal_clicked().connect(sigc::mem_fun(*this, &AddAppWindow::on_save_button_clicked));
-
-  show_all_children();
-}
-
-/**
- * \brief Destructor
- */
-AddAppWindow::~AddAppWindow()
-{
+  vbox.append(header_add_app_label);
+  vbox.append(add_app_grid);
+  vbox.append(hbox_buttons);
+  set_child(vbox);
 }
 
 /**
@@ -130,6 +148,55 @@ void AddAppWindow::set_default_values()
  */
 void AddAppWindow::on_select_file()
 {
+#ifndef OLD_GTK
+  // New GTK4 version, using FileDialog
+  auto dialog = Gtk::FileDialog::create();
+  dialog->set_title("Please choose a file");
+  dialog->set_modal(true);
+  {
+    if (active_bottle_ != nullptr)
+    {
+      auto folder = Gio::File::create_for_path(active_bottle_->wine_c_drive());
+      if (!folder->get_path().empty())
+      {
+        dialog->set_initial_folder(folder);
+      }
+    }
+  }
+
+  // Filters
+  const auto filters = Gio::ListStore<Gtk::FileFilter>::create();
+  auto filter_win = Gtk::FileFilter::create();
+  filter_win->set_name("Windows Executable/MSI Installer");
+  filter_win->add_mime_type("application/x-ms-dos-executable");
+  filter_win->add_mime_type("application/x-msi");
+  filters->append(filter_win);
+  auto filter_any = Gtk::FileFilter::create();
+  filter_any->set_name("Any file");
+  filter_any->add_pattern("*");
+  filters->append(filter_any);
+  // Set the filters
+  dialog->set_filters(filters);
+
+  dialog->open(*this,
+               [this, dialog](const Glib::RefPtr<Gio::AsyncResult>& result)
+               {
+                 try
+                 {
+                   const auto file = dialog->open_finish(result);
+                   command_entry.set_text(file->get_path());
+                 }
+                 catch (const Gtk::DialogError& err)
+                 {
+                   // Do nothing
+                 }
+                 catch (const Glib::Error& err)
+                 {
+                   // Do nothing
+                 }
+               });
+#else
+  // Old GTK4 version, using FileChooserDialog
   auto filter_win = Gtk::FileFilter::create();
   filter_win->set_name("Windows Executable/MSI Installer");
   filter_win->add_mime_type("application/x-ms-dos-executable");
@@ -138,46 +205,44 @@ void AddAppWindow::on_select_file()
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
 
-  auto* file_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_OPEN, Gtk::DialogFlags::DIALOG_MODAL);
+  auto* file_chooser = new Gtk::FileChooserDialog(*this, "Choose a file", Gtk::FileChooser::Action::OPEN, true);
   file_chooser->set_modal(true);
-  file_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &AddAppWindow::on_select_dialog_response), file_chooser));
-  file_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
-  file_chooser->add_button("_Select file", Gtk::ResponseType::RESPONSE_OK);
+  file_chooser->set_transient_for(*this);
+
+  // Create inline lambda function to handle the response, with the response type + file_chooser pointer
+  file_chooser->signal_response().connect(
+      [this, file_chooser](int response_id)
+      {
+        switch (response_id)
+        {
+        case Gtk::ResponseType::OK:
+        {
+          // Update the command entry
+          auto file = file_chooser->get_file();
+          command_entry.set_text(file->get_path());
+          break;
+        }
+        case Gtk::ResponseType::CANCEL:
+        {
+          break; // ignore
+        }
+        default:
+        {
+          break; // ignore
+        }
+        }
+        delete file_chooser;
+      });
+  file_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
+  file_chooser->add_button("_Select file", Gtk::ResponseType::OK);
   if (active_bottle_ != nullptr)
   {
-    file_chooser->set_current_folder(active_bottle_->wine_c_drive());
+    file_chooser->set_current_folder(Gio::File::create_for_path(active_bottle_->wine_c_drive()));
   }
   file_chooser->add_filter(filter_win);
   file_chooser->add_filter(filter_any);
   file_chooser->show();
-}
-
-/**
- * \brief when file is selected
- */
-void AddAppWindow::on_select_dialog_response(int response_id, Gtk::FileChooserDialog* dialog)
-{
-  switch (response_id)
-  {
-  case Gtk::ResponseType::RESPONSE_OK:
-  {
-    // Update the command entry
-    auto filename = dialog->get_filename();
-    command_entry.set_text(filename);
-    break;
-  }
-  case Gtk::ResponseType::RESPONSE_CANCEL:
-  {
-    break; // ignore
-  }
-  default:
-  {
-    std::cout << "Error: Unexpected button clicked." << std::endl;
-    break;
-  }
-  }
-  delete dialog;
+#endif
 }
 
 /**
@@ -185,7 +250,7 @@ void AddAppWindow::on_select_dialog_response(int response_id, Gtk::FileChooserDi
  */
 void AddAppWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
@@ -198,11 +263,11 @@ void AddAppWindow::on_save_button_clicked()
     // Check if all fields are filled-in
     if (name_entry.get_text().empty() || command_entry.get_text().empty())
     {
-      Gtk::MessageDialog dialog(*this, "You forgot to fill-in the name and command (only the description is optional).", false, Gtk::MESSAGE_ERROR,
-                                Gtk::BUTTONS_OK);
+      Gtk::MessageDialog dialog(*this, "You forgot to fill-in the name and command (only the description is optional).", false,
+                                Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
       dialog.set_title("Error during new application saving");
       dialog.set_modal(true);
-      dialog.run();
+      dialog.present();
     }
     else
     {
@@ -223,15 +288,15 @@ void AddAppWindow::on_save_button_clicked()
       // Save application to bottle config
       if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
       {
-        Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+        Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
         dialog.set_title("An error has occurred!");
         dialog.set_modal(true);
-        dialog.run();
+        dialog.present();
       }
       else
       {
         // Hide new application window
-        hide();
+        set_visible(false);
         // Reset entry fields
         set_default_values();
         // Trigger manager update & UI update
@@ -241,11 +306,10 @@ void AddAppWindow::on_save_button_clicked()
   }
   else
   {
-    Gtk::MessageDialog dialog(*this, "Error occurred during saving, because there is no active Windows machine set.", false, Gtk::MESSAGE_ERROR,
-                              Gtk::BUTTONS_OK);
+    Gtk::MessageDialog dialog(*this, "Error occurred during saving, because there is no active Windows machine set.", false, Gtk::MessageType::ERROR,
+                              Gtk::ButtonsType::OK);
     dialog.set_title("Error during new application saving");
     dialog.set_modal(true);
-    dialog.run();
-    std::cout << "Error: No current Windows machine is set. Change won't be saved." << std::endl;
+    dialog.present();
   }
 }

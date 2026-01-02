@@ -27,6 +27,10 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+# Clangd
+.clangd/
+.cache
+
 # Prerequisites
 *.d
 

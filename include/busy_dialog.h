@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    busy_dialog.h
  * \brief   Busy Dialog (showing a loading process bar)
@@ -26,16 +26,16 @@ using std::string;
 
 /**
  * \class BusyDialog
- * \brief GTK+ Window class for the settings
+ * \brief GTK Window class for the busy dialog, which shows a loading bar and a message
  */
-class BusyDialog : public Gtk::Dialog
+class BusyDialog : public Gtk::Window
 {
 public:
   explicit BusyDialog(Gtk::Window& parent);
   virtual ~BusyDialog();
 
-  void show();
-  void close();
+  void present();
+  void hide(); /**< Hide the busy dialog (stop the timer and calls parent set_visible()) */
 
   void set_message(const Glib::ustring& heading_text, const Glib::ustring& message);
 

@@ -21,14 +21,12 @@
 #include "bottle_manager.h"
 #include "bottle_config_file.h"
 #include "bottle_item.h"
-#include "dll_override_types.h"
 #include "general_config_file.h"
 #include "helper.h"
 #include "main_window.h"
 #include "signal_controller.h"
 #include "wine_defaults.h"
 
-#include <chrono>
 #include <stdexcept>
 
 /*************************************************************
@@ -51,10 +49,10 @@ BottleManager::BottleManager(MainWindow& main_window)
       error_message_winetricks_()
 {
   // Connect internal dispatcher(s)
-  update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(this, &BottleManager::update_config_and_bottles), "", false));
-  write_log_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::write_log_to_file));
-  error_message_winetricks_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::on_error_winetricks));
-  winetricks_finished_dispatcher_.connect(sigc::mem_fun(this, &BottleManager::cleanup_install_update_winetricks_thread));
+  update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(*this, &BottleManager::update_config_and_bottles), "", false));
+  write_log_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::write_log_to_file));
+  error_message_winetricks_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::on_error_winetricks));
+  winetricks_finished_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::cleanup_install_update_winetricks_thread));
 }
 
 /**
@@ -85,7 +83,7 @@ void BottleManager::prepare()
   // Start the initial read from disk to fetch the bottles & update GUI
   // "" - during startup (no bottle name to select)
   // true - during startup
-  // TODO: Run in thread, not blocking the main thread
+  // TODO: Run in separate thread, thus not blocking the main thread
   update_config_and_bottles("", true);
 }
 
@@ -179,7 +177,7 @@ void BottleManager::update_config_and_bottles(const Glib::ustring& select_bottle
 {
   // Read general & save config in bottle manager
   GeneralConfigData config_data = load_and_save_general_config();
-  // Set/update main window about the latest general config data
+  // Set/update main window with the latest general config data
   main_window_.set_general_config(config_data);
 
   bool try_to_restore = (active_bottle_ != nullptr);
@@ -229,7 +227,7 @@ void BottleManager::update_config_and_bottles(const Glib::ustring& select_bottle
       {
         // Check if there is a bottle with the same name and select as active bottle
         auto it = std::find_if(bottles_.begin(), bottles_.end(),
-                               [&select_bottle_name](const BottleItem& bottle) { return bottle.name() == select_bottle_name; });
+                               [&select_bottle_name](const BottleItem& bottle) { return bottle.name().compare(select_bottle_name) == 0; });
         if (it != bottles_.end())
         {
           main_window_.select_row_bottle(*it);
@@ -303,7 +301,7 @@ void BottleManager::new_bottle(SignalController* caller,
   {
     {
       std::lock_guard<std::mutex> lock(error_message_mutex_);
-      error_message_ = "Could not find wine binary. Please first install wine on your machine.";
+      error_message_ = "Could not find wine binary. Please install Wine on your machine and try again.";
     }
     caller->signal_error_message_during_create();
     return; // Stop thread prematurely
@@ -450,12 +448,12 @@ void BottleManager::update_bottle(SignalController* caller,
     BottleConfigData bottle_config;
     std::map<int, ApplicationData> app_list; // App list is never dirty, so no need to check
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
-    if (active_bottle_->name() != name)
+    if (active_bottle_->name().compare(name) != 0)
     {
       bottle_config.name = name;
       need_update_bottle_config_file = true;
     }
-    if (active_bottle_->description() != description)
+    if (active_bottle_->description().compare(description) != 0)
     {
       bottle_config.description = description;
       need_update_bottle_config_file = true;
@@ -497,7 +495,7 @@ void BottleManager::update_bottle(SignalController* caller,
       }
     }
 
-    if (active_bottle_->virtual_desktop() != virtual_desktop_resolution)
+    if (active_bottle_->virtual_desktop().compare(virtual_desktop_resolution) != 0)
     {
       if (!virtual_desktop_resolution.empty())
       {
@@ -554,7 +552,7 @@ void BottleManager::update_bottle(SignalController* caller,
 
     // LAST but not least, rename Wine bottle folder
     // Do this after the wait on wineserver, since otherwise renaming may break the Wine installation during update
-    if (active_bottle_->folder_name() != folder_name)
+    if (active_bottle_->folder_name().compare(folder_name) != 0)
     {
       // Build new prefix
       std::vector<string> dirs{bottle_location_, folder_name};
@@ -657,7 +655,7 @@ void BottleManager::clone_bottle(SignalController* caller,
 /**
  * \brief Remove the current active Wine bottle
  */
-void BottleManager::delete_bottle()
+void BottleManager::delete_bottle(Gtk::Window* parent)
 {
   if (active_bottle_ != nullptr)
   {
@@ -669,17 +667,20 @@ void BottleManager::delete_bottle()
       Glib::ustring confirm_message = "Are you sure you want to <b>PERMANENTLY</b> remove machine named '" +
                                       Glib::Markup::escape_text(Helper::get_folder_name(prefix_path)) + "' running " + windows +
                                       "?\n\n<i>Note:</i> This action cannot be undone!";
-      if (main_window_.show_confirm_dialog(confirm_message, true))
-      {
-        // Signal that bottle is removed
-        bottle_removed.emit();
-        Helper::remove_wine_bottle(prefix_path);
-        this->update_config_and_bottles("", false);
-      }
-      else
-      {
-        // Nothing, canceled
-      }
+      auto dialog = main_window_.show_question_dialog(parent, confirm_message, true);
+      dialog->signal_response.connect(
+          [this, prefix_path](DialogWindow::ResponseType result)
+          {
+            if (result == DialogWindow::ResponseType::YES)
+            {
+              // Signal that bottle is removed (which only closes the edit window)
+              bottle_removed.emit();
+              // Remove the actual bottle
+              Helper::remove_wine_bottle(prefix_path);
+              // Update the config and bottles listing
+              this->update_config_and_bottles("", false);
+            }
+          });
     }
     catch (const std::runtime_error& error)
     {
@@ -971,12 +972,12 @@ void BottleManager::kill_processes()
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of additional DirectX 9 DLLs, eg. 26 (for default use: "")
  */
-void BottleManager::install_d3dx9(Gtk::Window& parent, const string& version)
+void BottleManager::install_d3dx9(Gtk::Window* parent, const string& version)
 {
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing D3DX9 (OpenGL implementation of DirectX 9).");
+    main_window_.show_busy_install_dialog(*parent, "Installing D3DX9 (OpenGL implementation of DirectX 9).");
 
     string package = "d3dx9";
     if (version != "")
@@ -1017,12 +1018,12 @@ void BottleManager::install_d3dx9(Gtk::Window& parent, const string& version)
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of DXVK, eg. 151 (for default use: "latest")
  */
-void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
+void BottleManager::install_dxvk(Gtk::Window* parent, const string& version)
 {
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
+    main_window_.show_busy_install_dialog(*parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
 
     string package = "dxvk";
     if (version != "latest")
@@ -1061,12 +1062,12 @@ void BottleManager::install_dxvk(Gtk::Window& parent, const string& version)
  * \brief Install vkd3d-proton (Vulkan based DirectX 12)
  * \param[in] parent Parent GTK window were the request is coming from
  */
-void BottleManager::install_vkd3d(Gtk::Window& parent)
+void BottleManager::install_vkd3d(Gtk::Window* parent)
 {
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing VKD3D (Vulkan-based implementation of DirectX 12).\n");
+    main_window_.show_busy_install_dialog(*parent, "Installing VKD3D (Vulkan-based implementation of DirectX 12).\n");
 
     string package = "vkd3d";
     string wine_prefix = active_bottle_->wine_location();
@@ -1102,12 +1103,12 @@ void BottleManager::install_vkd3d(Gtk::Window& parent)
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of Visual C++, eg. 6, 2010, 2013, 2015, 2019 (no default)
  */
-void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string& version)
+void BottleManager::install_visual_cpp_package(Gtk::Window* parent, const string& version)
 {
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing Visual C++ package (" + version + ").");
+    main_window_.show_busy_install_dialog(*parent, "Installing Visual C++ package (" + version + ").");
 
     string package = "vcrun" + version;
     string wine_prefix = active_bottle_->wine_location();
@@ -1144,61 +1145,64 @@ void BottleManager::install_visual_cpp_package(Gtk::Window& parent, const string
  * \param[in] parent Parent GTK window were the request is coming from
  * \param[in] version Version of .NET, eg. '35' for 3.5, '471' for 4.7.1 or '35sp1' for 3.5 SP1 (no default)
  */
-void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
+void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
 {
   if (is_bottle_not_null())
   {
-    if (main_window_.show_confirm_dialog("<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
-                                         "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
-                                         true))
-    {
-      // Before we execute the install, show busy dialog
-      main_window_.show_busy_install_dialog(parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time!\n");
-
-      string deinstall_command = this->get_deinstall_mono_command();
-
-      string package = "dotnet" + version;
-      string wine_prefix = active_bottle_->wine_location();
-      bool is_debug_logging = active_bottle_->is_debug_logging();
-      int debug_log_level = active_bottle_->debug_log_level();
-      // I can't use -q with .NET installs
-      string install_command = Helper::get_winetricks_location() + " " + package;
-      string program = "";
-      if (!deinstall_command.empty())
-      {
-        // First deinstall Mono then install native .NET
-        program = deinstall_command + "; " + install_command;
-      }
-      else
-      {
-        program = install_command;
-      }
-      // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
-      std::thread t(
-          [wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
-           output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
-           output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
-           finish_dispatcher = &finished_package_install_dispatcher]
+    auto dialog =
+        main_window_.show_question_dialog(parent,
+                                          "<i>Important note:</i> Wine Mono &amp; Gecko support is often sufficient enough.\n\nWine Mono will be "
+                                          "<b>uninstalled</b> before native .NET will be installed.\n\nAre you sure you want to continue?",
+                                          true);
+    dialog->signal_response.connect(
+        [this, parent, version](DialogWindow::ResponseType result)
+        {
+          if (result == DialogWindow::ResponseType::YES)
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", {}, true, logging_stderr);
-            if (debug_logging && !output.empty())
+            // Before we execute the install, show busy dialog
+            main_window_.show_busy_install_dialog(*parent, "Installing Native .NET package (v" + version + ").\nThis may take quite some time!\n");
+
+            string deinstall_command = this->get_deinstall_mono_command();
+
+            string package = "dotnet" + version;
+            string wine_prefix = active_bottle_->wine_location();
+            bool is_debug_logging = active_bottle_->is_debug_logging();
+            int debug_log_level = active_bottle_->debug_log_level();
+            // I can't use -q with .NET installs
+            string install_command = Helper::get_winetricks_location() + " " + package;
+            string program = "";
+            if (!deinstall_command.empty())
             {
-              {
-                std::lock_guard<std::mutex> lock(output_logging_mutex);
-                logging_bottle_prefix.get() = wine_prefix;
-                output_logging.get() = output;
-              }
-              write_log_dispatcher->emit();
+              // First deinstall Mono then install native .NET
+              program = deinstall_command + "; " + install_command;
             }
-            Helper::wait_until_wineserver_is_terminated(wine_prefix);
-            finish_dispatcher->emit();
-          });
-      t.detach();
-    }
-    else
-    {
-      // Nothing, canceled
-    }
+            else
+            {
+              program = install_command;
+            }
+            // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
+            std::thread t(
+                [wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+                 output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+                 output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+                 finish_dispatcher = &finished_package_install_dispatcher]
+                {
+                  string output = Helper::run_program(wine_prefix, debug_log_level, program, "", {}, true, logging_stderr);
+                  if (debug_logging && !output.empty())
+                  {
+                    {
+                      std::lock_guard<std::mutex> lock(output_logging_mutex);
+                      logging_bottle_prefix.get() = wine_prefix;
+                      output_logging.get() = output;
+                    }
+                    write_log_dispatcher->emit();
+                  }
+                  Helper::wait_until_wineserver_is_terminated(wine_prefix);
+                  finish_dispatcher->emit();
+                });
+            t.detach();
+          }
+        });
   }
 }
 
@@ -1206,12 +1210,12 @@ void BottleManager::install_dot_net(Gtk::Window& parent, const string& version)
  * \brief Install core fonts (which is often enough)
  * \param[in] parent Parent GTK window were the request is coming from
  */
-void BottleManager::install_core_fonts(Gtk::Window& parent)
+void BottleManager::install_core_fonts(Gtk::Window* parent)
 {
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing MS Core fonts.");
+    main_window_.show_busy_install_dialog(*parent, "Installing MS Core fonts.");
 
     string wine_prefix = active_bottle_->wine_location();
     bool is_debug_logging = active_bottle_->is_debug_logging();
@@ -1245,12 +1249,12 @@ void BottleManager::install_core_fonts(Gtk::Window& parent)
  * \brief Install liberation fonts, open-source (which is often enough)
  * \param[in] parent Parent GTK window were the request is coming from
  */
-void BottleManager::install_liberation(Gtk::Window& parent)
+void BottleManager::install_liberation(Gtk::Window* parent)
 {
   if (is_bottle_not_null())
   {
     // Before we execute the install, show busy dialog
-    main_window_.show_busy_install_dialog(parent, "Installing Liberation open-source fonts.");
+    main_window_.show_busy_install_dialog(*parent, "Installing Liberation open-source fonts.");
 
     string wine_prefix = active_bottle_->wine_location();
     bool is_debug_logging = active_bottle_->is_debug_logging();
@@ -1455,14 +1459,14 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
     {
       main_window_.show_error_message(error.what());
     }
-    try
     {
-      windows = Helper::get_windows_version(prefix);
-      status = Helper::get_bottle_status(prefix);
-    }
-    catch (const std::runtime_error& error)
-    {
-      main_window_.show_error_message(error.what());
+      std::tuple<bool, BottleTypes::Windows, std::string> result = Helper::get_bottle_status_and_windows_version(prefix);
+      status = std::get<0>(result);
+      windows = std::get<1>(result);
+      if (!status)
+      {
+        main_window_.show_error_message(std::get<2>(result));
+      }
     }
     try
     {

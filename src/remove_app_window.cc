@@ -28,8 +28,8 @@
  * \param parent Reference to parent GTK Window
  */
 RemoveAppWindow::RemoveAppWindow(Gtk::Window& parent)
-    : vbox(Gtk::ORIENTATION_VERTICAL, 4),
-      hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
+    : vbox(Gtk::Orientation::VERTICAL, 4),
+      hbox_buttons(Gtk::Orientation::HORIZONTAL, 4),
       header_remove_app_label("Remove Application shortcut(s)"),
       header_remove_description_label("Select one or more shortcuts you want to remove,\n then press the \"Remove selected\" button."),
       select_all_button("Select all"),
@@ -44,7 +44,7 @@ RemoveAppWindow::RemoveAppWindow(Gtk::Window& parent)
   set_modal(true);
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
-  fd_label.set_weight(Pango::WEIGHT_BOLD);
+  fd_label.set_weight(Pango::Weight::BOLD);
   auto font_label = Pango::Attribute::create_attr_font_desc(fd_label);
   Pango::AttrList attr_list_header_label;
   attr_list_header_label.insert(font_label);
@@ -59,31 +59,44 @@ RemoveAppWindow::RemoveAppWindow(Gtk::Window& parent)
   app_list_box.set_margin_bottom(6);
   app_list_box.set_margin_start(6);
   app_list_box.set_can_focus(false);
-  app_list_box.set_selection_mode(Gtk::SelectionMode::SELECTION_MULTIPLE);
+  app_list_box.set_selection_mode(Gtk::SelectionMode::MULTIPLE);
+  app_list_box.set_vexpand(true);
+  app_list_box.set_hexpand(true);
+  app_list_box.set_halign(Gtk::Align::FILL);
 
   select_all_button.set_margin_start(5);
   select_all_button.set_margin_end(5);
+  app_list_box.set_halign(Gtk::Align::FILL);
   unselect_all_button.set_margin_start(5);
   unselect_all_button.set_margin_end(5);
+  app_list_box.set_halign(Gtk::Align::FILL);
 
-  hbox_buttons.pack_end(remove_selected_button, false, false, 4);
-  hbox_buttons.pack_end(cancel_button, false, false, 4);
+  hbox_buttons.set_halign(Gtk::Align::END);
+  hbox_buttons.set_margin(6);
+  hbox_buttons.append(remove_selected_button);
+  hbox_buttons.append(cancel_button);
 
-  vbox.pack_start(header_remove_app_label, false, false, 4);
-  vbox.pack_start(header_remove_description_label, false, true, 4);
-  vbox.pack_start(app_list_box, true, true, 4);
-  vbox.pack_start(select_all_button, false, true, 0);
-  vbox.pack_start(unselect_all_button, false, true, 0);
-  vbox.pack_start(hbox_buttons, false, false, 4);
-  add(vbox);
+  vbox.append(header_remove_app_label);
+  vbox.append(header_remove_description_label);
+  vbox.append(app_list_box);
+  vbox.append(select_all_button);
+  vbox.append(unselect_all_button);
+  vbox.append(hbox_buttons);
+  set_child(vbox);
 
   // Signals
   select_all_button.signal_clicked().connect(sigc::mem_fun(app_list_box, &Gtk::ListBox::select_all));
   unselect_all_button.signal_clicked().connect(sigc::mem_fun(app_list_box, &Gtk::ListBox::unselect_all));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &RemoveAppWindow::on_cancel_button_clicked));
   remove_selected_button.signal_clicked().connect(sigc::mem_fun(*this, &RemoveAppWindow::on_remove_selected_button_clicked));
-
-  show_all_children();
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        set_visible(false);
+        return true; // stop default destroy
+      },
+      false);
 }
 
 /**
@@ -99,9 +112,12 @@ RemoveAppWindow::~RemoveAppWindow()
 void RemoveAppWindow::show()
 {
   // Clean-up
-  for (const auto& app_item : app_list_box.get_children())
+  auto child = app_list_box.get_first_child();
+  while (child != nullptr)
   {
-    delete app_item;
+    auto next = child->get_next_sibling();
+    app_list_box.remove(*child);
+    child = next;
   }
 
   if (active_bottle_ != nullptr)
@@ -115,12 +131,11 @@ void RemoveAppWindow::show()
     {
       std::string label_name = (!app_data.description.empty()) ? app_data.name + " - " + app_data.description : app_data.name;
       Gtk::Label* label = Gtk::manage(new Gtk::Label(label_name));
-      app_list_box.add(*label);
+      app_list_box.append(*label);
     }
-    show_all_children();
   }
-  // Call parent show
-  Gtk::Widget::show();
+  // Call parent present
+  present();
   // Unselect items by default
   app_list_box.unselect_all();
 }
@@ -147,7 +162,7 @@ void RemoveAppWindow::reset_active_bottle()
  */
 void RemoveAppWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
@@ -173,15 +188,15 @@ void RemoveAppWindow::on_remove_selected_button_clicked()
       // Save application to bottle config
       if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
       {
-        Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+        Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
         dialog.set_title("An error has occurred!");
         dialog.set_modal(true);
-        dialog.run();
+        dialog.present();
       }
       else
       {
         // Hide remove application window
-        hide();
+        set_visible(false);
         // Trigger manager update & UI update
         config_saved.emit();
       }
@@ -189,19 +204,19 @@ void RemoveAppWindow::on_remove_selected_button_clicked()
     else
     {
       Gtk::MessageDialog dialog(*this, "You have not selected anything to remove. Select one or more shortcuts or press the cancel button.", false,
-                                Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
+                                Gtk::MessageType::WARNING, Gtk::ButtonsType::OK);
       dialog.set_title("Nothing selected?");
       dialog.set_modal(true);
-      dialog.run();
+      dialog.present();
     }
   }
   else
   {
-    Gtk::MessageDialog dialog(*this, "Error occurred during saving, because there is no active Windows machine set.", false, Gtk::MESSAGE_ERROR,
-                              Gtk::BUTTONS_OK);
+    Gtk::MessageDialog dialog(*this, "Error occurred during saving, because there is no active Windows machine set.", false, Gtk::MessageType::ERROR,
+                              Gtk::ButtonsType::OK);
     dialog.set_title("Error during remove application saving");
     dialog.set_modal(true);
-    dialog.run();
+    dialog.present();
     std::cout << "Error: No current Windows machine is set. Change won't be saved." << std::endl;
   }
 }
