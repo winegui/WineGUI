@@ -1095,7 +1095,7 @@ void MainWindow::load_stored_window_settings()
     if (window_settings->get_boolean("maximized"))
       maximize();
     if (window_settings->get_boolean("fullscreen"))
-       fullscreen();
+      fullscreen();
     int position_divider_paned = window_settings->get_int("position-divider-paned");
     main_paned.set_position(position_divider_paned);
     int position_divider_container_paned = window_settings->get_int("position-divider-container-paned");
