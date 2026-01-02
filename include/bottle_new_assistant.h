@@ -31,8 +31,11 @@ class BottleNewAssistant : public Gtk::Assistant
 {
 public:
   // Signal
-  sigc::signal<void, Glib::ustring&> new_bottle_finished; /*!< Signal when New Bottle Assistant is finished with the just created bottle name */
-  // Result struct
+  sigc::signal<void(const Glib::ustring&)> new_bottle_finished; /*!< Signal when New Bottle Assistant is finished with the just created bottle name */
+  /*
+   * \struct Result
+   * \brief Result struct for New Bottle Assistant
+   */
   struct Result
   {
     Glib::ustring name;
@@ -79,7 +82,6 @@ private:
   // Signal handlers
   void on_assistant_apply();
   void on_assistant_cancel();
-  void on_assistant_close();
   void on_assistant_prepare(Gtk::Widget* widget);
   void on_entry_changed();
   void on_virtual_desktop_toggle();

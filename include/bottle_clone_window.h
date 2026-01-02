@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2024 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    bottle_clone_window.h
  * \brief   Wine bottle clone window
@@ -20,7 +20,6 @@
  */
 #pragma once
 
-#include "bottle_types.h"
 #include "busy_dialog.h"
 #include <gtkmm.h>
 
@@ -29,6 +28,10 @@ using std::string;
 // Forward declaration
 class BottleItem;
 
+/**
+ * \struct CloneBottleStruct
+ * \brief custom struct for bottle clone data information
+ */
 struct CloneBottleStruct
 {
   Glib::ustring name;
@@ -44,7 +47,7 @@ class BottleCloneWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void, CloneBottleStruct&> clone_bottle; /*!< clone button clicked signal */
+  sigc::signal<void(CloneBottleStruct&)> clone_bottle; /*!< clone button clicked signal */
 
   explicit BottleCloneWindow(Gtk::Window& parent);
   virtual ~BottleCloneWindow();
@@ -58,28 +61,24 @@ public:
 
 protected:
   // Child widgets
-  Gtk::Box vbox;         /*!< main vertical box */
-  Gtk::Box hbox_buttons; /*!< box for buttons */
-  Gtk::Grid clone_grid;  /*!< grid layout for form */
-
-  Gtk::Label header_clone_label;                   /*!< header clone label */
-  Gtk::Label name_label;                           /*!< name label */
-  Gtk::Label folder_name_label;                    /*!< folder name label */
-  Gtk::Label description_label;                    /*!< description label */
-  Gtk::Entry name_entry;                           /*!< name input field */
-  Gtk::Entry folder_name_entry;                    /*!< folder name input field */
-  Gtk::ScrolledWindow description_scrolled_window; /*!< description scrolled window */
-  Gtk::TextView description_text_view;             /*!< description text view */
-  Gtk::Button clone_button;                        /*!< clone button */
-  Gtk::Button cancel_button;                       /*!< cancel button */
-  // Busy dialog
-  BusyDialog busy_dialog; /*!< Busy dialog, when the user should wait until install is finished */
+  Gtk::Box vbox;                                   /*!< Main vertical box */
+  Gtk::Box hbox_buttons;                           /*!< Box for buttons */
+  Gtk::Grid clone_grid;                            /*!< Grid layout for form */
+  Gtk::Label header_clone_label;                   /*!< Header clone label */
+  Gtk::Label name_label;                           /*!< Name label */
+  Gtk::Label folder_name_label;                    /*!< Folder name label */
+  Gtk::Label description_label;                    /*!< Description label */
+  Gtk::Entry name_entry;                           /*!< Name input field */
+  Gtk::Entry folder_name_entry;                    /*!< Folder name input field */
+  Gtk::ScrolledWindow description_scrolled_window; /*!< Description scrolled window */
+  Gtk::TextView description_text_view;             /*!< Description text view */
+  Gtk::Button clone_button;                        /*!< Clone button */
+  Gtk::Button cancel_button;                       /*!< Cancel button */
+  BusyDialog busy_dialog;                          /*!< Busy dialog, when the user should wait until cloning is finished */
 private:
   // Signal handlers
   void on_cancel_button_clicked();
   void on_clone_button_clicked();
-
-  // Member functions
 
   BottleItem* active_bottle_; /*!< Current active bottle */
 };

@@ -2,8 +2,7 @@
  * Copyright (c) 2019-2025 WineGUI
  *
  * \file    signal_controller.cc
- * \brief   Manager and connect different signals and dispatchers
- *          (eg. Menu button clicks and new bottle wizard signals) them to the proper calls within WineGUI
+ * \brief   Manager and connect different signals and dispatchers them to the proper calls within WineGUI
  * \author  Melroy van den Berg <melroy@melroy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,7 +20,6 @@
  */
 #include "signal_controller.h"
 
-#include "about_dialog.h"
 #include "add_app_window.h"
 #include "bottle_clone_window.h"
 #include "bottle_configure_env_var_window.h"
@@ -30,28 +28,24 @@
 #include "bottle_manager.h"
 #include "helper.h"
 #include "main_window.h"
-#include "menu.h"
 #include "preferences_window.h"
 #include "remove_app_window.h"
 
 /**
  * \brief Signal Dispatcher Constructor
  */
-SignalController::SignalController(BottleManager& manager,
-                                   Menu& menu,
+SignalController::SignalController(MainWindow* main_window,
+                                   BottleManager& manager,
                                    PreferencesWindow& preferences_window,
-                                   AboutDialog& about_dialog,
                                    BottleEditWindow& edit_window,
                                    BottleCloneWindow& clone_window,
                                    BottleConfigureEnvVarWindow& configure_env_var_window,
                                    BottleConfigureWindow& configure_window,
                                    AddAppWindow& add_app_window,
                                    RemoveAppWindow& remove_app_window)
-    : main_window_(nullptr),
+    : main_window_(main_window),
       manager_(manager),
-      menu_(menu),
       preferences_window_(preferences_window),
-      about_dialog_(about_dialog),
       edit_window_(edit_window),
       clone_window_(clone_window),
       configure_env_var_window_(configure_env_var_window),
@@ -72,44 +66,10 @@ SignalController::~SignalController()
 }
 
 /**
- * \brief Set main window pointer to Signal Dispatcher
- */
-void SignalController::set_main_window(MainWindow* main_window)
-{
-  if (main_window_ == nullptr)
-  {
-    main_window_ = main_window;
-  }
-  else
-  {
-    g_error("Something really strange is going on with setting the main window!");
-  }
-}
-
-/**
  * \brief This method does all the signal connections between classes/emits/signals
  */
 void SignalController::dispatch_signals()
 {
-  // Menu buttons
-  menu_.preferences.connect(sigc::mem_fun(preferences_window_, &PreferencesWindow::show));
-  menu_.quit.connect(
-      sigc::mem_fun(*main_window_, &MainWindow::on_hide_window)); /*!< When quit button is pressed, hide main window and therefore closes the app */
-  menu_.refresh_view.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
-  menu_.new_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::on_new_bottle_button_clicked));
-  menu_.run.connect(sigc::mem_fun(*main_window_, &MainWindow::on_run_button_clicked));
-  menu_.edit_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
-  menu_.clone_bottle.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::show));
-  menu_.configure_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::show));
-  menu_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
-  menu_.open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
-  menu_.open_log_file.connect(sigc::mem_fun(manager_, &BottleManager::open_log_file));
-  menu_.give_feedback.connect(sigc::mem_fun(*main_window_, &MainWindow::on_give_feedback));
-  menu_.list_issues.connect(sigc::mem_fun(*main_window_, &MainWindow::on_issue_tickets));
-  menu_.check_version.connect(sigc::mem_fun(main_window_, &MainWindow::on_check_version));
-  menu_.show_about.connect(sigc::mem_fun(about_dialog_, &AboutDialog::run_dialog));
-  about_dialog_.signal_response().connect(sigc::mem_fun(about_dialog_, &AboutDialog::hide_dialog));
-
   // Distribute the active bottle signal from Main Window
   main_window_->active_bottle.connect(sigc::mem_fun(manager_, &BottleManager::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::set_active_bottle));
@@ -129,12 +89,12 @@ void SignalController::dispatch_signals()
   manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_application_list));
   // Removed bottle signal from the manager
   manager_.bottle_removed.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::bottle_removed));
-  // Package install finished (in settings window), close the busy dialog & refresh the settings window
-  manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(*main_window_, &MainWindow::close_busy_dialog));
+  // Package install finished (in settings window), hide the busy dialog & refresh the settings window
+  manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(*main_window_, &MainWindow::hide_busy_dialog));
   manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::update_installed));
 
-  // Menu / Toolbar actions
-  main_window_->new_bottle.connect(sigc::mem_fun(this, &SignalController::on_new_bottle));
+  // Toolbar actions
+  main_window_->new_bottle.connect(sigc::mem_fun(*this, &SignalController::on_new_bottle));
   main_window_->finished_new_bottle.connect(sigc::bind<1>(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), false));
   main_window_->run_executable.connect(sigc::mem_fun(manager_, &BottleManager::run_executable));
   main_window_->run_program.connect(sigc::mem_fun(manager_, &BottleManager::run_program));
@@ -152,22 +112,22 @@ void SignalController::dispatch_signals()
 
   // Edit Window
   edit_window_.configure_environment_variables.connect(sigc::mem_fun(configure_env_var_window_, &BottleConfigureEnvVarWindow::show));
-  edit_window_.update_bottle.connect(sigc::mem_fun(this, &SignalController::on_update_bottle));
+  edit_window_.update_bottle.connect(sigc::mem_fun(*this, &SignalController::on_update_bottle));
   edit_window_.remove_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
 
   // Clone Window
-  clone_window_.clone_bottle.connect(sigc::mem_fun(this, &SignalController::on_clone_bottle));
+  clone_window_.clone_bottle.connect(sigc::mem_fun(*this, &SignalController::on_clone_bottle));
 
   // Right click menu in listbox
-  main_window_->right_click_menu.connect(sigc::mem_fun(this, &SignalController::on_mouse_button_pressed));
+  // main_window_->right_click_menu.connect(sigc::mem_fun(*this, &SignalController::on_mouse_button_pressed));
 
-  // When bottle created, the finish (or error message) event is called
-  bottle_created_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_new_bottle_created));
-  bottle_updated_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_bottle_updated));
-  bottle_cloned_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_bottle_cloned));
-  error_message_created_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_error_message_created));
-  error_message_updated_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_error_message_updated));
-  error_message_cloned_dispatcher_.connect(sigc::mem_fun(this, &SignalController::on_error_message_cloned));
+  // When bottle created or updated or cloned, the finish (or error message) event is called
+  bottle_created_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_new_bottle_created));
+  bottle_updated_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_bottle_updated));
+  bottle_cloned_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_bottle_cloned));
+  error_message_created_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_error_message_created));
+  error_message_updated_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_error_message_updated));
+  error_message_cloned_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_error_message_cloned));
 
   // When the WineExec() results into a non-zero exit code the failure_on_exec it triggered
   Helper& helper = Helper::get_instance();
@@ -193,7 +153,7 @@ void SignalController::dispatch_signals()
   // Remove application Window
   remove_app_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 
-  // WineGUI Preference Window
+  // Preference Window
   preferences_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 }
 
@@ -273,22 +233,22 @@ void SignalController::cleanup_bottle_manager_thread()
  * Dispatch events from Main Window *
  ************************************/
 
-bool SignalController::on_mouse_button_pressed(GdkEventButton* event)
-{
-  // Single click with right mouse button?
-  if (event->type == GDK_BUTTON_PRESS && event->button == 3)
-  {
-    Gtk::Menu* popup = menu_.get_machine_menu();
-    if (popup)
-    {
-      popup->popup(event->button, event->time);
-    }
-    return true;
-  }
+// bool SignalController::on_mouse_button_pressed(GdkEventButton* event)
+// {
+//   // Single click with right mouse button?
+//   if (event->type == GDK_BUTTON_PRESS && event->button == 3)
+//   {
+//     Gtk::Menu* popup = menu_.get_machine_menu();
+//     if (popup)
+//     {
+//       popup->popup(event->button, event->time);
+//     }
+//     return true;
+//   }
 
-  // Event has not been handled
-  return false;
-}
+//   // Event has not been handled
+//   return false;
+// }
 
 /**
  * \brief New Bottle signal, starting new_bottle() within thread

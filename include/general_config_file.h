@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2022-2023 WineGUI
  *
- * \file    generic_config_file.h
+ * \file    general_config_file.h
  * \brief   WineGUI Configuration file supporting methods
  * \author  Melroy van den Berg <webmaster1989@gmail.com>
  *

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 WineGUI
+ * Copyright (c) 2023-2025 WineGUI
  *
  * \file    app_list_struct.h
  * \brief   Custom application data struct for bottle app list
@@ -22,6 +22,10 @@
 
 #include <string>
 
+/**
+ * \struct ApplicationData
+ * \brief Custom application data struct for bottle app list
+ */
 struct ApplicationData
 {
   std::string name;

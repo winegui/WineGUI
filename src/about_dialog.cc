@@ -26,30 +26,33 @@
  * \brief Constructor
  */
 AboutDialog::AboutDialog(Gtk::Window& parent)
-    : visit_gitlab_project_link_button("https://gitlab.melroy.org/melroy/winegui", "Visit the Official GitLab Project"),
-      visit_github_project_link_button("https://github.com/winegui/WineGUI", "Visit the mirror GitHub Project")
 {
   // Set logo
-  logo.set(Helper::get_image_location("logo.png"));
+  logo.set(Helper::get_image_location("logo_big.png"));
   // Set version
   std::vector<Glib::ustring> devs;
   devs.emplace_back("Melroy van den Berg <melroy@melroy.org>");
 
   set_transient_for(parent);
   set_program_name("WineGUI");
-  set_comments("The most user-friendly WINE manager.");
-  set_logo(logo.get_pixbuf());
+  set_comments("The most user-friendly Wine manager.");
+
+  set_logo(logo.get_paintable());
   set_authors(devs);
   set_artists(devs);
   set_version(PROJECT_VER);
   set_copyright("Copyright © 2019-2025 Melroy van den Berg");
-  set_license_type(Gtk::LICENSE_AGPL_3_0);
+  set_license_type(Gtk::License::AGPL_3_0);
+  set_website_label("Official GitLab Project");
+  set_website("https://gitlab.melroy.org/melroy/winegui");
 
-  Gtk::Box* vbox = get_vbox();
-  vbox->pack_start(visit_gitlab_project_link_button, Gtk::PackOptions::PACK_SHRINK);
-  vbox->pack_start(visit_github_project_link_button, Gtk::PackOptions::PACK_SHRINK);
-
-  vbox->show_all();
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        set_visible(false);
+        return true; // stop default destroy
+      },
+      false);
 }
 
 AboutDialog::~AboutDialog()
@@ -57,19 +60,11 @@ AboutDialog::~AboutDialog()
 }
 
 /**
- * \brief Open about dialog
+ * \brief Open about dialog window
  */
 void AboutDialog::run_dialog()
 {
-  run();
-}
-
-/**
- * \brief Close the about dialog
- */
-void AboutDialog::hide_dialog(__attribute__((unused)) int response)
-{
-  hide();
+  present();
 }
 
 /**

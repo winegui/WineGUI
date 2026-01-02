@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2024 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    menu.h
  * \brief   Main menu bar
@@ -30,22 +30,21 @@ class Menu : public Gtk::MenuBar
 {
 public:
   // Signals
-  sigc::signal<void> preferences;      /*!< preferences button clicked signal */
-  sigc::signal<void> quit;             /*!< quite button clicked signal */
-  sigc::signal<void> refresh_view;     /*!< refresh button clicked signal */
-  sigc::signal<void> new_bottle;       /*!< new machine button clicked signal */
-  sigc::signal<void> edit_bottle;      /*!< edit button clicked signal */
-  sigc::signal<void> clone_bottle;     /*!< clone button clicked signal */
-  sigc::signal<void> configure_bottle; /*!< configure button clicked signal */
-  sigc::signal<void> run;              /*!< run button clicked signal */
-  sigc::signal<void> remove_bottle;    /*!< remove button clicked signal */
-  sigc::signal<void> open_c_drive;     /*!< open C: drive clicked signal */
-  sigc::signal<void> open_log_file;    /*!< open log file clicked signal */
-  sigc::signal<void> give_feedback;    /*!< feedback button clicked signal */
-  sigc::signal<void> list_issues;      /*!< issue list button clicked signal */
-  sigc::signal<void> check_version;    /*!< check version update button clicked signal */
-  sigc::signal<void> show_about;       /*!< about button clicked signal */
-
+  sigc::signal<void()> preferences;      /*!< preferences button clicked signal */
+  sigc::signal<void()> quit;             /*!< quite button clicked signal */
+  sigc::signal<void()> refresh_view;     /*!< refresh button clicked signal */
+  sigc::signal<void()> new_bottle;       /*!< new machine button clicked signal */
+  sigc::signal<void()> edit_bottle;      /*!< edit button clicked signal */
+  sigc::signal<void()> clone_bottle;     /*!< clone button clicked signal */
+  sigc::signal<void()> configure_bottle; /*!< configure button clicked signal */
+  sigc::signal<void()> run;              /*!< run button clicked signal */
+  sigc::signal<void()> remove_bottle;    /*!< remove button clicked signal */
+  sigc::signal<void()> open_c_drive;     /*!< open C: drive clicked signal */
+  sigc::signal<void()> open_log_file;    /*!< open log file clicked signal */
+  sigc::signal<void()> give_feedback;    /*!< feedback button clicked signal */
+  sigc::signal<void()> list_issues;      /*!< issue list button clicked signal */
+  sigc::signal<void()> check_version;    /*!< check version update button clicked signal */
+  sigc::signal<void()> show_about;       /*!< about button clicked signal */
   Menu();
   virtual ~Menu();
   Gtk::Menu* get_machine_menu();

@@ -19,33 +19,47 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "busy_dialog.h"
+#include "gtkmm/window.h"
 
 /**
  * \brief Constructor
  * \param parent Reference to parent GTK+ Window
  */
-BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Dialog("Applying Changes"), default_parent_(parent)
+BusyDialog::BusyDialog(Gtk::Window& parent) : Gtk::Window(), default_parent_(parent)
 {
+  set_title("Applying Changes...");
   set_transient_for(parent);
-  set_default_size(400, 120);
   set_modal(true);
+  set_resizable(false);
   set_deletable(false);
+  set_default_size(400, 140);
 
-  heading_label.set_alignment(0.0);
-  message_label.set_alignment(0.0);
+  heading_label.set_xalign(0.0);
+  message_label.set_xalign(0.0);
+  message_label.set_halign(Gtk::Align::START);
+  message_label.set_hexpand(true);
   loading_bar.set_pulse_step(0.3);
+  loading_bar.set_hexpand(true);
 
-  Gtk::Box* box = get_vbox();
-  box->set_margin_top(10);
-  box->set_margin_right(10);
-  box->set_margin_bottom(10);
-  box->set_margin_left(10);
+  Gtk::Box* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
+  vbox->set_margin_top(10);
+  vbox->set_margin_start(10);
+  vbox->set_margin_bottom(10);
+  vbox->set_margin_end(10);
 
-  box->pack_start(heading_label, false, false);
-  box->pack_start(message_label, true, false);
-  box->pack_start(loading_bar, true, false);
+  vbox->append(heading_label);
+  vbox->append(message_label);
+  vbox->append(loading_bar);
+  set_child(*vbox);
 
-  show_all_children();
+  // Hide window instead of destroy (although set deletable is set to false)
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        set_visible(false);
+        return true; // stop default destroy
+      },
+      false);
 }
 
 /**
@@ -63,13 +77,13 @@ BusyDialog::~BusyDialog()
 void BusyDialog::set_message(const Glib::ustring& heading_text, const Glib::ustring& message)
 {
   this->heading_label.set_markup("<big><b>" + Glib::Markup::escape_text(heading_text) + "</b></big>");
-  this->message_label.set_text(message + " Please wait...");
+  this->message_label.set_text(message.empty() ? "Please wait..." : message + "\nPlease wait...");
 }
 
 /**
- * \brief Show the busy dialog (override the show(), calls parent show())
+ * \brief Present the busy dialog (override the present(), calls parent present())
  */
-void BusyDialog::show()
+void BusyDialog::present()
 {
   if (!timer_.empty() && timer_.connected())
   {
@@ -78,13 +92,13 @@ void BusyDialog::show()
 
   int time_interval = 200;
   timer_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &BusyDialog::pulsing), time_interval);
-  Gtk::Dialog::show();
+  Gtk::Window::present();
 }
 
 /**
- * \brief Close the busy dialog (override the close(), calls parent close())
+ * \brief Hide the busy dialog (stop the timer and calls parent set_visible())
  */
-void BusyDialog::close()
+void BusyDialog::hide()
 {
   // Reset default parent
   set_transient_for(default_parent_);
@@ -94,7 +108,10 @@ void BusyDialog::close()
   {
     timer_.disconnect();
   }
-  Gtk::Dialog::close();
+
+  // Dispatch the set_visible in the main thread, to avoid weird behavior when the dialog is open and closed too fast.
+  // Typical GTK non sense issues.
+  Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &BusyDialog::set_visible), false), Glib::PRIORITY_DEFAULT_IDLE);
 }
 
 /**

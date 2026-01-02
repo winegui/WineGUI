@@ -20,6 +20,7 @@
  */
 #include "bottle_configure_window.h"
 #include "bottle_item.h"
+#include "dll_override_types.h"
 #include "helper.h"
 #include <iostream>
 
@@ -33,38 +34,64 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
   set_default_size(1100, 500);
   set_modal(true);
 
-  add(configure_grid);
   configure_grid.set_margin_top(5);
   configure_grid.set_margin_end(5);
-  configure_grid.set_margin_bottom(6);
-  configure_grid.set_margin_start(6);
+  configure_grid.set_margin_bottom(5);
+  configure_grid.set_margin_start(5);
   configure_grid.set_column_spacing(6);
   configure_grid.set_row_spacing(8);
 
-  first_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  first_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  first_toolbar.set_valign(Gtk::ALIGN_CENTER);
-  first_toolbar.set_hexpand(true);
-  first_toolbar.set_vexpand(true);
-  second_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  second_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  second_toolbar.set_valign(Gtk::ALIGN_CENTER);
-  second_toolbar.set_hexpand(true);
-  second_toolbar.set_vexpand(true);
-  third_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  third_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  third_toolbar.set_valign(Gtk::ALIGN_CENTER);
-  third_toolbar.set_hexpand(true);
-  third_toolbar.set_vexpand(true);
-  fourth_toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
-  fourth_toolbar.set_halign(Gtk::ALIGN_CENTER);
-  fourth_toolbar.set_valign(Gtk::ALIGN_CENTER);
-  fourth_toolbar.set_hexpand(true);
-  fourth_toolbar.set_vexpand(true);
+  set_child(configure_grid);
+
+  create_layout();
+
+  // Signals
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        set_visible(false);
+        return true; // stop default destroy
+      },
+      false);
+}
+
+/**
+ * \brief Destructor
+ */
+BottleConfigureWindow::~BottleConfigureWindow()
+{
+}
+
+void BottleConfigureWindow::create_layout()
+{
+  first_toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
+  first_toolbar.set_halign(Gtk::Align::CENTER);
+  first_toolbar.set_valign(Gtk::Align::CENTER);
+  first_toolbar.set_expand();
+  first_toolbar.set_spacing(10);
+
+  second_toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
+  second_toolbar.set_halign(Gtk::Align::CENTER);
+  second_toolbar.set_valign(Gtk::Align::CENTER);
+  second_toolbar.set_expand();
+  second_toolbar.set_spacing(10);
+
+  third_toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
+  third_toolbar.set_halign(Gtk::Align::CENTER);
+  third_toolbar.set_valign(Gtk::Align::CENTER);
+  third_toolbar.set_expand();
+  third_toolbar.set_spacing(10);
+
+  fourth_toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
+  fourth_toolbar.set_halign(Gtk::Align::CENTER);
+  fourth_toolbar.set_valign(Gtk::Align::CENTER);
+  fourth_toolbar.set_expand();
+  fourth_toolbar.set_spacing(10);
 
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
-  fd_label.set_weight(Pango::WEIGHT_BOLD);
+  fd_label.set_weight(Pango::Weight::BOLD);
   auto font_label = Pango::Attribute::create_attr_font_desc(fd_label);
   Pango::AttrList attr_list_label;
   attr_list_label.insert(font_label);
@@ -75,16 +102,16 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
 
   first_row_label.set_text("Graphics packages");
   first_row_label.set_attributes(attr_list_label);
-  first_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
+  first_row_label.set_halign(Gtk::Align::CENTER);
   second_row_label.set_text("Font packages");
   second_row_label.set_attributes(attr_list_label);
-  second_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
+  second_row_label.set_halign(Gtk::Align::CENTER);
   third_row_label.set_text("Visual C++ packages");
   third_row_label.set_attributes(attr_list_label);
-  third_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
+  third_row_label.set_halign(Gtk::Align::CENTER);
   fourth_row_label.set_text(".NET packages");
   fourth_row_label.set_attributes(attr_list_label);
-  fourth_row_label.set_halign(Gtk::Align::ALIGN_CENTER);
+  fourth_row_label.set_halign(Gtk::Align::CENTER);
 
   configure_grid.attach(hint_label, 0, 0, 2, 1);
   configure_grid.attach(first_row_label, 0, 1);
@@ -98,67 +125,74 @@ BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottl
 
   // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
+  static const int button_height = 85;
   // First row buttons, graphics packages
-  install_d3dx9_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(directx9, *this, ""));
+  install_d3dx9_button.signal_clicked().connect(sigc::bind(directx9, this, ""));
+  install_d3dx9_button.set_size_request(-1, button_height);
   install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL API");
-  first_toolbar.insert(install_d3dx9_button, 0);
-  install_dxvk_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dxvk, *this, "latest"));
+  first_toolbar.append(install_d3dx9_button);
+  install_dxvk_button.signal_clicked().connect(sigc::bind(dxvk, this, "latest"));
+  install_dxvk_button.set_size_request(-1, button_height);
   install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9, 10 or 11 games, by using Vulkan API");
-  first_toolbar.insert(install_dxvk_button, 1);
-  install_vkd3d_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(vkd3d, *this));
+  first_toolbar.append(install_dxvk_button);
+  install_vkd3d_button.signal_clicked().connect(sigc::bind(vkd3d, this));
+  install_vkd3d_button.set_size_request(-1, button_height);
   install_vkd3d_button.set_tooltip_text("Installs VKD3D-Proton: Ideal for DirectX 12 games, by using Vulkan API");
-  first_toolbar.insert(install_vkd3d_button, 2);
+  first_toolbar.append(install_vkd3d_button);
 
-  // Second row, Font packages
-  install_liberation_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(liberation_fonts, *this));
+  // // Second row, Font packages
+  install_liberation_fonts_button.signal_clicked().connect(sigc::bind(liberation_fonts, this));
+  install_liberation_fonts_button.set_size_request(-1, button_height);
   install_liberation_fonts_button.set_tooltip_text("Installs Liberation open-source Fonts, alternative for Core fonts");
-  second_toolbar.insert(install_liberation_fonts_button, 0);
-  install_core_fonts_button.signal_clicked().connect(sigc::bind<Gtk::Window&>(corefonts, *this));
+  second_toolbar.append(install_liberation_fonts_button);
+  install_core_fonts_button.signal_clicked().connect(sigc::bind(corefonts, this));
+  install_core_fonts_button.set_size_request(-1, button_height);
   install_core_fonts_button.set_tooltip_text("Installs Microsoft Core Fonts");
-  second_toolbar.insert(install_core_fonts_button, 1);
+  second_toolbar.append(install_core_fonts_button);
 
-  // Third row, Visual C++ packages
-  install_visual_cpp_2013_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2013"));
+  // // Third row, Visual C++ packages
+  install_visual_cpp_2013_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2013"));
+  install_visual_cpp_2013_button.set_size_request(-1, button_height);
   install_visual_cpp_2013_button.set_tooltip_text("Installs Visual C++ 2013");
-  third_toolbar.insert(install_visual_cpp_2013_button, 0);
-  install_visual_cpp_2015_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2015"));
+  third_toolbar.append(install_visual_cpp_2013_button);
+  install_visual_cpp_2015_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2015"));
+  install_visual_cpp_2015_button.set_size_request(-1, button_height);
   install_visual_cpp_2015_button.set_tooltip_text("Installs Visual C++ 2015");
-  third_toolbar.insert(install_visual_cpp_2015_button, 1);
-  install_visual_cpp_2017_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2017"));
+  third_toolbar.append(install_visual_cpp_2015_button);
+  install_visual_cpp_2017_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2017"));
+  install_visual_cpp_2017_button.set_size_request(-1, button_height);
   install_visual_cpp_2017_button.set_tooltip_text("Installs Visual C++ 2017");
-  third_toolbar.insert(install_visual_cpp_2017_button, 2);
-  install_visual_cpp_2019_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2019"));
+  third_toolbar.append(install_visual_cpp_2017_button);
+  install_visual_cpp_2019_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2019"));
+  install_visual_cpp_2019_button.set_size_request(-1, button_height);
   install_visual_cpp_2019_button.set_tooltip_text("Installs Visual C++ 2015-2019");
-  third_toolbar.insert(install_visual_cpp_2019_button, 3);
-  install_visual_cpp_2022_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(visual_cpp_package, *this, "2022"));
+  third_toolbar.append(install_visual_cpp_2019_button);
+  install_visual_cpp_2022_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2022"));
+  install_visual_cpp_2022_button.set_size_request(-1, button_height);
   install_visual_cpp_2022_button.set_tooltip_text("Installs Visual C++ 2015-2022");
-  third_toolbar.insert(install_visual_cpp_2022_button, 4);
+  third_toolbar.append(install_visual_cpp_2022_button);
 
-  // Fourth row, .NET packages
-  install_dotnet4_0_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "40"));
+  // // Fourth row, .NET packages
+  install_dotnet4_0_button.signal_clicked().connect(sigc::bind(dotnet, this, "40"));
+  install_dotnet4_0_button.set_size_request(-1, button_height);
   install_dotnet4_0_button.set_tooltip_text("Installs .NET 4.0 from 2011");
-  fourth_toolbar.insert(install_dotnet4_0_button, 0);
-  install_dotnet4_5_2_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "452"));
+  fourth_toolbar.append(install_dotnet4_0_button);
+  install_dotnet4_5_2_button.signal_clicked().connect(sigc::bind(dotnet, this, "452"));
+  install_dotnet4_5_2_button.set_size_request(-1, button_height);
   install_dotnet4_5_2_button.set_tooltip_text("Installs .NET 4.5.2 from 2012");
-  fourth_toolbar.insert(install_dotnet4_5_2_button, 1);
-  install_dotnet4_7_2_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "472"));
+  fourth_toolbar.append(install_dotnet4_5_2_button);
+  install_dotnet4_7_2_button.signal_clicked().connect(sigc::bind(dotnet, this, "472"));
+  install_dotnet4_7_2_button.set_size_request(-1, button_height);
   install_dotnet4_7_2_button.set_tooltip_text("Installs .NET 4.7.2 from 2018");
-  fourth_toolbar.insert(install_dotnet4_7_2_button, 2);
-  install_dotnet4_8_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "48"));
+  fourth_toolbar.append(install_dotnet4_7_2_button);
+  install_dotnet4_8_button.signal_clicked().connect(sigc::bind(dotnet, this, "48"));
+  install_dotnet4_8_button.set_size_request(-1, button_height);
   install_dotnet4_8_button.set_tooltip_text("Installs .NET 4.8 from 2019");
-  fourth_toolbar.insert(install_dotnet4_8_button, 3);
-  install_dotnet6_button.signal_clicked().connect(sigc::bind<Gtk::Window&, Glib::ustring>(dotnet, *this, "6"));
+  fourth_toolbar.append(install_dotnet4_8_button);
+  install_dotnet6_button.signal_clicked().connect(sigc::bind(dotnet, this, "6"));
+  install_dotnet6_button.set_size_request(-1, button_height);
   install_dotnet6_button.set_tooltip_text("Installs .NET 6.0 from 2023");
-  fourth_toolbar.insert(install_dotnet6_button, 4);
-
-  show_all_children();
-}
-
-/**
- * \brief Destructor
- */
-BottleConfigureWindow::~BottleConfigureWindow()
-{
+  fourth_toolbar.append(install_dotnet6_button);
 }
 
 /**
@@ -173,8 +207,8 @@ void BottleConfigureWindow::show()
               ((!active_bottle_->name().empty()) ? active_bottle_->name() : active_bottle_->folder_name())); // Fall-back to folder name
   else
     set_title("Configure machine (Unknown machine)");
-  // Call parent show
-  Gtk::Widget::show();
+  // Call parent present
+  present();
 }
 
 /**
@@ -201,240 +235,168 @@ void BottleConfigureWindow::update_installed()
 {
   if (is_d3dx9_installed())
   {
-    Gtk::Image* reinstall_d3dx9_image = Gtk::manage(new Gtk::Image());
-    reinstall_d3dx9_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_d3dx9_button.set_label("Reinstall DirectX v9 (OpenGL)");
-    install_d3dx9_button.set_icon_widget(*reinstall_d3dx9_image);
+    add_name_and_icon_to_button(install_d3dx9_button, "Reinstall DirectX v9 (OpenGL)", true);
   }
   else
   {
-    Gtk::Image* install_d3dx9_image = Gtk::manage(new Gtk::Image());
-    install_d3dx9_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_d3dx9_button.set_label("Install DirectX v9 (OpenGL)");
-    install_d3dx9_button.set_icon_widget(*install_d3dx9_image);
+    add_name_and_icon_to_button(install_d3dx9_button, "Install DirectX v9 (OpenGL)", false);
   }
 
   if (is_dxvk_installed())
   {
-    Gtk::Image* reinstall_dxvk_image = Gtk::manage(new Gtk::Image());
-    reinstall_dxvk_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dxvk_button.set_label("Reinstall DirectX v9/v10/v11 (Vulkan)");
-    install_dxvk_button.set_icon_widget(*reinstall_dxvk_image);
+    add_name_and_icon_to_button(install_dxvk_button, "Reinstall DirectX v9/v10/v11 (Vulkan)", true);
   }
   else
   {
-    Gtk::Image* install_dxvk_image = Gtk::manage(new Gtk::Image());
-    install_dxvk_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dxvk_button.set_label("Install DirectX v9/v10/v11 (Vulkan)");
-    install_dxvk_button.set_icon_widget(*install_dxvk_image);
+    add_name_and_icon_to_button(install_dxvk_button, "Install DirectX v9/v10/v11 (Vulkan)", false);
   }
 
   if (is_vkd3d_installed())
   {
-    Gtk::Image* reinstall_vkd3d_image = Gtk::manage(new Gtk::Image());
-    reinstall_vkd3d_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_vkd3d_button.set_label("Reinstall DirectX v12 (Vulkan)");
-    install_vkd3d_button.set_icon_widget(*reinstall_vkd3d_image);
+    add_name_and_icon_to_button(install_vkd3d_button, "Reinstall DirectX v12 (Vulkan)", true);
   }
   else
   {
-    Gtk::Image* install_vkd3d_image = Gtk::manage(new Gtk::Image());
-    install_vkd3d_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_vkd3d_button.set_label("Install DirectX v12 (Vulkan)");
-    install_vkd3d_button.set_icon_widget(*install_vkd3d_image);
+    add_name_and_icon_to_button(install_vkd3d_button, "Install DirectX v12 (Vulkan)", false);
   }
 
   if (is_liberation_installed())
   {
-    Gtk::Image* reinstall_liberation_image = Gtk::manage(new Gtk::Image());
-    reinstall_liberation_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_liberation_fonts_button.set_label("Reinstall Liberation fonts");
-    install_liberation_fonts_button.set_icon_widget(*reinstall_liberation_image);
+    add_name_and_icon_to_button(install_liberation_fonts_button, "Reinstall Liberation fonts", true);
   }
   else
   {
-    Gtk::Image* install_liberation_image = Gtk::manage(new Gtk::Image());
-    install_liberation_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_liberation_fonts_button.set_label("Install Liberation fonts");
-    install_liberation_fonts_button.set_icon_widget(*install_liberation_image);
+    add_name_and_icon_to_button(install_liberation_fonts_button, "Install Liberation fonts", false);
   }
 
   if (is_core_fonts_installed())
   {
-    Gtk::Image* reinstall_core_fonts_image = Gtk::manage(new Gtk::Image());
-    reinstall_core_fonts_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_core_fonts_button.set_label("Reinstall Core Fonts");
-    install_core_fonts_button.set_icon_widget(*reinstall_core_fonts_image);
+    add_name_and_icon_to_button(install_core_fonts_button, "Reinstall Core Fonts", true);
   }
   else
   {
-    Gtk::Image* install_core_fonts_image = Gtk::manage(new Gtk::Image());
-    install_core_fonts_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_core_fonts_button.set_label("Install Core Fonts");
-    install_core_fonts_button.set_icon_widget(*install_core_fonts_image);
+    add_name_and_icon_to_button(install_core_fonts_button, "Install Core Fonts", false);
   }
 
   // Check for Visual C++ 2013
   if (is_visual_cpp_2013_installed())
   {
-    Gtk::Image* reinstall_visual_cpp_2013_image = Gtk::manage(new Gtk::Image());
-    reinstall_visual_cpp_2013_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2013_button.set_label("Reinstall Visual C++ 2013");
-    install_visual_cpp_2013_button.set_icon_widget(*reinstall_visual_cpp_2013_image);
+    add_name_and_icon_to_button(install_visual_cpp_2013_button, "Reinstall Visual C++ 2013", true);
   }
   else
   {
-    Gtk::Image* install_visual_cpp_2013_image = Gtk::manage(new Gtk::Image());
-    install_visual_cpp_2013_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2013_button.set_label("Install Visual C++ 2013");
-    install_visual_cpp_2013_button.set_icon_widget(*install_visual_cpp_2013_image);
+    add_name_and_icon_to_button(install_visual_cpp_2013_button, "Install Visual C++ 2013", false);
   }
 
   // Check for Visual C++ 2015
   if (is_visual_cpp_2015_installed())
   {
-    Gtk::Image* reinstall_visual_cpp_2015_image = Gtk::manage(new Gtk::Image());
-    reinstall_visual_cpp_2015_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2015_button.set_label("Reinstall Visual C++ 2015");
-    install_visual_cpp_2015_button.set_icon_widget(*reinstall_visual_cpp_2015_image);
+    add_name_and_icon_to_button(install_visual_cpp_2015_button, "Reinstall Visual C++ 2015", true);
   }
   else
   {
-    Gtk::Image* install_visual_cpp_2015_image = Gtk::manage(new Gtk::Image());
-    install_visual_cpp_2015_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2015_button.set_label("Install Visual C++ 2015");
-    install_visual_cpp_2015_button.set_icon_widget(*install_visual_cpp_2015_image);
+    add_name_and_icon_to_button(install_visual_cpp_2015_button, "Install Visual C++ 2015", false);
   }
 
   // Check for Visual C++ 2017
   if (is_visual_cpp_2017_installed())
   {
-    Gtk::Image* reinstall_visual_cpp_2017_image = Gtk::manage(new Gtk::Image());
-    reinstall_visual_cpp_2017_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2017_button.set_label("Reinstall Visual C++ 2017");
-    install_visual_cpp_2017_button.set_icon_widget(*reinstall_visual_cpp_2017_image);
+    add_name_and_icon_to_button(install_visual_cpp_2017_button, "Reinstall Visual C++ 2017", true);
   }
   else
   {
-    Gtk::Image* install_visual_cpp_2017_image = Gtk::manage(new Gtk::Image());
-    install_visual_cpp_2017_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2017_button.set_label("Install Visual C++ 2017");
-    install_visual_cpp_2017_button.set_icon_widget(*install_visual_cpp_2017_image);
+    add_name_and_icon_to_button(install_visual_cpp_2017_button, "Install Visual C++ 2017", false);
   }
 
   // Check for Visual C++ 2019
   if (is_visual_cpp_2019_installed())
   {
-    Gtk::Image* reinstall_visual_cpp_2019_image = Gtk::manage(new Gtk::Image());
-    reinstall_visual_cpp_2019_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2019_button.set_label("Reinstall Visual C++ 2019");
-    install_visual_cpp_2019_button.set_icon_widget(*reinstall_visual_cpp_2019_image);
+    add_name_and_icon_to_button(install_visual_cpp_2019_button, "Reinstall Visual C++ 2019", true);
   }
   else
   {
-    Gtk::Image* install_visual_cpp_2019_image = Gtk::manage(new Gtk::Image());
-    install_visual_cpp_2019_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2019_button.set_label("Install Visual C++ 2019");
-    install_visual_cpp_2019_button.set_icon_widget(*install_visual_cpp_2019_image);
+    add_name_and_icon_to_button(install_visual_cpp_2019_button, "Install Visual C++ 2019", false);
   }
 
   // Check for Visual C++ 2022
   if (is_visual_cpp_2022_installed())
   {
-    Gtk::Image* reinstall_visual_cpp_2022_image = Gtk::manage(new Gtk::Image());
-    reinstall_visual_cpp_2022_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2022_button.set_label("Reinstall Visual C++ 2022");
-    install_visual_cpp_2022_button.set_icon_widget(*reinstall_visual_cpp_2022_image);
+    add_name_and_icon_to_button(install_visual_cpp_2022_button, "Reinstall Visual C++ 2022", true);
   }
   else
   {
-    Gtk::Image* install_visual_cpp_2022_image = Gtk::manage(new Gtk::Image());
-    install_visual_cpp_2022_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_visual_cpp_2022_button.set_label("Install Visual C++ 2022");
-    install_visual_cpp_2022_button.set_icon_widget(*install_visual_cpp_2022_image);
+    add_name_and_icon_to_button(install_visual_cpp_2022_button, "Install Visual C++ 2022", false);
   }
 
   // Check for .NET 4.0
   if (is_dotnet_installed("Microsoft .NET Framework 4 Extended", "Microsoft .NET Framework 4 Extended"))
   {
-    Gtk::Image* reinstall_dotnet4_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet4_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_0_button.set_label("Reinstall .NET v4");
-    install_dotnet4_0_button.set_icon_widget(*reinstall_dotnet4_image);
+    add_name_and_icon_to_button(install_dotnet4_0_button, "Reinstall .NET v4", true);
   }
   else
   {
-    Gtk::Image* install_dotnet4_image = Gtk::manage(new Gtk::Image());
-    install_dotnet4_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_0_button.set_label("Install .NET v4");
-    install_dotnet4_0_button.set_icon_widget(*install_dotnet4_image);
+    add_name_and_icon_to_button(install_dotnet4_0_button, "Install .NET v4", false);
   }
 
   // Check for .NET 4.5.2
   if (is_dotnet_installed("{92FB6C44-E685-45AD-9B20-CADF4CABA132}", "Microsoft .NET Framework 4.5.2"))
   {
-    Gtk::Image* reinstall_dotnet4_5_2_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet4_5_2_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_5_2_button.set_label("Reinstall .NET v4.5.2");
-    install_dotnet4_5_2_button.set_icon_widget(*reinstall_dotnet4_5_2_image);
+    add_name_and_icon_to_button(install_dotnet4_5_2_button, "Reinstall .NET v4.5.2", true);
   }
   else
   {
-    Gtk::Image* install_dotnet4_5_2_image = Gtk::manage(new Gtk::Image());
-    install_dotnet4_5_2_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_5_2_button.set_label("Install .NET v4.5.2");
-    install_dotnet4_5_2_button.set_icon_widget(*install_dotnet4_5_2_image);
+    add_name_and_icon_to_button(install_dotnet4_5_2_button, "Install .NET v4.5.2", false);
   }
 
   // Check for .NET 4.7.2
   if (is_dotnet_installed("{92FB6C44-E685-45AD-9B20-CADF4CABA132} - 1033", "Microsoft .NET Framework 4.7.2"))
   {
-    Gtk::Image* reinstall_dotnet4_7_2_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet4_7_2_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_7_2_button.set_label("Reinstall .NET v4.7.2");
-    install_dotnet4_7_2_button.set_icon_widget(*reinstall_dotnet4_7_2_image);
+    add_name_and_icon_to_button(install_dotnet4_7_2_button, "Reinstall .NET v4.7.2", true);
   }
   else
   {
-    Gtk::Image* install_dotnet4_7_2_image = Gtk::manage(new Gtk::Image());
-    install_dotnet4_7_2_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_7_2_button.set_label("Install .NET v4.7.2");
-    install_dotnet4_7_2_button.set_icon_widget(*install_dotnet4_7_2_image);
+    add_name_and_icon_to_button(install_dotnet4_7_2_button, "Install .NET v4.7.2", false);
   }
 
   // Check for .NET 4.8
   if (is_dotnet_installed("{92FB6C44-E685-45AD-9B20-CADF4CABA132} - 1033", "Microsoft .NET Framework 4.8"))
   {
-    Gtk::Image* reinstall_dotnet4_8_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet4_8_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_8_button.set_label("Reinstall .NET v4.8");
-    install_dotnet4_8_button.set_icon_widget(*reinstall_dotnet4_8_image);
+    add_name_and_icon_to_button(install_dotnet4_8_button, "Reinstall .NET v4.8", true);
   }
   else
   {
-    Gtk::Image* install_dotnet4_8_image = Gtk::manage(new Gtk::Image());
-    install_dotnet4_8_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet4_8_button.set_label("Install .NET v4.8");
-    install_dotnet4_8_button.set_icon_widget(*install_dotnet4_8_image);
+    add_name_and_icon_to_button(install_dotnet4_8_button, "Install .NET v4.8", false);
   }
 
   // Check for .NET 6.0 LTS
   if (is_dotnet_6_installed())
   {
-    Gtk::Image* reinstall_dotnet6_image = Gtk::manage(new Gtk::Image());
-    reinstall_dotnet6_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet6_button.set_label("Reinstall .NET v6.0 LTS");
-    install_dotnet6_button.set_icon_widget(*reinstall_dotnet6_image);
+    add_name_and_icon_to_button(install_dotnet6_button, "Reinstall .NET v6.0 LTS", true);
   }
   else
   {
-    Gtk::Image* install_dotnet6_image = Gtk::manage(new Gtk::Image());
-    install_dotnet6_image->set_from_icon_name("system-software-install", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-    install_dotnet6_button.set_label("Install .NET v6.0 LTS");
-    install_dotnet6_button.set_icon_widget(*install_dotnet6_image);
+    add_name_and_icon_to_button(install_dotnet6_button, "Install .NET v6.0 LTS", false);
   }
+}
 
-  show_all_children();
+/**
+ * \brief Add name and icon to a button
+ * \param[in,out] button Reference to GTK Button
+ * \param[in] label Label text
+ * \param[in] is_installed True if package is installed otherwise False
+ */
+void BottleConfigureWindow::add_name_and_icon_to_button(Gtk::Button& button, const std::string& label, bool is_installed)
+{
+  Gtk::Image* button_imag = Gtk::manage(new Gtk::Image());
+  button_imag->set_from_icon_name(is_installed ? "view-refresh" : "system-software-install");
+  button_imag->set_icon_size(Gtk::IconSize::LARGE);
+  Gtk::Label* button_label = Gtk::manage(new Gtk::Label(label));
+  Gtk::Box* button_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+  button_box->set_valign(Gtk::Align::CENTER);
+  button_box->set_vexpand(true);
+  button_box->append(*button_imag);
+  button_box->append(*button_label);
+  button.set_child(*button_box);
 }
 
 /**
@@ -516,10 +478,10 @@ bool BottleConfigureWindow::is_liberation_installed()
   bool is_installed = false;
   if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    BottleTypes::Bit bit = active_bottle_->bit();
     try
     {
+      Glib::ustring wine_prefix = active_bottle_->wine_location();
+      BottleTypes::Bit bit = active_bottle_->bit();
       string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Liberation Mono (TrueType)");
       is_installed = (fontFilename == "liberationmono-regular.ttf");
     }
@@ -540,10 +502,10 @@ bool BottleConfigureWindow::is_core_fonts_installed()
   bool is_installed = false;
   if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    BottleTypes::Bit bit = active_bottle_->bit();
     try
     {
+      Glib::ustring wine_prefix = active_bottle_->wine_location();
+      BottleTypes::Bit bit = active_bottle_->bit();
       string fontFilename = Helper::get_font_filename(wine_prefix, bit, "Comic Sans MS (TrueType)");
       is_installed = (fontFilename == "comic.ttf");
     }

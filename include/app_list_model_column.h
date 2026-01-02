@@ -20,26 +20,42 @@
  */
 #pragma once
 
+#include "gdkmm/texture.h"
 #include <gdkmm/pixbuf.h>
+#include <glibmm/object.h>
 #include <glibmm/refptr.h>
 #include <glibmm/ustring.h>
-#include <gtkmm/treemodel.h>
-#include <gtkmm/treemodelcolumn.h>
 #include <string>
 
-class AppListModelColumns : public Gtk::TreeModel::ColumnRecord
+/**
+ * \class AppListModelColumns
+ * \brief List model for the application list, just based on Glib Object.
+ */
+class AppListModelColumns : public Glib::Object
 {
 public:
-  AppListModelColumns()
+  Glib::ustring name;
+  Glib::ustring description;
+  Glib::RefPtr<Gdk::Texture> icon;
+  std::string command;
+
+  static Glib::RefPtr<AppListModelColumns> create(const Glib::ustring& col_name,
+                                                  const Glib::ustring& col_description,
+                                                  const Glib::RefPtr<Gdk::Texture>& col_icon,
+                                                  const std::string& col_command)
   {
-    add(icon);
-    add(name);
-    add(description);
-    add(command);
+    return Glib::make_refptr_for_instance<AppListModelColumns>(new AppListModelColumns(col_name, col_description, col_icon, col_command));
   }
 
-  Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf>> icon;
-  Gtk::TreeModelColumn<Glib::ustring> name;
-  Gtk::TreeModelColumn<Glib::ustring> description;
-  Gtk::TreeModelColumn<std::string> command;
+protected:
+  AppListModelColumns(const Glib::ustring& col_name,
+                      const Glib::ustring& col_description,
+                      const Glib::RefPtr<Gdk::Texture>& col_icon,
+                      const std::string& col_command)
+      : name(col_name),
+        description(col_description),
+        icon(col_icon),
+        command(col_command)
+  {
+  }
 };
