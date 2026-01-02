@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 3.25)
 
 set(PROJECT_NAME WineGUI)
 set(PROJECT_TARGET winegui)
+set(PROJECT_SPDX_LICENSE "AGPL-3.0-only")
 
 option(DOXYGEN "Build Documentation" OFF)
 option(PACKAGE "Build packages in release mode" OFF)
+option(CHECK_FOR_UPDATE "Check for updates during startup" ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -56,7 +58,7 @@ find_package(Threads REQUIRED)
 
 # Use the package PkgConfig to detect (any version) of GTK+ headers/library files
 find_package(PkgConfig REQUIRED)
-PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
+PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-4.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -71,9 +73,9 @@ endif()
 configure_file(include/project_config.h.in ${CMAKE_BINARY_DIR}/project_config.h)
 
 set(HEADERS
-  include/menu.h
   include/app_list_model_column.h
   include/app_list_struct.h
+  include/application.h
   include/main_window.h
   include/add_app_window.h
   include/remove_app_window.h
@@ -83,6 +85,7 @@ set(HEADERS
   include/bottle_configure_env_var_window.h
   include/bottle_configure_window.h
   include/busy_dialog.h
+  include/dialog_window.h
   include/bottle_manager.h
   include/bottle_config_file.h
   include/bottle_item.h
@@ -94,8 +97,8 @@ set(HEADERS
 )
 
 set(SOURCES
+  src/application.cc
   src/main.cc
-  src/menu.cc
   src/main_window.cc
   src/add_app_window.cc
   src/remove_app_window.cc
@@ -105,6 +108,7 @@ set(SOURCES
   src/bottle_configure_env_var_window.cc
   src/bottle_configure_window.cc
   src/busy_dialog.cc
+  src/dialog_window.cc
   src/bottle_manager.cc
   src/bottle_config_file.cc
   src/bottle_item.cc
@@ -131,6 +135,11 @@ target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INI
 target_include_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
 target_link_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_LIBRARY_DIRS})
 target_compile_options(${PROJECT_TARGET} PRIVATE ${GTKMM_CFLAGS_OTHER})
+
+# If we are using an old version of GTK, define OLD_GTK
+if(GTKMM_VERSION VERSION_LESS "4.10")
+  target_compile_definitions(${PROJECT_TARGET} PUBLIC OLD_GTK)
+endif()
 
 install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
 install(FILES misc/winegui.desktop DESTINATION ${DATADIR}/applications)

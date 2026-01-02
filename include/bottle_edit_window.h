@@ -29,6 +29,10 @@ using std::string;
 // Forward declaration
 class BottleItem;
 
+/**
+ * \struct UpdateBottleStruct
+ * \brief Custom struct for bottle update data information
+ */
 struct UpdateBottleStruct
 {
   Glib::ustring name;
@@ -49,9 +53,9 @@ class BottleEditWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void> configure_environment_variables;    /*!< configure environment variables signal */
-  sigc::signal<void, UpdateBottleStruct&> update_bottle; /*!< save button clicked signal */
-  sigc::signal<void> remove_bottle;                      /*!< remove button clicked signal */
+  sigc::signal<void()> configure_environment_variables;  /*!< configure environment variables signal */
+  sigc::signal<void(UpdateBottleStruct&)> update_bottle; /*!< save button clicked signal */
+  sigc::signal<void(Gtk::Window*)> remove_bottle;        /*!< remove button clicked signal */
 
   explicit BottleEditWindow(Gtk::Window& parent);
   virtual ~BottleEditWindow();
@@ -93,9 +97,7 @@ protected:
   Gtk::Button save_button;                            /*!< save button */
   Gtk::Button cancel_button;                          /*!< cancel button */
   Gtk::Button delete_button;                          /*!< delete button */
-
-  // Busy dialog
-  BusyDialog busy_dialog; /*!< Busy dialog, when the user should wait until install is finished */
+  BusyDialog busy_dialog;                             /*!< Busy dialog, when the user should wait until install is finished */
 private:
   // Signal handlers
   void on_cancel_button_clicked();
@@ -104,6 +106,7 @@ private:
   void on_debug_logging_toggle();
 
   // Member functions
+  void create_layout();
   void virtual_desktop_resolution_sensitive(bool sensitive);
   void log_level_sensitive(bool sensitive);
 
