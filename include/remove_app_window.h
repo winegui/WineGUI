@@ -33,7 +33,7 @@ class RemoveAppWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void> config_saved; /*!< bottle config is saved signal */
+  sigc::signal<void()> config_saved; /*!< bottle config is saved signal */
 
   explicit RemoveAppWindow(Gtk::Window& parent);
   virtual ~RemoveAppWindow();

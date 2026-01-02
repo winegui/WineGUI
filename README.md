@@ -36,6 +36,11 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 
 [![Star History Chart](https://api.star-history.com/svg?repos=winegui/WineGUI&type=Date)](https://star-history.com/#winegui/WineGUI&Date)
 
+
+---
+
+The sections below are mainly relevant for software developers, who want to contribute or help the WineGUI project.
+
 ---
 
 ## Contributing
@@ -46,27 +51,36 @@ Please, read the dedicated [contributing page](CONTRIBUTING.md).
 
 ## Development
 
+More information about Gtkmm4 can be found on the official [GTK documentation site](https://gtkmm.gnome.org/en/documentation.html).
+
 ### Requirements
 
-WineGUI is created by using [GTK3 toolkit](https://www.gtk.org/) (Gtkmm C++-interface) and C++ code.
+WineGUI is created by using [GTK4 toolkit](https://www.gtk.org/) (Gtkmm C++-interface) and C++ code.
 
-Dependencies should be met before build:
+The following build dependencies should be met first:
 
-- gcc/g++ (advised: v8 or later)
-- cmake (advised: v3.10 or later)
+- gcc/g++ (advised: v13 or later) or clang (advised: v18 or later)
+- cmake (advised: v3.25 or newer)
 - ninja-build
-- libgtkmm-3.0-dev (implicit dependency with libgtk-3-dev)
+- libgtkmm-4.0-dev (implicit dependency with libgtk-4-dev and other dev packages)
 - libjson-glib-dev
 - pkg-config
 
 Optionally:
 
-- Ccache (optional, but recommended)
-- doxygen
-- graphviz
+- Ccache (optional, but very much **recommended**)
 - rpm
+- clangd (v18 or higher, if clangd is used in your IDE)
+
+**Dependencies for testing:**
+
 - clang-format (v19)
 - cppcheck (v2.18 or higher)
+
+For generating docs:
+
+- doxygen
+- graphviz
 
 **Hint:** You could execute `./scripts/deps.sh` script for Debian based systems (incl. Ubuntu and Linux Mint) in order to get all the dependencies installed automatically.
 
@@ -82,6 +96,8 @@ cmake -GNinja -B build
 # Build WineGUI
 cmake --build ./build
 ```
+
+Optionally, use the VSCode `CMake Tools` extension to start the build or build with debug targets.
 
 #### Building from source
 
@@ -119,9 +135,17 @@ Clean the build via: `ninja clean`.
 
 _Hint:_ Run `ninja help` for all available targets.
 
+### Installation
+
+If you would like to install the build targets (when build from source) on your machine, you can execute:
+
+```bash
+cmake --install ./build
+```
+
 ### Debug
 
-You can use the helper script: `./scripts/build_debug.sh`
+You can use the helper script: `./scripts/build-debug.sh`
 
 Start debugging in [GDB (GNU Debugger)](https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf):
 
@@ -132,9 +156,15 @@ gdb -ex=run bin/winegui
 
 ### Production
 
-For production build and DEB file package, you can run: `./scripts/build_prod.sh`
+For production build DEB + RPM packages, you can run the script: 
 
-Or use:
+```sh
+./scripts/build-prod.sh "DEB;RPM"
+```
+
+First parameter is required and should be a semicolon separated list of packages to build. Some valid options are: `TGZ`, `DEB`, `RPM`. See `cpack --help` for more information.
+
+Or build manually:
 
 ```sh
 cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -DPACKAGE -DCMAKE_BUILD_TYPE=Release -B build_prod
@@ -142,6 +172,8 @@ cmake --build ./build_prod --config Release
 cd build_prod
 cpack -C Release -G "DEB"
 ```
+
+_Hint:_ You can disable the automatic startup version check by setting the `-DCHECK_FOR_UPDATE=OFF` variable. This will write the config init file with `CheckForUpdatesStartup` set to `false` (instead of `true`). Which is used for *rolling release* Linux distros.
 
 ### Build Doxygen
 
@@ -169,7 +201,7 @@ Next, check for memory leaks using `valgrind` by executing:
 Or to generate a memory usage plot in [massif format](https://valgrind.org/docs/manual/ms-manual.html), execute:
 
 ```sh
-./scripts/valgrind_plot.sh
+./scripts/valgrind-plot.sh
 ```
 
 ### Releasing

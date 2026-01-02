@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024 WineGUI
+ * Copyright (c) 2024-2025 WineGUI
  *
  * \file    bottle_configure_env_var_window.h
  * \brief   Configure bottle environment variables
@@ -25,18 +25,25 @@
 // Forward declaration
 class BottleItem;
 
-// Tree model columns
-class ModelColumns : public Gtk::TreeModel::ColumnRecord
+/**
+ * \class EnvVarModelRow
+ * \brief custom model row for bottle environment variable (key/value)
+ */
+class EnvVarModelRow : public Glib::Object
 {
 public:
-  ModelColumns()
+  Glib::ustring name;
+  Glib::ustring value;
+
+  static Glib::RefPtr<EnvVarModelRow> create(const Glib::ustring& env_name, const Glib::ustring& env_value)
   {
-    add(m_col_name);
-    add(m_col_value);
+    return Glib::make_refptr_for_instance<EnvVarModelRow>(new EnvVarModelRow(env_name, env_value));
   }
 
-  Gtk::TreeModelColumn<Glib::ustring> m_col_name;
-  Gtk::TreeModelColumn<Glib::ustring> m_col_value;
+protected:
+  EnvVarModelRow(const Glib::ustring& env_name, const Glib::ustring& env_value) : name(env_name), value(env_value)
+  {
+  }
 };
 
 /**
@@ -47,7 +54,7 @@ class BottleConfigureEnvVarWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void> config_saved; /*!< bottle config is saved signal */
+  sigc::signal<void()> config_saved; /*!< bottle config is saved signal */
 
   explicit BottleConfigureEnvVarWindow(Gtk::Window& parent);
   virtual ~BottleConfigureEnvVarWindow();
@@ -68,10 +75,10 @@ protected:
   Gtk::Button save_button;                   /*!< Save button */
   Gtk::Button cancel_button;                 /*!< Save button */
 
-  ModelColumns m_Columns;
   Gtk::ScrolledWindow m_ScrolledWindow;
-  Gtk::TreeView m_TreeView;
-  Glib::RefPtr<Gtk::ListStore> m_refTreeModel;
+  Gtk::ColumnView m_ColumnView;
+  Glib::RefPtr<Gio::ListStore<EnvVarModelRow>> env_var_store_;
+  Glib::RefPtr<Gtk::SingleSelection> env_var_selection_model_;
 
 private:
   BottleItem* active_bottle_; /*!< Current active bottle */
@@ -83,5 +90,8 @@ private:
   void on_cancel_button_clicked();
 
   // Private methods
+  void on_setup_env_var_cell(const Glib::RefPtr<Gtk::ListItem>& list_item, bool is_name);
+  void bind_name_cell(const Glib::RefPtr<Gtk::ListItem>& list_item);
+  void bind_value_cell(const Glib::RefPtr<Gtk::ListItem>& list_item);
   void load_environment_variables_from_config();
 };

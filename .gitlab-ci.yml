@@ -1,51 +1,90 @@
 default:
-  image: registry.melroy.org/melroy/docker-images/gtk3-docker-cmake-ninja:trixie 
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:trixie 
 
 stages:
   - test
   - build
+  - deploy
+
+# Linux build template (debs only)
+.build_template: &build_definition
+  stage: build
+  rules:
+    - if: $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_TAG
+  script:
+    - ./scripts/build-prod.sh "DEB"
+  artifacts:
+    name: "Packages + Documentation"
+    expire_in: 3 months
+    paths:
+      - build_prod/WineGUI-*.deb
+
+#unit_test:
+#  stage: test
+#  interruptible: true
+#  script: ./scripts/run-tests.sh
 
 static_code_analysis:
   stage: test
+  interruptible: true
   script:
     - cppcheck --version
-    - ./scripts/cpp_check.sh
+    - ./scripts/cpp-check.sh
 
 code_style_guidelines:
   stage: test
+  interruptible: true
   script:
     - clang-format --version
-    - ./scripts/check_format.sh
+    - ./scripts/check-format.sh
 
-# Build WineGUI + Doxygen
-test-build:
+# Build trixie (deb + rpm + source archive)
+build:trixie:
   stage: build
-  only:
-    - merge_requests
-    - main
-  script: ./scripts/build_prod.sh
+  variables:
+  script:
+    - ./scripts/build-prod.sh "TGZ;DEB;RPM"
+    - ./scripts/create-source-archive.sh
   artifacts:
     name: "Packages + Documentation"
-    expire_in: 1 month
+    expire_in: 3 months
     paths:
       - doc/doxygen/
       - build_prod/WineGUI-*.deb
       - build_prod/WineGUI-*.rpm
       - build_prod/WineGUI-*.tar.gz
+      - build_prod/WineGUI-Source-*.tar.gz
 
-# Build Prd & Deploy new release on a new tag (deployment job),
-# which includes the deb, rpm and tar.gz file as well as the latest release txt file.
-# And will automatically create asset links to the existing GitLab release towards the deployment URL target files.
-build-and-deploy:
-  stage: build
+# Bookworm (debian)
+build:bookworm:
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:bookworm
+  <<: *build_definition
+
+# Forky (debian)
+build:forky:
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:forky
+  <<: *build_definition
+
+# Noble (ubuntu)
+build:noble:
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:noble
+  <<: *build_definition
+
+# Plucky (ubuntu)
+build:plucky:
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:plucky
+  <<: *build_definition
+
+# Create release links + release file (containing the version)
+release:
+  stage: deploy
+  image: curlimages/curl:latest
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_PROJECT_NAMESPACE == "melroy"'
+    - if: $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_TAG
   script:
-    - ./scripts/build_prod.sh
     - export APP_VERSION=${CI_COMMIT_TAG}
-    - ./scripts/create_source_archive.sh
-    - ./scripts/create_release_links.sh
-    - ./scripts/create_latest_release_file.sh
+    - ./scripts/create-release-links.sh
+    - ./scripts/create-latest-release-file.sh
   environment:
     name: production
     url: https://winegui.melroy.org/downloads
@@ -53,17 +92,4 @@ build-and-deploy:
     name: "Packages + Documentation"
     expire_in: 3 months
     paths:
-      - doc/doxygen/
       - release/
-      - build_prod/WineGUI-*.deb
-      - build_prod/WineGUI-*.rpm
-      - build_prod/WineGUI-*.tar.gz
-      - build_prod/WineGUI-Source-*.tar.gz
-#unit_test:
-#  stage: test
-#  script: ./build_prod/bin/runTests
-#  cache:
-#      key: "$CI_PIPELINE_ID"
-#      policy: pull
-#      paths:
-#        - build_prod/bin/

@@ -28,9 +28,9 @@
  * \param parent Reference to parent GTK Window
  */
 BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
-    : vbox(Gtk::ORIENTATION_VERTICAL, 4),
-      hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
-      hbox_2_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
+    : vbox(Gtk::Orientation::VERTICAL, 4),
+      hbox_buttons(Gtk::Orientation::HORIZONTAL, 4),
+      hbox_2_buttons(Gtk::Orientation::HORIZONTAL, 4),
       header_configure_env_var_label("Configure Environment Variables"),
       environment_variables_label("Current environment variables set for this machine:"),
       add_button("Add"),
@@ -46,7 +46,7 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
 
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
-  fd_label.set_weight(Pango::WEIGHT_BOLD);
+  fd_label.set_weight(Pango::Weight::BOLD);
   auto font_label = Pango::Attribute::create_attr_font_desc(fd_label);
   Pango::AttrList attr_list_header_label;
   attr_list_header_label.insert(font_label);
@@ -54,41 +54,67 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   header_configure_env_var_label.set_margin_top(5);
   header_configure_env_var_label.set_margin_bottom(5);
 
-  environment_variables_label.set_halign(Gtk::Align::ALIGN_START);
+  environment_variables_label.set_halign(Gtk::Align::START);
   environment_variables_label.set_margin_start(6);
 
-  // Horizontal buttons
+  remove_button.set_halign(Gtk::Align::FILL);
+  remove_button.set_margin_bottom(5);
+  add_button.set_halign(Gtk::Align::FILL);
+  add_button.set_margin_bottom(5);
+  // Add / remove buttons
   hbox_buttons.set_homogeneous(true);
-  hbox_buttons.pack_end(remove_button, false, true, 4);
-  hbox_buttons.pack_end(add_button, false, true, 4);
-  hbox_buttons.set_margin_bottom(12);
-  hbox_2_buttons.pack_end(save_button, false, false, 4);
-  hbox_2_buttons.pack_end(cancel_button, false, false, 4);
+  hbox_buttons.set_margin(6);
+  hbox_buttons.set_margin_bottom(2);
+  hbox_buttons.set_halign(Gtk::Align::FILL);
+  hbox_buttons.append(add_button);
+  hbox_buttons.append(remove_button);
+  // Save / Cancel buttons
+  hbox_2_buttons.append(save_button);
+  hbox_2_buttons.append(cancel_button);
+  hbox_2_buttons.set_halign(Gtk::Align::END);
+  hbox_2_buttons.set_margin(6);
 
-  // Add treeview to a scrolled window
-  m_ScrolledWindow.add(m_TreeView);
+  // Add ColumnView to a scrolled window
+  m_ScrolledWindow.set_child(m_ColumnView);
   m_ScrolledWindow.set_margin_start(6);
   m_ScrolledWindow.set_margin_end(6);
+  m_ScrolledWindow.set_margin_bottom(6);
+  m_ScrolledWindow.set_vexpand(true);
+  m_ScrolledWindow.set_hexpand(true);
+  m_ScrolledWindow.set_halign(Gtk::Align::FILL);
+  m_ScrolledWindow.set_valign(Gtk::Align::FILL);
 
-  vbox.pack_start(header_configure_env_var_label, false, false, 4);
-  vbox.pack_start(environment_variables_label, false, false, 4);
-  vbox.pack_start(m_ScrolledWindow, true, true, 4);
-  vbox.pack_start(hbox_buttons, false, true, 4);
-  vbox.pack_start(hbox_2_buttons, false, false, 4);
+  vbox.append(header_configure_env_var_label);
+  vbox.append(environment_variables_label);
+  vbox.append(m_ScrolledWindow);
+  vbox.append(hbox_buttons);
+  vbox.append(hbox_2_buttons);
 
-  add(vbox);
+  set_child(vbox);
 
-  // Create the Tree model
-  m_refTreeModel = Gtk::ListStore::create(m_Columns);
-  m_TreeView.set_model(m_refTreeModel);
+  // Create list model
+  env_var_store_ = Gio::ListStore<EnvVarModelRow>::create();
+  // Set list model and selection model
+  env_var_selection_model_ = Gtk::SingleSelection::create(env_var_store_);
+  env_var_selection_model_->set_autoselect(false);
+  env_var_selection_model_->set_can_unselect(true);
+  m_ColumnView.set_model(env_var_selection_model_);
 
-  // Add the TreeView's view columns:
-  m_TreeView.append_column_editable("Name", m_Columns.m_col_name);
-  m_TreeView.append_column_editable("Value", m_Columns.m_col_value);
-  m_TreeView.get_selection()->set_mode(Gtk::SelectionMode::SELECTION_SINGLE);
+  // Name column
+  auto factory = Gtk::SignalListItemFactory::create();
+  factory->signal_setup().connect(sigc::bind(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_setup_env_var_cell), true));
+  factory->signal_bind().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::bind_name_cell));
+  auto column = Gtk::ColumnViewColumn::create("Name", factory);
+  column->set_expand(true);
+  m_ColumnView.append_column(column);
 
-  m_TreeView.get_column(0)->set_min_width(200);
-  m_TreeView.set_resize_mode(Gtk::ResizeMode::RESIZE_IMMEDIATE);
+  // Value column
+  factory = Gtk::SignalListItemFactory::create();
+  factory->signal_setup().connect(sigc::bind(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_setup_env_var_cell), false));
+  factory->signal_bind().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::bind_value_cell));
+  column = Gtk::ColumnViewColumn::create("Value", factory);
+  column->set_expand(true);
+  m_ColumnView.append_column(column);
 
   // Signals
   add_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_add_button_clicked));
@@ -97,8 +123,86 @@ BottleConfigureEnvVarWindow::BottleConfigureEnvVarWindow(Gtk::Window& parent)
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::on_save_button_clicked));
   // On show signal, load the environment variables from the config file
   signal_show().connect(sigc::mem_fun(*this, &BottleConfigureEnvVarWindow::load_environment_variables_from_config));
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        set_visible(false);
+        return true; // stop default destroy
+      },
+      false);
+}
 
-  show_all_children();
+void BottleConfigureEnvVarWindow::on_setup_env_var_cell(const Glib::RefPtr<Gtk::ListItem>& list_item, bool is_name)
+{
+  auto entry = Gtk::make_managed<Gtk::Entry>();
+  entry->set_hexpand(true);
+
+  // Ensure the row gets selected when the user interacts with the Entry.
+  // Otherwise SingleSelection may remain unselected because the Entry consumes the click.
+  {
+    auto click = Gtk::GestureClick::create();
+    click->signal_pressed().connect(
+        [this, list_item](int /*n_press*/, double /*x*/, double /*y*/)
+        {
+          if (!env_var_selection_model_)
+            return;
+          const auto pos = list_item->get_position();
+          if (pos != static_cast<guint>(-1))
+            env_var_selection_model_->set_selected(pos);
+        });
+    entry->add_controller(click);
+
+    auto focus = Gtk::EventControllerFocus::create();
+    focus->signal_enter().connect(
+        [this, list_item]()
+        {
+          if (!env_var_selection_model_)
+            return;
+          const auto pos = list_item->get_position();
+          if (pos != static_cast<guint>(-1))
+            env_var_selection_model_->set_selected(pos);
+        });
+    entry->add_controller(focus);
+  }
+
+  entry->signal_changed().connect(
+      [list_item, entry, is_name]()
+      {
+        const auto item = list_item->get_item();
+        const auto row = std::dynamic_pointer_cast<EnvVarModelRow>(item);
+        if (!row)
+          return;
+        if (is_name)
+        {
+          row->name = entry->get_text();
+        }
+        else
+        {
+          row->value = entry->get_text();
+        }
+      });
+  list_item->set_child(*entry);
+}
+
+void BottleConfigureEnvVarWindow::bind_name_cell(const Glib::RefPtr<Gtk::ListItem>& list_item)
+{
+  const auto item = list_item->get_item();
+  const auto row = std::dynamic_pointer_cast<EnvVarModelRow>(item);
+  auto* entry = dynamic_cast<Gtk::Entry*>(list_item->get_child());
+  if (!entry)
+    return;
+  entry->set_text(row ? row->name : "");
+}
+
+void BottleConfigureEnvVarWindow::bind_value_cell(const Glib::RefPtr<Gtk::ListItem>& list_item)
+{
+  const auto item = list_item->get_item();
+  const auto row = std::dynamic_pointer_cast<EnvVarModelRow>(item);
+  auto* entry = dynamic_cast<Gtk::Entry*>(list_item->get_child());
+  if (!entry)
+    return;
+  entry->set_text(row ? row->value : "");
 }
 
 /**
@@ -127,8 +231,8 @@ void BottleConfigureEnvVarWindow::reset_active_bottle()
 
 void BottleConfigureEnvVarWindow::load_environment_variables_from_config()
 {
-  // Clear the treeview
-  m_refTreeModel->clear();
+  // Clear list model
+  env_var_store_->remove_all();
 
   if (active_bottle_ != nullptr)
   {
@@ -139,38 +243,27 @@ void BottleConfigureEnvVarWindow::load_environment_variables_from_config()
 
     for (const auto& [name, value] : bottle_config.env_vars)
     {
-      Gtk::TreeModel::Row row = *(m_refTreeModel->append());
-      row[m_Columns.m_col_name] = name;
-      row[m_Columns.m_col_value] = value;
+      env_var_store_->append(EnvVarModelRow::create(name, value));
     }
   }
 }
 
 void BottleConfigureEnvVarWindow::on_add_button_clicked()
 {
-  Gtk::TreeModel::Row row = *(m_refTreeModel->append());
-  row[m_Columns.m_col_name] = ""; // Empty placeholder
-  row[m_Columns.m_col_value] = "";
-
-  // Move cursor to the new row
-  Gtk::TreeModel::Path path = m_refTreeModel->get_path(row);
-  Gtk::TreeViewColumn* column = m_TreeView.get_column(0);
-  m_TreeView.scroll_to_row(path, 0);
-  m_TreeView.set_cursor(path, *column, true);
+  env_var_store_->append(EnvVarModelRow::create("", ""));
+  const auto pos = env_var_store_->get_n_items();
+  if (pos > 0)
+  {
+    env_var_selection_model_->set_selected(pos - 1);
+  }
 }
 
 void BottleConfigureEnvVarWindow::on_remove_button_clicked()
 {
-  Glib::RefPtr<Gtk::TreeSelection> refSelection = m_TreeView.get_selection();
-
-  // Get the selected row iterator
-  Gtk::TreeModel::iterator iter = refSelection->get_selected();
-
-  // Check if a row is selected
-  if (iter)
+  const auto selected = env_var_selection_model_->get_selected();
+  if (selected != static_cast<guint>(-1))
   {
-    // Remove the selected row from the TreeModel
-    m_refTreeModel->erase(iter);
+    env_var_store_->remove(selected);
   }
 }
 
@@ -179,7 +272,7 @@ void BottleConfigureEnvVarWindow::on_remove_button_clicked()
  */
 void BottleConfigureEnvVarWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
@@ -197,12 +290,16 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
     std::map<int, ApplicationData> app_list;
     std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(prefix_path);
 
-    // Get all items from the treeview
-    Gtk::TreeModel::Children children = m_refTreeModel->children();
-    for (const auto& child : children)
+    // Get all items from the model
+    const auto n_items = env_var_store_->get_n_items();
+    for (guint i = 0; i < n_items; i++)
     {
-      std::string name = child.get_value(m_Columns.m_col_name);
-      std::string value = child.get_value(m_Columns.m_col_value);
+      auto row = env_var_store_->get_item(i);
+      if (!row)
+        continue;
+
+      const std::string name = row->name;
+      const std::string value = row->value;
       if (name.empty() || value.empty())
       {
         continue; // Skip empty rows
@@ -216,14 +313,14 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
     // Save application to bottle config
     if (!BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list))
     {
-      Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+      Gtk::MessageDialog dialog(*this, "Error occurred during saving bottle config file.", false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
       dialog.set_title("An error has occurred!");
       dialog.set_modal(true);
-      dialog.run();
+      dialog.present();
     }
     else
     {
-      hide();
+      set_visible(false); // Hide the window
 
       // Trigger update config signal (so the bottle config file will be re-read)
       config_saved.emit();
@@ -231,11 +328,11 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
   }
   else
   {
-    Gtk::MessageDialog dialog(*this, "Error occurred during saving, because there is no active Windows machine set.", false, Gtk::MESSAGE_ERROR,
-                              Gtk::BUTTONS_OK);
+    Gtk::MessageDialog dialog(*this, "Error occurred during saving, because there is no active Windows machine set.", false, Gtk::MessageType::ERROR,
+                              Gtk::ButtonsType::OK);
     dialog.set_title("Error during new application saving");
     dialog.set_modal(true);
-    dialog.run();
+    dialog.present();
     std::cout << "Error: No current Windows machine is set. Change won't be saved." << std::endl;
   }
 }

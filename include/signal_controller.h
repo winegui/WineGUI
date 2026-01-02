@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    signal_controller.h
  * \brief   Handles different GTK signals and dispatch or connect them to other methods/handlers within WineGUI
@@ -27,9 +27,7 @@
 // Forward declaration
 class MainWindow;
 class BottleManager;
-class Menu;
 class PreferencesWindow;
-class AboutDialog;
 class BottleEditWindow;
 class BottleCloneWindow;
 class BottleConfigureEnvVarWindow;
@@ -43,15 +41,14 @@ struct CloneBottleStruct;
  * \class SignalController
  * \brief Dispatch and manage GTK signals across the app
  */
-class SignalController : public Gtk::Window
+class SignalController
 {
   friend class MainWindow;
 
 public:
-  SignalController(BottleManager& manager,
-                   Menu& menu,
+  SignalController(MainWindow* main_window,
+                   BottleManager& manager,
                    PreferencesWindow& preferences_window,
-                   AboutDialog& about_dialog,
                    BottleEditWindow& edit_window,
                    BottleCloneWindow& clone_window,
                    BottleConfigureEnvVarWindow& configure_env_var_window,
@@ -59,7 +56,6 @@ public:
                    AddAppWindow& add_app_window,
                    RemoveAppWindow& remove_app_window);
   virtual ~SignalController();
-  void set_main_window(MainWindow* main_window);
   void dispatch_signals();
 
   // Signal handlers
@@ -78,7 +74,7 @@ private:
   void cleanup_bottle_manager_thread();
 
   // slots
-  virtual bool on_mouse_button_pressed(GdkEventButton* event);
+  // virtual bool on_mouse_button_pressed(GdkEventButton* event);
   virtual void on_new_bottle(Glib::ustring& name,
                              BottleTypes::Windows windows_version,
                              BottleTypes::Bit bit,
@@ -96,9 +92,7 @@ private:
 
   MainWindow* main_window_;
   BottleManager& manager_;
-  Menu& menu_;
   PreferencesWindow& preferences_window_;
-  AboutDialog& about_dialog_;
   BottleEditWindow& edit_window_;
   BottleCloneWindow& clone_window_;
   BottleConfigureEnvVarWindow& configure_env_var_window_;

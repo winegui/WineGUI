@@ -23,6 +23,7 @@
 #include <string>
 
 /**
+ * \class DLLOverride
  * \brief DLL override enum definition
  */
 namespace DLLOverride
