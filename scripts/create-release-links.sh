@@ -25,7 +25,7 @@ if [[ "$output" == "[]" ]]; then
     # Meaning the first added, will be the displayed last.
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --data link_type="package" \
+        --data link_type="other" \
         --data name="WineGUI - Source Code Archive (.tar.gz)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-Source-$APP_VERSION.tar.gz" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
