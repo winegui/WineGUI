@@ -19,62 +19,137 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "main_window.h"
+#include "app_list_model_column.h"
+#include "general_config_file.h"
+#include "gtkmm/enums.h"
 #include "helper.h"
 #include "project_config.h"
-#include <algorithm>
-#include <cctype>
-#include <locale>
-#include <set>
-#include <utility>
-
-/************************
- * Public methods       *
- ************************/
 
 /**
  * \brief Constructor
  */
-MainWindow::MainWindow(Menu& menu)
-    : window_settings(),
-      vbox(Gtk::Orientation::ORIENTATION_VERTICAL),
-      paned(Gtk::Orientation::ORIENTATION_HORIZONTAL),
-      right_vbox(Gtk::Orientation::ORIENTATION_VERTICAL),
-      app_list_vbox(Gtk::Orientation::ORIENTATION_VERTICAL),
-      app_list_top_hbox(Gtk::Orientation::ORIENTATION_HORIZONTAL),
-      container_paned(Gtk::Orientation::ORIENTATION_HORIZONTAL),
-      separator1(Gtk::Orientation::ORIENTATION_HORIZONTAL),
+MainWindow::MainWindow()
+    : Gtk::ApplicationWindow(),
+      main_paned(Gtk::Orientation::HORIZONTAL),
+      window_settings(),
+      right_vbox(Gtk::Orientation::VERTICAL),
+      app_list_vbox(Gtk::Orientation::VERTICAL),
+      app_list_top_hbox(Gtk::Orientation::HORIZONTAL),
+      container_paned(Gtk::Orientation::HORIZONTAL),
+      toolbar_menu(Gio::Menu::create()),
+      separator1(Gtk::Orientation::HORIZONTAL),
       busy_dialog_(*this),
+      info_dialog_(*this, DialogWindow::DialogType::INFO),
+      warning_dialog_(*this, DialogWindow::DialogType::WARNING),
+      error_dialog_(*this, DialogWindow::DialogType::ERROR),
+      question_dialog_(*this, DialogWindow::DialogType::QUESTION),
       unknown_menu_item_name_("- Unknown menu item -"),
       unknown_desktop_item_name_("- Unknown desktop item -"),
+      general_config_data_(GeneralConfigFile::read_config_file()),
       thread_check_version_(nullptr)
 {
   // Set some Window properties
-  set_title("WineGUI - WINE Manager");
-  set_default_size(1120, 675);
-  set_position(Gtk::WIN_POS_CENTER);
+  set_title("WineGUI - Wine Manager");
+  set_default_size(1120, 800);
 
-  try
-  {
-    set_icon_from_file(Helper::get_image_location("logo.png"));
-  }
-  catch (Glib::FileError& e)
-  {
-    cout << "Error: couldn't load our logo: " << e.what() << endl;
-  }
+  // Menu actions
+  add_action("new_bottle", sigc::mem_fun(*this, &MainWindow::on_new_bottle_button_clicked));
+  add_action("run", sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
+  add_action("report_issue", sigc::mem_fun(*this, &MainWindow::on_report_issue));
+  add_action("list_issues", sigc::mem_fun(*this, &MainWindow::on_issue_tickets));
+  add_action("check_version", sigc::mem_fun(*this, &MainWindow::on_check_version));
+  // Toolbar button actions for menu
+  add_action("edit_bottle", [this]() { show_edit_window.emit(); });
+  add_action("clone_bottle", [this]() { show_clone_window.emit(); });
+  add_action("configure_bottle", [this]() { show_configure_window.emit(); });
+  add_action("open_c_drive", [this]() { open_c_drive.emit(); });
+  add_action("reboot_bottle", [this]() { reboot_bottle.emit(); });
+  add_action("update_bottle", [this]() { update_bottle.emit(); });
+  add_action("open_log_file", [this]() { open_log_file.emit(); });
+  add_action("kill_processes", [this]() { kill_running_processes.emit(); });
 
-  // Add menu to box (top), no expand/fill
-  vbox.pack_start(menu, false, false);
+  // Label alignments
+  name_label.set_halign(Gtk::Align::START);
+  folder_name_label.set_halign(Gtk::Align::START);
+  window_version_label.set_halign(Gtk::Align::START);
+  c_drive_location_label.set_halign(Gtk::Align::START);
+  wine_version_label.set_halign(Gtk::Align::START);
+  wine_location_label.set_halign(Gtk::Align::START);
+  debug_log_level_label.set_halign(Gtk::Align::START);
+  wine_last_changed_label.set_halign(Gtk::Align::START);
+  audio_driver_label.set_halign(Gtk::Align::START);
+  virtual_desktop_label.set_halign(Gtk::Align::START);
+  description_label.set_halign(Gtk::Align::START);
 
-  // Add paned to box (below menu)
-  // NOTE: expand/fill = true
-  vbox.pack_end(paned);
+  // Add custom css, fix the listview hover background issue,
+  // and add toolbar class (since not all GTK themes might have it)
+  auto css = Gtk::CssProvider::create();
+  // @theme_selected_bg_color
+  css->load_from_data(R"(
+    .app-list:not(:hover) row:selected,
+    .app-list:not(:hover) listitem:selected {
+      background-color: transparent;
+      color: @theme_text_color;
+    }
+
+    .toolbar {
+      margin: 0px;
+      margin-left: 10px;
+      padding: 0px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
+    .toolbar > button,
+    .toolbar > :not(.linked) > button {
+        background-color: transparent;
+        background-image: none;
+        border-color: transparent;
+        box-shadow: inset 0 1px transparentize(white, 1),
+        0 1px transparentize(white, 1);
+        text-shadow: none;
+        -gtk-icon-shadow: none;
+        transition: none;
+        margin-left: 4px;
+        margin-right: 4px;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .toolbar > button:hover,
+    .toolbar > :not(.linked) > button:hover {
+      color: @theme_text_color;
+      border-color: @theme_selected_bg_color;
+      background-color: @theme_selected_bg_color;
+      transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition-duration: 350ms;
+    }
+
+    .toolbar > button.keyboard-activating,
+    .toolbar > :not(.linked) > button.keyboard-activating,
+    .toolbar > button:checked,
+    .toolbar > :not(.linked) > button:checked {
+      color: @theme_text_color;
+      border-color: @borders;
+      background-color: @theme_text_color;
+      transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .toolbar > button:disabled,
+    .toolbar > :not(.linked) > button:disabled {
+      border-color: transparent;
+      background-color: transparent;
+      background-image: none;
+    }
+  )");
+  Gtk::StyleContext::add_provider_for_display(Gdk::Display::get_default(), css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
   // Create rest to vbox
   create_left_panel();
   create_right_panel();
 
-  // Using a Vertical box container
-  add(vbox);
+  // Set the main paned as the main window child
+  set_child(main_paned);
 
   // Reset the right panel to default values
   reset_detailed_info();
@@ -82,13 +157,16 @@ MainWindow::MainWindow(Menu& menu)
   // Load window settings from gsettings schema file
   load_stored_window_settings();
 
+  // By default hide the toolbar menu button
+  menu_button_toolbar.set_visible(false);
+
   // By default disable the toolbar buttons
   set_sensitive_toolbar_buttons(false);
 
-  // Left side (listbox)
-  listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_bottle_row_clicked));
+  // Left side (listbox of wine bottles)
+  bottles_listbox.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_bottle_row_clicked));
   // Disabled right-click menu for now, since it doesn't activate the right-clicked bottle as active
-  // listbox.signal_button_press_event().connect(right_click_menu);
+  // bottles_listbox.signal_button_press_event().connect(right_click_menu);
 
   // Right panel toolbar menu buttons
   // New button pressed signal
@@ -99,11 +177,14 @@ MainWindow::MainWindow(Menu& menu)
   new_bottle_assistant_.new_bottle_finished.connect(finished_new_bottle);
 
   // Application search
-  app_list_search_entry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::on_app_list_changed));
+  app_list_search_entry.signal_search_changed().connect(sigc::mem_fun(*this, &MainWindow::on_app_list_search));
 
   // Trigger row activated signal on a single click
-  application_list_treeview.set_activate_on_single_click(true);
-  application_list_treeview.signal_row_activated().connect(sigc::mem_fun(*this, &MainWindow::on_application_row_activated));
+  app_list_list_view.set_single_click_activate(true);
+  app_list_list_view.set_focus_on_click(false);
+  app_list_list_view.set_can_focus(false);
+  app_list_list_view.add_css_class("app-list");
+  app_list_list_view.signal_activate().connect(sigc::mem_fun(*this, &MainWindow::on_application_row_activated));
 
   // Toolbar buttons
   run_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
@@ -122,18 +203,18 @@ MainWindow::MainWindow(Menu& menu)
   refresh_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_refresh_app_list_button_clicked));
 
   // Dispatch signals
-  error_message_check_version_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_error_message_check_version));
-  info_message_check_version_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_info_message_check_version));
-  new_version_available_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::on_new_version_available));
-  check_version_finished_dispatcher_.connect(sigc::mem_fun(this, &MainWindow::cleanup_check_version_thread));
+  error_message_check_version_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::on_error_message_check_version));
+  info_message_check_version_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::on_info_message_check_version));
+  new_version_available_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::on_new_version_available));
+  check_version_finished_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::cleanup_check_version_thread));
 
   // Check for update without (error) messages, when app is idle
-  Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &MainWindow::check_version_update), false), Glib::PRIORITY_DEFAULT_IDLE);
+  if (general_config_data_.check_for_updates_startup)
+    Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &MainWindow::check_version_update), false), Glib::PRIORITY_DEFAULT_IDLE);
+  // Check once if it can find the wine binary during start-up
+  Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::check_wine_binary), Glib::PRIORITY_DEFAULT_IDLE);
   // Window closed signal
-  signal_delete_event().connect(sigc::mem_fun(this, &MainWindow::on_delete_window));
-
-  // Show the widget children
-  show_all_children();
+  signal_close_request().connect(sigc::mem_fun(*this, &MainWindow::on_delete_window), false);
 }
 
 /**
@@ -152,19 +233,20 @@ MainWindow::~MainWindow()
 void MainWindow::set_wine_bottles(std::list<BottleItem>& bottles)
 {
   // Clear whole listbox
-  std::vector<Gtk::Widget*> children = listbox.get_children();
-  for (Gtk::Widget* el : children)
+  auto child = bottles_listbox.get_first_child();
+  while (child != nullptr)
   {
-    listbox.remove(*el);
+    auto next = child->get_next_sibling();
+    bottles_listbox.remove(*child);
+    child = next;
   }
 
   for (BottleItem& bottle : bottles)
   {
-    listbox.add(bottle);
+    bottles_listbox.append(bottle);
   }
   // Enable/disable toolbar buttons depending on listbox
   set_sensitive_toolbar_buttons(bottles.size() > 0);
-  listbox.show_all();
 }
 
 /**
@@ -174,7 +256,7 @@ void MainWindow::set_wine_bottles(std::list<BottleItem>& bottles)
 void MainWindow::select_row_bottle(BottleItem& bottle)
 {
   if (!bottle.is_selected())
-    this->listbox.select_row(bottle);
+    this->bottles_listbox.select_row(bottle);
 }
 
 /**
@@ -204,7 +286,7 @@ void MainWindow::reset_detailed_info()
  */
 void MainWindow::reset_application_list()
 {
-  app_list_tree_model->clear();
+  app_list_store->remove_all();
   app_list_search_entry.set_text("");
 }
 
@@ -224,10 +306,9 @@ void MainWindow::set_general_config(const GeneralConfigData& config_data)
  */
 void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
-  dialog.set_title("Information message");
-  dialog.set_modal(true);
-  dialog.run();
+  info_dialog_.set_message(message, markup);
+  // Non-blocking present
+  info_dialog_.present();
 }
 
 /**
@@ -237,10 +318,9 @@ void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
  */
 void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
-  dialog.set_title("Warning message");
-  dialog.set_modal(true);
-  dialog.run();
+  warning_dialog_.set_message(message, markup);
+  // Non-blocking present
+  warning_dialog_.present();
 }
 
 /**
@@ -250,40 +330,24 @@ void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
  */
 void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
-  dialog.set_title("An error has occurred!");
-  dialog.set_modal(true);
-  dialog.run();
+  error_dialog_.set_message(message, markup);
+  // Non-blocking present
+  error_dialog_.present();
 }
 
 /**
- * \brief Confirm dialog (Yes/No message)
+ * \brief Question dialog (Yes/No message)
  * \param[in] message Show this message during confirmation
  * \param[in] markup Support markup in message text (default: false)
- * \return True if user pressed confirm (yes), otherwise False
+ * \return Pointer to a newly allocated DialogWindow object, it will close itself (destroy) when the user clicks 'Yes' or 'No'
  */
-bool MainWindow::show_confirm_dialog(const Glib::ustring& message, bool markup)
+DialogWindow* MainWindow::show_question_dialog(Gtk::Window* parent, const Glib::ustring& message, bool markup)
 {
-  Gtk::MessageDialog dialog(*this, message, markup, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
-  dialog.set_title("Are you sure?");
-  dialog.set_modal(true);
-  int result = dialog.run();
-  bool return_value = false;
-  if (result == Gtk::RESPONSE_YES)
-  {
-    return_value = true;
-  }
-  return return_value;
-}
-
-/**
- * \brief Show busy indicator (like busy installing corefonts in Wine bottle)
- * \param[in] message Given the user more information what is going on
- */
-void MainWindow::show_busy_install_dialog(const Glib::ustring& message)
-{
-  busy_dialog_.set_message("Installing software", message);
-  busy_dialog_.show();
+  // new gtk::manage DialogWindow with question dialog and return the pointer
+  DialogWindow* dialog = Gtk::manage(new DialogWindow(*parent, DialogWindow::DialogType::QUESTION, message, markup));
+  // Non-blocking present
+  dialog->present();
+  return dialog;
 }
 
 /**
@@ -295,13 +359,13 @@ void MainWindow::show_busy_install_dialog(Gtk::Window& parent, const Glib::ustri
 {
   busy_dialog_.set_message("Installing software", message);
   busy_dialog_.set_transient_for(parent);
-  busy_dialog_.show();
+  busy_dialog_.present();
 }
 
 /**
- * \brief Close the busy dialog again
+ * \brief Hide the busy dialog again
  */
-void MainWindow::close_busy_dialog()
+void MainWindow::hide_busy_dialog()
 {
   busy_dialog_.hide();
 }
@@ -312,7 +376,7 @@ void MainWindow::close_busy_dialog()
 void MainWindow::on_new_bottle_button_clicked()
 {
   new_bottle_assistant_.set_transient_for(*this);
-  new_bottle_assistant_.show();
+  new_bottle_assistant_.present();
 }
 
 /**
@@ -329,65 +393,134 @@ void MainWindow::on_new_bottle_created()
  */
 void MainWindow::on_run_button_clicked()
 {
-  Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_OPEN);
-  dialog.set_transient_for(*this);
+#ifndef OLD_GTK
+  auto dialog = Gtk::FileDialog::create();
+  dialog->set_title("Please choose a file");
+  dialog->set_modal(true);
+  {
+    auto folder = Gio::File::create_for_path(c_drive_location_label.get_text());
+    if (!folder->get_path().empty())
+    {
+      dialog->set_initial_folder(folder);
+    }
+  }
+
+  // Filters
+  const auto filters = Gio::ListStore<Gtk::FileFilter>::create();
+  auto filter_win = Gtk::FileFilter::create();
+  filter_win->set_name("Windows Executable/MSI Installer");
+  filter_win->add_mime_type("application/x-ms-dos-executable");
+  filter_win->add_mime_type("application/x-msi");
+  filters->append(filter_win);
+  auto filter_any = Gtk::FileFilter::create();
+  filter_any->set_name("Any file");
+  filter_any->add_pattern("*");
+  filters->append(filter_any);
+  // Set the filters
+  dialog->set_filters(filters);
+
+  dialog->open(*this,
+               [this, dialog](const Glib::RefPtr<Gio::AsyncResult>& result)
+               {
+                 try
+                 {
+                   const auto file = dialog->open_finish(result);
+                   string path = file->get_path();
+                   // Just guess based on extension
+                   string ext = path.substr(path.find_last_of(".") + 1);
+                   // To lower case
+                   std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+                   if (ext == "exe")
+                   {
+                     run_executable.emit(path, false);
+                   }
+                   else if (ext == "msi")
+                   {
+                     // Run as MSI (true=MSI)
+                     run_executable.emit(path, true);
+                   }
+                   else
+                   {
+                     // fall-back: try run as Exe
+                     run_executable.emit(path, false);
+                   }
+                 }
+                 catch (const Gtk::DialogError& err)
+                 {
+                   // Do nothing
+                 }
+                 catch (const Glib::Error& err)
+                 {
+                   // Do nothing
+                 }
+               });
+#else
+  auto* file_chooser = new Gtk::FileChooserDialog("Please choose a file", Gtk::FileChooser::Action::OPEN);
+  file_chooser->set_modal(true);
+  file_chooser->set_transient_for(*this);
 
   // Add response buttons the the dialog:
-  dialog.add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
-  dialog.add_button("_Open", Gtk::ResponseType::RESPONSE_OK);
+  file_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
+  file_chooser->add_button("_Open", Gtk::ResponseType::OK);
+
+  // Signal
+  file_chooser->signal_response().connect(
+      [this, file_chooser](int response_id)
+      {
+        switch (response_id)
+        {
+        case (Gtk::ResponseType::OK):
+        {
+          auto file = file_chooser->get_file();
+          string filename = file->get_path();
+          // Just guess based on extension
+          string ext = filename.substr(filename.find_last_of(".") + 1);
+          // To lower case
+          std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+          if (ext == "exe")
+          {
+            run_executable.emit(filename, false);
+          }
+          else if (ext == "msi")
+          {
+            // Run as MSI (true=MSI)
+            run_executable.emit(filename, true);
+          }
+          else
+          {
+            // fall-back: try run as Exe
+            run_executable.emit(filename, false);
+          }
+          break;
+        }
+        case (Gtk::ResponseType::CANCEL):
+        {
+          // Cancelled, do nothing
+          break;
+        }
+        default:
+        {
+          // Unexpected button, ignore
+          break;
+        }
+        }
+        delete file_chooser;
+      });
 
   auto filter_win = Gtk::FileFilter::create();
   filter_win->set_name("Windows Executable/MSI Installer");
   filter_win->add_mime_type("application/x-ms-dos-executable");
   filter_win->add_mime_type("application/x-msi");
-  dialog.add_filter(filter_win);
+  file_chooser->add_filter(filter_win);
 
   auto filter_any = Gtk::FileFilter::create();
   filter_any->set_name("Any file");
   filter_any->add_pattern("*");
-  dialog.add_filter(filter_any);
-  dialog.set_current_folder(c_drive_location_label.get_text().c_str());
-
-  // Show the dialog and wait for a user response:
-  int result = dialog.run();
-
-  // Handle the response:
-  switch (result)
-  {
-  case (Gtk::ResponseType::RESPONSE_OK):
-  {
-    string filename = dialog.get_filename();
-    // Just guess based on extension
-    string ext = filename.substr(filename.find_last_of(".") + 1);
-    // To lower case
-    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
-    if (ext == "exe")
-    {
-      run_executable.emit(filename, false);
-    }
-    else if (ext == "msi")
-    {
-      // Run as MSI (true=MSI)
-      run_executable.emit(filename, true);
-    }
-    else
-    {
-      // fall-back: try run as Exe
-      run_executable.emit(filename, false);
-    }
-    break;
-  }
-  case (Gtk::ResponseType::RESPONSE_CANCEL):
-  {
-    // Cancelled, do nothing
-    break;
-  }
-  default:
-  {
-    // Unexpected button, ignore
-    break;
-  }
-  }
+  file_chooser->add_filter(filter_any);
+  file_chooser->set_current_folder(Gio::File::create_for_path(c_drive_location_label.get_text()));
+  // Show the dialog
+  file_chooser->show();
+#endif
 }
 
 /**
@@ -395,7 +528,7 @@ void MainWindow::on_run_button_clicked()
  */
 void MainWindow::on_refresh_app_list_button_clicked()
 {
-  Gtk::ListBoxRow* selected_row = listbox.get_selected_row();
+  Gtk::ListBoxRow* selected_row = bottles_listbox.get_selected_row();
   if (selected_row)
   {
     // Refresh the current app list
@@ -409,13 +542,13 @@ void MainWindow::on_refresh_app_list_button_clicked()
  */
 void MainWindow::on_hide_window()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
- * \brief When the feedback button is pressed
+ * \brief When the report issue button is pressed
  */
-void MainWindow::on_give_feedback()
+void MainWindow::on_report_issue()
 {
   if (!Gio::AppInfo::launch_default_for_uri("https://github.com/winegui/WineGUI/issues/new"))
   {
@@ -447,10 +580,11 @@ void MainWindow::on_check_version()
  */
 void MainWindow::on_exec_failure()
 {
-  Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+  Gtk::MessageDialog dialog(*this, "\nExecuting the selected Windows application on Wine went wrong.\n", false, Gtk::MessageType::INFO,
+                            Gtk::ButtonsType::OK);
   dialog.set_title("An error has occurred during Wine application execution!");
   dialog.set_modal(false);
-  dialog.run();
+  dialog.present();
 }
 
 /************************
@@ -479,21 +613,29 @@ void MainWindow::on_bottle_row_clicked(Gtk::ListBoxRow* row)
   }
 }
 
-void MainWindow::on_app_list_changed()
+void MainWindow::on_app_list_search()
 {
-  // Refilter
-  app_list_filter->refilter();
+  string search_text = app_list_search_entry.get_text();
+  if (!search_text.empty())
+  {
+    app_list_filter->set_search(search_text);
+    app_list_selection_model->set_model(app_list_filter_list_model);
+  }
+  else
+  {
+    // Show all
+    app_list_selection_model->set_model(app_list_store);
+  }
 }
 
-void MainWindow::on_application_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* /* column */)
+void MainWindow::on_application_row_activated(unsigned int position)
 {
-  const auto iter = app_list_tree_model->get_iter(path);
-  if (iter)
-  {
-    const auto row = *iter;
-    // Run the command
-    run_program.emit(row[app_list_columns.command]);
-  }
+  auto col = app_list_store->get_item(position);
+  if (!col)
+    return;
+
+  // Run the command
+  run_program.emit(col->command);
 }
 
 /**
@@ -548,19 +690,19 @@ void MainWindow::on_new_version_available()
     string message = "<b>New WineGUI release is out.</b> Please, <i>update</i> WineGUI to the latest release.\n"
                      "You are using: v" +
                      std::string(PROJECT_VER) + ". Latest version: v" + new_version_ + ".";
-    Gtk::MessageDialog dialog(*this, message, true, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
+    Gtk::MessageDialog dialog(*this, message, true, Gtk::MessageType::WARNING, Gtk::ButtonsType::OK);
     dialog.set_secondary_text("<big><a href=\"https://gitlab.melroy.org/melroy/winegui/-/releases\">Download the latest release now!</a></big>",
                               true);
     dialog.set_title("New WineGUI Release!");
     dialog.set_modal(true);
-    dialog.run();
+    dialog.present();
   }
 }
 
 /**
  * \brief Called when Window is closed/exited
  */
-bool MainWindow::on_delete_window(GdkEventAny* any_event __attribute__((unused)))
+bool MainWindow::on_delete_window()
 {
   if (window_settings)
   {
@@ -568,10 +710,9 @@ bool MainWindow::on_delete_window(GdkEventAny* any_event __attribute__((unused))
     window_settings->set_int("width", get_width());
     window_settings->set_int("height", get_height());
     window_settings->set_boolean("maximized", is_maximized());
-    // Fullscreen will be available with gtkmm-4.0
-    // settings->set_boolean("fullscreen", is_fullscreen());
-    if (paned.get_position() > 0)
-      window_settings->set_int("position-divider-paned", paned.get_position());
+    window_settings->set_boolean("fullscreen", is_fullscreen());
+    if (main_paned.get_position() > 0)
+      window_settings->set_int("position-divider-paned", main_paned.get_position());
     if (container_paned.get_position() > 0)
       window_settings->set_int("position-divider-container-paned", container_paned.get_position());
   }
@@ -640,7 +781,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   // Temporally store the list of menu item names,
   // used for checking for duplicates when adding desktop items
   std::set<std::string> menu_item_names;
-  // Fill the application list (TreeView model)
+  // Fill the application list (list view)
   // First the start menu apps/games (if present)
   try
   {
@@ -825,21 +966,22 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
  */
 void MainWindow::add_application(const string& name, const string& description, const string& command, const string& icon, bool is_icon_full_path)
 {
-  auto row = *(app_list_tree_model->append());
-  row[app_list_columns.name] = Helper::encode_text(name);
-  row[app_list_columns.description] = Helper::encode_text(description);
-  row[app_list_columns.command] = command;
+  auto pixbuf = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/unknown_file.png"));
   try
   {
     if (!is_icon_full_path)
-      row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/" + icon + ".png"));
+      pixbuf = Gdk::Pixbuf::create_from_file(Helper::get_image_location("apps/" + icon + ".png"));
     else
-      row[app_list_columns.icon] = Gdk::Pixbuf::create_from_file(icon); // Use icon as full path
+      pixbuf = Gdk::Pixbuf::create_from_file(icon); // Use icon as full path
   }
   catch (const Glib::Error& error)
   {
     std::cerr << "ERROR: Could not find icon (" << icon << ") for app " << name << ": " << error.what() << std::endl;
   }
+
+  auto item =
+      AppListModelColumns::create(Helper::encode_text(name), Helper::encode_text(description), Gdk::Texture::create_for_pixbuf(pixbuf), command);
+  app_list_store->append(item);
 }
 
 /**
@@ -853,6 +995,18 @@ void MainWindow::cleanup_check_version_thread()
       thread_check_version_->join();
     delete thread_check_version_;
     thread_check_version_ = nullptr;
+  }
+}
+
+/**
+ * \brief Check if Wine is installed
+ */
+void MainWindow::check_wine_binary()
+{
+  int wineStatus = Helper::determine_wine_executable();
+  if (wineStatus == -1)
+  {
+    show_error_message("Could not find the 'wine' binary in your system PATH.\n\nPlease install Wine and try again.");
   }
 }
 
@@ -933,15 +1087,19 @@ void MainWindow::load_stored_window_settings()
 {
   // Load schema settings file
   auto schema_source = Gio::SettingsSchemaSource::get_default()->lookup("org.melroy.winegui", true);
+  // Can we find it?
   if (schema_source)
   {
     window_settings = Gio::Settings::create("org.melroy.winegui");
+
     // Apply global settings
     set_default_size(window_settings->get_int("width"), window_settings->get_int("height"));
     if (window_settings->get_boolean("maximized"))
       maximize();
+    if (window_settings->get_boolean("fullscreen"))
+      fullscreen();
     int position_divider_paned = window_settings->get_int("position-divider-paned");
-    paned.set_position(position_divider_paned);
+    main_paned.set_position(position_divider_paned);
     int position_divider_container_paned = window_settings->get_int("position-divider-container-paned");
     container_paned.set_position(position_divider_container_paned);
   }
@@ -949,7 +1107,7 @@ void MainWindow::load_stored_window_settings()
   {
     std::cerr << "Error: Gsettings schema file could not be found." << std::endl;
     // Fallback values
-    paned.set_position(320);
+    main_paned.set_position(280);
     container_paned.set_position(480);
   }
 }
@@ -960,13 +1118,13 @@ void MainWindow::load_stored_window_settings()
 void MainWindow::create_left_panel()
 {
   // Add scrolled window with listbox to paned
-  paned.pack1(scrolled_window_listbox);
+  main_paned.set_start_child(scrolled_window_bottles_listbox);
 
   // Set function that will add separators between each item
-  listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
+  bottles_listbox.set_header_func(sigc::ptr_fun(&MainWindow::cc_list_box_update_header_func));
 
   // Add list box to scrolled window
-  scrolled_window_listbox.add(listbox);
+  scrolled_window_bottles_listbox.set_child(bottles_listbox);
 }
 
 /**
@@ -974,96 +1132,70 @@ void MainWindow::create_left_panel()
  */
 void MainWindow::create_right_panel()
 {
+  // Generic container panel preferences
+  container_paned.set_halign(Gtk::Align::FILL);
+  container_paned.set_valign(Gtk::Align::FILL);
+  container_paned.set_expand();
+  container_paned.set_shrink_end_child(false);
+  container_paned.set_resize_end_child(false);
+
   /***
    * Toolbar section
    * TODO: Make it configurable to only show icons, text or both using preferences
    */
-  toolbar.set_toolbar_style(Gtk::ToolbarStyle::TOOLBAR_BOTH);
+  toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
+  toolbar.add_css_class("toolbar");
 
-  // Buttons in toolbar
-  Gtk::Image* new_image = Gtk::manage(new Gtk::Image());
-  new_image->set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  new_button.set_label("New");
-  new_button.set_tooltip_text("Create a new machine!");
-  new_button.set_icon_widget(*new_image);
-  new_button.set_homogeneous(false);
-  toolbar.insert(new_button, 0);
+  toolbar_buttons_ = {{&new_button, "New", "list-add", "Create a new machine!", "win.new_bottle"},
+                      {&edit_button, "Edit", "document-edit", "Edit Wine Machine", "win.edit_bottle"},
+                      {&clone_button, "Clone", "edit-copy", "Clone Wine Machine", "win.clone_bottle"},
+                      {&configure_button, "Configure", "preferences-other", "Install additional packages", "win.configure_bottle"},
+                      {&run_button, "Run Program...", "media-playback-start", "Run exe or msi in Wine Machine", "win.run"},
+                      {&open_c_driver_button, "Open C: Drive", "drive-harddisk", "Open the C: drive location in file manager", "win.open_c_drive"},
+                      {&reboot_button, "Reboot", "view-refresh", "Simulate Machine Reboot", "win.reboot_bottle"},
+                      {&update_button, "Update Config", "system-software-update", "Update the Wine Machine configuration", "win.update_bottle"},
+                      {&open_log_file_button, "Open Log", "text-x-generic", "Open debug logging file", "win.open_log_file"},
+                      {&kill_processes_button, "Kill Processes", "process-stop", "Kill all running processes in Wine Machine", "win.kill_processes"}};
 
-  Gtk::Image* edit_image = Gtk::manage(new Gtk::Image());
-  edit_image->set_from_icon_name("document-edit", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  edit_button.set_label("Edit");
-  edit_button.set_tooltip_text("Edit Wine Machine");
-  edit_button.set_icon_widget(*edit_image);
-  edit_button.set_homogeneous(false);
-  toolbar.insert(edit_button, 1);
+  // Create toolbar menu items
+  for (auto& toolbar_button_ : toolbar_buttons_)
+  {
+    Gtk::Image* image = Gtk::manage(new Gtk::Image());
+    image->set_from_icon_name(toolbar_button_.icon_name);
+    Gtk::Label* label = Gtk::manage(new Gtk::Label(toolbar_button_.label));
+    Gtk::Box* button_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
+    button_box->append(*image);
+    button_box->append(*label);
 
-  Gtk::Image* clone_image = Gtk::manage(new Gtk::Image());
-  clone_image->set_from_icon_name("edit-copy", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  clone_button.set_label("Clone");
-  clone_button.set_tooltip_text("Clone Wine Machine");
-  clone_button.set_icon_widget(*clone_image);
-  clone_button.set_homogeneous(false);
-  toolbar.insert(clone_button, 2);
+    toolbar_button_.button->set_tooltip_text(toolbar_button_.tooltip_text);
+    toolbar_button_.button->set_child(*button_box);
 
-  Gtk::Image* manage_image = Gtk::manage(new Gtk::Image());
-  manage_image->set_from_icon_name("preferences-other", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  configure_button.set_label("Configure");
-  configure_button.set_tooltip_text("Install additional packages");
-  configure_button.set_icon_widget(*manage_image);
-  configure_button.set_homogeneous(false);
-  toolbar.insert(configure_button, 3);
+    toolbar.append(*toolbar_button_.button);
+  }
 
-  Gtk::Image* run_image = Gtk::manage(new Gtk::Image());
-  run_image->set_from_icon_name("media-playback-start", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  run_button.set_label("Run Program...");
-  run_button.set_tooltip_text("Run exe or msi in Wine Machine");
-  run_button.set_icon_widget(*run_image);
-  run_button.set_homogeneous(false);
-  toolbar.insert(run_button, 4);
+  // Set the menu button icon + model + append to toolbar
+  menu_button_toolbar.set_icon_name("arrow-down");
+  menu_button_toolbar.set_menu_model(toolbar_menu);
+  toolbar.append(menu_button_toolbar);
 
-  Gtk::Image* open_c_drive_image = Gtk::manage(new Gtk::Image());
-  open_c_drive_image->set_from_icon_name("drive-harddisk", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  open_c_driver_button.set_label("Open C: Drive");
-  open_c_driver_button.set_tooltip_text("Open the C: drive location in file manager");
-  open_c_driver_button.set_icon_widget(*open_c_drive_image);
-  open_c_driver_button.set_homogeneous(false);
-  toolbar.insert(open_c_driver_button, 5);
+  // TODO: Implement overrides instead:
+  // https://gitlab.gnome.org/GNOME/gtkmm-documentation/-/blob/master/examples/book/custom/custom_container/mycontainer.cc
+  //   Gtk::SizeRequestMode get_request_mode_vfunc() const override;
+  // void measure_vfunc(Gtk::Orientation orientation, int for_size, int& minimum, int& natural,
+  //   int& minimum_baseline, int& natural_baseline) const override;
+  // void size_allocate_vfunc(int width, int height, int baseline) override;
+  //
+  // TODO: Disable this, since this will not work and flicker too much:
+  // property_default_width().signal_changed().connect([this]() {
+  //   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_update_toolbar_overflow));
+  // });
+  // property_default_height().signal_changed().connect([this]() {
+  //   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_update_toolbar_overflow));
+  // });
 
-  Gtk::Image* reboot_image = Gtk::manage(new Gtk::Image());
-  reboot_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  reboot_button.set_label("Reboot");
-  reboot_button.set_tooltip_text("Simulate Machine Reboot");
-  reboot_button.set_icon_widget(*reboot_image);
-  reboot_button.set_homogeneous(false);
-  toolbar.insert(reboot_button, 6);
-
-  Gtk::Image* update_image = Gtk::manage(new Gtk::Image());
-  update_image->set_from_icon_name("system-software-update", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  update_button.set_label("Update Config");
-  update_button.set_tooltip_text("Update the Wine Machine configuration");
-  update_button.set_icon_widget(*update_image);
-  update_button.set_homogeneous(false);
-  toolbar.insert(update_button, 7);
-
-  Gtk::Image* open_log_file_image = Gtk::manage(new Gtk::Image());
-  open_log_file_image->set_from_icon_name("text-x-generic", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  open_log_file_button.set_label("Open Log");
-  open_log_file_button.set_tooltip_text("Open debug logging file");
-  open_log_file_button.set_icon_widget(*open_log_file_image);
-  open_log_file_button.set_homogeneous(false);
-  toolbar.insert(open_log_file_button, 8);
-
-  Gtk::Image* kill_processes_image = Gtk::manage(new Gtk::Image());
-  kill_processes_image->set_from_icon_name("process-stop", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
-  kill_processes_button.set_label("Kill Processes");
-  kill_processes_button.set_tooltip_text("Kill all running processes in Wine Machine");
-  kill_processes_button.set_icon_widget(*kill_processes_image);
-  kill_processes_button.set_homogeneous(false);
-  toolbar.insert(kill_processes_button, 9);
-
-  // Add toolbar to right box
-  right_vbox.add(toolbar);
-  right_vbox.add(separator1);
+  // Add toolbar to right vbox
+  right_vbox.append(toolbar);
+  right_vbox.append(separator1);
 
   /**
    * Detail section (below toolbar)
@@ -1074,231 +1206,314 @@ void MainWindow::create_right_panel()
   detail_grid.set_margin_start(8);
   detail_grid.set_column_spacing(8);
   detail_grid.set_row_spacing(12);
+  detail_grid.set_hexpand(true);
+  detail_grid.set_vexpand(false);
 
   // General heading
   int column = 0;
   Gtk::Image* general_icon = Gtk::manage(new Gtk::Image());
-  general_icon->set_from_icon_name("dialog-information", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  // TODO:  Gtk::IconSize(Gtk::ICON_SIZE_MENU) is just removed from set_from_icon_name in gtkmm-4.0
+  general_icon->set_from_icon_name("dialog-information");
+  general_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* general_label = Gtk::manage(new Gtk::Label());
   general_label->set_markup("<b>General</b>");
   detail_grid.attach(*general_icon, 0, column++, 1, 1);
-  detail_grid.attach_next_to(*general_label, *general_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(*general_label, *general_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Bottle Name
-  Gtk::Label* name_text_label = Gtk::manage(new Gtk::Label("Name:", 0.0, -1));
-  name_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* name_text_label = Gtk::manage(new Gtk::Label("Name:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*name_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(name_label, *name_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(name_label, *name_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Folder Name
-  Gtk::Label* folder_name_text_label = Gtk::manage(new Gtk::Label("Folder Name:", 0.0, -1));
-  folder_name_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* folder_name_text_label = Gtk::manage(new Gtk::Label("Folder Name:", Gtk::Align::START, Gtk::Align::Center));
   detail_grid.attach(*folder_name_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(folder_name_label, *folder_name_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(folder_name_label, *folder_name_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine Binary Path
-  Gtk::Label* wine_bin_path_text_label = Gtk::manage(new Gtk::Label("Wine Binary Path:", 0.0, -1));
-  wine_bin_path_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* wine_bin_path_text_label = Gtk::manage(new Gtk::Label("Wine Binary Path:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*wine_bin_path_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(wine_bin_path_label, *wine_bin_path_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(wine_bin_path_label, *wine_bin_path_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End General
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, column++, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, column++, 3, 1);
 
   // System heading
   Gtk::Image* system_icon = Gtk::manage(new Gtk::Image());
-  system_icon->set_from_icon_name("computer", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  // TODO:  Gtk::IconSize(Gtk::ICON_SIZE_MENU) is just removed from set_from_icon_name in gtkmm-4.0
+  system_icon->set_from_icon_name("computer");
+  system_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* system_label = Gtk::manage(new Gtk::Label());
   system_label->set_markup("<b>System</b>");
   detail_grid.attach(*system_icon, 0, column++, 1, 1);
-  detail_grid.attach_next_to(*system_label, *system_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(*system_label, *system_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Windows version + bit os
-  Gtk::Label* window_version_text_label = Gtk::manage(new Gtk::Label("Windows:", 0.0, -1));
-  window_version_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* window_version_text_label = Gtk::manage(new Gtk::Label("Windows:", Gtk::Align::START, Gtk::Align::CENTER));
   // Label consumes 2 columns
   detail_grid.attach(*window_version_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(window_version_label, *window_version_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(window_version_label, *window_version_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // C:\ drive location
-  Gtk::Label* c_drive_location_text_label = Gtk::manage(new Gtk::Label("C: Drive Location:", 0.0, -1));
-  c_drive_location_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* c_drive_location_text_label = Gtk::manage(new Gtk::Label("C: Drive Location:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*c_drive_location_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(c_drive_location_label, *c_drive_location_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(c_drive_location_label, *c_drive_location_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End system
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, column++, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, column++, 3, 1);
 
   // Wine heading
   Gtk::Image* wine_icon = Gtk::manage(new Gtk::Image());
-  wine_icon->set_from_icon_name("dialog-information", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  wine_icon->set_from_icon_name("dialog-information");
+  wine_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* wine_label = Gtk::manage(new Gtk::Label());
   wine_label->set_markup("<b>Wine details</b>");
   detail_grid.attach(*wine_icon, 0, column++, 1, 1);
-  detail_grid.attach_next_to(*wine_label, *wine_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(*wine_label, *wine_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine version
-  Gtk::Label* wine_version_text_label = Gtk::manage(new Gtk::Label("Wine Version:", 0.0, -1));
-  wine_version_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* wine_version_text_label = Gtk::manage(new Gtk::Label("Wine Version:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*wine_version_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(wine_version_label, *wine_version_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(wine_version_label, *wine_version_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine debug log level
-  Gtk::Label* wine_log_level_text_label = Gtk::manage(new Gtk::Label("Log level:", 0.0, -1));
-  debug_log_level_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* wine_log_level_text_label = Gtk::manage(new Gtk::Label("Log level:", Gtk::Align::START, Gtk::Align::CENTER));
   debug_log_level_label.set_tooltip_text("Enable debug logging in Edit Window");
   detail_grid.attach(*wine_log_level_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(debug_log_level_label, *wine_log_level_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(debug_log_level_label, *wine_log_level_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine location
-  Gtk::Label* wine_location_text_label = Gtk::manage(new Gtk::Label("Wine Location:", 0.0, -1));
-  wine_location_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* wine_location_text_label = Gtk::manage(new Gtk::Label("Wine Location:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*wine_location_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(wine_location_label, *wine_location_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(wine_location_label, *wine_location_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine last changed
-  Gtk::Label* wine_last_changed_text_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", 0.0, -1));
-  wine_last_changed_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* wine_last_changed_text_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*wine_last_changed_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(wine_last_changed_label, *wine_last_changed_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(wine_last_changed_label, *wine_last_changed_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Wine
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, column++, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, column++, 3, 1);
 
   // Audio heading
   Gtk::Image* audio_icon = Gtk::manage(new Gtk::Image());
-  audio_icon->set_from_icon_name("audio-speakers", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  audio_icon->set_from_icon_name("audio-speakers");
+  audio_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* audio_text_label = Gtk::manage(new Gtk::Label());
   audio_text_label->set_markup("<b>Audio</b>");
   detail_grid.attach(*audio_icon, 0, column++, 1, 1);
-  detail_grid.attach_next_to(*audio_text_label, *audio_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(*audio_text_label, *audio_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Audio driver
-  Gtk::Label* audio_driver_text_label = Gtk::manage(new Gtk::Label("Audio Driver:", 0.0, -1));
-  audio_driver_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* audio_driver_text_label = Gtk::manage(new Gtk::Label("Audio Driver:", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*audio_driver_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(audio_driver_label, *audio_driver_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(audio_driver_label, *audio_driver_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Audio driver
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, column++, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, column++, 3, 1);
 
   // Display heading
   Gtk::Image* display_icon = Gtk::manage(new Gtk::Image());
-  display_icon->set_from_icon_name("view-fullscreen", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  display_icon->set_from_icon_name("view-fullscreen");
+  display_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* display_text_label = Gtk::manage(new Gtk::Label());
   display_text_label->set_markup("<b>Display</b>");
   detail_grid.attach(*display_icon, 0, column++, 1, 1);
-  detail_grid.attach_next_to(*display_text_label, *display_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(*display_text_label, *display_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Virtual Desktop
-  Gtk::Label* virtual_desktop_text_label = Gtk::manage(new Gtk::Label("Virtual Desktop\n(Windowed Mode):", 0.0, -1));
-  virtual_desktop_label.set_halign(Gtk::Align::ALIGN_START);
+  Gtk::Label* virtual_desktop_text_label = Gtk::manage(new Gtk::Label("Virtual Desktop\n(Windowed Mode):", Gtk::Align::START, Gtk::Align::CENTER));
   detail_grid.attach(*virtual_desktop_text_label, 0, column++, 2, 1);
-  detail_grid.attach_next_to(virtual_desktop_label, *virtual_desktop_text_label, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(virtual_desktop_label, *virtual_desktop_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Display
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, column++, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, column++, 3, 1);
 
   // Description heading
   Gtk::Image* description_icon = Gtk::manage(new Gtk::Image());
-  description_icon->set_from_icon_name("user-available", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  description_icon->set_from_icon_name("user-available");
+  description_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* description_text_label = Gtk::manage(new Gtk::Label());
   description_text_label->set_markup("<b>Description</b>");
   detail_grid.attach(*description_icon, 0, column++, 1, 1);
-  detail_grid.attach_next_to(*description_text_label, *description_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  detail_grid.attach_next_to(*description_text_label, *description_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Description text
-  description_label.set_halign(Gtk::Align::ALIGN_START);
   detail_grid.attach(description_label, 0, column++, 3, 1);
   // End Description
 
   // Place inside a scrolled window
-  detail_grid_scrolled_window_detail.add(detail_grid);
+  detail_grid_scrolled_window_detail.set_child(detail_grid);
 
   // Add to container
-  container_paned.pack1(detail_grid_scrolled_window_detail);
+  container_paned.set_start_child(detail_grid_scrolled_window_detail);
 
   /**
    * Application list section
    */
+  // Create list model
+  app_list_store = Gio::ListStore<AppListModelColumns>::create();
 
-  app_list_tree_model = Gtk::ListStore::create(app_list_columns);
-  app_list_filter = Gtk::TreeModelFilter::create(app_list_tree_model);
-  app_list_filter->set_visible_func(sigc::mem_fun(*this, &MainWindow::app_list_visible_func));
-  application_list_treeview.set_model(app_list_filter);
+  // Create the filter model
+  auto expression = Gtk::ClosureExpression<Glib::ustring>::create(
+      [](const Glib::RefPtr<Glib::ObjectBase>& item) -> Glib::ustring
+      {
+        const auto col = std::dynamic_pointer_cast<AppListModelColumns>(item);
+        if (!col)
+        {
+          return "";
+        }
 
-  name_desc_column.pack_start(name_desc_renderer_text);
-  application_list_treeview.append_column("icon", app_list_columns.icon); // TODO: Add spacing, maybe also use a custom method like below
-  application_list_treeview.append_column(name_desc_column);
-  name_desc_column.set_cell_data_func(name_desc_renderer_text, sigc::mem_fun(*this, &MainWindow::treeview_set_cell_data_name_desc));
+        if (col->description.empty())
+        {
+          return col->name;
+        }
 
-  application_list_treeview.set_headers_visible(false);
-  application_list_treeview.set_hover_selection(true);
-  application_list_treeview.set_show_expanders(false);
-  application_list_treeview.get_selection()->set_mode(Gtk::SELECTION_SINGLE);
+        return col->name + " " + col->description;
+      });
+  app_list_filter = Gtk::StringFilter::create(expression);
+  app_list_filter->set_ignore_case(true);
+  app_list_filter->set_match_mode(Gtk::StringFilter::MatchMode::SUBSTRING);
+  app_list_filter_list_model = Gtk::FilterListModel::create(app_list_store, app_list_filter);
 
+  // Set selection model
+  app_list_selection_model = Gtk::SingleSelection::create(app_list_store);
+  app_list_selection_model->set_autoselect(false);
+  app_list_selection_model->set_can_unselect(true);
+
+  // Create factory
+  app_list_factory = Gtk::SignalListItemFactory::create();
+  app_list_factory->signal_setup().connect(sigc::mem_fun(*this, &MainWindow::on_setup_label));
+  app_list_factory->signal_bind().connect(sigc::mem_fun(*this, &MainWindow::on_bind_icon_and_name));
+
+  // Set list model and factory
+  app_list_list_view.set_model(app_list_selection_model);
+  app_list_list_view.set_factory(app_list_factory);
+
+  // Set scrolled window properties
+  app_list_scrolled_window.set_margin_top(6);
   app_list_scrolled_window.set_margin_start(6);
   app_list_scrolled_window.set_margin_end(6);
   app_list_scrolled_window.set_margin_bottom(6);
-  app_list_scrolled_window.set_border_width(2);
-  app_list_scrolled_window.add(application_list_treeview);
-
-  app_list_search_entry.set_margin_start(6);
-  app_list_search_entry.set_margin_end(2);
-  app_list_search_entry.set_margin_top(6);
-  app_list_search_entry.set_margin_bottom(6);
+  app_list_scrolled_window.set_halign(Gtk::Align::FILL);
+  app_list_scrolled_window.set_valign(Gtk::Align::FILL);
+  app_list_scrolled_window.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+  app_list_scrolled_window.set_expand();
+  app_list_scrolled_window.set_child(app_list_list_view);
 
   // Add application header text
   Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
-  application_icon->set_from_icon_name("application-x-executable", Gtk::IconSize(Gtk::ICON_SIZE_MENU));
+  application_icon->set_from_icon_name("application-x-executable");
+  application_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* application_label = Gtk::manage(new Gtk::Label());
   application_label->set_markup("<b>Applications</b>");
+  application_label->set_margin_start(10);
   Gtk::Box* application_box = Gtk::manage(new Gtk::Box());
-  application_box->pack_start(*application_icon, false, false, 8);
-  application_box->pack_start(*application_label, false, false, 20);
+  application_box->append(*application_icon);
+  application_box->append(*application_label);
+  application_box->set_margin_start(6);
+  application_box->set_margin_end(6);
+  application_box->set_margin_top(6);
+  application_box->set_halign(Gtk::Align::FILL);
+
+  // Search entry
+  app_list_search_entry.set_margin_start(6);
+  app_list_search_entry.set_margin_end(6);
+  app_list_search_entry.set_margin_top(6);
+  app_list_search_entry.set_halign(Gtk::Align::START);
 
   // App list add shortcut button
-  Gtk::Image* add_app_list_image = Gtk::manage(new Gtk::Image());
-  add_app_list_image->set_from_icon_name("list-add", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   add_app_list_button.set_tooltip_text("Add shortcut to application list");
-  add_app_list_button.set_image(*add_app_list_image);
+  add_app_list_button.set_label("Add");
+  add_app_list_button.set_icon_name("list-add");
   add_app_list_button.set_margin_top(6);
-  add_app_list_button.set_margin_bottom(6);
   add_app_list_button.set_margin_end(6);
 
   // App list remove shortcut button
-  Gtk::Image* remove_app_list_image = Gtk::manage(new Gtk::Image());
-  remove_app_list_image->set_from_icon_name("list-remove", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   remove_app_list_button.set_tooltip_text("Remove shortcut from application list");
-  remove_app_list_button.set_image(*remove_app_list_image);
+  remove_app_list_button.set_label("Remove");
+  remove_app_list_button.set_icon_name("list-remove");
   remove_app_list_button.set_margin_top(6);
-  remove_app_list_button.set_margin_bottom(6);
   remove_app_list_button.set_margin_end(6);
 
   // App list refresh button
-  Gtk::Image* refresh_app_list_image = Gtk::manage(new Gtk::Image());
-  refresh_app_list_image->set_from_icon_name("view-refresh", Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR));
   refresh_app_list_button.set_tooltip_text("Refresh application list");
-  refresh_app_list_button.set_image(*refresh_app_list_image);
+  refresh_app_list_button.set_label("Refresh");
+  refresh_app_list_button.set_icon_name("view-refresh");
   refresh_app_list_button.set_margin_top(6);
-  refresh_app_list_button.set_margin_bottom(6);
   refresh_app_list_button.set_margin_end(6);
 
   // Preparing the horizontal box above the app list (containing the search entry & refresh button)
-  app_list_top_hbox.pack_start(app_list_search_entry, true, true);
-  app_list_top_hbox.pack_end(refresh_app_list_button, false, false);
-  app_list_top_hbox.pack_end(remove_app_list_button, false, false);
-  app_list_top_hbox.pack_end(add_app_list_button, false, false);
+  app_list_top_hbox.append(app_list_search_entry);
+  app_list_top_hbox.append(add_app_list_button);
+  app_list_top_hbox.append(remove_app_list_button);
+  app_list_top_hbox.append(refresh_app_list_button);
+  app_list_top_hbox.set_halign(Gtk::Align::FILL);
 
   // Add heading (label + icon)
-  app_list_vbox.pack_start(*application_box, false, true, 5);
+  app_list_vbox.set_margin_start(5); // Additional left margin
+  app_list_vbox.append(*application_box);
   // Add horizontal box (search entry + refresh button)
-  app_list_vbox.pack_start(app_list_top_hbox, false, true);
+  app_list_vbox.append(app_list_top_hbox);
   // Add application list (in scrolled window)
-  app_list_vbox.pack_end(app_list_scrolled_window);
+  app_list_vbox.append(app_list_scrolled_window);
   // Add to container
-  container_paned.pack2(app_list_vbox, false, false);
+  container_paned.set_end_child(app_list_vbox);
 
   // Add container to right box
-  right_vbox.pack_start(container_paned, true, true);
+  right_vbox.set_halign(Gtk::Align::FILL);
+  right_vbox.set_hexpand(true);
+  right_vbox.append(container_paned);
 
   // Add right box to paned
-  paned.pack2(right_vbox);
+  main_paned.set_end_child(right_vbox);
+}
+
+void MainWindow::on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item)
+{
+  Gtk::Box* hbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL);
+  hbox->set_hexpand(true);
+  Gtk::Box* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL);
+  vbox->set_hexpand(true);
+  Gtk::Image* icon = Gtk::make_managed<Gtk::Image>();
+  icon->set_pixel_size(32);
+  icon->set_halign(Gtk::Align::CENTER);
+  icon->set_valign(Gtk::Align::CENTER);
+  icon->set_margin_end(8);
+  hbox->append(*icon);
+
+  Gtk::Label* name = Gtk::make_managed<Gtk::Label>("", Gtk::Align::START);
+  name->set_single_line_mode(true);
+  Gtk::Label* description = Gtk::make_managed<Gtk::Label>("", Gtk::Align::START);
+  description->set_single_line_mode(true);
+  description->set_wrap(false);
+  vbox->append(*name);
+  vbox->append(*description);
+  hbox->append(*vbox);
+
+  list_item->set_child(*hbox);
+}
+
+void MainWindow::on_bind_icon_and_name(const Glib::RefPtr<Gtk::ListItem>& list_item)
+{
+  auto col = std::dynamic_pointer_cast<AppListModelColumns>(list_item->get_item());
+  if (!col)
+    return;
+  Gtk::Box* hbox = dynamic_cast<Gtk::Box*>(list_item->get_child());
+  if (!hbox)
+    return;
+  auto icon = dynamic_cast<Gtk::Image*>(hbox->get_first_child());
+  if (!icon)
+    return;
+  Gtk::Box* vbox = dynamic_cast<Gtk::Box*>(icon->get_next_sibling());
+  if (!vbox)
+    return;
+  Gtk::Label* name = dynamic_cast<Gtk::Label*>(vbox->get_first_child());
+  if (!name)
+    return;
+  Gtk::Label* description = dynamic_cast<Gtk::Label*>(name->get_next_sibling());
+  if (!description)
+    return;
+
+  // Set all fields
+  icon->set(col->icon);
+  name->set_markup("<b>" + col->name + "</b>");
+  description->set_markup(col->description);
 }
 
 /**
@@ -1336,40 +1551,96 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
   if (current == NULL)
   {
     current = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
-    gtk_widget_show(current);
+    // TODO: It shows automatically in gtk4?
+    // gtk_widget_show(current);
     gtk_list_box_row_set_header(row, current);
   }
 }
 
 /**
- * \brief Filter application list
- * \param iter Tree model iterator
- * \return true if application should be visible, otherwise false
+ * \brief Update toolbar button visibility based on available space
+ * Hides buttons that don't fit and adds them to the overflow menu
  */
-bool MainWindow::app_list_visible_func(const Gtk::TreeModel::const_iterator& iter)
+// cppcheck-suppress unusedFunction
+void MainWindow::on_update_toolbar_overflow()
 {
-  Gtk::TreeModel::Row row = *iter;
-  Glib::ustring name = row[app_list_columns.name];
-  Glib::ustring description = row[app_list_columns.description];
-  if (name.lowercase().find(app_list_search_entry.get_text().lowercase()) != Glib::ustring::npos)
-  {
-    return true;
-  }
-  if (description.lowercase().find(app_list_search_entry.get_text().lowercase()) != Glib::ustring::npos)
-  {
-    return true;
-  }
-  return false;
-}
+  // Get available width of the right vbox (minus the toolbar margin at the start, there is no margin at the end)
+  int available_width = right_vbox.get_width() - toolbar.get_margin_start();
+  if (available_width <= 0)
+    return;
 
-/**
- * \brief Render name + description text
- */
-void MainWindow::treeview_set_cell_data_name_desc(Gtk::CellRenderer* renderer, const Gtk::TreeModel::iterator& iter)
-{
-  // cppcheck-suppress dangerousTypeCast
-  Gtk::CellRendererText* text_renderer = (Gtk::CellRendererText*)renderer;
-  Glib::ustring name = "<b>" + (*iter)[app_list_columns.name] + "</b>\n";
-  name += (*iter)[app_list_columns.description];
-  text_renderer->property_markup().set_value(name);
+  // For faster calculation, we use some static values
+  static const int toolbar_spacing_both = 12;      // 2 * 6 (left + right padding between the childeren of the toolbar items)
+  static const int menu_button_toolbar_width = 60; // from menu_button_toolbar
+
+  // Clear the toolbar drop-down menu
+  toolbar_menu->remove_all();
+
+  // Calculate which buttons fit
+  int total_width = 0;
+  int visible_count = 0;
+
+  for (size_t i = 0; i < toolbar_buttons_.size(); ++i)
+  {
+    auto& button = toolbar_buttons_[i];
+
+    // Get button width - use allocated width if available, otherwise estimate
+    // We have spacing on both sides of the button
+    int button_width = button.button->get_allocated_width() + toolbar_spacing_both;
+    if (button_width <= 0)
+    {
+      // Estimate: label width * 8 pixels per character + 12 pixels padding + spacing on both sides
+      button_width = static_cast<int>(button.label.size() * 8) + 12 + toolbar_spacing_both;
+      if (button_width < 60)
+        button_width = 60;
+    }
+
+    // Calculate width needed including spacing
+    int width_needed = total_width + button_width;
+
+    // If there are more buttons after this, we need space for menu button
+    if (i < toolbar_buttons_.size() - 1)
+    {
+      width_needed += menu_button_toolbar_width + toolbar_spacing_both;
+    }
+
+    // Check if this button fits
+    if (width_needed > available_width && visible_count > 0)
+    {
+      // This button doesn't fit, stop here
+      break;
+    }
+
+    total_width = total_width + button_width;
+    visible_count++;
+  }
+
+  // Now hide/show buttons and populate menu
+  bool found_overflow = false;
+  for (size_t i = 0; i < toolbar_buttons_.size(); ++i)
+  {
+    auto& button_data = toolbar_buttons_[i];
+
+    if (static_cast<int>(i) < visible_count)
+    {
+      // Button fits, keep it visible
+      button_data.button->set_visible(true);
+    }
+    else
+    {
+      // Button doesn't fit, hide it and add to menu
+      button_data.button->set_visible(false);
+      found_overflow = true;
+
+      auto menu_item = Gio::MenuItem::create(button_data.label, button_data.action_name);
+      if (!button_data.icon_name.empty())
+      {
+        menu_item->set_attribute_value("icon", Glib::Variant<Glib::ustring>::create(button_data.icon_name));
+      }
+      toolbar_menu->append_item(menu_item);
+    }
+  }
+
+  // Show menu button only if we have overflow
+  menu_button_toolbar.set_visible(found_overflow);
 }

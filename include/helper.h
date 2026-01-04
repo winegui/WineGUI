@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2025 WineGUI
  *
  * \file    helper.h
  * \brief   Helper class for Bottle Manager and CLI
@@ -77,12 +77,11 @@ public:
   static void rename_wine_bottle_folder(const string& current_prefix_path, const string& new_prefix_path);
   static void copy_wine_bottle_folder(const string& source_prefix_path, const string& destination_prefix_path);
   static string get_folder_name(const string& prefix_path);
-  static BottleTypes::Windows get_windows_version(const string& prefix_path);
   static BottleTypes::Bit get_windows_bitness(const string& prefix_path);
   static BottleTypes::AudioDriver get_audio_driver(const string& prefix_path);
   static string get_virtual_desktop(const string& prefix_path);
   static string get_last_wine_updated(const string& prefix_path);
-  static bool get_bottle_status(const string& prefix_path);
+  static std::tuple<bool, BottleTypes::Windows, std::string> get_bottle_status_and_windows_version(const string& prefix_path);
   static std::tuple<string, string> get_menu_program_icon_path_and_comment(const string& shortcut_path);
   static string get_desktop_program_icon_path(const string& prefix_path, const string& shortcut_path);
   static string get_program_icon_from_shortcut_file(const string& prefix_path, const string& shortcut_path);
@@ -119,6 +118,7 @@ private:
   static int close_exec_stream(std::FILE* file);
   static void write_file(const string& filename, const string& contents);
   static string read_file(const string& filename);
+  static BottleTypes::Windows get_windows_version(const string& prefix_path);
   static string get_winetricks_version();
   static string get_reg_value(const string& filename, const string& key_name, const string& value_name);
   static vector<string> get_reg_keys(const string& file_path, const string& key_name);

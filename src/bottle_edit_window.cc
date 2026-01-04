@@ -27,8 +27,8 @@
  * \param parent Reference to parent GTK Window
  */
 BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
-    : vbox(Gtk::ORIENTATION_VERTICAL, 4),
-      hbox_buttons(Gtk::ORIENTATION_HORIZONTAL, 4),
+    : vbox(Gtk::Orientation::VERTICAL, 4),
+      hbox_buttons(Gtk::Orientation::HORIZONTAL, 4),
       header_edit_label("Edit Machine"),
       name_label("Name: "),
       folder_name_label("Folder Name: "),
@@ -61,9 +61,37 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   edit_grid.set_column_spacing(6);
   edit_grid.set_row_spacing(8);
 
+  create_layout();
+
+  // Signals
+  configure_environment_variables_button.signal_clicked().connect(configure_environment_variables);
+  delete_button.signal_clicked().connect(sigc::bind(remove_bottle, this));
+  virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
+  enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
+  cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
+  save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_save_button_clicked));
+  // Hide window instead of destroy
+  signal_close_request().connect(
+      [this]() -> bool
+      {
+        set_visible(false);
+        return true; // stop default destroy
+      },
+      false);
+}
+
+/**
+ * \brief Destructor
+ */
+BottleEditWindow::~BottleEditWindow()
+{
+}
+
+void BottleEditWindow::create_layout()
+{
   Pango::FontDescription fd_label;
   fd_label.set_size(12 * PANGO_SCALE);
-  fd_label.set_weight(Pango::WEIGHT_BOLD);
+  fd_label.set_weight(Pango::Weight::BOLD);
   auto font_label = Pango::Attribute::create_attr_font_desc(fd_label);
   Pango::AttrList attr_list_header_label;
   attr_list_header_label.insert(font_label);
@@ -71,15 +99,15 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   header_edit_label.set_margin_top(5);
   header_edit_label.set_margin_bottom(5);
 
-  name_label.set_halign(Gtk::Align::ALIGN_END);
-  folder_name_label.set_halign(Gtk::Align::ALIGN_END);
-  wine_bin_path_label.set_halign(Gtk::Align::ALIGN_END);
-  windows_version_label.set_halign(Gtk::Align::ALIGN_END);
-  audio_driver_label.set_halign(Gtk::Align::ALIGN_END);
-  virtual_desktop_resolution_label.set_halign(Gtk::Align::ALIGN_END);
-  log_level_label.set_halign(Gtk::Align::ALIGN_END);
-  environment_variables_label.set_halign(Gtk::Align::ALIGN_END);
-  description_label.set_halign(Gtk::Align::ALIGN_START);
+  name_label.set_halign(Gtk::Align::END);
+  folder_name_label.set_halign(Gtk::Align::END);
+  wine_bin_path_label.set_halign(Gtk::Align::END);
+  windows_version_label.set_halign(Gtk::Align::END);
+  audio_driver_label.set_halign(Gtk::Align::END);
+  virtual_desktop_resolution_label.set_halign(Gtk::Align::END);
+  log_level_label.set_halign(Gtk::Align::END);
+  environment_variables_label.set_halign(Gtk::Align::END);
+  description_label.set_halign(Gtk::Align::START);
   name_label.set_tooltip_text("Change the machine name");
   folder_name_label.set_tooltip_text("Change the folder. NOTE: This break your shortcuts!");
   wine_bin_path_label.set_tooltip_text("Change the path to the 'wine' binary for this machine");
@@ -123,42 +151,52 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   enable_logging_check.set_tooltip_text("Enable output logging to disk");
   folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name instead, see above.");
 
-  description_scrolled_window.add(description_text_view);
+  description_scrolled_window.set_child(description_text_view);
   description_scrolled_window.set_hexpand(true);
   description_scrolled_window.set_vexpand(true);
 
-  edit_grid.attach(name_label, 0, 0);
-  edit_grid.attach(name_entry, 1, 0);
-  edit_grid.attach(folder_name_label, 0, 1);
-  edit_grid.attach(folder_name_entry, 1, 1);
-  edit_grid.attach(system_wine_bin_path_check, 0, 2);
-  edit_grid.attach(wine_bin_path_label, 0, 3);
-  edit_grid.attach(wine_bin_path_entry, 1, 3);
-  edit_grid.attach(wine_bin_path_button, 2, 3);
-  edit_grid.attach(windows_version_label, 0, 4);
-  edit_grid.attach(windows_version_combobox, 1, 4);
-  edit_grid.attach(audio_driver_label, 0, 5);
-  edit_grid.attach(audio_driver_combobox, 1, 5);
-  edit_grid.attach(virtual_desktop_check, 0, 6, 2);
-  edit_grid.attach(virtual_desktop_resolution_label, 0, 7);
-  edit_grid.attach(virtual_desktop_resolution_entry, 1, 7);
-  edit_grid.attach(enable_logging_check, 0, 8, 2);
-  edit_grid.attach(log_level_label, 0, 9);
-  edit_grid.attach(log_level_combobox, 1, 9);
-  edit_grid.attach(environment_variables_label, 0, 10);
-  edit_grid.attach(configure_environment_variables_button, 1, 10);
-  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_HORIZONTAL)), 0, 11, 3);
-  edit_grid.attach(description_label, 0, 12, 2);
-  edit_grid.attach(description_scrolled_window, 0, 13, 3);
+  int column = 0;
+  edit_grid.attach(name_label, 0, column);
+  edit_grid.attach(name_entry, 1, column++);
+  edit_grid.attach(folder_name_label, 0, column);
+  edit_grid.attach(folder_name_entry, 1, column++);
+  edit_grid.attach(system_wine_bin_path_check, 0, column++);
+  edit_grid.attach(wine_bin_path_label, 0, column);
+  edit_grid.attach(wine_bin_path_entry, 1, column);
+  edit_grid.attach(wine_bin_path_button, 2, column++);
+  edit_grid.attach(windows_version_label, 0, column);
+  edit_grid.attach(windows_version_combobox, 1, column++);
+  edit_grid.attach(audio_driver_label, 0, column);
+  edit_grid.attach(audio_driver_combobox, 1, column++);
+  edit_grid.attach(virtual_desktop_check, 0, column++, 2);
+  edit_grid.attach(virtual_desktop_resolution_label, 0, column);
+  edit_grid.attach(virtual_desktop_resolution_entry, 1, column++);
+  edit_grid.attach(enable_logging_check, 0, column++, 2);
+  edit_grid.attach(log_level_label, 0, column);
+  edit_grid.attach(log_level_combobox, 1, column++);
+  edit_grid.attach(environment_variables_label, 0, column);
+  edit_grid.attach(configure_environment_variables_button, 1, column++);
+  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, column++, 2);
+  edit_grid.attach(description_label, 0, column++, 2);
+  edit_grid.attach(description_scrolled_window, 0, column++, 2);
+  edit_grid.set_hexpand(true);
+  edit_grid.set_vexpand(true);
+  edit_grid.set_halign(Gtk::Align::FILL);
+  edit_grid.set_margin_end(5);
 
-  hbox_buttons.pack_start(delete_button, false, false, 4);
-  hbox_buttons.pack_end(save_button, false, false, 4);
-  hbox_buttons.pack_end(cancel_button, false, false, 4);
+  hbox_buttons.set_margin(6);
+  delete_button.set_halign(Gtk::Align::START);
+  delete_button.set_hexpand(true);
+  save_button.set_halign(Gtk::Align::END);
+  cancel_button.set_halign(Gtk::Align::END);
+  hbox_buttons.append(delete_button);
+  hbox_buttons.append(save_button);
+  hbox_buttons.append(cancel_button);
 
-  vbox.pack_start(header_edit_label, false, false, 4);
-  vbox.pack_start(edit_grid, true, true, 4);
-  vbox.pack_start(hbox_buttons, false, false, 4);
-  add(vbox);
+  vbox.append(header_edit_label);
+  vbox.append(edit_grid);
+  vbox.append(hbox_buttons);
+  set_child(vbox);
 
   // Gray-out virtual desktop & log level by default
   virtual_desktop_resolution_sensitive(false);
@@ -237,15 +275,13 @@ void BottleEditWindow::show()
 
     enable_logging_check.set_active(active_bottle_->is_debug_logging());
     log_level_combobox.set_active_id(std::to_string((int)active_bottle_->debug_log_level()));
-
-    show_all_children();
   }
   else
   {
     set_title("Edit Machine (Unknown machine)");
   }
-  // Call parent show
-  Gtk::Widget::show();
+  // Call parent present
+  present();
 }
 
 /**
@@ -270,7 +306,7 @@ void BottleEditWindow::reset_active_bottle()
  */
 void BottleEditWindow::bottle_removed()
 {
-  hide(); // Close the edit window
+  set_visible(false); // Hide the edit window
 }
 
 /**
@@ -279,7 +315,7 @@ void BottleEditWindow::bottle_removed()
 void BottleEditWindow::on_bottle_updated()
 {
   busy_dialog.hide();
-  hide(); // Close the edit Window
+  set_visible(false); // Hide the edit Window
 }
 
 /**
@@ -387,7 +423,7 @@ void BottleEditWindow::on_select_wine_bin_path_response(int response_id, Gtk::Fi
  */
 void BottleEditWindow::on_cancel_button_clicked()
 {
-  hide();
+  set_visible(false);
 }
 
 /**
@@ -395,6 +431,13 @@ void BottleEditWindow::on_cancel_button_clicked()
  */
 void BottleEditWindow::on_save_button_clicked()
 {
+  // First disable save button (avoid multiple presses)
+  save_button.set_sensitive(false);
+
+  // Show busy dialog
+  busy_dialog.set_message("Updating Windows Machine", "Busy applying all your changes currently.");
+  busy_dialog.present();
+
   std::string::size_type sz;
 
   UpdateBottleStruct update_bottle_struct;
@@ -403,13 +446,6 @@ void BottleEditWindow::on_save_button_clicked()
   update_bottle_struct.virtual_desktop_resolution = "";           // Empty string default (= disabled windowed mode)
   update_bottle_struct.wine_bin_path = "";                        // Empty string default (= use system wine path)
   update_bottle_struct.debug_log_level = 1;                       // // 1 = Default wine debug logging
-
-  // First disable save button (avoid multiple presses)
-  save_button.set_sensitive(false);
-
-  // Show busy dialog
-  busy_dialog.set_message("Updating Windows Machine", "Busy applying all your changes currently.");
-  busy_dialog.show();
 
   update_bottle_struct.name = name_entry.get_text();
   update_bottle_struct.folder_name = folder_name_entry.get_text();

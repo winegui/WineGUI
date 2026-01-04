@@ -30,12 +30,10 @@
 #include <giomm/file.h>
 #include <glibmm/fileutils.h>
 #include <glibmm/miscutils.h>
-#include <glibmm/timeval.h>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <pwd.h>
-#include <regex>
 #include <stdexcept>
 #include <stdio.h>
 #include <sys/types.h>
@@ -43,10 +41,10 @@
 #include <tuple>
 #include <unistd.h>
 
-static const std::array<std::string, 2> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
+static const std::vector<std::string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
 static const string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
 
-static const std::array<std::string, 2> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
+static const std::vector<std::string> defaultWineDir{Glib::get_home_dir(), ".wine"}; /*!< Default Wine bottle location */
 static const string DefaultBottleWineDir = Glib::build_path(G_DIR_SEPARATOR_S, defaultWineDir);
 
 // Wine & Winetricks exec
@@ -100,12 +98,12 @@ static const struct
 {
   const BottleTypes::Windows windows;
   const string version;
-  const string versionNumber; // This version seems to no longer reflect the real OS major/minor version for Windows 10 and up (too bad):
-                              // https://gitlab.winehq.org/wine/wine/-/commit/3a819255f57e54917c598e66e60efb875162f8a3
+  const string versionNumber;
   const string buildNumber;
   const string productType;
 } WindowsVersions[] = {{BottleTypes::Windows::Windows11, "win11", "10.0", "22000", "WinNT"},
-                       {BottleTypes::Windows::Windows10, "win10", "10.0", "19043", "WinNT"},
+                       {BottleTypes::Windows::Windows10, "win10", "10.0", "19045", "WinNT"}, // Newer build number for Windows 10
+                       {BottleTypes::Windows::Windows10, "win10", "10.0", "19043", "WinNT"}, // In older Wine versions the build number is 19043
                        {BottleTypes::Windows::Windows81, "win81", "6.3", "9600", "WinNT"},
                        {BottleTypes::Windows::Windows8, "win8", "6.2", "9200", "WinNT"},
                        {BottleTypes::Windows::Windows2008R2, "win2008r2", "6.1", "7601", "ServerNT"},
@@ -126,7 +124,7 @@ static const struct
                        {BottleTypes::Windows::Windows20, "win20", "2.0", "0", ""}};
 
 //// Size of Windows Versions struct, see above!
-static const unsigned int WindowsStructSize = 20;
+static const unsigned int WindowsStructSize = 21;
 
 /// Meyers Singleton
 Helper::Helper() = default;
@@ -164,7 +162,7 @@ vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_de
   while (!name.empty())
   {
     auto path = Glib::build_filename(dir_path, name);
-    if (Glib::file_test(path, Glib::FileTest::FILE_TEST_IS_DIR))
+    if (Glib::file_test(path, Glib::FileTest::IS_DIR))
     {
       list.emplace_back(path);
     }
@@ -273,7 +271,7 @@ void Helper::write_to_log_file(const string& logging_bottle_prefix, const string
   auto file = Gio::File::create_for_path(log_path);
   try
   {
-    auto output = file->append_to(Gio::FileCreateFlags::FILE_CREATE_NONE);
+    auto output = file->append_to(Gio::File::CreateFlags::NONE);
     output->write(logging);
   }
   catch (const Glib::Error& ex)
@@ -562,137 +560,6 @@ string Helper::get_folder_name(const string& prefix_path)
 }
 
 /**
- * \brief Get current Windows OS version
- * \param[in] prefix_path Bottle prefix
- * \throws runtime_error when Windows registry could not be opened or could not determine Windows version
- * \return Return the Windows OS version
- */
-BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
-{
-  // Trying user registry first
-  string user_reg_file_path = Glib::build_filename(prefix_path, UserReg);
-
-  string win_version = Helper::get_reg_value(user_reg_file_path, RegKeyWine, RegNameWindowsVersion);
-  if (!win_version.empty())
-  {
-    for (unsigned int i = 0; i < WindowsStructSize; i++)
-    {
-      // Check if Windows version matches the win_version string
-      if (((WindowsVersions[i].version).compare(win_version) == 0))
-      {
-        return WindowsVersions[i].windows;
-      }
-    }
-  }
-
-  // Trying system registry
-  string system_reg_file_path = Glib::build_filename(prefix_path, SystemReg);
-  string version = "";
-  if (!(version = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTVersion)).empty())
-  {
-    string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
-    string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);
-    if (type_nt.empty())
-    {
-      // Check the second registry location
-      type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType2, RegNameProductType);
-    }
-    // Find the correct Windows version, comparing the version, build number and NT type (if present)
-    for (unsigned int i = 0; i < WindowsStructSize; i++)
-    {
-      // Check if version + build number matches
-      if (((WindowsVersions[i].versionNumber).compare(version) == 0) && ((WindowsVersions[i].buildNumber).compare(build_number_nt) == 0))
-      {
-        if (!type_nt.empty())
-        {
-          if ((WindowsVersions[i].productType).compare(type_nt) == 0)
-          {
-            return WindowsVersions[i].windows;
-          }
-        }
-        else
-        {
-          return WindowsVersions[i].windows;
-        }
-      }
-
-      // Fall-back - return the Windows version based on build NT number, even if the version number doesn't exactly match
-      for (unsigned int x = 0; x < WindowsStructSize; x++)
-      {
-        // Check if build number matches
-        if ((WindowsVersions[x].buildNumber).compare(build_number_nt) == 0)
-        {
-          if (!type_nt.empty())
-          {
-            if ((WindowsVersions[x].productType).compare(type_nt) == 0)
-            {
-              return WindowsVersions[x].windows;
-            }
-          }
-        }
-      }
-    }
-
-    // Fall-back of fall-back - return the Windows version based on version number, even if the build NT number doesn't exactly match
-    for (unsigned int y = 0; y < WindowsStructSize; y++)
-    {
-      // Check if version matches
-      if ((WindowsVersions[y].versionNumber).compare(version) == 0)
-      {
-        if (!type_nt.empty())
-        {
-          if ((WindowsVersions[y].productType).compare(type_nt) == 0)
-          {
-            return WindowsVersions[y].windows;
-          }
-        }
-        else
-        {
-          return WindowsVersions[y].windows;
-        }
-      }
-    }
-  }
-  else if (!(version = Helper::get_reg_value(system_reg_file_path, RegKeyName9x, RegName9xVersion)).empty())
-  {
-    string current_version = "";
-    string current_build_number = "";
-    vector<string> version_list = split(version, '.');
-    // Only get minor & major
-    if (sizeof(version_list) >= 2)
-    {
-      current_version = version_list.at(0) + '.' + version_list.at(1);
-    }
-    // Get build number
-    if (sizeof(version_list) >= 3)
-    {
-      current_build_number = version_list.at(2);
-    }
-
-    // Find Windows version
-    for (unsigned int i = 0; i < WindowsStructSize; i++)
-    {
-      // Check if version + build number matches
-      if (((WindowsVersions[i].versionNumber).compare(current_version) == 0) && ((WindowsVersions[i].buildNumber).compare(current_build_number) == 0))
-      {
-        return WindowsVersions[i].windows;
-      }
-    }
-
-    // Fall-back to default Windows version, even if the build number doesn't match
-    return WineDefaults::WindowsOs;
-  }
-  else
-  {
-    throw std::runtime_error("Could not determine Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
-                             ". Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
-  }
-  // Function didn't return before (meaning no match found)
-  throw std::runtime_error("Could not determine Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
-                           ". Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
-}
-
-/**
  * \brief Get system processor bit (32/64). *Throw runtime_error* when not found.
  * \param[in] prefix_path Bottle prefix
  * \throws runtime_error when Windows registry could not be opened or could not determine Windows version
@@ -836,12 +703,13 @@ string Helper::get_last_wine_updated(const string& prefix_path)
 }
 
 /**
- * \brief Get Bottle Status, to validate some bear minimal Wine stuff
+ * \brief Get Bottle status and Windows version.
  * Hint: use wait_until_wineserver_is_terminated, if you want to wait until the Bottle is fully created
  * \param[in] prefix_path Bottle prefix
- * \return True if everything is OK, otherwise false
+ * \return tuple of (bool, BottleTypes::Windows, string). Bool indicates if bottle is valid, BottleTypes::Windows indicates Windows version,
+ * and string contains error message when bool is false.
  */
-bool Helper::get_bottle_status(const string& prefix_path)
+std::tuple<bool, BottleTypes::Windows, std::string> Helper::get_bottle_status_and_windows_version(const string& prefix_path)
 {
   // Check if some directories exists, and system registry file,
   // and finally, if we can read-out the Windows OS version without errors
@@ -850,18 +718,17 @@ bool Helper::get_bottle_status(const string& prefix_path)
   {
     try
     {
-      Helper::get_windows_version(prefix_path);
-      return true;
+      BottleTypes::Windows windows = Helper::get_windows_version(prefix_path);
+      return std::make_tuple(true, windows, "");
     }
     catch (const std::runtime_error& error)
     {
-      // Not good!
-      return false;
+      return std::make_tuple(false, BottleTypes::Windows::Unknown, error.what());
     }
   }
   else
   {
-    return false;
+    return std::make_tuple(false, BottleTypes::Windows::Unknown, "Required files/directories are missing in the Wine bottle.");
   }
 }
 
@@ -1032,7 +899,7 @@ string Helper::get_c_letter_drive(const string& prefix_path)
  */
 bool Helper::dir_exists(const string& dir_path)
 {
-  return Glib::file_test(dir_path, Glib::FileTest::FILE_TEST_IS_DIR);
+  return Glib::file_test(dir_path, Glib::FileTest::IS_DIR);
 }
 
 /**
@@ -1056,7 +923,7 @@ bool Helper::create_dir(const string& dir_path)
  */
 bool Helper::file_exists(const string& file_path)
 {
-  return Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR);
+  return Glib::file_test(file_path, Glib::FileTest::IS_REGULAR);
 }
 
 /**
@@ -1547,8 +1414,8 @@ string Helper::string_to_icon(const std::string& filename)
 /**
  * \brief Execute command on terminal. Returns both the exit code as well as stdout output.
  * Note: Redirect stderr to stdout (2>&1), if you want stderr as well.
+ * Usage: const auto& [exit_code, output] = exec("echo 1");
  * \param[in] command The command to be executed
- * \example const auto& [exit_code, output] = exec("echo 1");
  * \throws runtime_error when popen failed (empty pipe pointer)
  * \return Exit code and terminal stdout output as a pair
  */
@@ -1654,6 +1521,137 @@ void Helper::write_file(const string& filename, const string& contents)
 string Helper::read_file(const string& filename)
 {
   return Glib::file_get_contents(filename);
+}
+
+/**
+ * \brief Get current Windows OS version
+ * \param[in] prefix_path Bottle prefix
+ * \throws runtime_error when Windows registry could not be opened or could not determine Windows version
+ * \return Return the Windows OS version
+ */
+BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
+{
+  // Trying user registry first
+  string user_reg_file_path = Glib::build_filename(prefix_path, UserReg);
+
+  string win_version = Helper::get_reg_value(user_reg_file_path, RegKeyWine, RegNameWindowsVersion);
+  if (!win_version.empty())
+  {
+    for (unsigned int i = 0; i < WindowsStructSize; i++)
+    {
+      // Check if Windows version matches the win_version string
+      if (((WindowsVersions[i].version).compare(win_version) == 0))
+      {
+        return WindowsVersions[i].windows;
+      }
+    }
+  }
+
+  // Trying system registry
+  string system_reg_file_path = Glib::build_filename(prefix_path, SystemReg);
+  string version = "";
+  if (!(version = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTVersion)).empty())
+  {
+    string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
+    string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);
+    if (type_nt.empty())
+    {
+      // Check the second registry location
+      type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType2, RegNameProductType);
+    }
+    // Find the correct Windows version, comparing the version, build number and NT type (if present)
+    for (unsigned int i = 0; i < WindowsStructSize; i++)
+    {
+      // Check if version + build number matches
+      if (((WindowsVersions[i].versionNumber).compare(version) == 0) && ((WindowsVersions[i].buildNumber).compare(build_number_nt) == 0))
+      {
+        if (!type_nt.empty())
+        {
+          if ((WindowsVersions[i].productType).compare(type_nt) == 0)
+          {
+            return WindowsVersions[i].windows;
+          }
+        }
+        else
+        {
+          return WindowsVersions[i].windows;
+        }
+      }
+
+      // Fall-back - return the Windows version based on build NT number, even if the version number doesn't exactly match
+      for (unsigned int x = 0; x < WindowsStructSize; x++)
+      {
+        // Check if build number matches
+        if ((WindowsVersions[x].buildNumber).compare(build_number_nt) == 0)
+        {
+          if (!type_nt.empty())
+          {
+            if ((WindowsVersions[x].productType).compare(type_nt) == 0)
+            {
+              return WindowsVersions[x].windows;
+            }
+          }
+        }
+      }
+    }
+
+    // Fall-back of fall-back - return the Windows version based on version number, even if the build NT number doesn't exactly match
+    for (unsigned int y = 0; y < WindowsStructSize; y++)
+    {
+      // Check if version matches
+      if ((WindowsVersions[y].versionNumber).compare(version) == 0)
+      {
+        if (!type_nt.empty())
+        {
+          if ((WindowsVersions[y].productType).compare(type_nt) == 0)
+          {
+            return WindowsVersions[y].windows;
+          }
+        }
+        else
+        {
+          return WindowsVersions[y].windows;
+        }
+      }
+    }
+  }
+  else if (!(version = Helper::get_reg_value(system_reg_file_path, RegKeyName9x, RegName9xVersion)).empty())
+  {
+    string current_version = "";
+    string current_build_number = "";
+    vector<string> version_list = split(version, '.');
+    // Only get minor & major
+    if (sizeof(version_list) >= 2)
+    {
+      current_version = version_list.at(0) + '.' + version_list.at(1);
+    }
+    // Get build number
+    if (sizeof(version_list) >= 3)
+    {
+      current_build_number = version_list.at(2);
+    }
+
+    // Find Windows version
+    for (unsigned int i = 0; i < WindowsStructSize; i++)
+    {
+      // Check if version + build number matches
+      if (((WindowsVersions[i].versionNumber).compare(current_version) == 0) && ((WindowsVersions[i].buildNumber).compare(current_build_number) == 0))
+      {
+        return WindowsVersions[i].windows;
+      }
+    }
+
+    // Fall-back to default Windows version, even if the build number doesn't match
+    return WineDefaults::WindowsOs;
+  }
+  else
+  {
+    throw std::runtime_error("Could not determine Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
+                             ". Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
+  }
+  // Function didn't return before (meaning no match found)
+  throw std::runtime_error("Could not determine Windows version, we assume " + BottleTypes::to_string(WineDefaults::WindowsOs) +
+                           ". Wine machine: " + get_folder_name(prefix_path) + "\n\nFull location: " + prefix_path);
 }
 
 /**

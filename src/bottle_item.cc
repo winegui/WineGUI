@@ -151,10 +151,9 @@ void BottleItem::CreateUI()
 
   // Set left side of the GUI
   image.set(Helper::get_image_location("windows/" + filename_str));
-  image.set_margin_top(8);
-  image.set_margin_end(8);
-  image.set_margin_bottom(8);
-  image.set_margin_start(8);
+  image.set_pixel_size(32);
+  image.set_margin_start(6);
+  image.set_halign(Gtk::Align::START);
 
   name_label.set_xalign(0.0);
   name_label.set_markup("<span size=\"medium\"><b>" + Glib::Markup::escape_text(name_label_text) + "</b></span>");
@@ -170,25 +169,29 @@ void BottleItem::CreateUI()
     status_icon.set(Helper::get_image_location("not_ready.png"));
   }
   status_icon.set_size_request(2, -1);
-  status_icon.set_halign(Gtk::Align::ALIGN_START);
+  status_icon.set_halign(Gtk::Align::START);
 
   status_label.set_text(status_text);
   status_label.set_xalign(0.0);
 
+  grid.set_valign(Gtk::Align::CENTER);
   grid.set_column_spacing(8);
   grid.set_row_spacing(5);
-  grid.set_border_width(4);
+  // TODO: border-width is now removed in GKT4, need to find alternative like CSS
+  // grid.set_border_width(4);
 
   grid.attach(image, 0, 0, 1, 2);
   // Agh, stupid GTK! Width 2 would be enough, add 8 extra = 10
   // I can't control the gtk grid cell width
-  grid.attach_next_to(name_label, image, Gtk::PositionType::POS_RIGHT, 10, 1);
+  grid.attach_next_to(name_label, image, Gtk::PositionType::RIGHT, 10, 1);
 
   grid.attach(status_icon, 1, 1, 1, 1);
-  grid.attach_next_to(status_label, status_icon, Gtk::PositionType::POS_RIGHT, 1, 1);
+  grid.attach_next_to(status_label, status_icon, Gtk::PositionType::RIGHT, 1, 1);
+
+  set_size_request(-1, 65); // More height then default
 
   // Finally at the grid to the ListBoxRow
-  add(grid);
+  set_child(grid);
 }
 
 /**

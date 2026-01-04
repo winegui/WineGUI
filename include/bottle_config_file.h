@@ -26,6 +26,10 @@
 #include <tuple>
 #include <vector>
 
+/**
+ * \struct BottleConfigData
+ * \brief Custom bottle config data struct for bottle config file
+ */
 struct BottleConfigData
 {
   std::string name;

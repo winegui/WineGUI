@@ -51,32 +51,32 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
                                          const std::map<int, ApplicationData>& app_list)
 {
   bool success = false;
-  Glib::KeyFile keyfile;
   std::string file_path = Glib::build_filename(prefix_path, "winegui.ini");
   try
   {
-    keyfile.set_string("General", "Name", bottle_config.name);
-    keyfile.set_string("General", "Description", bottle_config.description);
-    keyfile.set_string("General", "WineBinaryPath", bottle_config.wine_bin_path);
-    keyfile.set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
-    keyfile.set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
+    auto keyfile = Glib::KeyFile::create();
+    keyfile->set_string("General", "Name", bottle_config.name);
+    keyfile->set_string("General", "Description", bottle_config.description);
+    keyfile->set_string("General", "WineBinaryPath", bottle_config.wine_bin_path);
+    keyfile->set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
+    keyfile->set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
     // Iterate over the key/value environment variable pairs (if present)
     for (const auto& [key, value] : bottle_config.env_vars)
     {
-      keyfile.set_value("EnvironmentVariables", key, value);
+      keyfile->set_value("EnvironmentVariables", key, value);
     }
     // Save custom application list (if present)
     for (int i = 0; const auto& [_, app_data] : app_list)
     {
       // Instead of reusing the key, we will reindex if needed (starting from 0)
       std::string group_name = "Application." + std::to_string(i);
-      keyfile.set_string(group_name, "Name", app_data.name);
-      keyfile.set_string(group_name, "Description", app_data.description);
-      keyfile.set_string(group_name, "Command", app_data.command);
+      keyfile->set_string(group_name, "Name", app_data.name);
+      keyfile->set_string(group_name, "Description", app_data.description);
+      keyfile->set_string(group_name, "Command", app_data.command);
       i++;
     }
 
-    success = keyfile.save_to_file(file_path);
+    success = keyfile->save_to_file(file_path);
   }
   catch (const Glib::Error& ex)
   {
@@ -94,7 +94,6 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
 std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::read_config_file(const std::string& prefix_path)
 {
   bool keyfile_needs_save = false;
-  Glib::KeyFile keyfile;
   std::string file_path = Glib::build_filename(prefix_path, "winegui.ini");
 
   struct BottleConfigData bottle_config;
@@ -114,7 +113,7 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
   bottle_config.debug_log_level = 1;     // 1 (default)= Normal Wine debug logging: https://wiki.winehq.org/Debug_Channels
 
   // Check if config file exists
-  if (!Glib::file_test(file_path, Glib::FileTest::FILE_TEST_IS_REGULAR))
+  if (!Glib::file_test(file_path, Glib::FileTest::IS_REGULAR))
   {
     // Config file doesn't exist, make a new file with default configs, return default config data below
     BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list);
@@ -124,12 +123,13 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
     // Config file exists
     try
     {
-      keyfile.load_from_file(file_path);
+      auto keyfile = Glib::KeyFile::create();
+      keyfile->load_from_file(file_path);
       // Retrieve bottle config
-      bottle_config.name = keyfile.get_string("General", "Name");
-      bottle_config.description = keyfile.get_string("General", "Description");
-      bottle_config.logging_enabled = keyfile.get_boolean("Logging", "Enabled");
-      bottle_config.debug_log_level = keyfile.get_integer("Logging", "DebugLevel");
+      bottle_config.name = keyfile->get_string("General", "Name");
+      bottle_config.description = keyfile->get_string("General", "Description");
+      bottle_config.logging_enabled = keyfile->get_boolean("Logging", "Enabled");
+      bottle_config.debug_log_level = keyfile->get_integer("Logging", "DebugLevel");
       try
       {
         bottle_config.wine_bin_path = keyfile.get_string("General", "WineBinaryPath");
@@ -145,23 +145,23 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       }
 
       // Retrieve environment variables (if present)
-      if (keyfile.has_group("EnvironmentVariables"))
+      if (keyfile->has_group("EnvironmentVariables"))
       {
-        auto keys = keyfile.get_keys("EnvironmentVariables");
+        auto keys = keyfile->get_keys("EnvironmentVariables");
         for (Glib::ustring key : keys)
         {
-          bottle_config.env_vars.emplace_back(std::pair<std::string, std::string>(key, keyfile.get_string("EnvironmentVariables", key)));
+          bottle_config.env_vars.emplace_back(std::pair<std::string, std::string>(key, keyfile->get_string("EnvironmentVariables", key)));
         }
       }
 
       // Retrieve custom application list (if present)
-      auto groups = keyfile.get_groups();
+      auto groups = keyfile->get_groups();
       for (int i = 0; Glib::ustring group : groups)
       {
         if (std::string(group).starts_with("Application"))
         {
           app_list.insert(std::pair<int, ApplicationData>(
-              i, {keyfile.get_string(group, "Name"), keyfile.get_string(group, "Description"), keyfile.get_string(group, "Command")}));
+              i, {keyfile->get_string(group, "Name"), keyfile->get_string(group, "Description"), keyfile->get_string(group, "Command")}));
           i++;
         }
       }

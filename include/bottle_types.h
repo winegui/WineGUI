@@ -37,7 +37,8 @@ namespace BottleTypes
    */
   enum class Windows
   {
-    Windows20 = 0,
+    Unknown = 0,
+    Windows20,
     Windows30,
     Windows31,
     WindowsNT351,
@@ -86,8 +87,8 @@ namespace BottleTypes
       std::pair(Windows::Windows11, Bit::win32),    std::pair(Windows::Windows11, Bit::win64),
   };
 
-  //// Default Windows version (Windows 10 32-bit) as WineGUI Bottle
-  static const int DefaultBottleIndex = 25;
+  //// Default Windows version (Windows 10 64-bit) as WineGUI Bottle
+  static const int DefaultBottleIndex = 26;
 
   /**
    * \enum AudioDriver
@@ -131,6 +132,8 @@ namespace BottleTypes
   {
     switch (win)
     {
+    case Windows::Unknown:
+      return "- Unknown Windows OS -";
     case Windows::Windows20:
       return "Windows 2.0";
     case Windows::Windows30:

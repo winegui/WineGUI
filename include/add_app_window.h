@@ -33,7 +33,7 @@ class AddAppWindow : public Gtk::Window
 {
 public:
   // Signals
-  sigc::signal<void> config_saved; /*!< bottle config is saved signal */
+  sigc::signal<void()> config_saved; /*!< bottle config is saved signal */
 
   explicit AddAppWindow(Gtk::Window& parent);
   virtual ~AddAppWindow();
@@ -63,10 +63,10 @@ private:
 
   // Signal handlers
   void on_select_file();
-  void on_select_dialog_response(int response_id, Gtk::FileChooserDialog* dialog);
   void on_cancel_button_clicked();
   void on_save_button_clicked();
 
   // Member functions
+  void create_layout();
   void set_default_values();
 };
