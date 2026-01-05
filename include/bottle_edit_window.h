@@ -110,7 +110,6 @@ private:
   void on_save_button_clicked();
   void on_system_wine_bin_path_toggle();
   void on_select_wine_bin_path();
-  void on_select_wine_bin_path_response(int response_id, Gtk::FileChooserDialog* dialog);
   void on_virtual_desktop_toggle();
   void on_debug_logging_toggle();
 

@@ -132,7 +132,7 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       bottle_config.debug_log_level = keyfile->get_integer("Logging", "DebugLevel");
       try
       {
-        bottle_config.wine_bin_path = keyfile.get_string("General", "WineBinaryPath");
+        bottle_config.wine_bin_path = keyfile->get_string("General", "WineBinaryPath");
       }
       catch (const Glib::Error& ex)
       {

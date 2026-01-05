@@ -155,30 +155,30 @@ void BottleEditWindow::create_layout()
   description_scrolled_window.set_hexpand(true);
   description_scrolled_window.set_vexpand(true);
 
-  int column = 0;
-  edit_grid.attach(name_label, 0, column);
-  edit_grid.attach(name_entry, 1, column++);
-  edit_grid.attach(folder_name_label, 0, column);
-  edit_grid.attach(folder_name_entry, 1, column++);
-  edit_grid.attach(system_wine_bin_path_check, 0, column++);
-  edit_grid.attach(wine_bin_path_label, 0, column);
-  edit_grid.attach(wine_bin_path_entry, 1, column);
-  edit_grid.attach(wine_bin_path_button, 2, column++);
-  edit_grid.attach(windows_version_label, 0, column);
-  edit_grid.attach(windows_version_combobox, 1, column++);
-  edit_grid.attach(audio_driver_label, 0, column);
-  edit_grid.attach(audio_driver_combobox, 1, column++);
-  edit_grid.attach(virtual_desktop_check, 0, column++, 2);
-  edit_grid.attach(virtual_desktop_resolution_label, 0, column);
-  edit_grid.attach(virtual_desktop_resolution_entry, 1, column++);
-  edit_grid.attach(enable_logging_check, 0, column++, 2);
-  edit_grid.attach(log_level_label, 0, column);
-  edit_grid.attach(log_level_combobox, 1, column++);
-  edit_grid.attach(environment_variables_label, 0, column);
-  edit_grid.attach(configure_environment_variables_button, 1, column++);
-  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, column++, 2);
-  edit_grid.attach(description_label, 0, column++, 2);
-  edit_grid.attach(description_scrolled_window, 0, column++, 2);
+  int row = 0;
+  edit_grid.attach(name_label, 0, row);
+  edit_grid.attach(name_entry, 1, row++);
+  edit_grid.attach(folder_name_label, 0, row);
+  edit_grid.attach(folder_name_entry, 1, row++);
+  edit_grid.attach(system_wine_bin_path_check, 0, row++);
+  edit_grid.attach(wine_bin_path_label, 0, row);
+  edit_grid.attach(wine_bin_path_entry, 1, row);
+  edit_grid.attach(wine_bin_path_button, 2, row++);
+  edit_grid.attach(windows_version_label, 0, row);
+  edit_grid.attach(windows_version_combobox, 1, row++);
+  edit_grid.attach(audio_driver_label, 0, row);
+  edit_grid.attach(audio_driver_combobox, 1, row++);
+  edit_grid.attach(virtual_desktop_check, 0, row++, 2);
+  edit_grid.attach(virtual_desktop_resolution_label, 0, row);
+  edit_grid.attach(virtual_desktop_resolution_entry, 1, row++);
+  edit_grid.attach(enable_logging_check, 0, row++, 2);
+  edit_grid.attach(log_level_label, 0, row);
+  edit_grid.attach(log_level_combobox, 1, row++);
+  edit_grid.attach(environment_variables_label, 0, row);
+  edit_grid.attach(configure_environment_variables_button, 1, row++);
+  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, row++, 2);
+  edit_grid.attach(description_label, 0, row++, 2);
+  edit_grid.attach(description_scrolled_window, 0, row++, 2);
   edit_grid.set_hexpand(true);
   edit_grid.set_vexpand(true);
   edit_grid.set_halign(Gtk::Align::FILL);
@@ -205,21 +205,12 @@ void BottleEditWindow::create_layout()
   // Signals
   wine_bin_path_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_select_wine_bin_path));
   configure_environment_variables_button.signal_clicked().connect(configure_environment_variables);
-  delete_button.signal_clicked().connect(remove_bottle);
+  delete_button.signal_clicked().connect(sigc::bind(remove_bottle, this));
   system_wine_bin_path_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_system_wine_bin_path_toggle));
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
   enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_save_button_clicked));
-
-  show_all_children();
-}
-
-/**
- * \brief Destructor
- */
-BottleEditWindow::~BottleEditWindow()
-{
 }
 
 /**
@@ -381,41 +372,73 @@ void BottleEditWindow::on_debug_logging_toggle()
  */
 void BottleEditWindow::on_select_wine_bin_path()
 {
-  auto* folder_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER, Gtk::DialogFlags::DIALOG_MODAL);
-  folder_chooser->set_modal(true);
-  folder_chooser->signal_response().connect(sigc::bind(sigc::mem_fun(*this, &BottleEditWindow::on_select_wine_bin_path_response), folder_chooser));
-  folder_chooser->add_button("_Cancel", Gtk::ResponseType::RESPONSE_CANCEL);
-  folder_chooser->add_button("_Select folder", Gtk::ResponseType::RESPONSE_OK);
-  folder_chooser->set_current_folder(wine_bin_path_entry.get_text());
-  folder_chooser->show();
-}
+#ifndef OLD_GTK
+  // New GTK4 version, using FileDialog (copied from 'preferences_window.cc')
+  // TODO: can we wrap this in a helper?
+  auto dialog = Gtk::FileDialog::create();
+  dialog->set_title("Choose a folder");
+  dialog->set_modal(true);
+  {
+    auto folder = Gio::File::create_for_path(wine_bin_path_entry.get_text());
+    if (!folder->get_path().empty())
+    {
+      dialog->set_initial_folder(folder);
+    }
+  }
 
-/**
- * \brief Triggered when the 'on_select_wine_bin_path' dialog is ended.
- */
-void BottleEditWindow::on_select_wine_bin_path_response(int response_id, Gtk::FileChooserDialog* dialog)
-{
-  switch (response_id)
-  {
-  case Gtk::ResponseType::RESPONSE_OK:
-  {
-    // Update wine binary path entry
-    auto folder = dialog->get_current_folder();
-    wine_bin_path_entry.set_text(folder);
-    break;
-  }
-  case Gtk::ResponseType::RESPONSE_CANCEL:
-  {
-    break; // ignore
-  }
-  default:
-  {
-    std::cout << "Error: Unexpected button clicked in 'BottleEditWindow::on_select_wine_bin_response'." << std::endl;
-    break;
-  }
-  }
-  delete dialog;
+  dialog->select_folder(*this,
+                        [this, dialog](const Glib::RefPtr<Gio::AsyncResult>& result)
+                        {
+                          try
+                          {
+                            auto folder = dialog->select_folder_finish(result);
+                            wine_bin_path_entry.set_text(folder->get_path());
+                          }
+                          catch (const Gtk::DialogError& err)
+                          {
+                            // Do nothing
+                          }
+                          catch (const Glib::Error& err)
+                          {
+                            // Do nothing
+                          }
+                        });
+#else
+  auto* folder_chooser =
+      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER, true);
+  folder_chooser->set_modal(true);
+  folder_chooser->set_transient_for(*this);
+  folder_chooser->signal_response().connect(
+    [this, folder_chooser](int response_id)
+    {
+      switch (response_id)
+      {
+      case Gtk::ResponseType::OK:
+      {
+        // Update wine binary path entry
+        auto folder = folder_chooser->get_current_folder();
+        wine_bin_path_entry.set_text(folder->get_path());
+        break;
+      }
+      case Gtk::ResponseType::CANCEL:
+      {
+        break; // ignore
+      }
+      default:
+      {
+        std::cout << "Error: Unexpected button clicked in 'BottleEditWindow::on_select_wine_bin_response'." << std::endl;
+        break;
+      }
+      }
+      delete folder_chooser;
+    }
+  );
+  folder_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
+  folder_chooser->add_button("_Select folder", Gtk::ResponseType::OK);
+  auto folder = Gio::File::create_for_path(wine_bin_path_entry.get_text());
+  folder_chooser->set_current_folder(folder);
+  folder_chooser->show();
+#endif
 }
 
 /**
