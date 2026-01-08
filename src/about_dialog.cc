@@ -41,7 +41,7 @@ AboutDialog::AboutDialog(Gtk::Window& parent)
   set_authors(devs);
   set_artists(devs);
   set_version(PROJECT_VER);
-  set_copyright("Copyright © 2019-2025 Melroy van den Berg");
+  set_copyright("Copyright © 2019-2026 Melroy van den Berg");
   set_license_type(Gtk::License::AGPL_3_0);
   set_website_label("Official GitLab Project");
   set_website("https://gitlab.melroy.org/melroy/winegui");

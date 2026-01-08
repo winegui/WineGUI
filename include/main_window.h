@@ -30,6 +30,7 @@
 #include <gtkmm.h>
 #include <iostream>
 #include <list>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
