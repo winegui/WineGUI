@@ -71,6 +71,7 @@ MainWindow::MainWindow()
   // Label alignments
   name_label.set_halign(Gtk::Align::START);
   folder_name_label.set_halign(Gtk::Align::START);
+  wine_bin_path_label.set_halign(Gtk::Align::START);
   window_version_label.set_halign(Gtk::Align::START);
   c_drive_location_label.set_halign(Gtk::Align::START);
   wine_version_label.set_halign(Gtk::Align::START);
