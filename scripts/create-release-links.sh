@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # By: Melroy van den Berg
 # Description: Create new links in the Release page of Gitlab
 # Depends on one environment variable: $APP_VERSION
