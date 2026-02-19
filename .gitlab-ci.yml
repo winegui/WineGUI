@@ -1,5 +1,5 @@
 default:
-  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:trixie 
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:trixie
 
 stages:
   - test
@@ -78,7 +78,7 @@ build:plucky:
 # Create release links + release file (containing the version)
 release:
   stage: deploy
-  image: curlimages/curl:latest
+  image: serversideup/github-cli:latest
   needs:
     - job: build:bookworm
       artifacts: true
@@ -93,9 +93,23 @@ release:
   rules:
     - if: $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_TAG
   script:
+    # Release to winegui.melroy.org/downloads
     - export APP_VERSION=${CI_COMMIT_TAG}
     - ./scripts/create-release-links.sh
     - ./scripts/create-latest-release-file.sh
+
+    # GitHub Sync (fallback to only upload if creating a release fails)
+    # Using GH_TOKEN environment variable from GitLab CI/CD variables
+    - |
+      gh release create "$CI_COMMIT_TAG" \
+        build_prod/WineGUI-* \
+        --repo "winegui/WineGUI" \
+        --title "WineGUI $CI_COMMIT_TAG" \
+        --notes-from-tag || \
+      gh release upload "$CI_COMMIT_TAG" \
+        build_prod/WineGUI-* \
+        --repo "winegui/WineGUI" \
+        --clobber
   environment:
     name: production
     url: https://winegui.melroy.org/downloads
