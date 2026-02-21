@@ -105,7 +105,7 @@ release:
         build_prod/WineGUI-* \
         --repo "winegui/WineGUI" \
         --title "WineGUI $CI_COMMIT_TAG" \
-        --notes-from-tag || \
+        --notes "WineGUI Release $CI_COMMIT_TAG" || \
       gh release upload "$CI_COMMIT_TAG" \
         build_prod/WineGUI-* \
         --repo "winegui/WineGUI" \
