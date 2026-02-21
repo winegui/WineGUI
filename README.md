@@ -10,7 +10,9 @@ At last, a user-interface friendly [Wine](https://www.winehq.org/) (A compatibil
 
 ## Download
 
-You can find the latest version on the [Releases page](https://gitlab.melroy.org/melroy/winegui/-/releases) of GitLab.
+You can find the latest version on the [Releases page](https://gitlab.melroy.org/melroy/winegui/-/releases) under "Packages" on my GitLab server.
+
+Besides the release page on GitLab (see above), you can now also find the latest version on the [GitHub Release](https://github.com/winegui/WineGUI/releases) (mirror).
 
 Download the WineGUI package you require for your Linux distribution. I provide `.deb`, `.rpm` and `.tar.gz` files:
 
@@ -35,7 +37,6 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 ## GitHub Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=winegui/WineGUI&type=Date)](https://star-history.com/#winegui/WineGUI&Date)
-
 
 ---
 
@@ -156,7 +157,7 @@ gdb -ex=run bin/winegui
 
 ### Production
 
-For production build DEB + RPM packages, you can run the script: 
+For production build DEB + RPM packages, you can run the script:
 
 ```sh
 ./scripts/build-prod.sh "DEB;RPM"
@@ -173,7 +174,7 @@ cd build_prod
 cpack -C Release -G "DEB"
 ```
 
-_Hint:_ You can disable the automatic startup version check by setting the `-DCHECK_FOR_UPDATE=OFF` variable. This will write the config init file with `CheckForUpdatesStartup` set to `false` (instead of `true`). Which is used for *rolling release* Linux distros.
+_Hint:_ You can disable the automatic startup version check by setting the `-DCHECK_FOR_UPDATE=OFF` variable. This will write the config init file with `CheckForUpdatesStartup` set to `false` (instead of `true`). Which is used for _rolling release_ Linux distros.
 
 ### Build Doxygen
 
