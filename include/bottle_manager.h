@@ -64,13 +64,18 @@ public:
   void update_bottle(SignalController* caller,
                      const Glib::ustring& name,
                      const Glib::ustring& folder_name,
+                     const Glib::ustring& wine_bin_path,
                      const Glib::ustring& description,
                      BottleTypes::Windows windows_version,
                      const Glib::ustring& virtual_desktop_resolution,
                      BottleTypes::AudioDriver audio,
                      bool is_debug_logging,
                      int debug_log_level);
-  void clone_bottle(SignalController* caller, const Glib::ustring& name, const Glib::ustring& folder_name, const Glib::ustring& description);
+  void clone_bottle(SignalController* caller,
+                    const Glib::ustring& name,
+                    const Glib::ustring& folder_name,
+                    const Glib::ustring& description,
+                    const Glib::ustring& wine_bin_path);
   void delete_bottle(Gtk::Window* parent);
   void set_active_bottle(BottleItem* bottle);
   const Glib::ustring& get_error_message() const;
@@ -127,7 +132,7 @@ private:
   GeneralConfigData load_and_save_general_config();
   bool is_bottle_not_null();
   string get_deinstall_mono_command();
-  string get_wine_version();
+  string get_wine_version(const string& wine_bin_path);
   std::vector<string> get_bottle_paths();
   std::list<BottleItem> create_wine_bottles(const std::vector<string>& bottle_dirs);
 };

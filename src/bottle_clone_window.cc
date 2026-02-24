@@ -202,5 +202,6 @@ void BottleCloneWindow::on_clone_button_clicked()
   clone_bottle_struct.name = name_entry.get_text();
   clone_bottle_struct.folder_name = folder_name_entry.get_text();
   clone_bottle_struct.description = description_text_view.get_buffer()->get_text();
+  clone_bottle_struct.wine_bin_path = active_bottle_->wine_bin_path();
   clone_bottle.emit(clone_bottle_struct);
 }

@@ -34,6 +34,7 @@ struct BottleConfigData
 {
   std::string name;
   std::string description;
+  std::string wine_bin_path;
   bool logging_enabled;
   int debug_log_level;
   std::vector<std::pair<std::string, std::string>> env_vars;
