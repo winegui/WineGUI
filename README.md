@@ -168,7 +168,7 @@ First parameter is required and should be a semicolon separated list of packages
 Or build manually:
 
 ```sh
-cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -DPACKAGE -DCMAKE_BUILD_TYPE=Release -B build_prod
+cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -DPACKAGE -DCMAKE_BUILD_TYPE=Release -DGSETTINGS_COMPILE:BOOL=FALSE -B build_prod
 cmake --build ./build_prod --config Release
 cd build_prod
 cpack -C Release -G "DEB"
