@@ -23,6 +23,7 @@
 #include "bottle_types.h"
 #include "busy_dialog.h"
 #include <gtkmm.h>
+#include <iostream>
 
 using std::string;
 
@@ -37,6 +38,7 @@ struct UpdateBottleStruct
 {
   Glib::ustring name;
   Glib::ustring folder_name;
+  Glib::ustring wine_bin_path;
   Glib::ustring description;
   BottleTypes::Windows windows_version;
   Glib::ustring virtual_desktop_resolution;
@@ -77,6 +79,7 @@ protected:
   Gtk::Label header_edit_label;                       /*!< header edit label */
   Gtk::Label name_label;                              /*!< name label */
   Gtk::Label folder_name_label;                       /*!< folder name label */
+  Gtk::Label wine_bin_path_label;                     /*!< wine binary path label */
   Gtk::Label windows_version_label;                   /*!< windows version label */
   Gtk::Label audio_driver_label;                      /*!< audio driver label */
   Gtk::Label virtual_desktop_resolution_label;        /*!< virtual desktop resolution label */
@@ -85,7 +88,9 @@ protected:
   Gtk::Label environment_variables_label;             /*!< environment variables label */
   Gtk::Entry name_entry;                              /*!< name input field */
   Gtk::Entry folder_name_entry;                       /*!< folder name input field */
+  Gtk::Entry wine_bin_path_entry;                     /*!< wine binary path input field */
   Gtk::Entry virtual_desktop_resolution_entry;        /*!< virtual desktop resolution input field */
+  Gtk::CheckButton system_wine_bin_path_check;        /*!< use system wine binary path checkbox */
   Gtk::ComboBoxText windows_version_combobox;         /*!< windows version combobox */
   Gtk::ComboBoxText audio_driver_combobox;            /*!< audio driver combobox */
   Gtk::CheckButton virtual_desktop_check;             /*!< virtual desktop checkbox */
@@ -94,6 +99,7 @@ protected:
   Gtk::ScrolledWindow description_scrolled_window;    /*!< description scrolled window */
   Gtk::TextView description_text_view;                /*!< description text view */
   Gtk::Button configure_environment_variables_button; /*!< configure environment variables button */
+  Gtk::Button wine_bin_path_button;                   /*!< choose wine bin path button */
   Gtk::Button save_button;                            /*!< save button */
   Gtk::Button cancel_button;                          /*!< cancel button */
   Gtk::Button delete_button;                          /*!< delete button */
@@ -102,10 +108,13 @@ private:
   // Signal handlers
   void on_cancel_button_clicked();
   void on_save_button_clicked();
+  void on_system_wine_bin_path_toggle();
+  void on_select_wine_bin_path();
   void on_virtual_desktop_toggle();
   void on_debug_logging_toggle();
 
   // Member functions
+  void system_wine_bin_path_sensitive(bool sensitive);
   void create_layout();
   void virtual_desktop_resolution_sensitive(bool sensitive);
   void log_level_sensitive(bool sensitive);
