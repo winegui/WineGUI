@@ -16,11 +16,10 @@ if [ "$1" == "" ]; then
 fi
 
 rm -rf build_prod
-cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -DDOXYGEN=ON -DPACKAGE=ON -DCMAKE_BUILD_TYPE=Release -B build_prod
+cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr -DDOXYGEN=ON -DPACKAGE=ON -DCMAKE_BUILD_TYPE=Release -DGSETTINGS_COMPILE:BOOL=FALSE -B build_prod
 cmake --build ./build_prod --config Release
 echo "INFO: Building packages..."
 cd build_prod
-# Requires root
 cpack -C Release -G "$1"
 
 # Check if deb is in the generator names
