@@ -404,35 +404,33 @@ void BottleEditWindow::on_select_wine_bin_path()
                           }
                         });
 #else
-  auto* folder_chooser =
-      new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER, true);
+  auto* folder_chooser = new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER, true);
   folder_chooser->set_modal(true);
   folder_chooser->set_transient_for(*this);
   folder_chooser->signal_response().connect(
-    [this, folder_chooser](int response_id)
-    {
-      switch (response_id)
+      [this, folder_chooser](int response_id)
       {
-      case Gtk::ResponseType::OK:
-      {
-        // Update wine binary path entry
-        auto folder = folder_chooser->get_current_folder();
-        wine_bin_path_entry.set_text(folder->get_path());
-        break;
-      }
-      case Gtk::ResponseType::CANCEL:
-      {
-        break; // ignore
-      }
-      default:
-      {
-        std::cout << "Error: Unexpected button clicked in 'BottleEditWindow::on_select_wine_bin_response'." << std::endl;
-        break;
-      }
-      }
-      delete folder_chooser;
-    }
-  );
+        switch (response_id)
+        {
+        case Gtk::ResponseType::OK:
+        {
+          // Update wine binary path entry
+          auto folder = folder_chooser->get_current_folder();
+          wine_bin_path_entry.set_text(folder->get_path());
+          break;
+        }
+        case Gtk::ResponseType::CANCEL:
+        {
+          break; // ignore
+        }
+        default:
+        {
+          std::cout << "Error: Unexpected button clicked in 'BottleEditWindow::on_select_wine_bin_response'." << std::endl;
+          break;
+        }
+        }
+        delete folder_chooser;
+      });
   folder_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
   folder_chooser->add_button("_Select folder", Gtk::ResponseType::OK);
   auto folder = Gio::File::create_for_path(wine_bin_path_entry.get_text());
