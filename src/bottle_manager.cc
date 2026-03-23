@@ -1363,7 +1363,7 @@ string BottleManager::get_deinstall_mono_command()
  */
 string BottleManager::get_wine_version(const string& prefix_path, const string& wine_bin_path)
 {
-  string wine_version = "";
+  string wine_version = "?";
   try
   {
     wine_version = Helper::get_wine_version(is_wine64_bit_, prefix_path, wine_bin_path);

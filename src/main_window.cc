@@ -727,18 +727,20 @@ bool MainWindow::on_delete_window()
 void MainWindow::set_detailed_info(const BottleItem& bottle)
 {
   // Set right side of the GUI
+  // General
   name_label.set_text(bottle.name());
   folder_name_label.set_text(bottle.folder_name());
-  Glib::ustring wine_bin_path_text = (bottle.wine_bin_path().empty()) ? "System Default" : bottle.wine_bin_path();
-  wine_bin_path_label.set_text(wine_bin_path_text);
+  // System
   Glib::ustring windows = BottleTypes::to_string(bottle.windows());
   windows += " (" + BottleTypes::to_string(bottle.bit()) + ')';
   window_version_label.set_text(windows);
   c_drive_location_label.set_text(bottle.wine_c_drive());
+  // Wine details
   // Hide which wine bitness is used, since users think they need to run 64-bit,
   // while they shouldn't.
   // Glib::ustring wine_bitness = (bottle.is_wine64_bit()) ? "64-bit" : "32-bit";
-  wine_version_label.set_text(bottle.wine_version());
+  const Glib::ustring wine_version = bottle.wine_version();
+  wine_version_label.set_text(wine_version);
   if (Helper::is_default_wine_bottle(bottle.wine_location()))
   {
     wine_location_label.set_text(bottle.wine_location() + " - ⚠ Default Wine prefix");
@@ -752,13 +754,26 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
   if (!bottle.is_debug_logging())
     debug_log_level_str = "<s>" + debug_log_level_str + "</s>"; // Strikethrough when logging is disabled
 
+  Glib::ustring wine_bin_path_text = (bottle.wine_bin_path().empty()) ? "System Default" : bottle.wine_bin_path();
+  if (wine_version == "?")
+  {
+    // Wine version could be found, this is a red flag.
+    wine_bin_path_label.set_text(wine_bin_path_text + " - ⚠ Wine could not be found, check path in your settings!");
+  }
+  else
+  {
+    wine_bin_path_label.set_text(wine_bin_path_text);
+  }
   Glib::ustring log_level_prefix_str = (!bottle.is_debug_logging()) ? "Logging is disabled - " : "";
   debug_log_level_label.set_markup(log_level_prefix_str + debug_log_level_str);
   wine_last_changed_label.set_text(bottle.wine_last_changed());
+  // Audio
   audio_driver_label.set_text(BottleTypes::to_string(bottle.audio_driver()));
   Glib::ustring virtual_desktop_text = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
+  // Display
   virtual_desktop_label.set_text(virtual_desktop_text);
   Glib::ustring description_text = (bottle.description().empty()) ? "None" : bottle.description();
+  // Description
   description_label.set_text(description_text);
 }
 
