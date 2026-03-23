@@ -71,6 +71,7 @@ MainWindow::MainWindow()
   // Label alignments
   name_label.set_halign(Gtk::Align::START);
   folder_name_label.set_halign(Gtk::Align::START);
+  wine_bin_path_label.set_halign(Gtk::Align::START);
   window_version_label.set_halign(Gtk::Align::START);
   c_drive_location_label.set_halign(Gtk::Align::START);
   wine_version_label.set_halign(Gtk::Align::START);
@@ -266,6 +267,7 @@ void MainWindow::reset_detailed_info()
 {
   name_label.set_text("");
   folder_name_label.set_text("");
+  wine_bin_path_label.set_text("");
   window_version_label.set_text("");
   c_drive_location_label.set_text("");
   wine_version_label.set_text("");
@@ -727,6 +729,8 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
   // Set right side of the GUI
   name_label.set_text(bottle.name());
   folder_name_label.set_text(bottle.folder_name());
+  Glib::ustring wine_bin_path_text = (bottle.wine_bin_path().empty()) ? "System Default" : bottle.wine_bin_path();
+  wine_bin_path_label.set_text(wine_bin_path_text);
   Glib::ustring windows = BottleTypes::to_string(bottle.windows());
   windows += " (" + BottleTypes::to_string(bottle.bit()) + ')';
   window_version_label.set_text(windows);
@@ -1272,17 +1276,23 @@ void MainWindow::create_right_panel()
   detail_grid.attach(*wine_log_level_text_label, 0, 10, 2, 1);
   detail_grid.attach_next_to(debug_log_level_label, *wine_log_level_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
+  // Wine binary path
+  Gtk::Label* wine_bin_path_text_label = Gtk::manage(new Gtk::Label("Wine Bin Path:", Gtk::Align::START, Gtk::Align::CENTER));
+  wine_bin_path_label.set_tooltip_text("Custom Wine binary path (set in Edit Window)");
+  detail_grid.attach(*wine_bin_path_text_label, 0, 11, 2, 1);
+  detail_grid.attach_next_to(wine_bin_path_label, *wine_bin_path_text_label, Gtk::PositionType::RIGHT, 1, 1);
+
   // Wine location
   Gtk::Label* wine_location_text_label = Gtk::manage(new Gtk::Label("Wine Location:", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*wine_location_text_label, 0, 11, 2, 1);
+  detail_grid.attach(*wine_location_text_label, 0, 12, 2, 1);
   detail_grid.attach_next_to(wine_location_label, *wine_location_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine last changed
   Gtk::Label* wine_last_changed_text_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*wine_last_changed_text_label, 0, 12, 2, 1);
+  detail_grid.attach(*wine_last_changed_text_label, 0, 13, 2, 1);
   detail_grid.attach_next_to(wine_last_changed_label, *wine_last_changed_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Wine
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 13, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 14, 3, 1);
 
   // Audio heading
   Gtk::Image* audio_icon = Gtk::manage(new Gtk::Image());
@@ -1290,15 +1300,15 @@ void MainWindow::create_right_panel()
   audio_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* audio_text_label = Gtk::manage(new Gtk::Label());
   audio_text_label->set_markup("<b>Audio</b>");
-  detail_grid.attach(*audio_icon, 0, 14, 1, 1);
+  detail_grid.attach(*audio_icon, 0, 15, 1, 1);
   detail_grid.attach_next_to(*audio_text_label, *audio_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Audio driver
   Gtk::Label* audio_driver_text_label = Gtk::manage(new Gtk::Label("Audio Driver:", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*audio_driver_text_label, 0, 15, 2, 1);
+  detail_grid.attach(*audio_driver_text_label, 0, 16, 2, 1);
   detail_grid.attach_next_to(audio_driver_label, *audio_driver_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Audio driver
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 16, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 17, 3, 1);
 
   // Display heading
   Gtk::Image* display_icon = Gtk::manage(new Gtk::Image());
@@ -1306,15 +1316,15 @@ void MainWindow::create_right_panel()
   display_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* display_text_label = Gtk::manage(new Gtk::Label());
   display_text_label->set_markup("<b>Display</b>");
-  detail_grid.attach(*display_icon, 0, 17, 1, 1);
+  detail_grid.attach(*display_icon, 0, 18, 1, 1);
   detail_grid.attach_next_to(*display_text_label, *display_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Virtual Desktop
   Gtk::Label* virtual_desktop_text_label = Gtk::manage(new Gtk::Label("Virtual Desktop\n(Windowed Mode):", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*virtual_desktop_text_label, 0, 18, 2, 1);
+  detail_grid.attach(*virtual_desktop_text_label, 0, 19, 2, 1);
   detail_grid.attach_next_to(virtual_desktop_label, *virtual_desktop_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Display
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 19, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 20, 3, 1);
 
   // Description heading
   Gtk::Image* description_icon = Gtk::manage(new Gtk::Image());
@@ -1322,11 +1332,11 @@ void MainWindow::create_right_panel()
   description_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* description_text_label = Gtk::manage(new Gtk::Label());
   description_text_label->set_markup("<b>Description</b>");
-  detail_grid.attach(*description_icon, 0, 20, 1, 1);
+  detail_grid.attach(*description_icon, 0, 21, 1, 1);
   detail_grid.attach_next_to(*description_text_label, *description_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Description text
-  detail_grid.attach(description_label, 0, 21, 3, 1);
+  detail_grid.attach(description_label, 0, 22, 3, 1);
   // End Description
 
   // Place inside a scrolled window
