@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 WineGUI
+ * Copyright (c) 2022-2026 WineGUI
  *
  * \file    bottle_config_file.cc
  * \brief   Wine bottle config file helper class
@@ -55,9 +55,10 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
   try
   {
     auto keyfile = Glib::KeyFile::create();
+    keyfile->set_integer("General", "ConfigVersion", CONFIG_VERSION_CURRENT);
     keyfile->set_string("General", "Name", bottle_config.name);
     keyfile->set_string("General", "Description", bottle_config.description);
-    keyfile->set_string("General", "WineBinaryPath", bottle_config.wine_bin_path);
+    keyfile->set_string("Wine", "BinaryPath", bottle_config.wine_bin_path);
     keyfile->set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
     keyfile->set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
     // Iterate over the key/value environment variable pairs (if present)
@@ -95,57 +96,30 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
 {
   std::string file_path = Glib::build_filename(prefix_path, "winegui.ini");
 
-  struct BottleConfigData bottle_config;
-  std::map<int, ApplicationData> app_list; // Empty array
-  bool keyfile_needs_save = false;
-  /// Defaults config values ///
-  // Name from wine prefix
-  if (Helper::is_default_wine_bottle(prefix_path))
-  {
-    bottle_config.name = "Default Wine machine"; // In case of the default Wine bottle path (~/.wine)
-  }
-  else
-  {
-    bottle_config.name = Helper::get_folder_name(prefix_path); // Using the folder name as default name
-  }
-  bottle_config.description = "";        // Empty description
-  bottle_config.wine_bin_path = "";      // Empty wine binary path (= use system wine)
-  bottle_config.logging_enabled = false; // Disable logging by default
-  bottle_config.debug_log_level = 1;     // 1 (default)= Normal Wine debug logging: https://wiki.winehq.org/Debug_Channels
+  BottleConfigData bottle_config = get_default_config(prefix_path);
+  std::map<int, ApplicationData> app_list;
 
-  // Check if config file exists
   if (!Glib::file_test(file_path, Glib::FileTest::IS_REGULAR))
   {
-    // Config file doesn't exist, make a new file with default configs, return default config data below
     BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list);
   }
   else
   {
-    // Config file exists
     try
     {
       auto keyfile = Glib::KeyFile::create();
       keyfile->load_from_file(file_path);
-      // Retrieve bottle config
+
+      int config_version = detect_config_version(keyfile);
+      bool needs_save = migrate_config(keyfile, config_version);
+
       bottle_config.name = keyfile->get_string("General", "Name");
       bottle_config.description = keyfile->get_string("General", "Description");
+      bottle_config.wine_bin_path = keyfile->get_string("Wine", "BinaryPath");
       bottle_config.logging_enabled = keyfile->get_boolean("Logging", "Enabled");
       bottle_config.debug_log_level = keyfile->get_integer("Logging", "DebugLevel");
-      try
-      {
-        bottle_config.wine_bin_path = keyfile->get_string("General", "WineBinaryPath");
-      }
-      catch (const Glib::Error& ex)
-      {
-        // WineGUI <= 3.0.1 did not have the 'WineBinaryPath' property, so set to empty string
-        std::cerr << "Warning: Could not find 'General>WineBinaryPath' property in '" << file_path << "'! Setting it to an empty string."
-                  << std::endl;
-        std::cerr << "         This is probably a WineGUI <= 3.0.1 keyfile." << std::endl;
-        keyfile_needs_save = true;
-        bottle_config.wine_bin_path = "";
-      }
+      bottle_config.config_version = CONFIG_VERSION_CURRENT;
 
-      // Retrieve environment variables (if present)
       if (keyfile->has_group("EnvironmentVariables"))
       {
         auto keys = keyfile->get_keys("EnvironmentVariables");
@@ -155,7 +129,6 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
         }
       }
 
-      // Retrieve custom application list (if present)
       auto groups = keyfile->get_groups();
       for (int i = 0; Glib::ustring group : groups)
       {
@@ -166,20 +139,97 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
           i++;
         }
       }
+
+      if (needs_save)
+      {
+        write_config_file(prefix_path, bottle_config, app_list);
+      }
     }
     catch (const Glib::Error& ex)
     {
       std::cerr << "Error: Exception while loading config file: " << ex.what() << std::endl;
-      // Lets write a new config file and return the default values below
       BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list);
     }
   }
 
-  // Update if property is missing (due to keyfile created in older WineGUI version)
-  if (keyfile_needs_save)
+  return std::make_tuple(bottle_config, app_list);
+}
+
+/**
+ * \brief Detect config version from keyfile
+ * \param keyfile Glib KeyFile reference
+ * \return Config version number (1 for legacy, 2+ for versioned)
+ */
+int BottleConfigFile::detect_config_version(Glib::RefPtr<Glib::KeyFile>& keyfile)
+{
+  try
   {
-    write_config_file(prefix_path, bottle_config, app_list);
+    return keyfile->get_integer("General", "ConfigVersion");
+  }
+  catch (const Glib::Error&)
+  {
+    return CONFIG_VERSION_LEGACY; // v1
+  }
+}
+
+/**
+ * \brief Get default configuration values
+ * \param prefix_path Wine prefix path
+ * \return BottleConfigData with default values
+ */
+BottleConfigData BottleConfigFile::get_default_config(const std::string& prefix_path)
+{
+  BottleConfigData config;
+  if (Helper::is_default_wine_bottle(prefix_path))
+  {
+    config.name = "Default Wine machine";
+  }
+  else
+  {
+    config.name = Helper::get_folder_name(prefix_path);
+  }
+  config.description = "";
+  config.wine_bin_path = "";
+  config.logging_enabled = false;
+  config.debug_log_level = 1;
+  config.config_version = CONFIG_VERSION_CURRENT;
+  return config;
+}
+
+/**
+ * \brief Migrate config from one version to current version
+ * \param keyfile Glib KeyFile reference
+ * \param from_version Current version of the config file
+ * \return true if migrations were applied and file needs saving
+ */
+bool BottleConfigFile::migrate_config(Glib::RefPtr<Glib::KeyFile>& keyfile, int from_version)
+{
+  int current_version = from_version;
+
+  if (current_version < 2)
+  {
+    std::cout << "Migrating config from version " << current_version << " to version 2..." << std::endl;
+    if (!keyfile->has_group("Wine") || !keyfile->has_key("Wine", "BinaryPath"))
+    {
+      keyfile->set_string("Wine", "BinaryPath", "");
+    }
+    // cppcheck-suppress unreadVariable
+    current_version = 2;
   }
 
-  return std::make_tuple(bottle_config, app_list);
+  // Placeholder for future migrations
+  // if (current_version < 3) {
+  //   // Migration logic for version 3
+  //   current_version = 3;
+  // }
+
+  // Always write version if it doesn't match current
+  if (from_version != CONFIG_VERSION_CURRENT)
+  {
+    keyfile->set_integer("General", "ConfigVersion", CONFIG_VERSION_CURRENT);
+    std::cout << "Config migration completed. New version: " << CONFIG_VERSION_CURRENT << std::endl;
+    return true;
+  }
+
+  return false;
 }

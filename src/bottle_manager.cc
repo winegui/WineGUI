@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2025 WineGUI
+ * Copyright (c) 2019-2026 WineGUI
  *
  * \file    bottle_manager.cc
  * \brief   The controller controls it all
@@ -329,11 +329,8 @@ void BottleManager::new_bottle(SignalController* caller,
     // Now create a new Wine Bottle
     Helper::create_wine_bottle(is_wine64_bit_, prefix_path, bit, disable_gecko_mono);
     // Create default Bottle config data struct
-    BottleConfigData bottle_config;
+    BottleConfigData bottle_config = BottleConfigFile::get_default_config(prefix_path);
     bottle_config.name = name;
-    bottle_config.description = "";        // By default empty description
-    bottle_config.logging_enabled = false; // By default disable logging
-    bottle_config.debug_log_level = 1;     // 1 (default) = Normal debug log level
     // Create empty custom app list
     std::map<int, ApplicationData> app_list;
     // Next, write the WineGUI bottle config file

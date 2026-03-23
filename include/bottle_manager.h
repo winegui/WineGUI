@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019-2023 WineGUI
+ * Copyright (c) 2019-2026 WineGUI
  *
  * \file    bottle_manager.h
  * \brief   Wine Bottle manager controller

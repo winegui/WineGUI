@@ -155,6 +155,14 @@ cd build_debug
 gdb -ex=run bin/winegui
 ```
 
+### Tests
+
+You can run the unit tests using the helper script:
+
+```sh
+./scripts/run-tests.sh
+```
+
 ### Production
 
 For production build DEB + RPM packages, you can run the script:
