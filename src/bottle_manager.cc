@@ -1358,15 +1358,15 @@ string BottleManager::get_deinstall_mono_command()
 }
 
 /**
- * \brief Get Wine version
+ * \brief Try to get Wine version
  * \return Wine version
  */
-string BottleManager::get_wine_version(const string& wine_bin_path)
+string BottleManager::get_wine_version(const string& prefix_path, const string& wine_bin_path)
 {
   string wine_version = "";
   try
   {
-    wine_version = Helper::get_wine_version(is_wine64_bit_, wine_bin_path);
+    wine_version = Helper::get_wine_version(is_wine64_bit_, prefix_path, wine_bin_path);
   }
   catch (const std::runtime_error& error)
   {
@@ -1494,7 +1494,7 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
     Glib::ustring wine_bin_path_u(bottle_config.wine_bin_path);
     Glib::ustring description(bottle_config.description);
     Glib::ustring prefix_path(prefix);
-    Glib::ustring wine_version = get_wine_version(bottle_config.wine_bin_path);
+    Glib::ustring wine_version = get_wine_version(prefix, bottle_config.wine_bin_path);
     BottleItem* bottle = new BottleItem(name, folder_name, wine_bin_path_u, description, status, windows, bit, wine_version, is_wine64_bit_,
                                         prefix_path, c_drive_location, last_time_wine_updated, audio_driver, virtual_desktop,
                                         bottle_config.logging_enabled, bottle_config.debug_log_level, bottle_config.env_vars, bottle_app_list);

@@ -69,7 +69,7 @@ public:
   static int determine_wine_executable();
   static string get_wine_executable_location(bool bit64, const string& wine_bin_path = "");
   static string get_winetricks_location();
-  static string get_wine_version(bool wine_64_bit, const string& wine_bin_path = "");
+  static string get_wine_version(bool wine_64_bit, const string& prefix_path, const string& wine_bin_path = "");
   static string open_file_from_uri(const string& uri);
   static void create_wine_bottle(
       bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono = false, const string& wine_bin_path = "");

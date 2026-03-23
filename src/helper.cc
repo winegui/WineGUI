@@ -235,7 +235,7 @@ string Helper::run_program(const string& prefix_path,
  * \brief Run a Windows program under Wine (run this method async).
  * Returns stdout output. Redirect stderr to stdout (2>&1), if you want stderr as well.
  * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
- * \param[in] prefix_path The path to bottle wine
+ * \param[in] prefix_path The path to bottle wine directory
  * \param[in] debug_log_level Debug log level
  * \param[in] program Program/executable that will be executed (be sure your application executable is between
  * brackets in case of spaces)
@@ -369,10 +369,12 @@ string Helper::get_winetricks_location()
 /**
  * \brief Get Wine version from CLI
  * \param[in] wine_64_bit If true use Wine 64-bit binary, false use 32-bit binary
+ * \param[in] prefix_path The path to bottle wine directory (only used for the error message)
+ * \param[in] wine_bin_path The path to the Wine binary directory
  * \throws runtime_error we could not determine Wine version
  * \return Return the wine version
  */
-string Helper::get_wine_version(bool wine_64_bit, const string& wine_bin_path)
+string Helper::get_wine_version(bool wine_64_bit, const string& prefix_path, const string& wine_bin_path)
 {
   const auto& [exit_code, output] = exec(Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) + " --version 2>&1");
   if (exit_code == 0 && !output.empty())
@@ -391,24 +393,27 @@ string Helper::get_wine_version(bool wine_64_bit, const string& wine_bin_path)
       }
       else
       {
-        std::cerr << "Error: Couldn't determine Wine version. Using wine executable: "
-                  << Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) << ", output: " << output << std::endl;
+        std::cerr << "Error: Couldn't determine Wine version for machine: " << get_folder_name(prefix_path)
+                  << ". Using wine executable: " << Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) << ", output: " << output
+                  << std::endl;
         throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
       }
     }
     else
     {
-      std::cerr << "Error: Couldn't determine Wine version. Using wine executable: "
-                << Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) << ", output: " << output << std::endl;
+      std::cerr << "Error: Couldn't determine Wine version for machine " << get_folder_name(prefix_path)
+                << ". Using wine executable: " << Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) << ", output: " << output
+                << std::endl;
       throw std::runtime_error("Could not determine Wine version?\nSomething went wrong.");
     }
   }
   else
   {
     std::cerr << "Error: Couldn't determine Wine version. No output." << std::endl;
-    std::cerr << "       WineBinaryPath=" << wine_bin_path << std::endl;
-    throw std::runtime_error("Could not determine Wine version for '" + Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) +
-                             "'!\n\nIs Wine installed correctly or did you provide the correct path?");
+    std::cerr << "Wine Binary path: " << wine_bin_path << std::endl;
+    throw std::runtime_error("Could not determine Wine version for machine: " + get_folder_name(prefix_path) + ".\nUsing wine executable: '" +
+                             Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) +
+                             "'.\n\nIs Wine installed correctly or did you provide the correct path for this machine?");
   }
 }
 
