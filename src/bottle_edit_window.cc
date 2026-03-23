@@ -144,7 +144,7 @@ void BottleEditWindow::create_layout()
   name_entry.set_hexpand(true);
   folder_name_entry.set_hexpand(true);
   wine_bin_path_entry.set_hexpand(true);
-  system_wine_bin_path_check.set_tooltip_text("Use system wine binary path");
+  system_wine_bin_path_check.set_tooltip_text("Use system Wine binary path");
   windows_version_combobox.set_hexpand(true);
   audio_driver_combobox.set_hexpand(true);
   log_level_combobox.set_hexpand(true);
@@ -159,28 +159,28 @@ void BottleEditWindow::create_layout()
 
   int row = 0;
   edit_grid.attach(name_label, 0, row);
-  edit_grid.attach(name_entry, 1, row++);
+  edit_grid.attach(name_entry, 1, row++, 2);
   edit_grid.attach(folder_name_label, 0, row);
-  edit_grid.attach(folder_name_entry, 1, row++);
-  edit_grid.attach(system_wine_bin_path_check, 0, row++);
+  edit_grid.attach(folder_name_entry, 1, row++, 2);
+  edit_grid.attach(system_wine_bin_path_check, 0, row++, 3);
   edit_grid.attach(wine_bin_path_label, 0, row);
   edit_grid.attach(wine_bin_path_entry, 1, row);
   edit_grid.attach(wine_bin_path_button, 2, row++);
   edit_grid.attach(windows_version_label, 0, row);
-  edit_grid.attach(windows_version_combobox, 1, row++);
+  edit_grid.attach(windows_version_combobox, 1, row++, 2);
   edit_grid.attach(audio_driver_label, 0, row);
-  edit_grid.attach(audio_driver_combobox, 1, row++);
-  edit_grid.attach(virtual_desktop_check, 0, row++, 2);
+  edit_grid.attach(audio_driver_combobox, 1, row++, 2);
+  edit_grid.attach(virtual_desktop_check, 0, row++, 3);
   edit_grid.attach(virtual_desktop_resolution_label, 0, row);
-  edit_grid.attach(virtual_desktop_resolution_entry, 1, row++);
-  edit_grid.attach(enable_logging_check, 0, row++, 2);
+  edit_grid.attach(virtual_desktop_resolution_entry, 1, row++, 2);
+  edit_grid.attach(enable_logging_check, 0, row++, 3);
   edit_grid.attach(log_level_label, 0, row);
-  edit_grid.attach(log_level_combobox, 1, row++);
+  edit_grid.attach(log_level_combobox, 1, row++, 2);
   edit_grid.attach(environment_variables_label, 0, row);
-  edit_grid.attach(configure_environment_variables_button, 1, row++);
-  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, row++, 2);
-  edit_grid.attach(description_label, 0, row++, 2);
-  edit_grid.attach(description_scrolled_window, 0, row++, 2);
+  edit_grid.attach(configure_environment_variables_button, 1, row++, 2);
+  edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, row++, 3);
+  edit_grid.attach(description_label, 0, row++, 3);
+  edit_grid.attach(description_scrolled_window, 0, row++, 3);
   edit_grid.set_hexpand(true);
   edit_grid.set_vexpand(true);
   edit_grid.set_halign(Gtk::Align::FILL);
@@ -227,7 +227,7 @@ void BottleEditWindow::show()
 
     // Set wine binary path
     wine_bin_path_entry.set_text(active_bottle_->wine_bin_path());
-    system_wine_bin_path_check.set_active(active_bottle_->wine_bin_path().length() <= 0);
+    system_wine_bin_path_check.set_active(active_bottle_->wine_bin_path().empty());
 
     // Clear list
     windows_version_combobox.remove_all();
@@ -302,7 +302,7 @@ void BottleEditWindow::on_bottle_updated()
 }
 
 /**
- * \brief Enable/disable wine binary path fields.
+ * \brief Enable/disable Wine binary path fields.
  * \param sensitive Set true to enable, false for disable
  */
 void BottleEditWindow::system_wine_bin_path_sensitive(bool sensitive)
@@ -462,7 +462,7 @@ void BottleEditWindow::on_save_button_clicked()
   update_bottle_struct.folder_name = folder_name_entry.get_text();
   if (!system_wine_bin_path_check.get_active())
   {
-    // Set wine binary path only if checkbox is not selected (otherwise use default empty string)
+    // Set Wine binary path only if checkbox is not selected (otherwise use default empty string)
     update_bottle_struct.wine_bin_path = wine_bin_path_entry.get_text();
   }
 
