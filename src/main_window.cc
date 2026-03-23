@@ -1277,7 +1277,7 @@ void MainWindow::create_right_panel()
   detail_grid.attach_next_to(debug_log_level_label, *wine_log_level_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine binary path
-  Gtk::Label* wine_bin_path_text_label = Gtk::manage(new Gtk::Label("Wine Bin Path:", Gtk::Align::START, Gtk::Align::CENTER));
+  Gtk::Label* wine_bin_path_text_label = Gtk::manage(new Gtk::Label("Wine Binary Path:", Gtk::Align::START, Gtk::Align::CENTER));
   wine_bin_path_label.set_tooltip_text("Custom Wine binary path (set in Edit Window)");
   detail_grid.attach(*wine_bin_path_text_label, 0, 11, 2, 1);
   detail_grid.attach_next_to(wine_bin_path_label, *wine_bin_path_text_label, Gtk::PositionType::RIGHT, 1, 1);
