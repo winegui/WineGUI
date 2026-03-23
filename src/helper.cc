@@ -408,7 +408,7 @@ string Helper::get_wine_version(bool wine_64_bit, const string& wine_bin_path)
     std::cerr << "Error: Couldn't determine Wine version. No output." << std::endl;
     std::cerr << "       WineBinaryPath=" << wine_bin_path << std::endl;
     throw std::runtime_error("Could not determine Wine version for '" + Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) +
-                             "'!\n\nIs Wine installed correctly?");
+                             "'!\n\nIs Wine installed correctly or did you provide the correct path?");
   }
 }
 
