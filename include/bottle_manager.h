@@ -22,7 +22,6 @@
 
 #include <gtkmm.h>
 #include <list>
-#include <map>
 #include <mutex>
 #include <string>
 #include <thread>

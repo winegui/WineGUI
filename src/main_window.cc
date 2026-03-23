@@ -1213,8 +1213,7 @@ void MainWindow::create_right_panel()
 
   // General heading
   Gtk::Image* general_icon = Gtk::manage(new Gtk::Image());
-  // TODO:  Gtk::IconSize(Gtk::ICON_SIZE_MENU) is just removed from set_from_icon_name in gtkmm-4.0
-  general_icon->set_from_icon_name("dialog-information");
+  general_icon->set_from_icon_name("dialog-information-symbolic");
   general_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* general_label = Gtk::manage(new Gtk::Label());
   general_label->set_markup("<b>General</b>");
@@ -1235,8 +1234,7 @@ void MainWindow::create_right_panel()
 
   // System heading
   Gtk::Image* system_icon = Gtk::manage(new Gtk::Image());
-  // TODO:  Gtk::IconSize(Gtk::ICON_SIZE_MENU) is just removed from set_from_icon_name in gtkmm-4.0
-  system_icon->set_from_icon_name("computer");
+  system_icon->set_from_icon_name("computer-symbolic");
   system_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* system_label = Gtk::manage(new Gtk::Label());
   system_label->set_markup("<b>System</b>");
@@ -1258,7 +1256,7 @@ void MainWindow::create_right_panel()
 
   // Wine heading
   Gtk::Image* wine_icon = Gtk::manage(new Gtk::Image());
-  wine_icon->set_from_icon_name("dialog-information");
+  wine_icon->set_from_icon_name("emblem-system-symbolic");
   wine_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* wine_label = Gtk::manage(new Gtk::Label());
   wine_label->set_markup("<b>Wine details</b>");
@@ -1296,7 +1294,7 @@ void MainWindow::create_right_panel()
 
   // Audio heading
   Gtk::Image* audio_icon = Gtk::manage(new Gtk::Image());
-  audio_icon->set_from_icon_name("audio-speakers");
+  audio_icon->set_from_icon_name("audio-speakers-symbolic");
   audio_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* audio_text_label = Gtk::manage(new Gtk::Label());
   audio_text_label->set_markup("<b>Audio</b>");
@@ -1312,7 +1310,7 @@ void MainWindow::create_right_panel()
 
   // Display heading
   Gtk::Image* display_icon = Gtk::manage(new Gtk::Image());
-  display_icon->set_from_icon_name("view-fullscreen");
+  display_icon->set_from_icon_name("video-display-symbolic");
   display_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* display_text_label = Gtk::manage(new Gtk::Label());
   display_text_label->set_markup("<b>Display</b>");
@@ -1328,7 +1326,7 @@ void MainWindow::create_right_panel()
 
   // Description heading
   Gtk::Image* description_icon = Gtk::manage(new Gtk::Image());
-  description_icon->set_from_icon_name("user-available");
+  description_icon->set_from_icon_name("text-x-generic-symbolic");
   description_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* description_text_label = Gtk::manage(new Gtk::Label());
   description_text_label->set_markup("<b>Description</b>");
@@ -1400,7 +1398,7 @@ void MainWindow::create_right_panel()
 
   // Add application header text
   Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
-  application_icon->set_from_icon_name("application-x-executable");
+  application_icon->set_from_icon_name("application-x-executable-symbolic");
   application_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* application_label = Gtk::manage(new Gtk::Label());
   application_label->set_markup("<b>Applications</b>");
