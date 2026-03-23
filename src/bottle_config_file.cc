@@ -120,6 +120,7 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       bottle_config.debug_log_level = keyfile->get_integer("Logging", "DebugLevel");
       bottle_config.config_version = CONFIG_VERSION_CURRENT;
 
+      // Retrieve environment variables (if present)
       if (keyfile->has_group("EnvironmentVariables"))
       {
         auto keys = keyfile->get_keys("EnvironmentVariables");
@@ -129,6 +130,7 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
         }
       }
 
+      // Retrieve applications (if present)
       auto groups = keyfile->get_groups();
       for (int i = 0; Glib::ustring group : groups)
       {
@@ -140,6 +142,7 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
         }
       }
 
+      // Save config if migration was needed
       if (needs_save)
       {
         write_config_file(prefix_path, bottle_config, app_list);
