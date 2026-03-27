@@ -415,8 +415,7 @@ void BottleEditWindow::on_select_wine_bin_path()
         }
         default:
         {
-          std::cout << "Error: Unexpected button clicked in 'BottleEditWindow::on_select_wine_bin_response'." << std::endl;
-          break;
+          break; // ignore
         }
         }
         delete folder_chooser;
