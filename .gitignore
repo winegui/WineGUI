@@ -3,9 +3,7 @@ doc/doxygen/
 
 # Build artifacts
 build/
-build_debug/
-build_prod/
-build_docs/
+build_*/
 release/
 
 # winetricks script

@@ -2,11 +2,13 @@ cmake_minimum_required(VERSION 3.25)
 
 set(PROJECT_NAME WineGUI)
 set(PROJECT_TARGET winegui)
+set(PROJECT_TEST_TARGET_LIB winegui-test-lib)
 set(PROJECT_SPDX_LICENSE "AGPL-3.0-only")
 
 option(DOXYGEN "Build Documentation" OFF)
 option(PACKAGE "Build packages in release mode" OFF)
 option(CHECK_FOR_UPDATE "Check for updates during startup" ON)
+option(UNITTEST "Build unit tests" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -120,40 +122,73 @@ set(SOURCES
   ${HEADERS}
 )
 
-# Install and recompile glib gsettings schema
-add_schema("org.melroy.winegui.gschema.xml" GSCHEMA_RING)
+if(NOT UNITTEST)
+  # Install and recompile glib gsettings schema
+  add_schema("org.melroy.winegui.gschema.xml" GSCHEMA_RING)
 
-add_executable(${PROJECT_TARGET} ${GSCHEMA_RING} ${SOURCES})
+  add_executable(${PROJECT_TARGET} ${GSCHEMA_RING} ${SOURCES})
 
-# Set C++ standard to C++23 and disable C++ extensions
-set_target_properties(${PROJECT_TARGET} PROPERTIES CXX_STANDARD 23)
-set_target_properties(${PROJECT_TARGET} PROPERTIES CXX_EXTENSIONS OFF)
+  # Set C++ standard to C++23 and disable C++ extensions
+  set_target_properties(${PROJECT_TARGET} PROPERTIES CXX_STANDARD 23)
+  set_target_properties(${PROJECT_TARGET} PROPERTIES CXX_EXTENSIONS OFF)
 
-# Linking Threads and GTKMM
-target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+  # Linking Threads and GTKMM
+  target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
 
-target_include_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
-target_link_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_LIBRARY_DIRS})
-target_compile_options(${PROJECT_TARGET} PRIVATE ${GTKMM_CFLAGS_OTHER})
+  target_include_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
+  target_link_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_LIBRARY_DIRS})
+  target_compile_options(${PROJECT_TARGET} PRIVATE ${GTKMM_CFLAGS_OTHER})
 
-# If we are using an old version of GTK, define OLD_GTK
-if(GTKMM_VERSION VERSION_LESS "4.10")
-  target_compile_definitions(${PROJECT_TARGET} PUBLIC OLD_GTK)
+  # If we are using an old version of GTK, define OLD_GTK
+  if(GTKMM_VERSION VERSION_LESS "4.10")
+    target_compile_definitions(${PROJECT_TARGET} PUBLIC OLD_GTK)
+  endif()
+
+  install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
+  install(FILES misc/winegui.desktop DESTINATION ${DATADIR}/applications)
+  install(FILES misc/winegui.png DESTINATION ${DATADIR}/icons/hicolor/48x48/apps)
+  install(FILES misc/winegui.svg DESTINATION ${DATADIR}/icons/hicolor/scalable/apps)
+  install(DIRECTORY images DESTINATION ${DATADIR}/winegui)
+  # Could be easily extended with eg. scripts:
+  #   DIRECTORY images scripts/ DESTINATION ....
+  #   PATTERN "scripts/*"
+
+  # To create 'make run'
+  add_custom_target( run
+    COMMAND "bin/${PROJECT_TARGET}" 
+    COMMENT "Starting up..." )
+
+## Below for Unit testing only ##
+else()
+  # Build separate libraries for unit testing
+  add_library(${PROJECT_TEST_TARGET_LIB}-bottle-config STATIC 
+    src/bottle_config_file.cc
+    src/helper.cc
+  )
+
+  # Set C++23 for all libs
+  target_compile_features(${PROJECT_TEST_TARGET_LIB}-bottle-config PUBLIC cxx_std_23)
+  set_target_properties(${PROJECT_TEST_TARGET_LIB}-bottle-config PROPERTIES CXX_EXTENSIONS OFF)
+
+  # Link required external libraries
+  target_include_directories(${PROJECT_TEST_TARGET_LIB}-bottle-config PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
+    ${CMAKE_BINARY_DIR}
+    ${GTKMM_INCLUDE_DIRS}
+  )
+  target_link_libraries(${PROJECT_TEST_TARGET_LIB}-bottle-config PUBLIC
+    ${GTKMM_LIBRARIES}
+  )
+  target_link_directories(${PROJECT_TEST_TARGET_LIB}-bottle-config PUBLIC
+    ${GTKMM_LIBRARY_DIRS}
+  )
+  target_compile_options(${PROJECT_TEST_TARGET_LIB}-bottle-config PUBLIC
+    ${GTKMM_CFLAGS_OTHER}
+  )
+
+  # Add test subdirectory
+  add_subdirectory(tst)
 endif()
-
-install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
-install(FILES misc/winegui.desktop DESTINATION ${DATADIR}/applications)
-install(FILES misc/winegui.png DESTINATION ${DATADIR}/icons/hicolor/48x48/apps)
-install(FILES misc/winegui.svg DESTINATION ${DATADIR}/icons/hicolor/scalable/apps)
-install(DIRECTORY images DESTINATION ${DATADIR}/winegui)
-# Could be easily extended with eg. scripts:
-#   DIRECTORY images scripts/ DESTINATION ....
-#   PATTERN "scripts/*"
-
-# To create 'make run'
-add_custom_target( run
-  COMMAND "bin/${PROJECT_TARGET}" 
-  COMMENT "Starting up..." )
 
 ############
 # Doxygen  #
@@ -161,5 +196,4 @@ add_custom_target( run
 if(DOXYGEN)
   include(doxygen)
 endif()
-
 

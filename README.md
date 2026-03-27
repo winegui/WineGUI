@@ -155,6 +155,35 @@ cd build_debug
 gdb -ex=run bin/winegui
 ```
 
+### Tests
+
+WineGUI includes unit tests using the Google Test framework. Tests are located in the `tst/` directory.
+
+#### Quick Start
+
+Run all unit tests using the helper script:
+
+```sh
+./scripts/run-tests.sh
+```
+
+#### Manual Testing
+
+To build and run tests manually:
+
+```bash
+# Build with unit tests enabled
+cmake -GNinja -DDOXYGEN:BOOL=FALSE -DUNITTEST:BOOL=TRUE -B build_test
+cmake --build ./build_test
+
+# Run all tests
+ninja -C build_test tests
+
+# Or use CTest directly
+cd build_test
+ctest --verbose --output-on-failure
+```
+
 ### Production
 
 For production build DEB + RPM packages, you can run the script:
