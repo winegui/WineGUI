@@ -308,8 +308,9 @@ void MainWindow::set_general_config(const GeneralConfigData& config_data)
 void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 {
   info_dialog_.set_message(message, markup);
-  // Non-blocking present
-  info_dialog_.present();
+  // Defer present in all cases (during main window initialization at startup, but also later during bottle saving, which trigger wine window briefly)
+  // Deferring the present() call ensures the dialog is centered correctly relatieve to the main window.
+  Glib::signal_idle().connect_once([this]() { info_dialog_.present(); }, Glib::PRIORITY_DEFAULT_IDLE);
 }
 
 /**
@@ -320,8 +321,9 @@ void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
 {
   warning_dialog_.set_message(message, markup);
-  // Non-blocking present
-  warning_dialog_.present();
+  // Defer present in all cases (during main window initialization at startup, but also later during bottle saving, which trigger wine window briefly)
+  // Deferring the present() call ensures the dialog is centered correctly relatieve to the main window.
+  Glib::signal_idle().connect_once([this]() { warning_dialog_.present(); }, Glib::PRIORITY_DEFAULT_IDLE);
 }
 
 /**
@@ -332,8 +334,9 @@ void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
 void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
 {
   error_dialog_.set_message(message, markup);
-  // Non-blocking present
-  error_dialog_.present();
+  // Defer present in all cases (during main window initialization at startup, but also later during bottle saving, which trigger wine window briefly)
+  // Deferring the present() call ensures the dialog is centered correctly relatieve to the main window.
+  Glib::signal_idle().connect_once([this]() { error_dialog_.present(); }, Glib::PRIORITY_DEFAULT_IDLE);
 }
 
 /**
@@ -346,8 +349,10 @@ DialogWindow* MainWindow::show_question_dialog(Gtk::Window* parent, const Glib::
 {
   // new gtk::manage DialogWindow with question dialog and return the pointer
   DialogWindow* dialog = Gtk::manage(new DialogWindow(*parent, DialogWindow::DialogType::QUESTION, message, markup));
-  // Non-blocking present
-  dialog->present();
+  // Defer present in all cases (during main window initialization at startup, but also later during bottle saving, which trigger wine window briefly)
+  // Deferring the present() call ensures the dialog is centered correctly relatieve to the main window.
+  Glib::signal_idle().connect_once([dialog]() { dialog->present(); }, Glib::PRIORITY_DEFAULT_IDLE);
+
   return dialog;
 }
 
