@@ -758,7 +758,7 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
   if (wine_version == "?")
   {
     // Wine version could be found, this is a red flag.
-    wine_bin_path_label.set_text(wine_bin_path_text + " - ⚠ Wine could not be found, check path in your settings!");
+    wine_bin_path_label.set_text(wine_bin_path_text + " - ⚠ Wine could not be found, check Wine path in your settings!");
   }
   else
   {
