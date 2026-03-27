@@ -1995,11 +1995,20 @@ string Helper::get_reg_meta_data(const string& file_path, const string& meta_val
 string Helper::get_bottle_dir_from_prefix(const string& prefix_path)
 {
   string name = "- Unknown -";
-  std::size_t last_index = prefix_path.find_last_of("/\\");
+  string path = prefix_path;
+
+  // Remove trailing slashes
+  while (!path.empty() && path.back() == G_DIR_SEPARATOR_S[0])
+  {
+    path.pop_back();
+  }
+
+  // Find last separator
+  std::size_t last_index = path.find_last_of(G_DIR_SEPARATOR_S);
   if (last_index != string::npos)
   {
     // Get only the last directory name from path (+ remove slash)
-    name = prefix_path.substr(last_index + 1);
+    name = path.substr(last_index + 1);
     // Remove dot if present (=hidden dir)
     size_t dot_index = name.find_first_of('.');
     if (dot_index == 0)

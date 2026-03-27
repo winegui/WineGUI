@@ -219,8 +219,15 @@ TEST_F(HelperTest, GetFolderNameBasic) {
 TEST_F(HelperTest, GetFolderNameWithTrailingSlash) {
   std::string prefix = "/home/user/.local/share/winegui/Prefixes/MyBottle/";
   std::string result = Helper::get_folder_name(prefix);
-  // Trailing slash results in empty string
-  EXPECT_EQ(result, "");
+  // Trailing slash should be handled gracefully
+  EXPECT_EQ(result, "MyBottle");
+}
+
+TEST_F(HelperTest, GetFolderNameWithMultipleTrailingSlashes) {
+  std::string prefix = "/home/user/.local/share/winegui/Prefixes/MyBottle///";
+  std::string result = Helper::get_folder_name(prefix);
+  // Multiple trailing slashes should be handled
+  EXPECT_EQ(result, "MyBottle");
 }
 
 TEST_F(HelperTest, GetFolderNameSingleLevel) {
