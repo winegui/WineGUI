@@ -99,12 +99,15 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
   BottleConfigData bottle_config = get_default_config(prefix_path);
   std::map<int, ApplicationData> app_list;
 
+  // Check if config file exists
   if (!Glib::file_test(file_path, Glib::FileTest::IS_REGULAR))
   {
+    // Config file doesn't exist, make a new file with default configs, return default config data below
     BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list);
   }
   else
   {
+    // Config file exists, read it
     try
     {
       auto keyfile = Glib::KeyFile::create();
@@ -151,6 +154,7 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
     catch (const Glib::Error& ex)
     {
       std::cerr << "Error: Exception while loading config file: " << ex.what() << std::endl;
+      // Lets write a new config file and return the default values below
       BottleConfigFile::write_config_file(prefix_path, bottle_config, app_list);
     }
   }
