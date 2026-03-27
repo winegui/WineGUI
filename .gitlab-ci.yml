@@ -19,10 +19,11 @@ stages:
     paths:
       - build_prod/WineGUI-*.deb
 
-#unit_test:
-#  stage: test
-#  interruptible: true
-#  script: ./scripts/run-tests.sh
+unit_test:
+  stage: test
+  interruptible: true
+  script:
+    - ./scripts/run-tests.sh
 
 static_code_analysis:
   stage: test

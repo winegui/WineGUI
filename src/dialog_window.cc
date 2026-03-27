@@ -42,7 +42,7 @@ DialogWindow::DialogWindow(Gtk::Window& parent, DialogType type, const Glib::ust
   set_transient_for(parent);
   set_modal(true);
   set_deletable(true);
-  set_default_size(520, 180);
+  set_default_size(535, 200);
 
   set_message(message, markup);
 
