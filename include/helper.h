@@ -61,16 +61,18 @@ public:
                                        const string& working_directory = "",
                                        const vector<pair<string, string>>& env_vars = {},
                                        bool give_error = true,
-                                       bool stderr_output = true);
+                                       bool stderr_output = true,
+                                       const string& wine_bin_path = "");
   static void write_to_log_file(const string& logging_bottle_prefix, const string& logging);
   static string get_log_file_path(const string& logging_bottle_prefix);
   static void wait_until_wineserver_is_terminated(const string& prefix_path);
   static int determine_wine_executable();
-  static string get_wine_executable_location(bool bit64);
+  static string get_wine_executable_location(bool bit64, const string& wine_bin_path = "");
   static string get_winetricks_location();
-  static string get_wine_version(bool wine_64_bit);
+  static string get_wine_version(bool wine_64_bit, const string& prefix_path, const string& wine_bin_path = "");
   static string open_file_from_uri(const string& uri);
-  static void create_wine_bottle(bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono);
+  static void create_wine_bottle(
+      bool wine_64_bit, const string& prefix_path, BottleTypes::Bit bit, const bool disable_gecko_mono = false, const string& wine_bin_path = "");
   static void remove_wine_bottle(const string& prefix_path);
   static void rename_wine_bottle_folder(const string& current_prefix_path, const string& new_prefix_path);
   static void copy_wine_bottle_folder(const string& source_prefix_path, const string& destination_prefix_path);
@@ -96,7 +98,7 @@ public:
   static vector<string> get_menu_items(const string& prefix_path);
   static vector<pair<string, string>> get_desktop_items(const string& prefix_path);
   static string log_level_to_winedebug_string(int log_level);
-  static string get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name);
+  static string get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name, const string& wine_bin_path = "");
   static bool get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
   static string get_uninstaller(const string& prefix_path, const string& uninstallerKey);
   static string get_font_filename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName);
