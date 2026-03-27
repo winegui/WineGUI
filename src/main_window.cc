@@ -71,6 +71,7 @@ MainWindow::MainWindow()
   // Label alignments
   name_label.set_halign(Gtk::Align::START);
   folder_name_label.set_halign(Gtk::Align::START);
+  wine_bin_path_label.set_halign(Gtk::Align::START);
   window_version_label.set_halign(Gtk::Align::START);
   c_drive_location_label.set_halign(Gtk::Align::START);
   wine_version_label.set_halign(Gtk::Align::START);
@@ -266,6 +267,7 @@ void MainWindow::reset_detailed_info()
 {
   name_label.set_text("");
   folder_name_label.set_text("");
+  wine_bin_path_label.set_text("");
   window_version_label.set_text("");
   c_drive_location_label.set_text("");
   wine_version_label.set_text("");
@@ -306,8 +308,9 @@ void MainWindow::set_general_config(const GeneralConfigData& config_data)
 void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 {
   info_dialog_.set_message(message, markup);
-  // Non-blocking present
-  info_dialog_.present();
+  // Defer present in all cases (during main window initialization at startup, but also later during bottle saving, which trigger wine window briefly)
+  // Deferring the present() call ensures the dialog is centered correctly relatieve to the main window.
+  Glib::signal_idle().connect_once([this]() { info_dialog_.present(); }, Glib::PRIORITY_DEFAULT_IDLE);
 }
 
 /**
@@ -318,8 +321,9 @@ void MainWindow::show_info_message(const Glib::ustring& message, bool markup)
 void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
 {
   warning_dialog_.set_message(message, markup);
-  // Non-blocking present
-  warning_dialog_.present();
+  // Defer present in all cases (during main window initialization at startup, but also later during bottle saving, which trigger wine window briefly)
+  // Deferring the present() call ensures the dialog is centered correctly relatieve to the main window.
+  Glib::signal_idle().connect_once([this]() { warning_dialog_.present(); }, Glib::PRIORITY_DEFAULT_IDLE);
 }
 
 /**
@@ -330,8 +334,9 @@ void MainWindow::show_warning_message(const Glib::ustring& message, bool markup)
 void MainWindow::show_error_message(const Glib::ustring& message, bool markup)
 {
   error_dialog_.set_message(message, markup);
-  // Non-blocking present
-  error_dialog_.present();
+  // Defer present in all cases (during main window initialization at startup, but also later during bottle saving, which trigger wine window briefly)
+  // Deferring the present() call ensures the dialog is centered correctly relatieve to the main window.
+  Glib::signal_idle().connect_once([this]() { error_dialog_.present(); }, Glib::PRIORITY_DEFAULT_IDLE);
 }
 
 /**
@@ -344,8 +349,10 @@ DialogWindow* MainWindow::show_question_dialog(Gtk::Window* parent, const Glib::
 {
   // new gtk::manage DialogWindow with question dialog and return the pointer
   DialogWindow* dialog = Gtk::manage(new DialogWindow(*parent, DialogWindow::DialogType::QUESTION, message, markup));
-  // Non-blocking present
-  dialog->present();
+  // Defer present in all cases (during main window initialization at startup, but also later during bottle saving, which trigger wine window briefly)
+  // Deferring the present() call ensures the dialog is centered correctly relatieve to the main window.
+  Glib::signal_idle().connect_once([dialog]() { dialog->present(); }, Glib::PRIORITY_DEFAULT_IDLE);
+
   return dialog;
 }
 
@@ -725,16 +732,20 @@ bool MainWindow::on_delete_window()
 void MainWindow::set_detailed_info(const BottleItem& bottle)
 {
   // Set right side of the GUI
+  // General
   name_label.set_text(bottle.name());
   folder_name_label.set_text(bottle.folder_name());
+  // System
   Glib::ustring windows = BottleTypes::to_string(bottle.windows());
   windows += " (" + BottleTypes::to_string(bottle.bit()) + ')';
   window_version_label.set_text(windows);
   c_drive_location_label.set_text(bottle.wine_c_drive());
+  // Wine details
   // Hide which wine bitness is used, since users think they need to run 64-bit,
   // while they shouldn't.
   // Glib::ustring wine_bitness = (bottle.is_wine64_bit()) ? "64-bit" : "32-bit";
-  wine_version_label.set_text(bottle.wine_version());
+  const Glib::ustring wine_version = bottle.wine_version();
+  wine_version_label.set_text(wine_version);
   if (Helper::is_default_wine_bottle(bottle.wine_location()))
   {
     wine_location_label.set_text(bottle.wine_location() + " - ⚠ Default Wine prefix");
@@ -748,13 +759,26 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
   if (!bottle.is_debug_logging())
     debug_log_level_str = "<s>" + debug_log_level_str + "</s>"; // Strikethrough when logging is disabled
 
+  Glib::ustring wine_bin_path_text = (bottle.wine_bin_path().empty()) ? "System Default" : bottle.wine_bin_path();
+  if (wine_version == "?")
+  {
+    // Wine version could be found, this is a red flag.
+    wine_bin_path_label.set_text(wine_bin_path_text + " - ⚠ Wine could not be found, check Wine path in your settings!");
+  }
+  else
+  {
+    wine_bin_path_label.set_text(wine_bin_path_text);
+  }
   Glib::ustring log_level_prefix_str = (!bottle.is_debug_logging()) ? "Logging is disabled - " : "";
   debug_log_level_label.set_markup(log_level_prefix_str + debug_log_level_str);
   wine_last_changed_label.set_text(bottle.wine_last_changed());
+  // Audio
   audio_driver_label.set_text(BottleTypes::to_string(bottle.audio_driver()));
   Glib::ustring virtual_desktop_text = (bottle.virtual_desktop().empty()) ? "Disabled" : bottle.virtual_desktop();
+  // Display
   virtual_desktop_label.set_text(virtual_desktop_text);
   Glib::ustring description_text = (bottle.description().empty()) ? "None" : bottle.description();
+  // Description
   description_label.set_text(description_text);
 }
 
@@ -1209,8 +1233,7 @@ void MainWindow::create_right_panel()
 
   // General heading
   Gtk::Image* general_icon = Gtk::manage(new Gtk::Image());
-  // TODO:  Gtk::IconSize(Gtk::ICON_SIZE_MENU) is just removed from set_from_icon_name in gtkmm-4.0
-  general_icon->set_from_icon_name("dialog-information");
+  general_icon->set_from_icon_name("dialog-information-symbolic");
   general_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* general_label = Gtk::manage(new Gtk::Label());
   general_label->set_markup("<b>General</b>");
@@ -1231,8 +1254,7 @@ void MainWindow::create_right_panel()
 
   // System heading
   Gtk::Image* system_icon = Gtk::manage(new Gtk::Image());
-  // TODO:  Gtk::IconSize(Gtk::ICON_SIZE_MENU) is just removed from set_from_icon_name in gtkmm-4.0
-  system_icon->set_from_icon_name("computer");
+  system_icon->set_from_icon_name("computer-symbolic");
   system_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* system_label = Gtk::manage(new Gtk::Label());
   system_label->set_markup("<b>System</b>");
@@ -1254,7 +1276,7 @@ void MainWindow::create_right_panel()
 
   // Wine heading
   Gtk::Image* wine_icon = Gtk::manage(new Gtk::Image());
-  wine_icon->set_from_icon_name("dialog-information");
+  wine_icon->set_from_icon_name("emblem-system-symbolic");
   wine_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* wine_label = Gtk::manage(new Gtk::Label());
   wine_label->set_markup("<b>Wine details</b>");
@@ -1272,61 +1294,67 @@ void MainWindow::create_right_panel()
   detail_grid.attach(*wine_log_level_text_label, 0, 10, 2, 1);
   detail_grid.attach_next_to(debug_log_level_label, *wine_log_level_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
+  // Wine binary path
+  Gtk::Label* wine_bin_path_text_label = Gtk::manage(new Gtk::Label("Wine Binary Path:", Gtk::Align::START, Gtk::Align::CENTER));
+  wine_bin_path_label.set_tooltip_text("Custom Wine binary path (set in Edit Window)");
+  detail_grid.attach(*wine_bin_path_text_label, 0, 11, 2, 1);
+  detail_grid.attach_next_to(wine_bin_path_label, *wine_bin_path_text_label, Gtk::PositionType::RIGHT, 1, 1);
+
   // Wine location
   Gtk::Label* wine_location_text_label = Gtk::manage(new Gtk::Label("Wine Location:", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*wine_location_text_label, 0, 11, 2, 1);
+  detail_grid.attach(*wine_location_text_label, 0, 12, 2, 1);
   detail_grid.attach_next_to(wine_location_label, *wine_location_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine last changed
   Gtk::Label* wine_last_changed_text_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*wine_last_changed_text_label, 0, 12, 2, 1);
+  detail_grid.attach(*wine_last_changed_text_label, 0, 13, 2, 1);
   detail_grid.attach_next_to(wine_last_changed_label, *wine_last_changed_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Wine
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 13, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 14, 3, 1);
 
   // Audio heading
   Gtk::Image* audio_icon = Gtk::manage(new Gtk::Image());
-  audio_icon->set_from_icon_name("audio-speakers");
+  audio_icon->set_from_icon_name("audio-speakers-symbolic");
   audio_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* audio_text_label = Gtk::manage(new Gtk::Label());
   audio_text_label->set_markup("<b>Audio</b>");
-  detail_grid.attach(*audio_icon, 0, 14, 1, 1);
+  detail_grid.attach(*audio_icon, 0, 15, 1, 1);
   detail_grid.attach_next_to(*audio_text_label, *audio_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Audio driver
   Gtk::Label* audio_driver_text_label = Gtk::manage(new Gtk::Label("Audio Driver:", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*audio_driver_text_label, 0, 15, 2, 1);
+  detail_grid.attach(*audio_driver_text_label, 0, 16, 2, 1);
   detail_grid.attach_next_to(audio_driver_label, *audio_driver_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Audio driver
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 16, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 17, 3, 1);
 
   // Display heading
   Gtk::Image* display_icon = Gtk::manage(new Gtk::Image());
-  display_icon->set_from_icon_name("view-fullscreen");
+  display_icon->set_from_icon_name("video-display-symbolic");
   display_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* display_text_label = Gtk::manage(new Gtk::Label());
   display_text_label->set_markup("<b>Display</b>");
-  detail_grid.attach(*display_icon, 0, 17, 1, 1);
+  detail_grid.attach(*display_icon, 0, 18, 1, 1);
   detail_grid.attach_next_to(*display_text_label, *display_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Virtual Desktop
   Gtk::Label* virtual_desktop_text_label = Gtk::manage(new Gtk::Label("Virtual Desktop\n(Windowed Mode):", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*virtual_desktop_text_label, 0, 18, 2, 1);
+  detail_grid.attach(*virtual_desktop_text_label, 0, 19, 2, 1);
   detail_grid.attach_next_to(virtual_desktop_label, *virtual_desktop_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Display
-  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 19, 3, 1);
+  detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 20, 3, 1);
 
   // Description heading
   Gtk::Image* description_icon = Gtk::manage(new Gtk::Image());
-  description_icon->set_from_icon_name("user-available");
+  description_icon->set_from_icon_name("text-x-generic-symbolic");
   description_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* description_text_label = Gtk::manage(new Gtk::Label());
   description_text_label->set_markup("<b>Description</b>");
-  detail_grid.attach(*description_icon, 0, 20, 1, 1);
+  detail_grid.attach(*description_icon, 0, 21, 1, 1);
   detail_grid.attach_next_to(*description_text_label, *description_icon, Gtk::PositionType::RIGHT, 1, 1);
 
   // Description text
-  detail_grid.attach(description_label, 0, 21, 3, 1);
+  detail_grid.attach(description_label, 0, 22, 3, 1);
   // End Description
 
   // Place inside a scrolled window
@@ -1390,7 +1418,7 @@ void MainWindow::create_right_panel()
 
   // Add application header text
   Gtk::Image* application_icon = Gtk::manage(new Gtk::Image());
-  application_icon->set_from_icon_name("application-x-executable");
+  application_icon->set_from_icon_name("application-x-executable-symbolic");
   application_icon->set_icon_size(Gtk::IconSize::NORMAL);
   Gtk::Label* application_label = Gtk::manage(new Gtk::Label());
   application_label->set_markup("<b>Applications</b>");

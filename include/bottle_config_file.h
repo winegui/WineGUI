@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2023 WineGUI
+ * Copyright (c) 2022-2026 WineGUI
  *
  * \file    bottle_config_file.h
  * \brief   Wine bottle config file helper class
@@ -21,6 +21,7 @@
 #pragma once
 
 #include "app_list_struct.h"
+#include <glibmm/keyfile.h>
 #include <map>
 #include <string>
 #include <tuple>
@@ -34,9 +35,11 @@ struct BottleConfigData
 {
   std::string name;
   std::string description;
+  std::string wine_bin_path;
   bool logging_enabled;
   int debug_log_level;
   std::vector<std::pair<std::string, std::string>> env_vars;
+  int config_version;
 };
 
 /**
@@ -51,10 +54,17 @@ public:
   static bool
   write_config_file(const std::string& prefix_path, const BottleConfigData& bottle_config, const std::map<int, ApplicationData>& app_list);
   static std::tuple<BottleConfigData, std::map<int, ApplicationData>> read_config_file(const std::string& prefix_path);
+  static BottleConfigData get_default_config(const std::string& prefix_path);
 
 private:
   BottleConfigFile();
   ~BottleConfigFile();
   BottleConfigFile(const BottleConfigFile&) = delete;
   BottleConfigFile& operator=(const BottleConfigFile&) = delete;
+
+  static constexpr int CONFIG_VERSION_CURRENT = 2;
+  static constexpr int CONFIG_VERSION_LEGACY = 1;
+
+  static int detect_config_version(Glib::RefPtr<Glib::KeyFile>& keyfile);
+  static bool migrate_config(Glib::RefPtr<Glib::KeyFile>& keyfile, int from_version);
 };
