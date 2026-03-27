@@ -288,3 +288,90 @@ TEST_F(HelperTest, IsDefaultWineBottleFalseEmpty) {
   bool result = Helper::is_default_wine_bottle("");
   EXPECT_FALSE(result);
 }
+
+// Test get_log_file_path function
+TEST_F(HelperTest, GetLogFilePathBasic) {
+  std::string prefix = "/home/user/.wine";
+  std::string result = Helper::get_log_file_path(prefix);
+  EXPECT_EQ(result, "/home/user/.wine/winegui.log");
+}
+
+TEST_F(HelperTest, GetLogFilePathWithTrailingSlash) {
+  std::string prefix = "/home/user/.wine/";
+  std::string result = Helper::get_log_file_path(prefix);
+  EXPECT_EQ(result, "/home/user/.wine/winegui.log");
+}
+
+TEST_F(HelperTest, GetLogFilePathEmpty) {
+  std::string prefix = "";
+  std::string result = Helper::get_log_file_path(prefix);
+  EXPECT_EQ(result, "winegui.log");
+}
+
+// Test get_wine_executable_location function
+TEST_F(HelperTest, GetWineExecutableLocation32Bit) {
+  std::string result = Helper::get_wine_executable_location(false, "");
+  EXPECT_EQ(result, "wine");
+}
+
+TEST_F(HelperTest, GetWineExecutableLocation64Bit) {
+  std::string result = Helper::get_wine_executable_location(true, "");
+  EXPECT_EQ(result, "wine64");
+}
+
+TEST_F(HelperTest, GetWineExecutableLocationWithCustomPath32Bit) {
+  std::string result = Helper::get_wine_executable_location(false, "/opt/wine/bin");
+  EXPECT_EQ(result, "/opt/wine/bin/wine");
+}
+
+TEST_F(HelperTest, GetWineExecutableLocationWithCustomPath64Bit) {
+  std::string result = Helper::get_wine_executable_location(true, "/opt/wine/bin");
+  EXPECT_EQ(result, "/opt/wine/bin/wine64");
+}
+
+TEST_F(HelperTest, GetWineExecutableLocationWithTrailingSlash) {
+  std::string result = Helper::get_wine_executable_location(true, "/opt/wine/bin/");
+  EXPECT_EQ(result, "/opt/wine/bin/wine64");
+}
+
+// Test get_c_letter_drive function
+TEST_F(HelperTest, GetCLetterDriveSuccess) {
+  // Create a mock Wine prefix structure
+  std::string prefix = test_dir + "/test_prefix";
+  std::string dosdevices = prefix + "/dosdevices";
+  std::string c_drive = dosdevices + "/c:";
+  
+  fs::create_directories(c_drive);
+  
+  std::string result = Helper::get_c_letter_drive(prefix);
+  EXPECT_EQ(result, c_drive);
+}
+
+TEST_F(HelperTest, GetCLetterDriveNonExistentPrefix) {
+  std::string prefix = test_dir + "/non_existent_prefix";
+  EXPECT_THROW(Helper::get_c_letter_drive(prefix), std::runtime_error);
+}
+
+TEST_F(HelperTest, GetCLetterDriveMissingDosdevices) {
+  std::string prefix = test_dir + "/incomplete_prefix";
+  fs::create_directories(prefix);
+  
+  // Don't create dosdevices/c: directory
+  EXPECT_THROW(Helper::get_c_letter_drive(prefix), std::runtime_error);
+}
+
+// Test get_image_location function
+TEST_F(HelperTest, GetImageLocationNotFound) {
+  // Test with a filename that doesn't exist
+  std::string result = Helper::get_image_location("nonexistent_image.png");
+  // Should return empty string when not found
+  EXPECT_EQ(result, "");
+}
+
+TEST_F(HelperTest, GetImageLocationExistingFile) {
+  // Test with an actual existing image file from the project
+  std::string result = Helper::get_image_location("ready.png");
+  // Should find the file in ../images or ../../images relative paths
+  EXPECT_FALSE(result.empty());
+  EXPECT_TRUE(result.find("ready.png") != std::string::npos);
+}
