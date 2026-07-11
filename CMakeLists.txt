@@ -86,6 +86,7 @@ set(HEADERS
   include/app_list_struct.h
   include/application.h
   include/main_window.h
+  include/overflow_toolbar.h
   include/add_app_window.h
   include/remove_app_window.h
   include/create_shortcut_window.h
@@ -110,6 +111,7 @@ set(SOURCES
   src/application.cc
   src/main.cc
   src/main_window.cc
+  src/overflow_toolbar.cc
   src/add_app_window.cc
   src/remove_app_window.cc
   src/create_shortcut_window.cc

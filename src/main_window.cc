@@ -36,7 +36,6 @@ MainWindow::MainWindow()
       app_list_vbox(Gtk::Orientation::VERTICAL),
       app_list_top_hbox(Gtk::Orientation::HORIZONTAL),
       container_paned(Gtk::Orientation::HORIZONTAL),
-      toolbar_menu(Gio::Menu::create()),
       separator1(Gtk::Orientation::HORIZONTAL),
       busy_dialog_(*this),
       info_dialog_(*this, DialogWindow::DialogType::INFO),
@@ -157,9 +156,6 @@ MainWindow::MainWindow()
 
   // Load window settings from gsettings schema file
   load_stored_window_settings();
-
-  // By default hide the toolbar menu button
-  menu_button_toolbar.set_visible(false);
 
   // By default disable the toolbar buttons
   set_sensitive_toolbar_buttons(false);
@@ -1331,55 +1327,49 @@ void MainWindow::create_right_panel()
    * Toolbar section
    * TODO: Make it configurable to only show icons, text or both using preferences
    */
-  toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
   toolbar.add_css_class("toolbar");
 
-  toolbar_buttons_ = {{&new_button, "New", "list-add", "Create a new machine!", "win.new_bottle"},
-                      {&edit_button, "Edit", "document-edit", "Edit Wine Machine", "win.edit_bottle"},
-                      {&clone_button, "Clone", "edit-copy", "Clone Wine Machine", "win.clone_bottle"},
-                      {&configure_button, "Configure", "preferences-other", "Install additional packages", "win.configure_bottle"},
-                      {&run_button, "Run Program...", "media-playback-start", "Run exe or msi in Wine Machine", "win.run"},
-                      {&open_c_driver_button, "Open C: Drive", "drive-harddisk", "Open the C: drive location in file manager", "win.open_c_drive"},
-                      {&reboot_button, "Reboot", "view-refresh", "Simulate Machine Reboot", "win.reboot_bottle"},
-                      {&update_button, "Update Config", "system-software-update", "Update the Wine Machine configuration", "win.update_bottle"},
-                      {&open_log_file_button, "Open Log", "text-x-generic", "Open debug logging file", "win.open_log_file"},
-                      {&kill_processes_button, "Kill Processes", "process-stop", "Kill all running processes in Wine Machine", "win.kill_processes"}};
+  struct ToolbarButtonSpec
+  {
+    Gtk::Button* button;
+    Glib::ustring label;
+    Glib::ustring icon_name;
+    Glib::ustring tooltip_text;
+    Glib::ustring action_name;
+  };
+  const std::vector<ToolbarButtonSpec> toolbar_button_specs = {
+      {&new_button, "New", "list-add", "Create a new machine!", "win.new_bottle"},
+      {&edit_button, "Edit", "document-edit", "Edit Wine Machine", "win.edit_bottle"},
+      {&clone_button, "Clone", "edit-copy", "Clone Wine Machine", "win.clone_bottle"},
+      {&configure_button, "Configure", "preferences-other", "Install additional packages", "win.configure_bottle"},
+      {&run_button, "Run Program...", "media-playback-start", "Run exe or msi in Wine Machine", "win.run"},
+      {&open_c_driver_button, "Open C: Drive", "drive-harddisk", "Open the C: drive location in file manager", "win.open_c_drive"},
+      {&reboot_button, "Reboot", "view-refresh", "Simulate Machine Reboot", "win.reboot_bottle"},
+      {&update_button, "Update Config", "system-software-update", "Update the Wine Machine configuration", "win.update_bottle"},
+      {&open_log_file_button, "Open Log", "text-x-generic", "Open debug logging file", "win.open_log_file"},
+      {&kill_processes_button, "Kill Processes", "process-stop", "Kill all running processes in Wine Machine", "win.kill_processes"}};
 
-  // Create toolbar menu items
-  for (auto& toolbar_button_ : toolbar_buttons_)
+  // Build the toolbar buttons and the matching overflow menu entries
+  std::vector<OverflowToolbarButton> overflow_buttons;
+  overflow_buttons.reserve(toolbar_button_specs.size());
+  for (const auto& spec : toolbar_button_specs)
   {
     Gtk::Image* image = Gtk::manage(new Gtk::Image());
-    image->set_from_icon_name(toolbar_button_.icon_name);
-    Gtk::Label* label = Gtk::manage(new Gtk::Label(toolbar_button_.label));
+    image->set_from_icon_name(spec.icon_name);
+    Gtk::Label* label = Gtk::manage(new Gtk::Label(spec.label));
     Gtk::Box* button_box = Gtk::manage(new Gtk::Box(Gtk::Orientation::VERTICAL, 6));
     button_box->append(*image);
     button_box->append(*label);
 
-    toolbar_button_.button->set_tooltip_text(toolbar_button_.tooltip_text);
-    toolbar_button_.button->set_child(*button_box);
+    spec.button->set_tooltip_text(spec.tooltip_text);
+    spec.button->set_child(*button_box);
 
-    toolbar.append(*toolbar_button_.button);
+    overflow_buttons.push_back({spec.button, spec.label, spec.icon_name, spec.action_name});
   }
 
-  // Set the menu button icon + model + append to toolbar
-  menu_button_toolbar.set_icon_name("arrow-down");
-  menu_button_toolbar.set_menu_model(toolbar_menu);
-  toolbar.append(menu_button_toolbar);
-
-  // TODO: Implement overrides instead:
-  // https://gitlab.gnome.org/GNOME/gtkmm-documentation/-/blob/master/examples/book/custom/custom_container/mycontainer.cc
-  //   Gtk::SizeRequestMode get_request_mode_vfunc() const override;
-  // void measure_vfunc(Gtk::Orientation orientation, int for_size, int& minimum, int& natural,
-  //   int& minimum_baseline, int& natural_baseline) const override;
-  // void size_allocate_vfunc(int width, int height, int baseline) override;
-  //
-  // TODO: Disable this, since this will not work and flicker too much:
-  // property_default_width().signal_changed().connect([this]() {
-  //   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_update_toolbar_overflow));
-  // });
-  // property_default_height().signal_changed().connect([this]() {
-  //   Glib::signal_idle().connect_once(sigc::mem_fun(*this, &MainWindow::on_update_toolbar_overflow));
-  // });
+  // Hand the buttons to the overflow toolbar; it reparents them and moves non-fitting
+  // actions into a trailing "More options" (⋯) menu when horizontal space is tight.
+  toolbar.set_buttons(overflow_buttons);
 
   // Add toolbar to right vbox
   right_vbox.append(toolbar);
@@ -1769,6 +1759,15 @@ void MainWindow::set_sensitive_toolbar_buttons(bool sensitive)
   update_button.set_sensitive(sensitive);
   open_log_file_button.set_sensitive(sensitive);
   kill_processes_button.set_sensitive(sensitive);
+
+  // Keep the backing actions in sync so the same buttons are greyed out when they
+  // live in the toolbar's overflow menu (the menu items are driven by these actions).
+  for (const char* action_name : {"edit_bottle", "clone_bottle", "configure_bottle", "run", "open_c_drive", "reboot_bottle", "update_bottle",
+                                  "open_log_file", "kill_processes"})
+  {
+    if (auto action = std::dynamic_pointer_cast<Gio::SimpleAction>(lookup_action(action_name)))
+      action->set_enabled(sensitive);
+  }
 }
 
 /**
@@ -1793,92 +1792,4 @@ void MainWindow::cc_list_box_update_header_func(Gtk::ListBoxRow* list_box_row, G
     // gtk_widget_show(current);
     gtk_list_box_row_set_header(row, current);
   }
-}
-
-/**
- * \brief Update toolbar button visibility based on available space
- * Hides buttons that don't fit and adds them to the overflow menu
- */
-// cppcheck-suppress unusedFunction
-void MainWindow::on_update_toolbar_overflow()
-{
-  // Get available width of the right vbox (minus the toolbar margin at the start, there is no margin at the end)
-  int available_width = right_vbox.get_width() - toolbar.get_margin_start();
-  if (available_width <= 0)
-    return;
-
-  // For faster calculation, we use some static values
-  static const int toolbar_spacing_both = 12;      // 2 * 6 (left + right padding between the childeren of the toolbar items)
-  static const int menu_button_toolbar_width = 60; // from menu_button_toolbar
-
-  // Clear the toolbar drop-down menu
-  toolbar_menu->remove_all();
-
-  // Calculate which buttons fit
-  int total_width = 0;
-  int visible_count = 0;
-
-  for (size_t i = 0; i < toolbar_buttons_.size(); ++i)
-  {
-    auto& button = toolbar_buttons_[i];
-
-    // Get button width - use allocated width if available, otherwise estimate
-    // We have spacing on both sides of the button
-    int button_width = button.button->get_allocated_width() + toolbar_spacing_both;
-    if (button_width <= 0)
-    {
-      // Estimate: label width * 8 pixels per character + 12 pixels padding + spacing on both sides
-      button_width = static_cast<int>(button.label.size() * 8) + 12 + toolbar_spacing_both;
-      if (button_width < 60)
-        button_width = 60;
-    }
-
-    // Calculate width needed including spacing
-    int width_needed = total_width + button_width;
-
-    // If there are more buttons after this, we need space for menu button
-    if (i < toolbar_buttons_.size() - 1)
-    {
-      width_needed += menu_button_toolbar_width + toolbar_spacing_both;
-    }
-
-    // Check if this button fits
-    if (width_needed > available_width && visible_count > 0)
-    {
-      // This button doesn't fit, stop here
-      break;
-    }
-
-    total_width = total_width + button_width;
-    visible_count++;
-  }
-
-  // Now hide/show buttons and populate menu
-  bool found_overflow = false;
-  for (size_t i = 0; i < toolbar_buttons_.size(); ++i)
-  {
-    auto& button_data = toolbar_buttons_[i];
-
-    if (static_cast<int>(i) < visible_count)
-    {
-      // Button fits, keep it visible
-      button_data.button->set_visible(true);
-    }
-    else
-    {
-      // Button doesn't fit, hide it and add to menu
-      button_data.button->set_visible(false);
-      found_overflow = true;
-
-      auto menu_item = Gio::MenuItem::create(button_data.label, button_data.action_name);
-      if (!button_data.icon_name.empty())
-      {
-        menu_item->set_attribute_value("icon", Glib::Variant<Glib::ustring>::create(button_data.icon_name));
-      }
-      toolbar_menu->append_item(menu_item);
-    }
-  }
-
-  // Show menu button only if we have overflow
-  menu_button_toolbar.set_visible(found_overflow);
 }
