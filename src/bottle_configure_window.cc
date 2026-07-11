@@ -31,17 +31,17 @@
 BottleConfigureWindow::BottleConfigureWindow(Gtk::Window& parent) : active_bottle_(nullptr)
 {
   set_transient_for(parent);
-  set_default_size(1100, 500);
+  set_default_size(1000, 550);
   set_modal(true);
 
-  configure_grid.set_margin_top(5);
-  configure_grid.set_margin_end(5);
-  configure_grid.set_margin_bottom(5);
-  configure_grid.set_margin_start(5);
-  configure_grid.set_column_spacing(6);
-  configure_grid.set_row_spacing(8);
+  configure_box.set_orientation(Gtk::Orientation::VERTICAL);
+  configure_box.set_margin_top(5);
+  configure_box.set_margin_end(5);
+  configure_box.set_margin_bottom(5);
+  configure_box.set_margin_start(5);
+  configure_box.set_spacing(8);
 
-  set_child(configure_grid);
+  set_child(configure_box);
 
   create_layout();
 
@@ -65,138 +65,115 @@ BottleConfigureWindow::~BottleConfigureWindow()
 
 void BottleConfigureWindow::create_layout()
 {
-  first_toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
-  first_toolbar.set_halign(Gtk::Align::CENTER);
-  first_toolbar.set_valign(Gtk::Align::CENTER);
-  first_toolbar.set_expand();
-  first_toolbar.set_spacing(10);
-
-  second_toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
-  second_toolbar.set_halign(Gtk::Align::CENTER);
-  second_toolbar.set_valign(Gtk::Align::CENTER);
-  second_toolbar.set_expand();
-  second_toolbar.set_spacing(10);
-
-  third_toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
-  third_toolbar.set_halign(Gtk::Align::CENTER);
-  third_toolbar.set_valign(Gtk::Align::CENTER);
-  third_toolbar.set_expand();
-  third_toolbar.set_spacing(10);
-
-  fourth_toolbar.set_orientation(Gtk::Orientation::HORIZONTAL);
-  fourth_toolbar.set_halign(Gtk::Align::CENTER);
-  fourth_toolbar.set_valign(Gtk::Align::CENTER);
-  fourth_toolbar.set_expand();
-  fourth_toolbar.set_spacing(10);
-
-  Pango::FontDescription fd_label;
-  fd_label.set_size(12 * PANGO_SCALE);
-  fd_label.set_weight(Pango::Weight::BOLD);
-  auto font_label = Pango::Attribute::create_attr_font_desc(fd_label);
-  Pango::AttrList attr_list_label;
-  attr_list_label.insert(font_label);
-
   hint_label.set_markup("<big><b>Tip:</b> Hover the mouse over the buttons for more info.</big>");
-  hint_label.set_margin_top(8);
+  hint_label.set_margin_top(4);
   hint_label.set_margin_bottom(4);
+  hint_label.set_halign(Gtk::Align::CENTER);
 
-  first_row_label.set_text("Graphics packages");
-  first_row_label.set_attributes(attr_list_label);
-  first_row_label.set_halign(Gtk::Align::CENTER);
-  second_row_label.set_text("Font packages");
-  second_row_label.set_attributes(attr_list_label);
-  second_row_label.set_halign(Gtk::Align::CENTER);
-  third_row_label.set_text("Visual C++ packages");
-  third_row_label.set_attributes(attr_list_label);
-  third_row_label.set_halign(Gtk::Align::CENTER);
-  fourth_row_label.set_text("Wine Mono & .NET packages");
-  fourth_row_label.set_attributes(attr_list_label);
-  fourth_row_label.set_halign(Gtk::Align::CENTER);
+  // Sidebar (categories) on the left, the stack with buttons on the right
+  sidebar_stack_box.set_orientation(Gtk::Orientation::HORIZONTAL);
+  sidebar_stack_box.set_spacing(6);
+  sidebar_stack_box.set_expand();
+  stack.set_expand();
+  stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
+  sidebar.set_stack(stack);
 
-  configure_grid.attach(hint_label, 0, 0, 2, 1);
-  configure_grid.attach(first_row_label, 0, 1);
-  configure_grid.attach(first_toolbar, 0, 2);
-  configure_grid.attach(second_row_label, 1, 1);
-  configure_grid.attach(second_toolbar, 1, 2);
-  configure_grid.attach(third_row_label, 0, 3, 2, 1);
-  configure_grid.attach(third_toolbar, 0, 4, 2, 1);
-  configure_grid.attach(fourth_row_label, 0, 5, 2, 1);
-  configure_grid.attach(fourth_toolbar, 0, 6, 2, 1);
+  // Scroll the buttons instead of clipping them when the window is made small
+  stack_scroll.set_child(stack);
+  stack_scroll.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
+  stack_scroll.set_expand();
+
+  // Helper to prepare a per-category FlowBox page
+  auto setup_flowbox = [](Gtk::FlowBox& flowbox)
+  {
+    flowbox.set_orientation(Gtk::Orientation::HORIZONTAL);
+    flowbox.set_selection_mode(Gtk::SelectionMode::NONE);
+    flowbox.set_homogeneous(true);
+    flowbox.set_row_spacing(10);
+    flowbox.set_column_spacing(10);
+    // Cap at 3 columns so the FlowBox reports a predictable (row-based) height instead of
+    // stacking every button in one tall column. Allow it to reflow down to 1 column so the
+    // buttons re-wrap (rather than clip) when the window is made narrower.
+    flowbox.set_min_children_per_line(1);
+    flowbox.set_max_children_per_line(3);
+    flowbox.set_halign(Gtk::Align::CENTER);
+    flowbox.set_valign(Gtk::Align::START);
+    flowbox.set_margin(10);
+  };
+  setup_flowbox(graphics_flowbox);
+  setup_flowbox(fonts_flowbox);
+  setup_flowbox(visual_cpp_flowbox);
+  setup_flowbox(dotnet_flowbox);
+
+  static const int button_width = 210;
+  static const int button_height = 85;
+  // Helper to configure a package button and append it to the given category FlowBox
+  auto add_button = [](Gtk::FlowBox& flowbox, Gtk::Button& button, const std::string& tooltip)
+  {
+    button.set_size_request(button_width, button_height);
+    button.set_tooltip_text(tooltip);
+    flowbox.append(button);
+  };
+
+  // Graphics packages
+  install_d3dx9_button.signal_clicked().connect(sigc::bind(directx9, this, ""));
+  add_button(graphics_flowbox, install_d3dx9_button, "Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL API");
+  install_dxvk_button.signal_clicked().connect(sigc::bind(dxvk, this, "latest"));
+  add_button(graphics_flowbox, install_dxvk_button, "Installs DXVK: Ideal for DirectX 9, 10 or 11 games, by using Vulkan API");
+  install_vkd3d_button.signal_clicked().connect(sigc::bind(vkd3d, this));
+  add_button(graphics_flowbox, install_vkd3d_button, "Installs VKD3D-Proton: Ideal for DirectX 12 games, by using Vulkan API");
+
+  // Font packages
+  install_liberation_fonts_button.signal_clicked().connect(sigc::bind(liberation_fonts, this));
+  add_button(fonts_flowbox, install_liberation_fonts_button, "Installs Liberation open-source Fonts, alternative for Core fonts");
+  install_core_fonts_button.signal_clicked().connect(sigc::bind(corefonts, this));
+  add_button(fonts_flowbox, install_core_fonts_button, "Installs Microsoft Core Fonts");
+
+  // Visual C++ packages
+  install_visual_cpp_2013_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2013"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2013_button, "Installs Visual C++ 2013");
+  install_visual_cpp_2015_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2015"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2015_button, "Installs Visual C++ 2015");
+  install_visual_cpp_2017_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2017"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2017_button, "Installs Visual C++ 2017");
+  install_visual_cpp_2019_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2019"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2019_button, "Installs Visual C++ 2015-2019");
+  install_visual_cpp_2022_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2022"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2022_button, "Installs Visual C++ 2015-2022");
+
+  // Wine Mono & .NET packages
+  install_mono_button.signal_clicked().connect(sigc::bind(mono, this));
+  add_button(dotnet_flowbox, install_mono_button, "(Re)installs Wine Mono: fixes a broken Mono/.NET support by fetching the matching Wine Mono MSI");
+  install_dotnet4_0_button.signal_clicked().connect(sigc::bind(dotnet, this, "40"));
+  add_button(dotnet_flowbox, install_dotnet4_0_button, "Installs .NET 4.0 from 2011");
+  install_dotnet4_5_2_button.signal_clicked().connect(sigc::bind(dotnet, this, "452"));
+  add_button(dotnet_flowbox, install_dotnet4_5_2_button, "Installs .NET 4.5.2 from 2012");
+  install_dotnet4_7_2_button.signal_clicked().connect(sigc::bind(dotnet, this, "472"));
+  add_button(dotnet_flowbox, install_dotnet4_7_2_button, "Installs .NET 4.7.2 from 2018");
+  install_dotnet4_8_button.signal_clicked().connect(sigc::bind(dotnet, this, "48"));
+  add_button(dotnet_flowbox, install_dotnet4_8_button, "Installs .NET 4.8 from 2019");
+  install_dotnet6_button.signal_clicked().connect(sigc::bind(dotnet, this, "6"));
+  add_button(dotnet_flowbox, install_dotnet6_button, "Installs .NET 6.0 LTS from 2021");
+  install_dotnet7_button.signal_clicked().connect(sigc::bind(dotnet, this, "7"));
+  add_button(dotnet_flowbox, install_dotnet7_button, "Installs .NET 7.0 from 2022");
+  install_dotnet8_button.signal_clicked().connect(sigc::bind(dotnet, this, "8"));
+  add_button(dotnet_flowbox, install_dotnet8_button, "Installs .NET 8.0 LTS from 2023");
+  install_dotnet9_button.signal_clicked().connect(sigc::bind(dotnet, this, "9"));
+  add_button(dotnet_flowbox, install_dotnet9_button, "Installs .NET 9.0 from 2024");
 
   // TODO: Inform the user to disable desktop effects of the compositor. And set CPU to performance.
 
-  static const int button_height = 85;
-  // First row buttons, graphics packages
-  install_d3dx9_button.signal_clicked().connect(sigc::bind(directx9, this, ""));
-  install_d3dx9_button.set_size_request(-1, button_height);
-  install_d3dx9_button.set_tooltip_text("Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL API");
-  first_toolbar.append(install_d3dx9_button);
-  install_dxvk_button.signal_clicked().connect(sigc::bind(dxvk, this, "latest"));
-  install_dxvk_button.set_size_request(-1, button_height);
-  install_dxvk_button.set_tooltip_text("Installs DXVK: Ideal for DirectX 9, 10 or 11 games, by using Vulkan API");
-  first_toolbar.append(install_dxvk_button);
-  install_vkd3d_button.signal_clicked().connect(sigc::bind(vkd3d, this));
-  install_vkd3d_button.set_size_request(-1, button_height);
-  install_vkd3d_button.set_tooltip_text("Installs VKD3D-Proton: Ideal for DirectX 12 games, by using Vulkan API");
-  first_toolbar.append(install_vkd3d_button);
+  // Add the category pages to the stack (title shows up in the sidebar)
+  stack.add(graphics_flowbox, "graphics", "Graphics");
+  stack.add(fonts_flowbox, "fonts", "Fonts");
+  stack.add(visual_cpp_flowbox, "visual_cpp", "Visual C++");
+  stack.add(dotnet_flowbox, "dotnet", "Wine Mono & .NET");
 
-  // // Second row, Font packages
-  install_liberation_fonts_button.signal_clicked().connect(sigc::bind(liberation_fonts, this));
-  install_liberation_fonts_button.set_size_request(-1, button_height);
-  install_liberation_fonts_button.set_tooltip_text("Installs Liberation open-source Fonts, alternative for Core fonts");
-  second_toolbar.append(install_liberation_fonts_button);
-  install_core_fonts_button.signal_clicked().connect(sigc::bind(corefonts, this));
-  install_core_fonts_button.set_size_request(-1, button_height);
-  install_core_fonts_button.set_tooltip_text("Installs Microsoft Core Fonts");
-  second_toolbar.append(install_core_fonts_button);
+  sidebar_stack_box.append(sidebar);
+  sidebar_stack_box.append(stack_scroll);
 
-  // // Third row, Visual C++ packages
-  install_visual_cpp_2013_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2013"));
-  install_visual_cpp_2013_button.set_size_request(-1, button_height);
-  install_visual_cpp_2013_button.set_tooltip_text("Installs Visual C++ 2013");
-  third_toolbar.append(install_visual_cpp_2013_button);
-  install_visual_cpp_2015_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2015"));
-  install_visual_cpp_2015_button.set_size_request(-1, button_height);
-  install_visual_cpp_2015_button.set_tooltip_text("Installs Visual C++ 2015");
-  third_toolbar.append(install_visual_cpp_2015_button);
-  install_visual_cpp_2017_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2017"));
-  install_visual_cpp_2017_button.set_size_request(-1, button_height);
-  install_visual_cpp_2017_button.set_tooltip_text("Installs Visual C++ 2017");
-  third_toolbar.append(install_visual_cpp_2017_button);
-  install_visual_cpp_2019_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2019"));
-  install_visual_cpp_2019_button.set_size_request(-1, button_height);
-  install_visual_cpp_2019_button.set_tooltip_text("Installs Visual C++ 2015-2019");
-  third_toolbar.append(install_visual_cpp_2019_button);
-  install_visual_cpp_2022_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2022"));
-  install_visual_cpp_2022_button.set_size_request(-1, button_height);
-  install_visual_cpp_2022_button.set_tooltip_text("Installs Visual C++ 2015-2022");
-  third_toolbar.append(install_visual_cpp_2022_button);
-
-  // // Fourth row, Wine Mono & .NET packages
-  install_mono_button.signal_clicked().connect(sigc::bind(mono, this));
-  install_mono_button.set_size_request(-1, button_height);
-  install_mono_button.set_tooltip_text("(Re)installs Wine Mono: fixes a broken Mono/.NET support by fetching the matching Wine Mono MSI");
-  fourth_toolbar.append(install_mono_button);
-  install_dotnet4_0_button.signal_clicked().connect(sigc::bind(dotnet, this, "40"));
-  install_dotnet4_0_button.set_size_request(-1, button_height);
-  install_dotnet4_0_button.set_tooltip_text("Installs .NET 4.0 from 2011");
-  fourth_toolbar.append(install_dotnet4_0_button);
-  install_dotnet4_5_2_button.signal_clicked().connect(sigc::bind(dotnet, this, "452"));
-  install_dotnet4_5_2_button.set_size_request(-1, button_height);
-  install_dotnet4_5_2_button.set_tooltip_text("Installs .NET 4.5.2 from 2012");
-  fourth_toolbar.append(install_dotnet4_5_2_button);
-  install_dotnet4_7_2_button.signal_clicked().connect(sigc::bind(dotnet, this, "472"));
-  install_dotnet4_7_2_button.set_size_request(-1, button_height);
-  install_dotnet4_7_2_button.set_tooltip_text("Installs .NET 4.7.2 from 2018");
-  fourth_toolbar.append(install_dotnet4_7_2_button);
-  install_dotnet4_8_button.signal_clicked().connect(sigc::bind(dotnet, this, "48"));
-  install_dotnet4_8_button.set_size_request(-1, button_height);
-  install_dotnet4_8_button.set_tooltip_text("Installs .NET 4.8 from 2019");
-  fourth_toolbar.append(install_dotnet4_8_button);
-  install_dotnet6_button.signal_clicked().connect(sigc::bind(dotnet, this, "6"));
-  install_dotnet6_button.set_size_request(-1, button_height);
-  install_dotnet6_button.set_tooltip_text("Installs .NET 6.0 from 2023");
-  fourth_toolbar.append(install_dotnet6_button);
+  configure_box.append(hint_label);
+  configure_box.append(sidebar_stack_box);
 }
 
 /**
@@ -376,13 +353,46 @@ void BottleConfigureWindow::update_installed()
   }
 
   // Check for .NET 6.0 LTS
-  if (is_dotnet_6_installed())
+  if (is_dotnet_runtime_installed("6", "{5DEFBDBE-FF1A-4EB2-8DFB-17A26A7E6442}", "{3CC763AD-93B3-41EF-ABF8-CFE63A1DC3A6}"))
   {
     add_name_and_icon_to_button(install_dotnet6_button, "Reinstall .NET v6.0 LTS", true);
   }
   else
   {
     add_name_and_icon_to_button(install_dotnet6_button, "Install .NET v6.0 LTS", false);
+  }
+
+  // Check for .NET 7.0
+  // TODO: capture the x86/x64 MSI product GUIDs (install once, read system.reg) to enable reinstall detection
+  if (is_dotnet_runtime_installed("7", "", ""))
+  {
+    add_name_and_icon_to_button(install_dotnet7_button, "Reinstall .NET v7.0", true);
+  }
+  else
+  {
+    add_name_and_icon_to_button(install_dotnet7_button, "Install .NET v7.0", false);
+  }
+
+  // Check for .NET 8.0 LTS
+  // TODO: capture the x86/x64 MSI product GUIDs (install once, read system.reg) to enable reinstall detection
+  if (is_dotnet_runtime_installed("8", "", ""))
+  {
+    add_name_and_icon_to_button(install_dotnet8_button, "Reinstall .NET v8.0 LTS", true);
+  }
+  else
+  {
+    add_name_and_icon_to_button(install_dotnet8_button, "Install .NET v8.0 LTS", false);
+  }
+
+  // Check for .NET 9.0
+  // TODO: capture the x86/x64 MSI product GUIDs (install once, read system.reg) to enable reinstall detection
+  if (is_dotnet_runtime_installed("9", "", ""))
+  {
+    add_name_and_icon_to_button(install_dotnet9_button, "Reinstall .NET v9.0", true);
+  }
+  else
+  {
+    add_name_and_icon_to_button(install_dotnet9_button, "Install .NET v9.0", false);
   }
 }
 
@@ -767,27 +777,38 @@ bool BottleConfigureWindow::is_dotnet_installed(const string& uninstaller_key, c
 }
 
 /**
- * \brief Check if MS .NET v6 is installed
+ * \brief Check if a modern MS .NET runtime (v6 and up) is installed.
+ * These register in the uninstaller as "Microsoft .NET Runtime - <major>.x.x", using
+ * build-specific x86/x64 MSI product GUIDs. Pass an empty GUID to skip that architecture.
+ * \param[in] major_version         Major .NET version, eg. "6", "8" (used for the display name match)
+ * \param[in] x86_uninstaller_key   The 32-bit MSI product GUID (empty to skip)
+ * \param[in] x64_uninstaller_key   The 64-bit MSI product GUID (empty to skip)
  * \return True if installed otherwise False
  */
-bool BottleConfigureWindow::is_dotnet_6_installed()
+bool BottleConfigureWindow::is_dotnet_runtime_installed(const string& major_version,
+                                                        const string& x86_uninstaller_key,
+                                                        const string& x64_uninstaller_key)
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
   {
     Glib::ustring wine_prefix = active_bottle_->wine_location();
+    const string display_name_prefix = "Microsoft .NET Runtime - " + major_version;
     try
     {
-      // Check if package can be found to be uninstalled
-      string name = Helper::get_uninstaller(wine_prefix, "{5DEFBDBE-FF1A-4EB2-8DFB-17A26A7E6442}");
-      // Strings has first occurrence of display name
-      is_installed = (name.find("Microsoft .NET Runtime - 6") == 0);
-      // Try the 64-bit package (fallback)
-      if (!is_installed)
+      // Check the 32-bit package
+      if (!x86_uninstaller_key.empty())
       {
-        name = Helper::get_uninstaller(wine_prefix, "{3CC763AD-93B3-41EF-ABF8-CFE63A1DC3A6}");
+        string name = Helper::get_uninstaller(wine_prefix, x86_uninstaller_key);
         // Strings has first occurrence of display name
-        is_installed = (name.find("Microsoft .NET Runtime - 6") == 0);
+        is_installed = (name.find(display_name_prefix) == 0);
+      }
+      // Try the 64-bit package (fallback)
+      if (!is_installed && !x64_uninstaller_key.empty())
+      {
+        string name = Helper::get_uninstaller(wine_prefix, x64_uninstaller_key);
+        // Strings has first occurrence of display name
+        is_installed = (name.find(display_name_prefix) == 0);
       }
     }
     catch (const std::runtime_error& error)
