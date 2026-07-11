@@ -28,6 +28,7 @@
 #include "create_shortcut_window.h"
 #include "dialog_window.h"
 #include "general_config_struct.h"
+#include "overflow_toolbar.h"
 #include <gtkmm.h>
 #include <iostream>
 #include <list>
@@ -39,16 +40,6 @@
 using std::cout;
 using std::endl;
 using std::string;
-
-// Toolbar overflow management
-struct ToolbarButtonData
-{
-  Gtk::Button* button;
-  Glib::ustring label;
-  Glib::ustring icon_name;
-  Glib::ustring tooltip_text;
-  Glib::ustring action_name;
-};
 
 /**
  * \class MainWindow
@@ -138,9 +129,7 @@ protected:
   Glib::RefPtr<Gtk::SignalListItemFactory> app_list_factory;        /*!< Application list factory */
   Glib::RefPtr<Gtk::FilterListModel> app_list_filter_list_model;    /*!< Application list filter list model */
   Glib::RefPtr<Gtk::StringFilter> app_list_filter;                  /*!< Application list filter */
-  Gtk::Box toolbar;                                                 /*!< Toolbar at top */
-  Gtk::MenuButton menu_button_toolbar;                              /*!< The more menu button in the toolbar */
-  Glib::RefPtr<Gio::Menu> toolbar_menu;                             /*!< The toolbar menu */
+  OverflowToolbar toolbar;                                          /*!< Toolbar at top, moves non-fitting actions into an overflow menu */
   Gtk::Separator separator1;                                        /*!< Separator */
   Gtk::Grid detail_grid;                                            /*!< Grid layout container to have multiple rows & columns below the toolbar */
   Gtk::ScrolledWindow app_list_scrolled_window;                     /*!< Scrolled Window container for app list */
@@ -204,14 +193,12 @@ private:
   Glib::Dispatcher info_message_check_version_dispatcher_;
   Glib::Dispatcher new_version_available_dispatcher_;
   Glib::Dispatcher check_version_finished_dispatcher_;
-  std::vector<ToolbarButtonData> toolbar_buttons_; /*!< Toolbar buttons for menu management */
 
   // Signal handlers
   void on_bottle_row_clicked(Gtk::ListBoxRow* row);
   void on_app_list_search();
   void on_application_row_activated(unsigned int position);
   void on_new_bottle_apply();
-  void on_update_toolbar_overflow();
 
   // Private methods
   void set_detailed_info(const BottleItem& bottle);
