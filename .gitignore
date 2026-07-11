@@ -70,3 +70,6 @@ _deps
 !.vscode/c_cpp_properties.json
 !.vscode/settings.json
 !.vscode/launch.json
+
+# Except the bundled Windows DLLs for the DXVK GPU test
+!apps/*.dll

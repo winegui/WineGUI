@@ -53,7 +53,8 @@ public:
                             const string& working_directory = "",
                             const vector<pair<string, string>>& env_vars = {},
                             bool give_error = true,
-                            bool stderr_output = true);
+                            bool stderr_output = true,
+                            int* exit_code = nullptr);
   static string run_program_under_wine(bool wine_64_bit,
                                        const string& prefix_path,
                                        int debug_log_level,
@@ -62,7 +63,8 @@ public:
                                        const vector<pair<string, string>>& env_vars = {},
                                        bool give_error = true,
                                        bool stderr_output = true,
-                                       const string& wine_bin_path = "");
+                                       const string& wine_bin_path = "",
+                                       int* exit_code = nullptr);
   static void write_to_log_file(const string& logging_bottle_prefix, const string& logging);
   static string get_log_file_path(const string& logging_bottle_prefix);
   static void wait_until_wineserver_is_terminated(const string& prefix_path);
@@ -103,6 +105,7 @@ public:
   static string get_uninstaller(const string& prefix_path, const string& uninstallerKey);
   static string get_font_filename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName);
   static string get_image_location(const string& filename);
+  static string get_dxvk_test_location();
   static bool is_default_wine_bottle(const string& prefix_path);
   static string encode_text(const string& text);
   static string string_to_icon(const string& filename);

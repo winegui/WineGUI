@@ -41,18 +41,21 @@ BottleManager::BottleManager(MainWindow& main_window)
     : error_message_mutex_(),
       output_loging_mutex_(),
       error_message_winetricks_mutex_(),
+      error_message_gpu_test_mutex_(),
       main_window_(main_window),
       active_bottle_(nullptr),
       is_wine64_bit_(false),
       is_logging_stderr_(true),
       error_message_(),
-      error_message_winetricks_()
+      error_message_winetricks_(),
+      error_message_gpu_test_()
 {
   // Connect internal dispatcher(s)
   update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(*this, &BottleManager::update_config_and_bottles), "", false));
   write_log_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::write_log_to_file));
   error_message_winetricks_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::on_error_winetricks));
   winetricks_finished_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::cleanup_install_update_winetricks_thread));
+  error_message_gpu_test_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::on_error_gpu_test));
 }
 
 /**
@@ -125,6 +128,15 @@ void BottleManager::on_error_winetricks()
     std::lock_guard<std::mutex> lock(error_message_winetricks_mutex_);
     main_window_.show_error_message(error_message_winetricks_);
   }
+}
+
+/**
+ * \brief Show the DXVK GPU test failure message (incl. the test output) to the main window
+ */
+void BottleManager::on_error_gpu_test()
+{
+  std::lock_guard<std::mutex> lock(error_message_gpu_test_mutex_);
+  main_window_.show_error_message(error_message_gpu_test_);
 }
 
 /**
@@ -773,8 +785,56 @@ void BottleManager::run_program(string program)
     string wine_bin_path = active_bottle_->wine_bin_path();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    // For all programs (except winetricks)
-    if (!program.ends_with("winetricks --gui -q"))
+    // DXVK GPU test (bundled d3d11-triangle.exe)
+    if (program.ends_with("d3d11-triangle.exe"))
+    {
+      // Run the test executable directly (so without 'start /unix'), meaning Wine waits for the program to exit
+      // and we receive the real exit code. Which allows us to inform the user when the GPU test failed (incl. the test output).
+      program = "\"" + program + "\"";
+      auto env_vars = active_bottle_->env_vars();
+      // Use the bundled DXVK + d3dcompiler DLLs, which are located next to the test executable (Wine loads DLLs
+      // from the application directory first). The override only applies to this single test process,
+      // the bottle content and registry are left untouched.
+      // Prepend both, so the same variables defined in the bottle environment variables still take precedence.
+      env_vars.insert(env_vars.begin(), {"WINEDLLOVERRIDES", "d3d11,dxgi,d3dcompiler_47=n"});
+      // Enable the full DXVK HUD overlay
+      env_vars.insert(env_vars.begin(), {"DXVK_HUD", "full"});
+
+      std::thread t(
+          [wine64 = std::move(is_wine64_bit_), wine_bin_path, wine_prefix, debug_log_level, program, env_vars,
+           logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+           output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+           output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+           error_message_mutex = std::ref(error_message_gpu_test_mutex_), error_message = std::ref(error_message_gpu_test_),
+           error_dispatcher = &error_message_gpu_test_dispatcher_]
+          {
+            int exit_code = 0;
+            string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, "", env_vars, false, logging_stderr,
+                                                           wine_bin_path, &exit_code);
+            if (exit_code != 0)
+            {
+              // Only show the last part of the output (the most relevant error lines are at the end)
+              string output_tail = (output.size() > 1500) ? "...\n" + output.substr(output.size() - 1500) : output;
+              {
+                std::lock_guard<std::mutex> lock(error_message_mutex.get());
+                error_message.get() = "The GPU test (Direct3D 11 triangle) exited with an error.\n\nTest output:\n" + output_tail;
+              }
+              error_dispatcher->emit();
+            }
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+          });
+      t.detach();
+    }
+    // For all other programs (except winetricks)
+    else if (!program.ends_with("winetricks --gui -q"))
     {
       string working_directory = "";
       // Be-sure to execute the program between quotes (due to spaces).
