@@ -48,6 +48,10 @@ APPIMAGETOOL="${TOOLS_DIR}/appimagetool-x86_64.AppImage"
 # linuxdeploy discovers plugins named 'linuxdeploy-plugin-<name>' on PATH.
 export PATH="${TOOLS_DIR}:${PATH}"
 
+# linuxdeploy/appimagetool are AppImages themselves; inside Docker (CI) there
+# is no FUSE to mount them, so tell their runtimes to self-extract and run.
+export APPIMAGE_EXTRACT_AND_RUN=1
+
 # Version string (e.g. 'v3.1.0'), written by cmake/appimage.cmake. Used by
 # linuxdeploy to name the output WineGUI-<VERSION>-x86_64.AppImage, matching the
 # CPack naming and the release asset links.
