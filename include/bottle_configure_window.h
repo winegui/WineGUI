@@ -42,6 +42,7 @@ public:
   sigc::signal<void(Gtk::Window*)> corefonts;                         /*!< Install Core fonts signal */
   sigc::signal<void(Gtk::Window*, const string&)> visual_cpp_package; /*!< Install Visual C++ package signal */
   sigc::signal<void(Gtk::Window*, const string&)> dotnet;             /*!< Install .NET signal */
+  sigc::signal<void(Gtk::Window*)> mono;                              /*!< (Re)install Wine Mono signal */
 
   explicit BottleConfigureWindow(Gtk::Window& parent);
   virtual ~BottleConfigureWindow();
@@ -80,6 +81,7 @@ protected:
   Gtk::Button install_visual_cpp_2019_button; /*!< MS Visual C++ 2019 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2022_button; /*!< MS Visual C++ 2022 Redistributable Package install button */
   // Buttons Fourth row
+  Gtk::Button install_mono_button;        /*!< Wine Mono (re)install button */
   Gtk::Button install_dotnet4_0_button;   /*!< .NET v4.0 install button */
   Gtk::Button install_dotnet4_5_2_button; /*!< .NET v4.5.2 install button */
   Gtk::Button install_dotnet4_7_2_button; /*!< .NET v4.7.2 install button */
