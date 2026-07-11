@@ -69,7 +69,10 @@ public:
                      const Glib::ustring& virtual_desktop_resolution,
                      BottleTypes::AudioDriver audio,
                      bool is_debug_logging,
-                     int debug_log_level);
+                     int debug_log_level,
+                     bool enable_dxvk_hud,
+                     bool enable_gallium_hud,
+                     bool enable_mangohud);
   void clone_bottle(SignalController* caller,
                     const Glib::ustring& name,
                     const Glib::ustring& folder_name,
