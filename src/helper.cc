@@ -195,6 +195,7 @@ vector<string> Helper::get_bottles_paths(const string& dir_path, bool display_de
  * \param[in] give_error Inform user when application exit with non-zero exit code
  * \param[in] stderr_output Also output stderr (together with stout)
  * \param[in] env_vars Array of environment variables to set
+ * \param[out] exit_code (Optionally) Retrieve the exit code of the program (only set when give_error is false)
  * \return Terminal stdout output
  */
 string Helper::run_program(const string& prefix_path,
@@ -203,7 +204,8 @@ string Helper::run_program(const string& prefix_path,
                            const string& working_directory,
                            const vector<pair<string, string>>& env_vars,
                            bool give_error,
-                           bool stderr_output)
+                           bool stderr_output,
+                           int* exit_code)
 {
   string output;
 
@@ -227,7 +229,11 @@ string Helper::run_program(const string& prefix_path,
   else
   {
     // No error message when exit code is non-zero, but we can still return the output and log to disk (if logging is enabled)
-    const auto& [_, output_value] = exec(command);
+    const auto& [exit_code_value, output_value] = exec(command);
+    if (exit_code != nullptr)
+    {
+      *exit_code = exit_code_value;
+    }
     output = output_value;
   }
   return output;
@@ -246,6 +252,7 @@ string Helper::run_program(const string& prefix_path,
  * \param[in] stderr_output Also output stderr (together with stout)
  * \param[in] env_vars Array of environment variables to set
  * \param[in] wine_bin_path Path to Wine binary
+ * \param[out] exit_code (Optionally) Retrieve the exit code of the program (only set when give_error is false)
  * \return Terminal stdout output
  */
 string Helper::run_program_under_wine(bool wine_64_bit,
@@ -256,10 +263,11 @@ string Helper::run_program_under_wine(bool wine_64_bit,
                                       const vector<pair<string, string>>& env_vars,
                                       bool give_error,
                                       bool stderr_output,
-                                      const string& wine_bin_path)
+                                      const string& wine_bin_path,
+                                      int* exit_code)
 {
   return Helper::run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) + " " + program,
-                             working_directory, env_vars, give_error, stderr_output);
+                             working_directory, env_vars, give_error, stderr_output, exit_code);
 }
 
 /**
@@ -1288,6 +1296,45 @@ string Helper::get_image_location(const string& filename)
   else if (file_exists(file_path2))
   {
     return file_path2;
+  }
+  else
+  {
+    return "";
+  }
+}
+
+/**
+ * \brief Get path to the bundled DXVK GPU test application (d3d11-triangle.exe),
+ * located in a global data directory (like /usr/share)
+ * \return Absolute path to the DXVK test executable (or empty string if not found)
+ */
+string Helper::get_dxvk_test_location()
+{
+  static const string filename = "d3d11-triangle.exe";
+  // Try absolute path first
+  for (const string& data_dir : Glib::get_system_data_dirs())
+  {
+    vector<string> path_builder{data_dir, "winegui", "apps", filename};
+    string file_path = Glib::build_path(G_DIR_SEPARATOR_S, path_builder);
+    if (file_exists(file_path))
+    {
+      return file_path;
+    }
+  }
+
+  // Try local path if the apps are not installed (yet)
+  // When working directory is in the build folder (relative path)
+  string file_path = Glib::build_filename("../apps", filename);
+  // When working directory is in the build/bin folder (relative path)
+  string file_path2 = Glib::build_filename("../../apps", filename);
+  if (file_exists(file_path))
+  {
+    // Canonicalize the relative path, since the path is passed to Wine as command argument
+    return Glib::canonicalize_filename(file_path);
+  }
+  else if (file_exists(file_path2))
+  {
+    return Glib::canonicalize_filename(file_path2);
   }
   else
   {

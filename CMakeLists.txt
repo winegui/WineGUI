@@ -160,6 +160,8 @@ if(NOT UNITTEST)
   install(FILES misc/winegui.png DESTINATION ${DATADIR}/icons/hicolor/48x48/apps)
   install(FILES misc/winegui.svg DESTINATION ${DATADIR}/icons/hicolor/scalable/apps)
   install(DIRECTORY images DESTINATION ${DATADIR}/winegui)
+  # Windows test applications (eg. the DXVK GPU test), shipped as-is
+  install(DIRECTORY apps DESTINATION ${DATADIR}/winegui)
   # Could be easily extended with eg. scripts:
   #   DIRECTORY images scripts/ DESTINATION ....
   #   PATTERN "scripts/*"
