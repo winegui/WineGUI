@@ -14,14 +14,17 @@ You can find the latest version on the [Releases page](https://gitlab.melroy.org
 
 Besides the release page on GitLab (see above), you can now also find the latest version on the [GitHub Release](https://github.com/winegui/WineGUI/releases) (mirror).
 
-Download the WineGUI package you require for your Linux distribution. I provide `.deb`, `.rpm` and `.tar.gz` files:
+Download the WineGUI package you require for your Linux distribution. I provide `.AppImage`, `.deb`, `.rpm` and `.tar.gz` files:
 
+- The **`.AppImage`** is a single, self-contained file that runs on most Linux distributions without installation or root. Download it, make it executable (`chmod +x WineGUI-*.AppImage`) and run it.
 - Use the `.deb` package file for Ubuntu, Debian, Linux Mint, Zorin OS, MX linux, and other Debian-based distributions.
 - Use the `.rpm` package for Fedora, RHEL, and similar distributions.
 - The Compressed Binary `.tar.gz` file is available for manual installation or standalone usage. This is prebuild.
 - The Source Code Archive (also `tar.gz`) is intented for building WineGUI from source.
 
 Install the package and you are ready to go! WineGUI should be listed in your menu.
+
+> **Note:** The AppImage bundles only the GTK stack, not Wine itself. As with every WineGUI package, **Wine v9 or higher must be installed on the host** (see below).
 
 **Run-time requirement:** Wine v9 or higher.
 
@@ -204,6 +207,20 @@ cpack -C Release -G "DEB"
 ```
 
 _Hint:_ You can disable the automatic startup version check by setting the `-DCHECK_FOR_UPDATE=OFF` variable. This will write the config init file with `CheckForUpdatesStartup` set to `false` (instead of `true`). Which is used for _rolling release_ Linux distros.
+
+### AppImage
+
+To build a single-file, distro-agnostic AppImage, run the script:
+
+```sh
+./scripts/build-appimage.sh
+```
+
+This produces `build_prod/WineGUI-v<version>-x86_64.AppImage`.
+
+The required tools (`linuxdeploy`, `linuxdeploy-plugin-gtk` and `appimagetool`) do **not** need to be installed system-wide: they are downloaded automatically (with pinned checksums) into the build directory when CMake is configured with `-DAPPIMAGE=ON`, which the script does for you. To bump the pinned tool versions, edit `cmake/appimage.cmake`.
+
+The AppImage bundles the GTK stack via `linuxdeploy-plugin-gtk`. Note that this plugin is officially GTK+2/3 only; if a produced AppImage fails to run on target systems due to GTK4 bundling issues, consider switching the script to [sharun](https://github.com/VHSgunzo/sharun) / `quick-sharun` as an alternative deployment tool.
 
 ### Build Doxygen
 

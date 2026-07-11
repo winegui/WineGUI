@@ -7,6 +7,7 @@ set(PROJECT_SPDX_LICENSE "AGPL-3.0-only")
 
 option(DOXYGEN "Build Documentation" OFF)
 option(PACKAGE "Build packages in release mode" OFF)
+option(APPIMAGE "Download AppImage build tooling (used by scripts/build-appimage.sh)" OFF)
 option(CHECK_FOR_UPDATE "Check for updates during startup" ON)
 option(UNITTEST "Build unit tests" OFF)
 
@@ -42,6 +43,12 @@ message(STATUS "Project version: ${PROJECT_VERSION}")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Create packages: ${PACKAGE}")
 message(STATUS "Generate documentation: ${DOXYGEN}")
+
+# Download AppImage build tooling (linuxdeploy, GTK plugin, appimagetool).
+# Requires PROJECT_VERSION, so include after project().
+if(APPIMAGE)
+  include(appimage)
+endif()
 
 # Global CMake settings
 set(CMAKE_CXX_STANDARD 23)

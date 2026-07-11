@@ -80,6 +80,14 @@ if [[ "$output" == "[]" ]]; then
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-plucky.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
+    # Added last, so it is displayed first (see reverse-order note above)
+    curl --request POST \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data link_type="package" \
+        --data name="WineGUI - AppImage (.AppImage)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-x86_64.AppImage" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
 elif [[ "$output" == "{\"message\":\"404 Not found\"}" ]]; then
     echo "WARN: Release doesn't yet exist yet/can't be found yet in Gitlab: $APP_VERSION..."
 else
