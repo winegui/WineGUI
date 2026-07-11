@@ -33,7 +33,9 @@
 #include <glibmm/miscutils.h>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <pwd.h>
 #include <stdexcept>
 #include <stdio.h>
@@ -59,6 +61,23 @@ static const string WinetricksExecutable =
 static const string SystemReg = "system.reg";
 static const string UserReg = "user.reg";
 // static const string UserdefReg = "userdef.reg";
+
+// In-memory cache of registry file contents (pre-split into lines), keyed by absolute file path.
+// This avoids re-reading the same user.reg/system.reg from disk multiple times during a single
+// bottle enumeration pass. Every lookup re-validates the entry against the file's current
+// mtime + size (a single stat() call, no file read), so the cache can never serve data that
+// changed on disk — registry files are also rewritten outside WineGUI (winetricks, running
+// Windows programs, regedit, manual edits). On top of that the cache is cleared at the start &
+// end of every bottle refresh (see BottleManager::update_config_and_bottles) and invalidated
+// per-prefix by the reg mutating setters, keeping it empty at rest.
+struct RegFileCacheEntry
+{
+  struct timespec mtime;
+  off_t size;
+  std::shared_ptr<const std::vector<std::string>> lines;
+};
+static std::map<std::string, RegFileCacheEntry> reg_file_cache;
+static std::mutex reg_file_cache_mutex;
 
 // Reg keys
 static const string RegKeyName9x = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion]";
@@ -1028,6 +1047,8 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
   {
     std::cerr << "Error: Couldn't set Windows OS version, no Winetricks executable found. Winetricks path: " << WinetricksExecutable << std::endl;
   }
+  // Registry files just changed on disk, drop any cached copy for this bottle
+  invalidate_reg_cache(prefix_path);
 }
 
 /**
@@ -1082,6 +1103,8 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
     std::cerr << "Error:Couldn't set virtual desktop resolution, no Winetricks executable found. Wine prefix path: " << prefix_path
               << ", Winetricks path: " << WinetricksExecutable << std::endl;
   }
+  // Registry files just changed on disk, drop any cached copy for this bottle
+  invalidate_reg_cache(prefix_path);
 }
 
 /**
@@ -1104,6 +1127,8 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
   {
     std::cerr << "Error:Couldn't disable desktop, no Winetricks executable found. Winetricks path: " << WinetricksExecutable << std::endl;
   }
+  // Registry files just changed on disk, drop any cached copy for this bottle
+  invalidate_reg_cache(prefix_path);
 }
 
 /**
@@ -1131,6 +1156,8 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
     std::cerr << "Error:Couldn't set audio driver, no Winetricks executable found. Wine prefix path: " << prefix_path
               << ", Winetricks path: " << WinetricksExecutable << std::endl;
   }
+  // Registry files just changed on disk, drop any cached copy for this bottle
+  invalidate_reg_cache(prefix_path);
 }
 
 /**
@@ -1889,13 +1916,11 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
 {
   string output;
   output.reserve(10);
-  std::ifstream reg_file(file_path);
-  if (reg_file.is_open())
+  auto lines = get_reg_file_lines(file_path);
+  if (lines)
   {
-    string line;
-    line.reserve(128);
     bool match = false;
-    while (std::getline(reg_file, line))
+    for (const string& line : *lines)
     {
       if (!match)
       {
@@ -1914,7 +1939,6 @@ string Helper::get_reg_value(const string& file_path, const string& key_name, co
         }
       }
     }
-    reg_file.close();
   }
   else
   {
@@ -1936,13 +1960,11 @@ vector<string> Helper::get_reg_keys(const string& file_path, const string& key_n
 {
   vector<string> keys;
   keys.reserve(10);
-  std::ifstream reg_file(file_path);
-  if (reg_file.is_open())
+  auto lines = get_reg_file_lines(file_path);
+  if (lines)
   {
-    string line;
-    line.reserve(128);
     bool match = false;
-    while (std::getline(reg_file, line))
+    for (const string& line : *lines)
     {
       if (!match)
       {
@@ -1950,13 +1972,12 @@ vector<string> Helper::get_reg_keys(const string& file_path, const string& key_n
       }
       else
       {
-        if (line.empty() || reg_file.eof())
+        if (line.empty())
           break; // End of key section in registry
         if (!line.starts_with('#'))
           keys.emplace_back(line);
       }
     }
-    reg_file.close();
   }
   else
   {
@@ -2011,13 +2032,11 @@ vector<pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(c
 {
   vector<pair<string, string>> pairs;
   pairs.reserve(3);
-  std::ifstream reg_file(file_path);
-  if (reg_file.is_open())
+  auto lines = get_reg_file_lines(file_path);
+  if (lines)
   {
-    string line;
-    line.reserve(128);
     bool match = false;
-    while (std::getline(reg_file, line))
+    for (string line : *lines)
     {
       if (!match)
       {
@@ -2025,7 +2044,7 @@ vector<pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(c
       }
       else
       {
-        if (line.empty() || reg_file.eof())
+        if (line.empty())
           break; // End of key section in registry
 
         line = unescape_reg_key_data(line);
@@ -2045,7 +2064,6 @@ vector<pair<string, string>> Helper::get_reg_keys_name_data_pair_filter_ignore(c
         }
       }
     }
-    reg_file.close();
   }
   else
   {
@@ -2099,13 +2117,11 @@ vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_
 {
   vector<string> keys;
   keys.reserve(10);
-  std::ifstream reg_file(file_path);
-  if (reg_file.is_open())
+  auto lines = get_reg_file_lines(file_path);
+  if (lines)
   {
-    string line;
-    line.reserve(128);
     bool match = false;
-    while (std::getline(reg_file, line))
+    for (string line : *lines)
     {
       if (!match)
       {
@@ -2113,7 +2129,7 @@ vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_
       }
       else
       {
-        if (line.empty() || reg_file.eof())
+        if (line.empty())
           break; // End of key section in registry
 
         line = unescape_reg_key_data(line);
@@ -2131,7 +2147,6 @@ vector<string> Helper::get_reg_keys_value_data_filter_ignore(const string& file_
         }
       }
     }
-    reg_file.close();
   }
   else
   {
@@ -2154,13 +2169,11 @@ string Helper::get_reg_meta_data(const string& file_path, const string& meta_val
 {
   string output;
   output.reserve(10);
-  std::ifstream reg_file(file_path);
-  if (reg_file.is_open())
+  auto lines = get_reg_file_lines(file_path);
+  if (lines)
   {
     string meta_pattern = "#" + meta_value_name + "=";
-    string line;
-    line.reserve(80);
-    while (std::getline(reg_file, line))
+    for (const string& line : *lines)
     {
       std::size_t pos = line.find(meta_pattern);
       if (pos != std::string::npos)
@@ -2171,7 +2184,6 @@ string Helper::get_reg_meta_data(const string& file_path, const string& meta_val
         break;
       }
     }
-    reg_file.close();
   }
   else
   {
@@ -2243,6 +2255,78 @@ vector<string> Helper::read_file_lines(const string& file_path)
     throw std::runtime_error("Could not open file!");
   }
   return output;
+}
+
+/**
+ * \brief Get the lines of a registry file, using the in-memory cache.
+ * Every call stats the file and compares mtime + size against the cached entry; the cached
+ * snapshot is only served while the file is unchanged on disk, otherwise it is re-read. This
+ * keeps the cache correct even when the registry is rewritten outside WineGUI. The returned
+ * shared_ptr is a stable snapshot, so a caller can keep iterating even if the cache entry is
+ * invalidated or replaced concurrently.
+ * \param[in] file_path File location of the registry file
+ * \return Shared pointer to the (cached) file lines, or nullptr when the file could not be opened
+ */
+std::shared_ptr<const vector<string>> Helper::get_reg_file_lines(const string& file_path)
+{
+  std::lock_guard<std::mutex> lock(reg_file_cache_mutex);
+  struct stat file_stat;
+  if (stat(file_path.c_str(), &file_stat) != 0)
+  {
+    // File is gone (or unreadable); drop any stale entry and let the caller emit its own error
+    reg_file_cache.erase(file_path);
+    return nullptr;
+  }
+  auto it = reg_file_cache.find(file_path);
+  if (it != reg_file_cache.end() && it->second.mtime.tv_sec == file_stat.st_mtim.tv_sec && it->second.mtime.tv_nsec == file_stat.st_mtim.tv_nsec &&
+      it->second.size == file_stat.st_size)
+  {
+    return it->second.lines;
+  }
+
+  std::ifstream reg_file(file_path);
+  if (!reg_file.is_open())
+  {
+    // Let the caller emit its own (function-specific) error and throw
+    reg_file_cache.erase(file_path);
+    return nullptr;
+  }
+  auto lines = std::make_shared<vector<string>>();
+  lines->reserve(50);
+  string line;
+  line.reserve(128);
+  while (std::getline(reg_file, line))
+  {
+    lines->emplace_back(line);
+  }
+  reg_file.close();
+  auto cached = std::shared_ptr<const vector<string>>(std::move(lines));
+  reg_file_cache[file_path] = RegFileCacheEntry{file_stat.st_mtim, file_stat.st_size, cached};
+  return cached;
+}
+
+/**
+ * \brief Clear the whole in-memory registry file cache.
+ * Called at the start & end of every bottle refresh so the cache is empty at rest and
+ * every refresh re-reads the registry files fresh from disk.
+ */
+void Helper::invalidate_reg_cache()
+{
+  std::lock_guard<std::mutex> lock(reg_file_cache_mutex);
+  reg_file_cache.clear();
+}
+
+/**
+ * \brief Invalidate the cached registry files (user.reg & system.reg) for a single bottle prefix.
+ * Call this right after mutating a bottle's registry so a subsequent read cannot serve the
+ * pre-write value.
+ * \param[in] prefix_path Bottle prefix whose registry files should be dropped from the cache
+ */
+void Helper::invalidate_reg_cache(const string& prefix_path)
+{
+  std::lock_guard<std::mutex> lock(reg_file_cache_mutex);
+  reg_file_cache.erase(Glib::build_filename(prefix_path, UserReg));
+  reg_file_cache.erase(Glib::build_filename(prefix_path, SystemReg));
 }
 
 /**

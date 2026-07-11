@@ -187,6 +187,19 @@ void BottleManager::install_or_update_winetricks_thread(bool install)
  */
 void BottleManager::update_config_and_bottles(const Glib::ustring& select_bottle_name, bool is_startup)
 {
+  // Registry files are cached in-memory only for the duration of this enumeration pass, to avoid
+  // re-reading the same user.reg/system.reg from disk many times per bottle. Clear the cache at the
+  // start so every refresh reads fresh from disk, and again on exit (all return paths) so the cache
+  // is empty at rest and never serves data that changed on disk afterwards (also from outside WineGUI).
+  Helper::invalidate_reg_cache();
+  struct RegCacheGuard
+  {
+    ~RegCacheGuard()
+    {
+      Helper::invalidate_reg_cache();
+    }
+  } reg_cache_guard;
+
   // Read general & save config in bottle manager
   GeneralConfigData config_data = load_and_save_general_config();
   // Set/update main window with the latest general config data
