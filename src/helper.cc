@@ -23,6 +23,7 @@
 #include "wine_defaults.h"
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
@@ -36,6 +37,7 @@
 #include <pwd.h>
 #include <stdexcept>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <tuple>
@@ -1413,6 +1415,153 @@ string Helper::string_to_icon(const std::string& filename)
   return icon;
 }
 
+/**
+ * \brief Build a self-contained command line for a freedesktop `.desktop` Exec= field.
+ * This reproduces the same command WineGUI assembles at runtime (see BottleManager::run_program),
+ * so the resulting shortcut runs the application under the correct Wine prefix/binary/env even when
+ * WineGUI itself is not running.
+ * \param[in] wine_64_bit If true use the Wine 64-bit binary, false use the 32-bit binary
+ * \param[in] prefix_path The Wine prefix (WINEPREFIX) of the bottle
+ * \param[in] wine_bin_path Optional custom Wine binary directory of the bottle (empty = use global Wine)
+ * \param[in] command The application command (Unix path, Windows-style command like 'notepad', or the Winetricks command)
+ * \param[in] env_vars Additional environment variables to set for the bottle
+ * \return A single command line suitable for a `.desktop` Exec= line
+ */
+string Helper::build_desktop_exec_line(
+    bool wine_64_bit, const string& prefix_path, const string& wine_bin_path, const string& command, const vector<pair<string, string>>& env_vars)
+{
+  // Environment prefix (env allows a single runnable command line in the .desktop Exec field)
+  string env_prefix = "env WINEPREFIX=\"" + prefix_path + "\" ";
+  for (const auto& [key, value] : env_vars)
+  {
+    env_prefix += key + "=\"" + value + "\" ";
+  }
+
+  // Winetricks is a special case: it doesn't run through the Wine binary (see BottleManager::run_program)
+  if (command.ends_with("winetricks --gui -q"))
+  {
+    return env_prefix + command;
+  }
+
+  // Wrap the program the same way as at runtime (see BottleManager::run_program)
+  string wrapped_program;
+  if (command.starts_with("/"))
+  {
+    // Unix-style command, like application shortcuts
+    wrapped_program = "start /unix \"" + command + "\"";
+  }
+  else
+  {
+    // Windows-style commands, like 'notepad'
+    wrapped_program = "start \"" + command + "\"";
+  }
+
+  return env_prefix + Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) + " " + wrapped_program;
+}
+
+/**
+ * \brief Create a freedesktop `.desktop` shortcut file on disk (eg. in the applications menu or on the desktop)
+ * \param[in] target_dir Directory the `.desktop` file is written to (created if it doesn't exist)
+ * \param[in] file_basename The `.desktop` file name (including the .desktop extension)
+ * \param[in] app_name The application name (Name= field)
+ * \param[in] comment Optional description (Comment= field)
+ * \param[in] exec_line The self-contained command line (Exec= field), see build_desktop_exec_line()
+ * \param[in] icon Icon name or absolute path to an icon file (Icon= field)
+ * \param[in] bottle_name Optional bottle name, stored as a marker (X-WineGUI-Bottle= field)
+ * \param[in] make_executable If true, mark the file as executable and trusted (needed for desktop icons)
+ * \return true if successfully written, otherwise false
+ */
+bool Helper::create_desktop_file(const string& target_dir,
+                                 const string& file_basename,
+                                 const string& app_name,
+                                 const string& comment,
+                                 const string& exec_line,
+                                 const string& icon,
+                                 const string& bottle_name,
+                                 bool make_executable)
+{
+  // Ensure the target directory exists
+  if (!dir_exists(target_dir))
+  {
+    if (!create_dir(target_dir))
+    {
+      std::cerr << "ERROR: Could not create directory for desktop shortcut: " << target_dir << std::endl;
+      return false;
+    }
+  }
+
+  string file_path = Glib::build_filename(target_dir, file_basename);
+
+  string contents = "[Desktop Entry]\n";
+  contents += "Type=Application\n";
+  contents += "Name=" + app_name + "\n";
+  if (!comment.empty())
+    contents += "Comment=" + comment + "\n";
+  contents += "Exec=" + exec_line + "\n";
+  if (!icon.empty())
+    contents += "Icon=" + icon + "\n";
+  contents += "Terminal=false\n";
+  contents += "Categories=Wine;\n";
+  if (!bottle_name.empty())
+    contents += "X-WineGUI-Bottle=" + bottle_name + "\n";
+
+  try
+  {
+    Helper::write_file(file_path, contents);
+  }
+  catch (const Glib::Error& error)
+  {
+    std::cerr << "ERROR: Could not write desktop shortcut file (" << file_path << "): " << error.what() << std::endl;
+    return false;
+  }
+
+  if (make_executable)
+  {
+    // Make the file executable (0755), required for desktop icons to be launchable
+    if (chmod(file_path.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0)
+    {
+      std::cerr << "WARN: Could not set executable bit on desktop shortcut file: " << file_path << std::endl;
+    }
+    // Mark the file as trusted, so (GNOME) file managers don't show an "untrusted" prompt
+    try
+    {
+      auto file = Gio::File::create_for_path(file_path);
+      file->set_attribute_string("metadata::trusted", "true", Gio::FileQueryInfoFlags::NONE);
+    }
+    catch (const Glib::Error& error)
+    {
+      // Best-effort only, ignore failure
+    }
+  }
+
+  return true;
+}
+
+/**
+ * \brief Sanitize a string so it can be safely used as part of a file name (eg. for a .desktop file)
+ * \param[in] input The input string
+ * \return The sanitized string (lower-case, only alphanumerics/dash/underscore, spaces become dashes)
+ */
+string Helper::to_filename_part(const string& input)
+{
+  string result;
+  result.reserve(input.size());
+  for (char c : input)
+  {
+    unsigned char uc = static_cast<unsigned char>(c);
+    if (std::isalnum(uc))
+      result += static_cast<char>(std::tolower(uc));
+    else if (c == '-' || c == '_')
+      result += c;
+    else if (c == ' ')
+      result += '-';
+    // else: drop the character
+  }
+  if (result.empty())
+    result = "shortcut";
+  return result;
+}
+
 /****************************************************************************
  *  Private methods                                                         *
  ****************************************************************************/
@@ -1555,8 +1704,8 @@ BottleTypes::Windows Helper::get_windows_version(const string& prefix_path)
 
   // Trying system registry
   string system_reg_file_path = Glib::build_filename(prefix_path, SystemReg);
-  string version = "";
-  if (!(version = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTVersion)).empty())
+  string version = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTVersion);
+  if (!version.empty())
   {
     string build_number_nt = Helper::get_reg_value(system_reg_file_path, RegKeyNameNT, RegNameNTBuildNumber);
     string type_nt = Helper::get_reg_value(system_reg_file_path, RegKeyType, RegNameProductType);

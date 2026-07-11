@@ -6,6 +6,7 @@
 #include "bottle_configure_window.h"
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
+#include "create_shortcut_window.h"
 #include "main_window.h"
 #include "preferences_window.h"
 #include "remove_app_window.h"
@@ -28,9 +29,11 @@ Application::Application() : Gtk::Application("org.melroy.winegui", Gio::Applica
     configure_window_ = Gtk::make_managed<BottleConfigureWindow>(*main_window_);
     add_app_window_ = Gtk::make_managed<AddAppWindow>(*main_window_);
     remove_app_window_ = Gtk::make_managed<RemoveAppWindow>(*main_window_);
+    create_shortcut_window_ = Gtk::make_managed<CreateShortcutWindow>(*main_window_);
     manager_ = std::make_shared<BottleManager>(*main_window_);
-    signal_controller_ = std::make_shared<SignalController>(main_window_, *manager_, *preferences_window_, *edit_window_, *clone_window_,
-                                                            *configure_env_var_window_, *configure_window_, *add_app_window_, *remove_app_window_);
+    signal_controller_ =
+        std::make_shared<SignalController>(main_window_, *manager_, *preferences_window_, *edit_window_, *clone_window_, *configure_env_var_window_,
+                                           *configure_window_, *add_app_window_, *remove_app_window_, *create_shortcut_window_);
   }
   else
   {
