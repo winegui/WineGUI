@@ -26,6 +26,7 @@
 #include "bottle_configure_window.h"
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
+#include "create_shortcut_window.h"
 #include "helper.h"
 #include "main_window.h"
 #include "preferences_window.h"
@@ -42,7 +43,8 @@ SignalController::SignalController(MainWindow* main_window,
                                    BottleConfigureEnvVarWindow& configure_env_var_window,
                                    BottleConfigureWindow& configure_window,
                                    AddAppWindow& add_app_window,
-                                   RemoveAppWindow& remove_app_window)
+                                   RemoveAppWindow& remove_app_window,
+                                   CreateShortcutWindow& create_shortcut_window)
     : main_window_(main_window),
       manager_(manager),
       preferences_window_(preferences_window),
@@ -51,7 +53,8 @@ SignalController::SignalController(MainWindow* main_window,
       configure_env_var_window_(configure_env_var_window),
       configure_window_(configure_window),
       add_app_window_(add_app_window),
-      remove_app_window_(remove_app_window)
+      remove_app_window_(remove_app_window),
+      create_shortcut_window_(create_shortcut_window)
 {
   // Nothing
 }
@@ -78,6 +81,7 @@ void SignalController::dispatch_signals()
   main_window_->active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::set_active_bottle));
   main_window_->active_bottle.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::set_active_bottle));
+  main_window_->active_bottle.connect(sigc::mem_fun(create_shortcut_window_, &CreateShortcutWindow::set_active_bottle));
   // Distribute the reset bottle signal from the manager
   manager_.reset_active_bottle.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::reset_active_bottle));
@@ -85,6 +89,7 @@ void SignalController::dispatch_signals()
   manager_.reset_active_bottle.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::reset_active_bottle));
+  manager_.reset_active_bottle.connect(sigc::mem_fun(create_shortcut_window_, &CreateShortcutWindow::reset_active_bottle));
   manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_detailed_info));
   manager_.reset_active_bottle.connect(sigc::mem_fun(*main_window_, &MainWindow::reset_application_list));
   // Removed bottle signal from the manager
@@ -109,6 +114,8 @@ void SignalController::dispatch_signals()
   // App list
   main_window_->show_add_app_window.connect(sigc::mem_fun(add_app_window_, &AddAppWindow::show));
   main_window_->show_remove_app_window.connect(sigc::mem_fun(remove_app_window_, &RemoveAppWindow::show));
+  main_window_->prepare_create_shortcut.connect(sigc::mem_fun(create_shortcut_window_, &CreateShortcutWindow::set_applications));
+  main_window_->show_create_shortcut_window.connect(sigc::mem_fun(create_shortcut_window_, &CreateShortcutWindow::show));
 
   // Edit Window
   edit_window_.configure_environment_variables.connect(sigc::mem_fun(configure_env_var_window_, &BottleConfigureEnvVarWindow::show));

@@ -6,6 +6,9 @@ build/
 build_*/
 release/
 
+# worktrees
+.claude/worktrees
+
 # winetricks script
 winetricks
 

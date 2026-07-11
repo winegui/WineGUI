@@ -382,3 +382,76 @@ TEST_F(HelperTest, GetImageLocationExistingFile) {
   EXPECT_FALSE(result.empty());
   EXPECT_TRUE(result.find("ready.png") != std::string::npos);
 }
+
+// Test build_desktop_exec_line function
+
+TEST_F(HelperTest, BuildDesktopExecLineUnixPath) {
+  // A Unix-style path should be wrapped with 'start /unix' and include the WINEPREFIX
+  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", "", "/home/user/.wine/drive_c/game.exe");
+  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" wine64 start /unix \"/home/user/.wine/drive_c/game.exe\"");
+}
+
+TEST_F(HelperTest, BuildDesktopExecLineWindowsCommand) {
+  // A Windows-style command (like 'notepad') should be wrapped with 'start'
+  std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "notepad");
+  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" wine start \"notepad\"");
+}
+
+TEST_F(HelperTest, BuildDesktopExecLineWithEnvVars) {
+  // Environment variables should be added to the env prefix
+  std::vector<std::pair<std::string, std::string>> env_vars = {{"DXVK_HUD", "fps"}};
+  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", "", "notepad", env_vars);
+  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" DXVK_HUD=\"fps\" wine64 start \"notepad\"");
+}
+
+TEST_F(HelperTest, BuildDesktopExecLineCustomWineBinPath) {
+  // A custom Wine binary path should be used instead of the global 'wine64'
+  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", "/opt/wine/bin", "notepad");
+  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" /opt/wine/bin/wine64 start \"notepad\"");
+}
+
+TEST_F(HelperTest, BuildDesktopExecLineWinetricks) {
+  // Winetricks is a special case and does not run through the Wine binary
+  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", "", "/some/path/winetricks --gui -q");
+  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" /some/path/winetricks --gui -q");
+}
+
+// Test create_desktop_file function
+
+TEST_F(HelperTest, CreateDesktopFileWritesEntry) {
+  std::string target_dir = test_dir + "/applications";
+  bool success =
+      Helper::create_desktop_file(target_dir, "winegui-test-app.desktop", "Test App", "A test comment",
+                                  "env WINEPREFIX=\"/home/user/.wine\" wine64 start \"notepad\"", "logo_big.png", "TestBottle", false);
+  EXPECT_TRUE(success);
+
+  std::string file_path = target_dir + "/winegui-test-app.desktop";
+  EXPECT_TRUE(fs::exists(file_path));
+
+  std::ifstream file(file_path);
+  std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  EXPECT_TRUE(contents.find("[Desktop Entry]") != std::string::npos);
+  EXPECT_TRUE(contents.find("Type=Application") != std::string::npos);
+  EXPECT_TRUE(contents.find("Name=Test App") != std::string::npos);
+  EXPECT_TRUE(contents.find("Comment=A test comment") != std::string::npos);
+  EXPECT_TRUE(contents.find("Exec=env WINEPREFIX=\"/home/user/.wine\" wine64 start \"notepad\"") != std::string::npos);
+  EXPECT_TRUE(contents.find("X-WineGUI-Bottle=TestBottle") != std::string::npos);
+}
+
+// Test to_filename_part function
+
+TEST_F(HelperTest, ToFilenamePartLowercasesAndReplacesSpaces) {
+  EXPECT_EQ(Helper::to_filename_part("Wine Config"), "wine-config");
+}
+
+TEST_F(HelperTest, ToFilenamePartDropsSpecialCharacters) {
+  EXPECT_EQ(Helper::to_filename_part("My App (2.0)!"), "my-app-20");
+}
+
+TEST_F(HelperTest, ToFilenamePartKeepsDashAndUnderscore) {
+  EXPECT_EQ(Helper::to_filename_part("office_2019-pro"), "office_2019-pro");
+}
+
+TEST_F(HelperTest, ToFilenamePartEmptyFallback) {
+  EXPECT_EQ(Helper::to_filename_part("***"), "shortcut");
+}
