@@ -21,6 +21,9 @@
 #pragma once
 
 #include <glibmm/dispatcher.h>
+#include <map>
+#include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -123,6 +126,8 @@ public:
                                   const string& bottle_name = "",
                                   bool make_executable = false);
   static string to_filename_part(const string& input);
+  static void invalidate_reg_cache();
+  static void invalidate_reg_cache(const string& prefix_path);
 
 private:
   Helper();
@@ -155,6 +160,7 @@ private:
   static string get_reg_meta_data(const string& filename, const string& meta_value_name);
   static string get_bottle_dir_from_prefix(const string& prefix_path);
   static vector<string> read_file_lines(const string& file_path);
+  static std::shared_ptr<const vector<string>> get_reg_file_lines(const string& file_path);
   static vector<string> split(const string& s, const char delimiter);
   static string unescape_reg_key_data(const string& src);
   static string string2hex(const string& str, bool capital = false);
