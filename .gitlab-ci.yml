@@ -7,8 +7,12 @@ stages:
   - deploy
 
 # Linux build template (debs only)
+# resource_group serializes the heavy release builds: all jobs in the
+# 'heavy-build' group run one at a time instead of thrashing the runner
+# in parallel.
 .build_template: &build_definition
   stage: build
+  resource_group: heavy-build
   rules:
     - if: $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_TAG
   script:
@@ -42,6 +46,7 @@ code_style_guidelines:
 # Build trixie (deb + rpm + source archive)
 build:trixie:
   stage: build
+  resource_group: heavy-build
   variables:
   script:
     - ./scripts/build-prod.sh "TGZ;DEB;RPM"
@@ -79,6 +84,7 @@ build:plucky:
 # AppImage (single-file, distro-agnostic)
 build:appimage:
   stage: build
+  resource_group: heavy-build
   rules:
     - if: $CI_PROJECT_NAMESPACE == "melroy" && $CI_COMMIT_TAG
   script:
