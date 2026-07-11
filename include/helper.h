@@ -106,6 +106,20 @@ public:
   static bool is_default_wine_bottle(const string& prefix_path);
   static string encode_text(const string& text);
   static string string_to_icon(const string& filename);
+  static string build_desktop_exec_line(bool wine_64_bit,
+                                        const string& prefix_path,
+                                        const string& wine_bin_path,
+                                        const string& command,
+                                        const vector<pair<string, string>>& env_vars = {});
+  static bool create_desktop_file(const string& target_dir,
+                                  const string& file_basename,
+                                  const string& app_name,
+                                  const string& comment,
+                                  const string& exec_line,
+                                  const string& icon,
+                                  const string& bottle_name = "",
+                                  bool make_executable = false);
+  static string to_filename_part(const string& input);
 
 private:
   Helper();

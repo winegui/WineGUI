@@ -34,6 +34,7 @@ class BottleConfigureEnvVarWindow;
 class BottleConfigureWindow;
 class AddAppWindow;
 class RemoveAppWindow;
+class CreateShortcutWindow;
 struct UpdateBottleStruct;
 struct CloneBottleStruct;
 
@@ -54,7 +55,8 @@ public:
                    BottleConfigureEnvVarWindow& configure_env_var_window,
                    BottleConfigureWindow& configure_window,
                    AddAppWindow& add_app_window,
-                   RemoveAppWindow& remove_app_window);
+                   RemoveAppWindow& remove_app_window,
+                   CreateShortcutWindow& create_shortcut_window);
   virtual ~SignalController();
   void dispatch_signals();
 
@@ -99,6 +101,7 @@ private:
   BottleConfigureWindow& configure_window_;
   AddAppWindow& add_app_window_;
   RemoveAppWindow& remove_app_window_;
+  CreateShortcutWindow& create_shortcut_window_;
 
   // Dispatchers for handling signals from the thread towards a GUI thread
   Glib::Dispatcher bottle_created_dispatcher_;

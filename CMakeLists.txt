@@ -81,6 +81,7 @@ set(HEADERS
   include/main_window.h
   include/add_app_window.h
   include/remove_app_window.h
+  include/create_shortcut_window.h
   include/preferences_window.h
   include/bottle_edit_window.h
   include/bottle_clone_window.h
@@ -104,6 +105,7 @@ set(SOURCES
   src/main_window.cc
   src/add_app_window.cc
   src/remove_app_window.cc
+  src/create_shortcut_window.cc
   src/preferences_window.cc
   src/bottle_edit_window.cc
   src/bottle_clone_window.cc

@@ -25,6 +25,7 @@
 #include "bottle_item.h"
 #include "bottle_new_assistant.h"
 #include "busy_dialog.h"
+#include "create_shortcut_window.h"
 #include "dialog_window.h"
 #include "general_config_struct.h"
 #include <gtkmm.h>
@@ -64,6 +65,8 @@ public:
   sigc::signal<void()> show_configure_window;                   /*!< show Settings window signal */
   sigc::signal<void()> show_add_app_window;                     /*!< show add application window signal */
   sigc::signal<void()> show_remove_app_window;                  /*!< show remove application window signal */
+  sigc::signal<void(std::vector<ShortcutAppData>)> prepare_create_shortcut; /*!< provide the create shortcut window with the full app list */
+  sigc::signal<void()> show_create_shortcut_window;                         /*!< show create shortcut window signal */
   sigc::signal<void(Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, Glib::ustring&, bool&, BottleTypes::AudioDriver)>
       new_bottle;                                  /*!< Create new Wine Bottle Signal */
   sigc::signal<void(string, bool)> run_executable; /*!< Run an EXE or MSI application in Wine with provided filename */
@@ -95,6 +98,7 @@ public:
   virtual void on_new_bottle_button_clicked();
   virtual void on_new_bottle_created();
   virtual void on_run_button_clicked();
+  virtual void on_create_shortcut_button_clicked();
   virtual void on_refresh_app_list_button_clicked();
   virtual void on_hide_window();
   virtual void on_report_issue();
@@ -106,10 +110,15 @@ protected:
   // Signal handlers
   void on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item);
   void on_bind_icon_and_name(const Glib::RefPtr<Gtk::ListItem>& list_item);
+  void on_app_row_right_click(const Glib::RefPtr<Gtk::ListItem>& list_item, Gtk::Widget* row_widget, double x, double y);
   void on_error_message_check_version();
   void on_info_message_check_version();
   void on_new_version_available();
   bool on_delete_window();
+
+  // Member functions
+  std::vector<ShortcutAppData> get_all_applications() const;
+  void create_shortcut_for(const Glib::ustring& name, const Glib::ustring& description, const std::string& command, bool to_desktop);
 
   // Child widgets
   Gtk::Paned main_paned;                       /*!< The main paned panel */
@@ -136,6 +145,9 @@ protected:
   Gtk::Grid detail_grid;                                            /*!< Grid layout container to have multiple rows & columns below the toolbar */
   Gtk::ScrolledWindow app_list_scrolled_window;                     /*!< Scrolled Window container for app list */
   Gtk::ListView app_list_list_view;                                 /*!< List of applications put inside a list view */
+  Gtk::PopoverMenu app_list_context_menu;                           /*!< Right-click context menu for an application row */
+  Glib::RefPtr<Gio::SimpleActionGroup> app_list_action_group;       /*!< Action group backing the app row context menu */
+  ShortcutAppData app_context_data_;                                /*!< Application data of the currently right-clicked row */
 
   // Detailed info labels on the right panel
   Gtk::Label name_label;              /*!< Bottle name */
@@ -164,9 +176,10 @@ protected:
   Gtk::Button kill_processes_button; /*!< Kill processes toolbar button */
 
   // Other various buttons
-  Gtk::Button add_app_list_button;     /*!< Button that add shortcut item to application list */
-  Gtk::Button remove_app_list_button;  /*!< Button that remove shortcut item to application list */
-  Gtk::Button refresh_app_list_button; /*!< Button that refreshes the application list */
+  Gtk::Button add_app_list_button;             /*!< Button that add shortcut item to application list */
+  Gtk::Button remove_app_list_button;          /*!< Button that remove shortcut item to application list */
+  Gtk::Button create_shortcut_app_list_button; /*!< Button that creates a host (menu/desktop) shortcut for the selected application */
+  Gtk::Button refresh_app_list_button;         /*!< Button that refreshes the application list */
 
 private:
   // Dialogs
