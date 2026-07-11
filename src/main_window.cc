@@ -292,6 +292,33 @@ void MainWindow::select_row_bottle(BottleItem& bottle)
 {
   if (!bottle.is_selected())
     this->bottles_listbox.select_row(bottle);
+
+  // Also scroll the list so the selected row becomes visible (eg. when a new bottle is
+  // created and selected further down the list). Defer to an idle handler so the row and
+  // its parent have been (re)allocated a size before we compute its position.
+  Glib::signal_idle().connect_once(
+      [this, row = &bottle]()
+      {
+        auto adjustment = this->scrolled_window_bottles_listbox.get_vadjustment();
+        if (!adjustment)
+          return;
+
+        // Translate the top of the row into the coordinate space of the list box.
+        double row_x = 0.0;
+        double row_y = 0.0;
+        if (!row->translate_coordinates(this->bottles_listbox, 0.0, 0.0, row_x, row_y))
+          return;
+
+        const double row_height = static_cast<double>(row->get_height());
+        const double page_size = adjustment->get_page_size();
+        const double value = adjustment->get_value();
+
+        // Only scroll when the row is (partially) outside of the visible area.
+        if (row_y < value)
+          adjustment->set_value(row_y);
+        else if (row_y + row_height > value + page_size)
+          adjustment->set_value(row_y + row_height - page_size);
+      });
 }
 
 /**
