@@ -54,39 +54,42 @@ public:
 
 protected:
   // Child widgets
-  Gtk::Grid configure_grid; /*!< The overall grid */
+  Gtk::Box configure_box;           /*!< The overall vertical container */
+  Gtk::Label hint_label;            /*!< Extra hint label info for user */
+  Gtk::Box sidebar_stack_box;       /*!< Horizontal container holding the sidebar and stack */
+  Gtk::StackSidebar sidebar;        /*!< Category sidebar (Graphics, Fonts, ...) */
+  Gtk::ScrolledWindow stack_scroll; /*!< Scroll container so the buttons never clip when the window shrinks */
+  Gtk::Stack stack;                 /*!< Stack showing the buttons of the selected category */
 
-  Gtk::Box first_toolbar;  /*!< 1st row toolbar */
-  Gtk::Box second_toolbar; /*!< 2nd row toolbar */
-  Gtk::Box third_toolbar;  /*!< 3rd row toolbar */
-  Gtk::Box fourth_toolbar; /*!< 4th row toolbar */
+  // Per-category button containers (wrap so buttons never overflow horizontally)
+  Gtk::FlowBox graphics_flowbox;   /*!< Graphics packages page */
+  Gtk::FlowBox fonts_flowbox;      /*!< Font packages page */
+  Gtk::FlowBox visual_cpp_flowbox; /*!< Visual C++ packages page */
+  Gtk::FlowBox dotnet_flowbox;     /*!< Wine Mono & .NET packages page */
 
-  Gtk::Label first_row_label;  /*!< 1st row label */
-  Gtk::Label hint_label;       /*!< Extra hint label info for user */
-  Gtk::Label second_row_label; /*!< 2nd row label */
-  Gtk::Label third_row_label;  /*!< 3rd row label */
-  Gtk::Label fourth_row_label; /*!< 4th row label */
-
-  // Buttons First row
+  // Graphics packages
   Gtk::Button install_d3dx9_button; /*!< d3dx9 install button */
   Gtk::Button install_dxvk_button;  /*!< DXVK install button */
   Gtk::Button install_vkd3d_button; /*!< DKD3D install button */
-  // Buttons Second row
+  // Font packages
   Gtk::Button install_liberation_fonts_button; /*!< Liberation fonts install button */
   Gtk::Button install_core_fonts_button;       /*!< Core fonts install button */
-  // Buttons Third row
+  // Visual C++ packages
   Gtk::Button install_visual_cpp_2013_button; /*!< MS Visual C++ 2013 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2015_button; /*!< MS Visual C++ 2015 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2017_button; /*!< MS Visual C++ 2017 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2019_button; /*!< MS Visual C++ 2019 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2022_button; /*!< MS Visual C++ 2022 Redistributable Package install button */
-  // Buttons Fourth row
+  // Wine Mono & .NET packages
   Gtk::Button install_mono_button;        /*!< Wine Mono (re)install button */
   Gtk::Button install_dotnet4_0_button;   /*!< .NET v4.0 install button */
   Gtk::Button install_dotnet4_5_2_button; /*!< .NET v4.5.2 install button */
   Gtk::Button install_dotnet4_7_2_button; /*!< .NET v4.7.2 install button */
   Gtk::Button install_dotnet4_8_button;   /*!< .NET v4.8 install button */
   Gtk::Button install_dotnet6_button;     /*!< .NET v6.0 install button */
+  Gtk::Button install_dotnet7_button;     /*!< .NET v7.0 install button */
+  Gtk::Button install_dotnet8_button;     /*!< .NET v8.0 install button */
+  Gtk::Button install_dotnet9_button;     /*!< .NET v9.0 install button */
 
 private:
   BottleItem* active_bottle_; /*!< Current active bottle */
@@ -104,5 +107,5 @@ private:
   bool is_visual_cpp_2019_installed();
   bool is_visual_cpp_2022_installed();
   bool is_dotnet_installed(const string& uninstaller_key, const string& uninstaller_name);
-  bool is_dotnet_6_installed();
+  bool is_dotnet_runtime_installed(const string& major_version, const string& x86_uninstaller_key, const string& x64_uninstaller_key);
 };
