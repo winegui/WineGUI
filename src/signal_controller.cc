@@ -303,7 +303,8 @@ void SignalController::on_update_bottle(const UpdateBottleStruct& update_bottle_
           manager_.update_bottle(this, update_bottle_struct.name, update_bottle_struct.folder_name, update_bottle_struct.wine_bin_path,
                                  update_bottle_struct.description, update_bottle_struct.windows_version,
                                  update_bottle_struct.virtual_desktop_resolution, update_bottle_struct.audio, update_bottle_struct.is_debug_logging,
-                                 update_bottle_struct.debug_log_level);
+                                 update_bottle_struct.debug_log_level, update_bottle_struct.enable_dxvk_hud, update_bottle_struct.enable_gallium_hud,
+                                 update_bottle_struct.enable_mangohud);
         });
   }
 }

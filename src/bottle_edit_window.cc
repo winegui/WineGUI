@@ -39,9 +39,14 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       log_level_label("Log Level:"),
       description_label("Description:"),
       environment_variables_label("Environment Variables:"),
+      hud_label("Performance Overlay:"),
       system_wine_bin_path_check("Use System Wine Binary Path"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
       enable_logging_check("Enable debug logging"),
+      hbox_hud_checks(Gtk::Orientation::HORIZONTAL, 12),
+      dxvk_hud_check("DXVK HUD"),
+      gallium_hud_check("Gallium HUD"),
+      mangohud_check("MangoHud"),
       configure_environment_variables_button("Configure Environment Variables"),
       wine_bin_path_button("Select folder..."),
       save_button("Save"),
@@ -109,6 +114,7 @@ void BottleEditWindow::create_layout()
   virtual_desktop_resolution_label.set_halign(Gtk::Align::END);
   log_level_label.set_halign(Gtk::Align::END);
   environment_variables_label.set_halign(Gtk::Align::END);
+  hud_label.set_halign(Gtk::Align::END);
   description_label.set_halign(Gtk::Align::START);
   name_label.set_tooltip_text("Change the machine name");
   folder_name_label.set_tooltip_text("Change the folder. NOTE: This break your shortcuts!");
@@ -118,7 +124,16 @@ void BottleEditWindow::create_layout()
   virtual_desktop_resolution_label.set_tooltip_text("Set the emulated desktop resolution");
   log_level_label.set_tooltip_text("Change the Wine debug messages for logging");
   environment_variables_label.set_tooltip_text("Set one or more environment variables");
+  hud_label.set_tooltip_text("Show a performance overlay (HUD) on top of your apps/games");
   description_label.set_tooltip_text("Add an additional description text to your machine");
+  dxvk_hud_check.set_tooltip_text("Enable the DXVK HUD, showing device info and FPS (sets the DXVK_HUD environment variable).\nOnly for Direct3D "
+                                  "applications running via DXVK.");
+  gallium_hud_check.set_tooltip_text(
+      "Enable the Mesa Gallium HUD, showing FPS, GPU load, VRAM usage and draw calls (sets the GALLIUM_HUD environment "
+      "variable).\nOnly for OpenGL applications using a Mesa Gallium driver.");
+  mangohud_check.set_tooltip_text(
+      "Enable the MangoHud overlay for Vulkan & OpenGL (sets the MANGOHUD environment variable).\nRequires MangoHud to be "
+      "installed on your system.");
 
   // Fill-in Audio drivers in combobox
   for (int i = BottleTypes::AudioDriverStart; i < BottleTypes::AudioDriverEnd; i++)
@@ -178,6 +193,11 @@ void BottleEditWindow::create_layout()
   edit_grid.attach(log_level_combobox, 1, row++, 2);
   edit_grid.attach(environment_variables_label, 0, row);
   edit_grid.attach(configure_environment_variables_button, 1, row++, 2);
+  hbox_hud_checks.append(dxvk_hud_check);
+  hbox_hud_checks.append(gallium_hud_check);
+  hbox_hud_checks.append(mangohud_check);
+  edit_grid.attach(hud_label, 0, row);
+  edit_grid.attach(hbox_hud_checks, 1, row++, 2);
   edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, row++, 3);
   edit_grid.attach(description_label, 0, row++, 3);
   edit_grid.attach(description_scrolled_window, 0, row++, 3);
@@ -258,6 +278,21 @@ void BottleEditWindow::show()
 
     enable_logging_check.set_active(active_bottle_->is_debug_logging());
     log_level_combobox.set_active_id(std::to_string((int)active_bottle_->debug_log_level()));
+
+    // Reflect the current HUD environment variables in the checkboxes
+    bool has_dxvk_hud = false, has_gallium_hud = false, has_mangohud = false;
+    for (const auto& [key, value] : active_bottle_->env_vars())
+    {
+      if (key == "DXVK_HUD")
+        has_dxvk_hud = true;
+      else if (key == "GALLIUM_HUD")
+        has_gallium_hud = true;
+      else if (key == "MANGOHUD")
+        has_mangohud = true;
+    }
+    dxvk_hud_check.set_active(has_dxvk_hud);
+    gallium_hud_check.set_active(has_gallium_hud);
+    mangohud_check.set_active(has_mangohud);
   }
   else
   {
@@ -472,6 +507,9 @@ void BottleEditWindow::on_save_button_clicked()
     update_bottle_struct.virtual_desktop_resolution = virtual_desktop_resolution_entry.get_text();
   }
   update_bottle_struct.is_debug_logging = enable_logging_check.get_active();
+  update_bottle_struct.enable_dxvk_hud = dxvk_hud_check.get_active();
+  update_bottle_struct.enable_gallium_hud = gallium_hud_check.get_active();
+  update_bottle_struct.enable_mangohud = mangohud_check.get_active();
   try
   {
     update_bottle_struct.debug_log_level = std::stoi(log_level_combobox.get_active_id(), &sz);
