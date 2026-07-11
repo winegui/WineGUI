@@ -149,6 +149,7 @@ void SignalController::dispatch_signals()
   configure_window_.liberation_fonts.connect(sigc::mem_fun(manager_, &BottleManager::install_liberation));
   configure_window_.corefonts.connect(sigc::mem_fun(manager_, &BottleManager::install_core_fonts));
   configure_window_.dotnet.connect(sigc::mem_fun(manager_, &BottleManager::install_dot_net));
+  configure_window_.mono.connect(sigc::mem_fun(manager_, &BottleManager::install_mono));
   configure_window_.visual_cpp_package.connect(sigc::mem_fun(manager_, &BottleManager::install_visual_cpp_package));
 
   // Add new application Window

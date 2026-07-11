@@ -1220,6 +1220,59 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
 }
 
 /**
+ * \brief (Re)install Wine Mono. Useful to repair a broken Mono/.NET support,
+ * eg. after native .NET was installed. Any existing Wine Mono is uninstalled first,
+ * then a Wine boot update is triggered which makes Wine fetch and install the
+ * matching Wine Mono MSI from https://dl.winehq.org/wine/wine-mono/ automatically.
+ * \param[in] parent Parent GTK window were the request is coming from
+ */
+void BottleManager::install_mono(Gtk::Window* parent)
+{
+  if (is_bottle_not_null())
+  {
+    // Before we execute the install, show busy dialog
+    main_window_.show_busy_install_dialog(*parent,
+                                          "(Re)installing Wine Mono.\nWine will fetch the matching Wine Mono MSI, this may take some time!\n");
+
+    // Uninstall any existing (possibly broken) Wine Mono first
+    string deinstall_command = this->get_deinstall_mono_command();
+
+    string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
+    int debug_log_level = active_bottle_->debug_log_level();
+    // A Wine boot update makes Wine detect the missing Mono and (re)install the
+    // correct Wine Mono MSI, matching the bottle's Wine version.
+    // Force mscoree to 'builtin' so Wine's Mono auto-installer is triggered, even when a
+    // previous native .NET install left mscoree overridden to 'native'.
+    string wine_exec = (active_bottle_->bit() == BottleTypes::Bit::win64) ? "wine64" : "wine";
+    string install_command = "WINEDLLOVERRIDES=\"mscoree=b\" " + wine_exec + " wineboot -u";
+    // First deinstall Mono (if present) then let Wine (re)install it
+    string program = (!deinstall_command.empty()) ? (deinstall_command + "; " + install_command) : install_command;
+    // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
+    std::thread t(
+        [wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+         output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+         finish_dispatcher = &finished_package_install_dispatcher]
+        {
+          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", {}, true, logging_stderr);
+          if (debug_logging && !output.empty())
+          {
+            {
+              std::lock_guard<std::mutex> lock(output_logging_mutex);
+              logging_bottle_prefix.get() = wine_prefix;
+              output_logging.get() = output;
+            }
+            write_log_dispatcher->emit();
+          }
+          Helper::wait_until_wineserver_is_terminated(wine_prefix);
+          finish_dispatcher->emit();
+        });
+    t.detach();
+  }
+}
+
+/**
  * \brief Install core fonts (which is often enough)
  * \param[in] parent Parent GTK window were the request is coming from
  */
