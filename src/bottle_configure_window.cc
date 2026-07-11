@@ -109,7 +109,7 @@ void BottleConfigureWindow::create_layout()
   third_row_label.set_text("Visual C++ packages");
   third_row_label.set_attributes(attr_list_label);
   third_row_label.set_halign(Gtk::Align::CENTER);
-  fourth_row_label.set_text(".NET packages");
+  fourth_row_label.set_text("Wine Mono & .NET packages");
   fourth_row_label.set_attributes(attr_list_label);
   fourth_row_label.set_halign(Gtk::Align::CENTER);
 
@@ -172,7 +172,11 @@ void BottleConfigureWindow::create_layout()
   install_visual_cpp_2022_button.set_tooltip_text("Installs Visual C++ 2015-2022");
   third_toolbar.append(install_visual_cpp_2022_button);
 
-  // // Fourth row, .NET packages
+  // // Fourth row, Wine Mono & .NET packages
+  install_mono_button.signal_clicked().connect(sigc::bind(mono, this));
+  install_mono_button.set_size_request(-1, button_height);
+  install_mono_button.set_tooltip_text("(Re)installs Wine Mono: fixes a broken Mono/.NET support by fetching the matching Wine Mono MSI");
+  fourth_toolbar.append(install_mono_button);
   install_dotnet4_0_button.signal_clicked().connect(sigc::bind(dotnet, this, "40"));
   install_dotnet4_0_button.set_size_request(-1, button_height);
   install_dotnet4_0_button.set_tooltip_text("Installs .NET 4.0 from 2011");
@@ -327,6 +331,9 @@ void BottleConfigureWindow::update_installed()
   {
     add_name_and_icon_to_button(install_visual_cpp_2022_button, "Install Visual C++ 2022", false);
   }
+
+  // Wine Mono can always be (re)installed to repair a broken Mono/.NET support
+  add_name_and_icon_to_button(install_mono_button, "Reinstall Wine Mono", true);
 
   // Check for .NET 4.0
   if (is_dotnet_installed("Microsoft .NET Framework 4 Extended", "Microsoft .NET Framework 4 Extended"))

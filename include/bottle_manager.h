@@ -92,6 +92,7 @@ public:
   void install_vkd3d(Gtk::Window* parent);
   void install_visual_cpp_package(Gtk::Window* parent, const string& version);
   void install_dot_net(Gtk::Window* parent, const string& version);
+  void install_mono(Gtk::Window* parent);
   void install_core_fonts(Gtk::Window* parent);
   void install_liberation(Gtk::Window* parent);
 
