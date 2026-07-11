@@ -44,6 +44,9 @@ struct UpdateBottleStruct
   BottleTypes::AudioDriver audio;
   bool is_debug_logging;
   int debug_log_level;
+  bool enable_dxvk_hud;
+  bool enable_gallium_hud;
+  bool enable_mangohud;
 };
 
 /**
@@ -85,6 +88,7 @@ protected:
   Gtk::Label log_level_label;                         /*!< log level label */
   Gtk::Label description_label;                       /*!< description label */
   Gtk::Label environment_variables_label;             /*!< environment variables label */
+  Gtk::Label hud_label;                               /*!< HUD overlay label */
   Gtk::Entry name_entry;                              /*!< name input field */
   Gtk::Entry folder_name_entry;                       /*!< folder name input field */
   Gtk::Entry wine_bin_path_entry;                     /*!< wine binary path input field */
@@ -94,6 +98,10 @@ protected:
   Gtk::ComboBoxText audio_driver_combobox;            /*!< audio driver combobox */
   Gtk::CheckButton virtual_desktop_check;             /*!< virtual desktop checkbox */
   Gtk::CheckButton enable_logging_check;              /**!< debug logging checkbox */
+  Gtk::Box hbox_hud_checks;                           /*!< box for the HUD overlay checkboxes */
+  Gtk::CheckButton dxvk_hud_check;                    /*!< DXVK HUD overlay checkbox */
+  Gtk::CheckButton gallium_hud_check;                 /*!< Gallium (Mesa) HUD overlay checkbox */
+  Gtk::CheckButton mangohud_check;                    /*!< MangoHud overlay checkbox */
   Gtk::ComboBoxText log_level_combobox;               /*!< log level combobox */
   Gtk::ScrolledWindow description_scrolled_window;    /*!< description scrolled window */
   Gtk::TextView description_text_view;                /*!< description text view */

@@ -26,6 +26,7 @@
 #include "main_window.h"
 #include "signal_controller.h"
 #include "wine_defaults.h"
+#include <algorithm>
 
 #include <stdexcept>
 
@@ -451,6 +452,9 @@ void BottleManager::new_bottle(SignalController* caller,
  * \param[in] audio                       Audio Driver type
  * \param[in] is_debug_logging            Enable/disable debug logging to disk
  * \param[in] debug_log_level             Bottle Debug Log Level
+ * \param[in] enable_dxvk_hud             Enable/disable the DXVK HUD overlay (DXVK_HUD environment variable)
+ * \param[in] enable_gallium_hud          Enable/disable the Mesa Gallium HUD overlay (GALLIUM_HUD environment variable)
+ * \param[in] enable_mangohud             Enable/disable the MangoHud overlay (MANGOHUD environment variable)
  */
 void BottleManager::update_bottle(SignalController* caller,
                                   const Glib::ustring& name,
@@ -461,7 +465,10 @@ void BottleManager::update_bottle(SignalController* caller,
                                   const Glib::ustring& virtual_desktop_resolution,
                                   BottleTypes::AudioDriver audio,
                                   bool is_debug_logging,
-                                  int debug_log_level)
+                                  int debug_log_level,
+                                  bool enable_dxvk_hud,
+                                  bool enable_gallium_hud,
+                                  bool enable_mangohud)
 {
   if (active_bottle_ != nullptr)
   {
@@ -496,6 +503,25 @@ void BottleManager::update_bottle(SignalController* caller,
       bottle_config.debug_log_level = debug_log_level;
       need_update_bottle_config_file = true;
     }
+
+    // Add or remove the HUD overlay environment variables, keeping any custom value the user already set
+    auto sync_hud_env_var = [&bottle_config, &need_update_bottle_config_file](const std::string& key, bool enabled, const std::string& default_value)
+    {
+      auto it = std::find_if(bottle_config.env_vars.begin(), bottle_config.env_vars.end(), [&key](const auto& pair) { return pair.first == key; });
+      if (enabled && it == bottle_config.env_vars.end())
+      {
+        bottle_config.env_vars.emplace_back(key, default_value);
+        need_update_bottle_config_file = true;
+      }
+      else if (!enabled && it != bottle_config.env_vars.end())
+      {
+        bottle_config.env_vars.erase(it);
+        need_update_bottle_config_file = true;
+      }
+    };
+    sync_hud_env_var("DXVK_HUD", enable_dxvk_hud, "devinfo,fps");
+    sync_hud_env_var("GALLIUM_HUD", enable_gallium_hud, "fps,GPU-load,VRAM-usage,draw-calls");
+    sync_hud_env_var("MANGOHUD", enable_mangohud, "1");
 
     if (need_update_bottle_config_file)
     {
