@@ -201,7 +201,39 @@ MainWindow::MainWindow()
   // App list buttons
   add_app_list_button.signal_clicked().connect(show_add_app_window);
   remove_app_list_button.signal_clicked().connect(show_remove_app_window);
+  create_shortcut_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_create_shortcut_button_clicked));
   refresh_app_list_button.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_refresh_app_list_button_clicked));
+
+  // App list right-click context menu (Run / Create menu shortcut / Create desktop shortcut)
+  app_list_action_group = Gio::SimpleActionGroup::create();
+  app_list_action_group->add_action("run",
+                                    [this]()
+                                    {
+                                      const auto& command = std::get<2>(app_context_data_);
+                                      if (!command.empty())
+                                        run_program.emit(command);
+                                    });
+  app_list_action_group->add_action("create_menu_shortcut",
+                                    [this]()
+                                    {
+                                      const auto& [name, description, command] = app_context_data_;
+                                      create_shortcut_for(name, description, command, false);
+                                    });
+  app_list_action_group->add_action("create_desktop_shortcut",
+                                    [this]()
+                                    {
+                                      const auto& [name, description, command] = app_context_data_;
+                                      create_shortcut_for(name, description, command, true);
+                                    });
+  app_list_list_view.insert_action_group("applist", app_list_action_group);
+
+  auto context_menu_model = Gio::Menu::create();
+  context_menu_model->append("Run", "applist.run");
+  context_menu_model->append("Create menu shortcut", "applist.create_menu_shortcut");
+  context_menu_model->append("Create desktop shortcut", "applist.create_desktop_shortcut");
+  app_list_context_menu.set_menu_model(context_menu_model);
+  app_list_context_menu.set_parent(app_list_list_view);
+  app_list_context_menu.set_has_arrow(false);
 
   // Dispatch signals
   error_message_check_version_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::on_error_message_check_version));
@@ -225,6 +257,8 @@ MainWindow::~MainWindow()
 {
   // Avoid zombies
   this->cleanup_check_version_thread();
+  // Unparent the manually-parented context menu popover to avoid a GTK warning on destruction
+  app_list_context_menu.unparent();
 }
 
 /**
@@ -642,6 +676,111 @@ void MainWindow::on_application_row_activated(unsigned int position)
 
   // Run the command
   run_program.emit(col->command);
+}
+
+/**
+ * \brief Triggered when the user pressed the create shortcut button.
+ * Provides the create shortcut window with the full list of applications and shows it.
+ */
+void MainWindow::on_create_shortcut_button_clicked()
+{
+  auto applications = get_all_applications();
+  if (applications.empty())
+  {
+    show_warning_message("There are no applications to create a shortcut for.");
+    return;
+  }
+  prepare_create_shortcut.emit(applications);
+  show_create_shortcut_window.emit();
+}
+
+/**
+ * \brief Gather all applications currently shown in the app list (name, description, command).
+ * The name/description stored in the model are &-encoded for GTK markup; they are decoded back to plain text.
+ * \return Vector of (name, description, command) tuples
+ */
+std::vector<ShortcutAppData> MainWindow::get_all_applications() const
+{
+  // The name & description stored in the model are &-encoded for GTK markup; decode back to plain text
+  auto decode = [](const Glib::ustring& text) -> Glib::ustring
+  {
+    std::string result = text;
+    size_t pos = 0;
+    while ((pos = result.find("&amp;", pos)) != std::string::npos)
+    {
+      result.replace(pos, 5, "&");
+      pos += 1;
+    }
+    return result;
+  };
+
+  std::vector<ShortcutAppData> applications;
+  guint count = app_list_store->get_n_items();
+  for (guint i = 0; i < count; ++i)
+  {
+    auto col = app_list_store->get_item(i);
+    if (!col)
+      continue;
+    applications.emplace_back(decode(col->name), decode(col->description), col->command);
+  }
+  return applications;
+}
+
+/**
+ * \brief Create a host shortcut (.desktop file) for a single application, using the active bottle.
+ * \param[in] name Application name
+ * \param[in] description Application description
+ * \param[in] command Application command
+ * \param[in] to_desktop If true add to the desktop, otherwise to the applications menu
+ */
+void MainWindow::create_shortcut_for(const Glib::ustring& name, const Glib::ustring& description, const std::string& command, bool to_desktop)
+{
+  Gtk::ListBoxRow* selected_row = bottles_listbox.get_selected_row();
+  if (selected_row == nullptr)
+  {
+    show_warning_message("Please select a Windows machine first.");
+    return;
+  }
+  const auto* current_bottle = dynamic_cast<BottleItem*>(selected_row);
+  if (current_bottle == nullptr)
+    return;
+
+  // Resolve the target directory
+  std::string target_dir;
+  if (to_desktop)
+  {
+    target_dir = Glib::get_user_special_dir(Glib::UserDirectory::DESKTOP);
+    if (target_dir.empty())
+      target_dir = Glib::build_filename(Glib::get_home_dir(), "Desktop");
+  }
+  else
+  {
+    target_dir = Glib::build_filename(Glib::get_user_data_dir(), "applications");
+  }
+
+  std::string icon = Helper::get_image_location("logo_big.png");
+  std::string app_name = name;
+  std::string comment = description;
+  std::string bottle_name = current_bottle->name();
+
+  // Sanitized, deterministic file name so re-creating overwrites rather than duplicates
+  std::string basename = "winegui-" + Helper::to_filename_part(bottle_name) + "-" + Helper::to_filename_part(app_name) + ".desktop";
+
+  std::string exec_line = Helper::build_desktop_exec_line(current_bottle->is_wine64_bit(), current_bottle->wine_location(),
+                                                          current_bottle->wine_bin_path(), command, current_bottle->env_vars());
+
+  bool success = Helper::create_desktop_file(target_dir, basename, app_name, comment, exec_line, icon, bottle_name, to_desktop);
+  if (!success)
+  {
+    show_error_message("Error occurred while writing the shortcut file to disk.");
+    return;
+  }
+
+  // For the applications menu, best-effort refresh the desktop database (ignore failure, not always present)
+  if (!to_desktop)
+    Glib::spawn_command_line_async("update-desktop-database \"" + target_dir + "\"");
+
+  show_info_message("The shortcut '" + name + "' has been created " + (to_desktop ? "on your desktop." : "in your applications menu."));
 }
 
 /**
@@ -1451,6 +1590,13 @@ void MainWindow::create_right_panel()
   remove_app_list_button.set_margin_top(6);
   remove_app_list_button.set_margin_end(6);
 
+  // App list create host shortcut button (menu/desktop)
+  create_shortcut_app_list_button.set_tooltip_text("Create a menu or desktop shortcut for the selected application");
+  create_shortcut_app_list_button.set_label("Create shortcut");
+  create_shortcut_app_list_button.set_icon_name("emblem-symbolic-link");
+  create_shortcut_app_list_button.set_margin_top(6);
+  create_shortcut_app_list_button.set_margin_end(6);
+
   // App list refresh button
   refresh_app_list_button.set_tooltip_text("Refresh application list");
   refresh_app_list_button.set_label("Refresh");
@@ -1462,6 +1608,7 @@ void MainWindow::create_right_panel()
   app_list_top_hbox.append(app_list_search_entry);
   app_list_top_hbox.append(add_app_list_button);
   app_list_top_hbox.append(remove_app_list_button);
+  app_list_top_hbox.append(create_shortcut_app_list_button);
   app_list_top_hbox.append(refresh_app_list_button);
   app_list_top_hbox.set_halign(Gtk::Align::FILL);
 
@@ -1506,7 +1653,51 @@ void MainWindow::on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item)
   vbox->append(*description);
   hbox->append(*vbox);
 
+  // Right-click (secondary button) context menu on the row
+  auto right_click = Gtk::GestureClick::create();
+  right_click->set_button(GDK_BUTTON_SECONDARY);
+  right_click->signal_pressed().connect([this, list_item, hbox](int /*n_press*/, double x, double y)
+                                        { on_app_row_right_click(list_item, hbox, x, y); });
+  hbox->add_controller(right_click);
+
   list_item->set_child(*hbox);
+}
+
+/**
+ * \brief Show the app row context menu at the right-click position, remembering the clicked application
+ * \param[in] list_item The list item that was right-clicked
+ * \param[in] row_widget The row widget (used to translate the click coordinates)
+ * \param[in] x The x coordinate of the click, relative to the row widget
+ * \param[in] y The y coordinate of the click, relative to the row widget
+ */
+void MainWindow::on_app_row_right_click(const Glib::RefPtr<Gtk::ListItem>& list_item, Gtk::Widget* row_widget, double x, double y)
+{
+  auto col = std::dynamic_pointer_cast<AppListModelColumns>(list_item->get_item());
+  if (!col)
+    return;
+
+  // The name & description stored in the model are &-encoded for GTK markup; decode back to plain text
+  auto decode = [](const Glib::ustring& text) -> Glib::ustring
+  {
+    std::string result = text;
+    size_t pos = 0;
+    while ((pos = result.find("&amp;", pos)) != std::string::npos)
+    {
+      result.replace(pos, 5, "&");
+      pos += 1;
+    }
+    return result;
+  };
+  app_context_data_ = std::make_tuple(decode(col->name), decode(col->description), col->command);
+
+  // Translate the click position to the list view (context menu parent) coordinate space
+  double dest_x = x;
+  double dest_y = y;
+  if (row_widget != nullptr)
+    row_widget->translate_coordinates(app_list_list_view, x, y, dest_x, dest_y);
+  Gdk::Rectangle rect(static_cast<int>(dest_x), static_cast<int>(dest_y), 1, 1);
+  app_list_context_menu.set_pointing_to(rect);
+  app_list_context_menu.popup();
 }
 
 void MainWindow::on_bind_icon_and_name(const Glib::RefPtr<Gtk::ListItem>& list_item)

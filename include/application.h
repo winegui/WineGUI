@@ -33,6 +33,7 @@ class BottleConfigureEnvVarWindow;
 class BottleConfigureWindow;
 class AddAppWindow;
 class RemoveAppWindow;
+class CreateShortcutWindow;
 class SignalController;
 
 /**
@@ -62,6 +63,7 @@ private:
   BottleConfigureWindow* configure_window_;
   AddAppWindow* add_app_window_;
   RemoveAppWindow* remove_app_window_;
+  CreateShortcutWindow* create_shortcut_window_;
   std::shared_ptr<BottleManager> manager_;
   std::shared_ptr<SignalController> signal_controller_;
 
