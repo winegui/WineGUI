@@ -37,7 +37,7 @@ endif()
 # Optional RPM packages
 set(CPACK_RPM_PACKAGE_SUGGESTS "vulkan, vulkan-loader")
 
-# Debian bookworm, trixie, forky, sid, Ubuntu Noble Numbat, Linux Mint 22 (libgtkmm-4.0-0)
+# Debian trixie, forky, sid, Ubuntu Noble Numbat, Linux Mint 22 (libgtkmm-4.0-0)
 # If needed we can add multiple minor versions eg. via libgtkmm-4.0-0 | libgtkmm-4.0-1
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-4.0-0, cabextract, unzip, p7zip, wget, zenity")
 # Optional deb packages

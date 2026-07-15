@@ -28,7 +28,7 @@ if [[ "$1" == *"DEB"* ]]; then
     # Load os-release
     . /etc/os-release
     # Use the version codename for the new file name prefix.
-    # Make the package file name unique, by renaming WineGUI-*.deb to WineGUI-*-bookworm.deb for example.
+    # Make the package file name unique, by renaming WineGUI-*.deb to WineGUI-*-trixie.deb for example.
     # Basically adding a postfix to the deb file name
     mv WineGUI-*.deb "$(echo WineGUI-*.deb | sed "s/\.deb$/-${VERSION_CODENAME}.deb/")"
     echo "Debian package renamed to $(echo WineGUI-*.deb)"

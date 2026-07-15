@@ -61,11 +61,6 @@ build:trixie:
       - build_prod/WineGUI-*.tar.gz
       - build_prod/WineGUI-Source-*.tar.gz
 
-# Bookworm (debian)
-build:bookworm:
-  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:bookworm
-  <<: *build_definition
-
 # Forky (debian)
 build:forky:
   image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:forky
@@ -105,8 +100,6 @@ release:
   stage: deploy
   image: serversideup/github-cli:latest
   needs:
-    - job: build:bookworm
-      artifacts: true
     - job: build:trixie
       artifacts: true
     - job: build:forky
