@@ -16,7 +16,7 @@ Besides the release page on GitLab (see above), you can now also find the latest
 
 Download the WineGUI package you require for your Linux distribution. I provide `.AppImage`, `.deb`, `.rpm` and `.tar.gz` files:
 
-- The **`.AppImage`** is a single, self-contained file that runs on most Linux distributions without installation or root. Download it and run it.
+- The **`.AppImage`** is a single, self-contained file that runs on most Linux distributions without installation or root. Download it, make it executable (`chmod +x WineGUI-*.AppImage`) and run it.
 - Use the `.deb` package file for Ubuntu, Debian, Linux Mint, Zorin OS, MX linux, and other Debian-based distributions.
 - Use the `.rpm` package for Fedora, RHEL, and similar distributions.
 - The Compressed Binary `.tar.gz` file is available for manual installation or standalone usage. This is prebuild.
