@@ -19,6 +19,21 @@
   <url type="homepage">https://winegui.melroy.org</url>
   <url type="bugtracker">https://github.com/winegui/WineGUI/issues</url>
   <releases>
-    <release version="3.1.0" date="2026-07-15"/>
+    <release version="4.0.0" date="2026-07-15">
+      <description>
+        <ul>
+          <li>Right-click context menu on the bottle list (Edit, Configure, Clone, Run..., Delete)</li>
+          <li>One-click DXVK GPU test in the application list</li>
+          <li>Performance overlay (HUD) options in the edit machine window</li>
+          <li>New AppImage build: single-file, distro-agnostic</li>
+          <li>Create menu/desktop application shortcuts</li>
+          <li>Single-click Wine Mono (re)install button in the Configure window</li>
+          <li>Restored main toolbar overflow menu and refreshed Configure sidebar layout</li>
+          <li>Faster startup via in-memory registry file caching</li>
+          <li>Various bug fixes and build/CI improvements</li>
+        </ul>
+      </description>
+    </release>
+    <release version="3.1.0" date="2026-03-27"/>
   </releases>
 </component>
