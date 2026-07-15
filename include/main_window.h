@@ -54,6 +54,7 @@ public:
   sigc::signal<void()> show_edit_window;                        /*!< show Edit window signal */
   sigc::signal<void()> show_clone_window;                       /*!< show Clone window signal */
   sigc::signal<void()> show_configure_window;                   /*!< show Settings window signal */
+  sigc::signal<void(Gtk::Window*)> delete_bottle;               /*!< remove the active bottle signal (with parent window for the confirm dialog) */
   sigc::signal<void()> show_add_app_window;                     /*!< show add application window signal */
   sigc::signal<void()> show_remove_app_window;                  /*!< show remove application window signal */
   sigc::signal<void(std::vector<ShortcutAppData>)> prepare_create_shortcut; /*!< provide the create shortcut window with the full app list */
@@ -102,6 +103,7 @@ protected:
   void on_setup_label(const Glib::RefPtr<Gtk::ListItem>& list_item);
   void on_bind_icon_and_name(const Glib::RefPtr<Gtk::ListItem>& list_item);
   void on_app_row_right_click(const Glib::RefPtr<Gtk::ListItem>& list_item, Gtk::Widget* row_widget, double x, double y);
+  void on_bottle_row_right_click(BottleItem* bottle, double x, double y);
   void on_error_message_check_version();
   void on_info_message_check_version();
   void on_new_version_available();
@@ -115,8 +117,10 @@ protected:
   Gtk::Paned main_paned;                       /*!< The main paned panel */
   Glib::RefPtr<Gio::Settings> window_settings; /*!< Window settings to store our window settings, even during restarts */
   // Left widgets
-  Gtk::ScrolledWindow scrolled_window_bottles_listbox; /*!< Scrolled Window container, which contains the listbox of bottles */
-  Gtk::ListBox bottles_listbox;                        /*!< Listbox of Wine bottles in the left panel */
+  Gtk::ScrolledWindow scrolled_window_bottles_listbox;       /*!< Scrolled Window container, which contains the listbox of bottles */
+  Gtk::ListBox bottles_listbox;                              /*!< Listbox of Wine bottles in the left panel */
+  Gtk::PopoverMenu bottles_context_menu;                     /*!< Right-click context menu for a bottle row */
+  Glib::RefPtr<Gio::SimpleActionGroup> bottles_action_group; /*!< Action group backing the bottle row context menu */
   // Right widgets
   Gtk::ScrolledWindow detail_grid_scrolled_window_detail;           /*!< Scrolled Window container for the detail grid */
   Gtk::Box right_vbox;                                              /*!< Right panel vertical box */

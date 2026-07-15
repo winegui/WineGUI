@@ -231,6 +231,29 @@ MainWindow::MainWindow()
   app_list_context_menu.set_parent(app_list_list_view);
   app_list_context_menu.set_has_arrow(false);
 
+  // Bottle list right-click context menu (Edit / Configure / Clone / Run... / Delete)
+  bottles_action_group = Gio::SimpleActionGroup::create();
+  bottles_action_group->add_action("edit", [this]() { show_edit_window.emit(); });
+  bottles_action_group->add_action("configure", [this]() { show_configure_window.emit(); });
+  bottles_action_group->add_action("clone", [this]() { show_clone_window.emit(); });
+  bottles_action_group->add_action("run", sigc::mem_fun(*this, &MainWindow::on_run_button_clicked));
+  bottles_action_group->add_action("delete", [this]() { delete_bottle.emit(this); });
+  // Insert the action group on the same widget the popover is parented to (below), so the
+  // menu items can resolve the "bottlelist.*" actions when clicked.
+  scrolled_window_bottles_listbox.insert_action_group("bottlelist", bottles_action_group);
+
+  auto bottles_context_menu_model = Gio::Menu::create();
+  bottles_context_menu_model->append("Edit", "bottlelist.edit");
+  bottles_context_menu_model->append("Configure", "bottlelist.configure");
+  bottles_context_menu_model->append("Clone", "bottlelist.clone");
+  bottles_context_menu_model->append("Run...", "bottlelist.run");
+  bottles_context_menu_model->append("Delete", "bottlelist.delete");
+  bottles_context_menu.set_menu_model(bottles_context_menu_model);
+  // Parent the popover to the (stable) scrolled window rather than the list box itself: the list box
+  // clears its children on every refresh, which conflicts with a manually-parented popover living inside it.
+  bottles_context_menu.set_parent(scrolled_window_bottles_listbox);
+  bottles_context_menu.set_has_arrow(false);
+
   // Dispatch signals
   error_message_check_version_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::on_error_message_check_version));
   info_message_check_version_dispatcher_.connect(sigc::mem_fun(*this, &MainWindow::on_info_message_check_version));
@@ -253,8 +276,9 @@ MainWindow::~MainWindow()
 {
   // Avoid zombies
   this->cleanup_check_version_thread();
-  // Unparent the manually-parented context menu popover to avoid a GTK warning on destruction
+  // Unparent the manually-parented context menu popovers to avoid a GTK warning on destruction
   app_list_context_menu.unparent();
+  bottles_context_menu.unparent();
 }
 
 /**
@@ -275,6 +299,13 @@ void MainWindow::set_wine_bottles(std::list<BottleItem>& bottles)
   for (BottleItem& bottle : bottles)
   {
     bottles_listbox.append(bottle);
+
+    // Right-click (secondary button) context menu on the bottle row
+    auto right_click = Gtk::GestureClick::create();
+    right_click->set_button(GDK_BUTTON_SECONDARY);
+    right_click->signal_pressed().connect([this, bottle_ptr = &bottle](int /*n_press*/, double x, double y)
+                                          { on_bottle_row_right_click(bottle_ptr, x, y); });
+    bottle.add_controller(right_click);
   }
   // Enable/disable toolbar buttons depending on listbox
   set_sensitive_toolbar_buttons(bottles.size() > 0);
@@ -674,6 +705,31 @@ void MainWindow::on_bottle_row_clicked(Gtk::ListBoxRow* row)
     // Which updates the connected modules accordingly.
     active_bottle.emit(current_bottle);
   }
+}
+
+/**
+ * \brief Show the bottle row context menu at the right-click position, making the clicked bottle the active one
+ * \param[in] bottle The bottle row that was right-clicked
+ * \param[in] x The x coordinate of the click, relative to the bottle row
+ * \param[in] y The y coordinate of the click, relative to the bottle row
+ */
+void MainWindow::on_bottle_row_right_click(BottleItem* bottle, double x, double y)
+{
+  if (bottle == nullptr)
+    return;
+
+  // Select the right-clicked row first, so it becomes the active bottle. This makes the
+  // Edit/Clone/Configure/Delete actions operate on the bottle the user actually clicked.
+  if (!bottle->is_selected())
+    bottles_listbox.select_row(*bottle);
+
+  // Translate the click position to the scrolled window (context menu parent) coordinate space
+  double dest_x = x;
+  double dest_y = y;
+  bottle->translate_coordinates(scrolled_window_bottles_listbox, x, y, dest_x, dest_y);
+  Gdk::Rectangle rect(static_cast<int>(dest_x), static_cast<int>(dest_y), 1, 1);
+  bottles_context_menu.set_pointing_to(rect);
+  bottles_context_menu.popup();
 }
 
 void MainWindow::on_app_list_search()
