@@ -38,13 +38,16 @@ OverflowToolbar::OverflowToolbar() : Gtk::Widget(), overflow_menu_(Gio::Menu::cr
 
 OverflowToolbar::~OverflowToolbar()
 {
-  // Unparent every child we own, otherwise gtkmm warns on destruction
-  for (auto& toolbar_button : buttons_)
-  {
-    if (toolbar_button.button->get_parent() == this)
-      toolbar_button.button->unparent();
-  }
-  menu_button_.unparent();
+  // Unparent every remaining child, otherwise gtkmm warns on destruction.
+  //
+  // We deliberately walk GTK's live child list here instead of iterating buttons_.
+  // The buttons are owned by the caller (they are direct members of MainWindow) and,
+  // depending on member declaration order, may already have been destroyed by the time
+  // this destructor runs. Dereferencing their (now dangling) pointers in buttons_ would
+  // be undefined behaviour. get_first_child()/get_next_sibling() only ever return
+  // children GTK still considers alive, so this is safe regardless of destruction order.
+  while (Gtk::Widget* child = get_first_child())
+    child->unparent();
 }
 
 void OverflowToolbar::set_buttons(const std::vector<OverflowToolbarButton>& buttons)
