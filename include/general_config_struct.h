@@ -29,7 +29,7 @@
 struct GeneralConfigData
 {
   std::string default_folder;
-  bool display_default_wine_machine;
-  bool enable_logging_stderr;
-  bool check_for_updates_startup;
+  bool display_default_wine_machine = false;
+  bool enable_logging_stderr = false;
+  bool check_for_updates_startup = false;
 };

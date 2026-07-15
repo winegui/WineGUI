@@ -39,14 +39,14 @@ struct UpdateBottleStruct
   Glib::ustring folder_name;
   Glib::ustring wine_bin_path;
   Glib::ustring description;
-  BottleTypes::Windows windows_version;
+  BottleTypes::Windows windows_version = BottleTypes::Windows::Unknown;
   Glib::ustring virtual_desktop_resolution;
-  BottleTypes::AudioDriver audio;
-  bool is_debug_logging;
-  int debug_log_level;
-  bool enable_dxvk_hud;
-  bool enable_gallium_hud;
-  bool enable_mangohud;
+  BottleTypes::AudioDriver audio = BottleTypes::AudioDriver::pulseaudio;
+  bool is_debug_logging = false;
+  int debug_log_level = 0;
+  bool enable_dxvk_hud = false;
+  bool enable_gallium_hud = false;
+  bool enable_mangohud = false;
 };
 
 /**

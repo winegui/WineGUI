@@ -117,7 +117,7 @@ static const string UpdateTimestamp = ".update-timestamp";
  */
 static const struct
 {
-  const BottleTypes::Windows windows;
+  const BottleTypes::Windows windows = BottleTypes::Windows::Unknown;
   const string version;
   const string versionNumber;
   const string buildNumber;

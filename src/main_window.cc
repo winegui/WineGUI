@@ -1338,7 +1338,7 @@ void MainWindow::create_right_panel()
 
   struct ToolbarButtonSpec
   {
-    Gtk::Button* button;
+    Gtk::Button* button = nullptr;
     Glib::ustring label;
     Glib::ustring icon_name;
     Glib::ustring tooltip_text;
