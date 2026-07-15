@@ -15,7 +15,6 @@
   </description>
   <categories>
     <category>Utility</category>
-    <category>Settings</category>
   </categories>
   <url type="homepage">https://winegui.melroy.org</url>
   <url type="bugtracker">https://github.com/winegui/WineGUI/issues</url>
