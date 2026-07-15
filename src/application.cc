@@ -16,6 +16,11 @@
 Application::Application() : Gtk::Application("org.melroy.winegui", Gio::Application::Flags::DEFAULT_FLAGS)
 {
   Glib::set_application_name("WineGUI");
+  // Explicitly set the themed icon used for all top-level windows. Without this GTK
+  // relies solely on the desktop-file <-> application-id association to find the icon,
+  // which fails inside the AppImage (see the bundled hicolor index.theme in
+  // scripts/build-appimage.sh).
+  Gtk::Window::set_default_icon_name("winegui");
 
   // Create all objects
   main_window_ = Gtk::make_managed<MainWindow>();

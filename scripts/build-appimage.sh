@@ -40,6 +40,42 @@ DESTDIR="${APPDIR}" cmake --install "${BUILD_DIR}"
 APPIMAGE_DESKTOP="${APPDIR}/usr/share/applications/winegui.desktop"
 sed -i 's#^Exec=/usr/bin/winegui#Exec=winegui#' "${APPIMAGE_DESKTOP}"
 
+# GTK resolves the window icon through its icon theme, which only scans a hicolor tree
+# that has a valid index.theme at its root. On a normal system install the icon lands in
+# /usr/share/icons/hicolor, which already ships an index.theme (hicolor-icon-theme pkg).
+# Inside the AppImage the GTK plugin prepends $APPDIR/usr/share to XDG_DATA_DIRS, but
+# linuxdeploy never synthesizes an index.theme there, so GTK cannot find the 'winegui'
+# icon and the running app shows a blank window icon. Write a minimal one ourselves.
+HICOLOR_DIR="${APPDIR}/usr/share/icons/hicolor"
+cat > "${HICOLOR_DIR}/index.theme" <<'EOF'
+[Icon Theme]
+Name=Hicolor
+Comment=Fallback icon theme
+Directories=48x48/apps,scalable/apps
+
+[48x48/apps]
+Size=48
+Context=Applications
+Type=Fixed
+
+[scalable/apps]
+MinSize=1
+Size=48
+MaxSize=512
+Context=Applications
+Type=Scalable
+EOF
+
+# Ship AppStream metadata inside the AppImage only. The deb/rpm (CPack) packages do not
+# generate or install a metainfo file, so we keep this out of the CMake install() rules
+# and stage it directly into the AppDir. Without it appimagetool warns that the AppStream
+# upstream metadata is missing; with it, appimagetool validates the file via appstreamcli
+# and fails the build on warnings, so the filename must match the component <id>
+# (org.melroy.winegui) and every <url> must be reachable.
+METAINFO_DIR="${APPDIR}/usr/share/metainfo"
+mkdir -p "${METAINFO_DIR}"
+cp "${PWD}/misc/org.melroy.winegui.metainfo.xml" "${METAINFO_DIR}/org.melroy.winegui.metainfo.xml"
+
 # Locate the downloaded tools (paths defined in cmake/appimage.cmake).
 TOOLS_DIR="${PWD}/${BUILD_DIR}/appimage-tools"
 LINUXDEPLOY="${TOOLS_DIR}/linuxdeploy-x86_64.AppImage"
