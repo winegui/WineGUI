@@ -1142,8 +1142,7 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   string dxvk_test_location = Helper::get_dxvk_test_location();
   if (!dxvk_test_location.empty())
   {
-    add_application("DXVK GPU Test", "Direct3D 11 triangle GPU test with DXVK HUD overlay (uses bundled DXVK, machine stays untouched)",
-                    dxvk_test_location, "dxvk_test");
+    add_application("DXVK GPU Test", "Direct3D 11 GPU test + DXVK HUD", dxvk_test_location, "dxvk_test");
   }
 }
 
