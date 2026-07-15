@@ -32,12 +32,20 @@ cmake --build "./${BUILD_DIR}" --config Release
 echo "INFO: Staging AppDir..."
 DESTDIR="${APPDIR}" cmake --install "${BUILD_DIR}"
 
-# The installed desktop file uses an absolute 'Exec=/usr/bin/winegui', which is
-# correct for a normal system install. Inside a relocatable AppImage, however,
-# linuxdeploy needs a bare 'Exec=winegui' to symlink the AppRun target. Instead
-# of changing the shipped misc/winegui.desktop, we patch only the AppDir copy
-# (and pass that same copy to linuxdeploy below).
-APPIMAGE_DESKTOP="${APPDIR}/usr/share/applications/winegui.desktop"
+# Patch the AppDir copy of the desktop file (never misc/winegui.desktop, which the deb/rpm
+# packages ship as-is). Two AppImage-only changes:
+#
+#   1. The installed file uses an absolute 'Exec=/usr/bin/winegui', correct for a system
+#      install; a relocatable AppImage needs a bare 'Exec=winegui' so linuxdeploy can symlink
+#      the AppRun target.
+#   2. Rename it from winegui.desktop to org.melroy.winegui.desktop (matching the AppStream
+#      component <id>). appimagetool derives the expected metainfo filename from the desktop
+#      basename, so this makes it look for org.melroy.winegui.appdata.xml (staged below) rather
+#      than winegui.appdata.xml. Without the rename appimagetool's bundled appstreamcli fails
+#      the build with metainfo-filename-cid-mismatch. The rDNS basename is also the modern
+#      Desktop-Entry recommendation. We pass this renamed copy to linuxdeploy below.
+APPIMAGE_DESKTOP="${APPDIR}/usr/share/applications/org.melroy.winegui.desktop"
+mv "${APPDIR}/usr/share/applications/winegui.desktop" "${APPIMAGE_DESKTOP}"
 sed -i 's#^Exec=/usr/bin/winegui#Exec=winegui#' "${APPIMAGE_DESKTOP}"
 
 # GTK resolves the window icon through its icon theme, which only scans a hicolor tree
@@ -67,14 +75,29 @@ Type=Scalable
 EOF
 
 # Ship AppStream metadata inside the AppImage only. The deb/rpm (CPack) packages do not
-# generate or install a metainfo file, so we keep this out of the CMake install() rules
-# and stage it directly into the AppDir. Without it appimagetool warns that the AppStream
-# upstream metadata is missing; with it, appimagetool validates the file via appstreamcli
-# and fails the build on warnings, so the filename must match the component <id>
-# (org.melroy.winegui) and every <url> must be reachable.
+# generate or install a metainfo file, so we keep this out of the CMake install() rules and
+# stage it directly into the AppDir. The file name matters because two checks disagree:
+#
+#   * appimagetool's presence check only recognises the legacy .appdata.xml suffix and derives
+#     the expected basename from the desktop file; without a matching *.appdata.xml it warns
+#     "AppStream upstream metadata is missing". (Our canonical source uses the modern
+#     .metainfo.xml suffix, which this check ignores.)
+#   * appimagetool then runs `appstreamcli validate`, which fails the build (exit 3) on any
+#     warning, e.g. metainfo-filename-cid-mismatch when the basename != component <id>.
+#
+# Since we renamed the AppDir desktop file to org.melroy.winegui.desktop above, appimagetool
+# looks for org.melroy.winegui.appdata.xml. That basename equals the rDNS <id>, so it is both
+# found and validates cleanly (only non-fatal infos remain). The canonical source keeps its
+# .metainfo.xml name for appstreamcli and the deb/rpm packages.
 METAINFO_DIR="${APPDIR}/usr/share/metainfo"
 mkdir -p "${METAINFO_DIR}"
-cp "${PWD}/misc/org.melroy.winegui.metainfo.xml" "${METAINFO_DIR}/org.melroy.winegui.metainfo.xml"
+cp "${PWD}/misc/org.melroy.winegui.metainfo.xml" "${METAINFO_DIR}/org.melroy.winegui.appdata.xml"
+
+# Keep the AppDir metainfo internally consistent with the renamed desktop file: its
+# <launchable> must reference org.melroy.winegui.desktop, not the original winegui.desktop.
+# Patched in the AppDir copy only; the canonical misc/ file is unchanged for the deb/rpm packages.
+sed -i 's#<launchable type="desktop-id">winegui.desktop</launchable>#<launchable type="desktop-id">org.melroy.winegui.desktop</launchable>#' \
+    "${METAINFO_DIR}/org.melroy.winegui.appdata.xml"
 
 # Locate the downloaded tools (paths defined in cmake/appimage.cmake).
 TOOLS_DIR="${PWD}/${BUILD_DIR}/appimage-tools"
