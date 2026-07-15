@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.melroy.winegui</id>
+  <name>WineGUI</name>
+  <summary>WineGUI is a user-friendly WINE graphical interface</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-only</project_license>
+  <provides>
+    <binary>winegui</binary>
+  </provides>
+  <launchable type="desktop-id">winegui.desktop</launchable>
+  <description>
+    <p>WineGUI is a friendly interface for Wine, letting you easily manage your Wine machines/bottles.</p>
+    <p>Features include an easy step-by-step wizard for creating a new machine, a built-in application list, editing machines and configuring a machine with a single click, and much more.</p>
+  </description>
+  <categories>
+    <category>Utility</category>
+    <category>Settings</category>
+  </categories>
+  <url type="homepage">https://winegui.melroy.org</url>
+  <url type="bugtracker">https://github.com/winegui/WineGUI/issues</url>
+  <releases>
+    <release version="3.1.0" date="2026-07-15"/>
+  </releases>
+</component>
