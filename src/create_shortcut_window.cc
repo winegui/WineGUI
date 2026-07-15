@@ -35,7 +35,7 @@ CreateShortcutWindow::CreateShortcutWindow(Gtk::Window& parent)
 {
   set_transient_for(parent);
   set_title("Create Application shortcuts");
-  set_default_size(550, 450);
+  set_default_size(600, 500);
   set_modal(true);
 
   Pango::FontDescription fd_label;
