@@ -80,6 +80,13 @@ if [[ "$output" == "[]" ]]; then
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-plucky.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
+    curl --request POST \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --data link_type="package" \
+        --data name="WineGUI - Ubuntu 26.04 (Resolute Raccoon) (.deb)" \
+        --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-resolute.deb" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
+
     # Added last, so it is displayed first (see reverse-order note above)
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \

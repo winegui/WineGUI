@@ -81,6 +81,11 @@ build:plucky:
   image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:plucky
   <<: *build_definition
 
+# Resolute (ubuntu)
+build:resolute:
+  image: registry.melroy.org/melroy/docker-images/gtk-cmake-ninja:resolute
+  <<: *build_definition
+
 # AppImage (single-file, distro-agnostic)
 build:appimage:
   stage: build
@@ -109,6 +114,8 @@ release:
     - job: build:noble
       artifacts: true
     - job: build:plucky
+      artifacts: true
+    - job: build:resolute
       artifacts: true
     - job: build:appimage
       artifacts: true
