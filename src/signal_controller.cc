@@ -106,6 +106,7 @@ void SignalController::dispatch_signals()
   main_window_->show_edit_window.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::show));
   main_window_->show_clone_window.connect(sigc::mem_fun(clone_window_, &BottleCloneWindow::show));
   main_window_->show_configure_window.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::show));
+  main_window_->delete_bottle.connect(sigc::mem_fun(manager_, &BottleManager::delete_bottle));
   main_window_->open_c_drive.connect(sigc::mem_fun(manager_, &BottleManager::open_c_drive));
   main_window_->reboot_bottle.connect(sigc::mem_fun(manager_, &BottleManager::reboot));
   main_window_->update_bottle.connect(sigc::mem_fun(manager_, &BottleManager::update));
@@ -125,8 +126,8 @@ void SignalController::dispatch_signals()
   // Clone Window
   clone_window_.clone_bottle.connect(sigc::mem_fun(*this, &SignalController::on_clone_bottle));
 
-  // Right click menu in listbox
-  // main_window_->right_click_menu.connect(sigc::mem_fun(*this, &SignalController::on_mouse_button_pressed));
+  // Note: the bottle list right-click context menu (Edit/Clone/Configure/Delete) is handled
+  // internally in MainWindow; only the Delete action routes back here via main_window_->delete_bottle above.
 
   // When bottle created or updated or cloned, the finish (or error message) event is called
   bottle_created_dispatcher_.connect(sigc::mem_fun(*this, &SignalController::on_new_bottle_created));
