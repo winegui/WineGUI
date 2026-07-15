@@ -65,9 +65,9 @@ endif()
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-# Use the package PkgConfig to detect (any version) of GTK+ headers/library files
+# Use the package PkgConfig to detect GTK+ headers/library files (gtkmm 4.10+ for Gtk::FileDialog)
 find_package(PkgConfig REQUIRED)
-PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-4.0)
+PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-4.0>=4.10)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -149,11 +149,6 @@ if(NOT UNITTEST)
   target_include_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
   target_link_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_LIBRARY_DIRS})
   target_compile_options(${PROJECT_TARGET} PRIVATE ${GTKMM_CFLAGS_OTHER})
-
-  # If we are using an old version of GTK, define OLD_GTK
-  if(GTKMM_VERSION VERSION_LESS "4.10")
-    target_compile_definitions(${PROJECT_TARGET} PUBLIC OLD_GTK)
-  endif()
 
   install(TARGETS ${PROJECT_TARGET} RUNTIME DESTINATION "bin" COMPONENT applications)
   install(FILES misc/winegui.desktop DESTINATION ${DATADIR}/applications)

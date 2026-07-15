@@ -148,8 +148,6 @@ void AddAppWindow::set_default_values()
  */
 void AddAppWindow::on_select_file()
 {
-#ifndef OLD_GTK
-  // New GTK4 version, using FileDialog
   auto dialog = Gtk::FileDialog::create();
   dialog->set_title("Please choose a file");
   dialog->set_modal(true);
@@ -195,54 +193,6 @@ void AddAppWindow::on_select_file()
                    // Do nothing
                  }
                });
-#else
-  // Old GTK4 version, using FileChooserDialog
-  auto filter_win = Gtk::FileFilter::create();
-  filter_win->set_name("Windows Executable/MSI Installer");
-  filter_win->add_mime_type("application/x-ms-dos-executable");
-  filter_win->add_mime_type("application/x-msi");
-  auto filter_any = Gtk::FileFilter::create();
-  filter_any->set_name("Any file");
-  filter_any->add_pattern("*");
-
-  auto* file_chooser = new Gtk::FileChooserDialog(*this, "Choose a file", Gtk::FileChooser::Action::OPEN, true);
-  file_chooser->set_modal(true);
-  file_chooser->set_transient_for(*this);
-
-  // Create inline lambda function to handle the response, with the response type + file_chooser pointer
-  file_chooser->signal_response().connect(
-      [this, file_chooser](int response_id)
-      {
-        switch (response_id)
-        {
-        case Gtk::ResponseType::OK:
-        {
-          // Update the command entry
-          auto file = file_chooser->get_file();
-          command_entry.set_text(file->get_path());
-          break;
-        }
-        case Gtk::ResponseType::CANCEL:
-        {
-          break; // ignore
-        }
-        default:
-        {
-          break; // ignore
-        }
-        }
-        delete file_chooser;
-      });
-  file_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
-  file_chooser->add_button("_Select file", Gtk::ResponseType::OK);
-  if (active_bottle_ != nullptr)
-  {
-    file_chooser->set_current_folder(Gio::File::create_for_path(active_bottle_->wine_c_drive()));
-  }
-  file_chooser->add_filter(filter_win);
-  file_chooser->add_filter(filter_any);
-  file_chooser->show();
-#endif
 }
 
 /**

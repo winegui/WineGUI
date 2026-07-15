@@ -186,8 +186,6 @@ void PreferencesWindow::show()
  */
 void PreferencesWindow::on_select_folder()
 {
-#ifndef OLD_GTK
-  // New GTK4 version, using FileDialog
   auto dialog = Gtk::FileDialog::create();
   dialog->set_title("Choose a folder");
   dialog->set_modal(true);
@@ -219,41 +217,6 @@ void PreferencesWindow::on_select_folder()
                             // Do nothing
                           }
                         });
-#else
-  auto* folder_chooser = new Gtk::FileChooserDialog(*this, "Choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER, true);
-  folder_chooser->set_modal(true);
-  folder_chooser->set_transient_for(*this);
-  folder_chooser->signal_response().connect(
-      [this, folder_chooser](int response_id)
-      {
-        switch (response_id)
-        {
-        case Gtk::ResponseType::OK:
-        {
-          // Get current older and update folder entry
-          auto folder = folder_chooser->get_current_folder();
-          default_folder_entry.set_text(folder->get_path());
-          break;
-        }
-        case Gtk::ResponseType::CANCEL:
-        {
-          break; // ignore
-        }
-        default:
-        {
-          break; // ignore
-        }
-        }
-        delete folder_chooser;
-      });
-  folder_chooser->add_button("_Cancel", Gtk::ResponseType::CANCEL);
-  folder_chooser->add_button("_Select folder", Gtk::ResponseType::OK);
-  static const std::vector<std::string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"};
-  static const std::string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
-  auto folder = Gio::File::create_for_path(WineGuiDataDir);
-  folder_chooser->set_current_folder(folder);
-  folder_chooser->show();
-#endif
 }
 
 /**
