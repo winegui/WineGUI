@@ -36,10 +36,10 @@ struct BottleConfigData
   std::string name;
   std::string description;
   std::string wine_bin_path;
-  bool logging_enabled;
-  int debug_log_level;
+  bool logging_enabled = false;
+  int debug_log_level = 0;
   std::vector<std::pair<std::string, std::string>> env_vars;
-  int config_version;
+  int config_version = 0;
 };
 
 /**

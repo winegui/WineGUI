@@ -39,11 +39,11 @@ public:
   struct Result
   {
     Glib::ustring name;
-    BottleTypes::Windows windows_version;
-    BottleTypes::Bit bit;
+    BottleTypes::Windows windows_version = BottleTypes::Windows::Unknown;
+    BottleTypes::Bit bit = BottleTypes::Bit::win32;
     Glib::ustring virtual_desktop_resolution;
-    bool disable_gecko_mono;
-    BottleTypes::AudioDriver audio;
+    bool disable_gecko_mono = false;
+    BottleTypes::AudioDriver audio = BottleTypes::AudioDriver::pulseaudio;
   };
 
   BottleNewAssistant();

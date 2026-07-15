@@ -29,7 +29,7 @@
  */
 struct OverflowToolbarButton
 {
-  Gtk::Button* button;       /*!< The visible toolbar button (owned by the caller, parented to the toolbar) */
+  Gtk::Button* button = nullptr; /*!< The visible toolbar button (owned by the caller, parented to the toolbar) */
   Glib::ustring label;       /*!< Human readable label, also used as the overflow menu item text */
   Glib::ustring icon_name;   /*!< Icon name, also used as the overflow menu item icon */
   Glib::ustring action_name; /*!< Detailed action name (e.g. "win.edit_bottle") backing the overflow menu item */
