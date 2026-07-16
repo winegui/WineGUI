@@ -10,9 +10,10 @@ At last, a user-interface friendly [Wine](https://www.winehq.org/) (A compatibil
 
 ## Download
 
-You can find the latest version on the [Releases page](https://gitlab.melroy.org/melroy/winegui/-/releases) under "Packages" on my GitLab server.
+Two places where you can find the downloads:
 
-Besides the release page on GitLab (see above), you can now also find the latest version on the [GitHub Release](https://github.com/winegui/WineGUI/releases) (mirror).
+1. You can find the latest version on the [Releases page](https://gitlab.melroy.org/melroy/winegui/-/releases) under "Assets" -> "Packages" on my GitLab.
+2. Find the same packages on the [GitHub Release page](https://github.com/winegui/WineGUI/releases).
 
 Download the WineGUI package you require for your Linux distribution. I provide `.AppImage`, `.deb`, `.rpm` and `.tar.gz` files:
 
