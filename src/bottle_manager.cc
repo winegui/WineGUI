@@ -1125,6 +1125,106 @@ void BottleManager::install_d3dx9(Gtk::Window* parent, const string& version)
 }
 
 /**
+ * \brief Install Gallium Nine Standalone (Direct3D 9 via the Mesa Gallium driver)
+ * Renders Direct3D 9 directly through the Mesa Gallium driver instead of translating
+ * to OpenGL/Vulkan, giving a smoother gaming experience and increased FPS.
+ * Requires a Mesa Gallium driver (eg. AMD or Intel GPUs).
+ * \param[in] parent Parent GTK window were the request is coming from
+ */
+void BottleManager::install_gallium_nine(Gtk::Window* parent)
+{
+  if (is_bottle_not_null())
+  {
+    // Before we execute the install, show busy dialog
+    main_window_.show_busy_install_dialog(*parent, "Installing Gallium Nine (DirectX 9 directly via the Mesa graphics driver).\n");
+
+    string package = "galliumnine";
+    string wine_prefix = active_bottle_->wine_location();
+    bool is_debug_logging = active_bottle_->is_debug_logging();
+    int debug_log_level = active_bottle_->debug_log_level();
+    string program = Helper::get_winetricks_location() + " -q " + package;
+    // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
+    std::thread t(
+        [wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+         output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+         update_bottles_dispatcher = &update_bottles_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
+        {
+          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", {}, true, logging_stderr);
+          if (debug_logging && !output.empty())
+          {
+            {
+              std::lock_guard<std::mutex> lock(output_logging_mutex);
+              logging_bottle_prefix.get() = wine_prefix;
+              output_logging.get() = output;
+            }
+            write_log_dispatcher->emit();
+          }
+          Helper::wait_until_wineserver_is_terminated(wine_prefix);
+          // When the install actually succeeded (winetricks ran ninewinecfg -e, which sets the 'd3d9'
+          // DLL override), add a custom app shortcut for the Gallium Nine settings GUI (ninewinecfg.exe),
+          // so the user can enable/disable Gallium Nine afterwards (and remove the shortcut again if desired)
+          bool added_shortcut = false;
+          try
+          {
+            if (Helper::get_dll_override(wine_prefix, "d3d9"))
+            {
+              added_shortcut = BottleManager::add_gallium_nine_shortcut(wine_prefix);
+            }
+          }
+          catch (const std::runtime_error& error)
+          {
+            std::cout << "Error: " << error.what() << std::endl;
+          }
+          if (added_shortcut)
+          {
+            // Refresh the bottles so the new app shortcut shows up in the application list
+            update_bottles_dispatcher->emit();
+          }
+          finish_dispatcher->emit();
+        });
+    t.detach();
+  }
+}
+
+/**
+ * \brief Add a custom app shortcut for the Gallium Nine settings GUI (ninewinecfg.exe) to the bottle config,
+ * unless an app with the same command is already present in the app list (eg. added by a previous install)
+ * \param[in] wine_prefix Bottle prefix
+ * \return True when the shortcut is added, false when it was already present (or could not be saved)
+ */
+bool BottleManager::add_gallium_nine_shortcut(const string& wine_prefix)
+{
+  static const string gallium_nine_command = "ninewinecfg.exe";
+
+  // Read existing config data
+  BottleConfigData bottle_config;
+  std::map<int, ApplicationData> app_list;
+  std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(wine_prefix);
+
+  // Do not add the app shortcut again, if it's already present
+  for (const auto& [_, app_data] : app_list)
+  {
+    if (app_data.command == gallium_nine_command)
+      return false;
+  }
+
+  int new_index = (!app_list.empty()) ? std::prev(app_list.end())->first + 1 : 0;
+  ApplicationData new_app;
+  new_app.name = "Gallium Nine Settings";
+  new_app.description = "Gallium Nine settings panel (DirectX 9)";
+  new_app.command = gallium_nine_command;
+  app_list.insert(std::pair<int, ApplicationData>(new_index, new_app));
+
+  if (!BottleConfigFile::write_config_file(wine_prefix, bottle_config, app_list))
+  {
+    std::cout << "Error: Could not write bottle config file (during adding the Gallium Nine app shortcut)." << std::endl;
+    return false;
+  }
+  return true;
+}
+
+/**
  * \brief Install DXVK (Vulkan based DirectX 9/10/11)
  * Note: initially only Direct3D 10 & 11 was supported by DXVK. But now also Direct3D 9.
  * \param[in] parent Parent GTK window were the request is coming from
