@@ -118,6 +118,10 @@ void BottleConfigureWindow::create_layout()
   // Graphics packages
   install_d3dx9_button.signal_clicked().connect(sigc::bind(directx9, this, ""));
   add_button(graphics_flowbox, install_d3dx9_button, "Installs MS D3DX9: Ideal for DirectX 9 games, by using OpenGL API");
+  install_gallium_nine_button.signal_clicked().connect(sigc::bind(gallium_nine, this));
+  add_button(graphics_flowbox, install_gallium_nine_button,
+             "Installs Gallium Nine: Runs DirectX 9 games directly on your Mesa graphics driver, "
+             "giving a smoother gaming experience and higher FPS (requires a Mesa driver, eg. AMD or Intel GPUs)");
   install_dxvk_button.signal_clicked().connect(sigc::bind(dxvk, this, "latest"));
   add_button(graphics_flowbox, install_dxvk_button, "Installs DXVK: Ideal for DirectX 9, 10 or 11 games, by using Vulkan API");
   install_vkd3d_button.signal_clicked().connect(sigc::bind(vkd3d, this));
@@ -221,6 +225,15 @@ void BottleConfigureWindow::update_installed()
   else
   {
     add_name_and_icon_to_button(install_d3dx9_button, "Install DirectX v9 (OpenGL)", false);
+  }
+
+  if (is_gallium_nine_installed())
+  {
+    add_name_and_icon_to_button(install_gallium_nine_button, "Reinstall Gallium Nine DirectX v9", true);
+  }
+  else
+  {
+    add_name_and_icon_to_button(install_gallium_nine_button, "Install Gallium Nine DirectX v9", false);
   }
 
   if (is_dxvk_installed())
@@ -430,6 +443,30 @@ bool BottleConfigureWindow::is_d3dx9_installed()
     {
       // Check if DLL is set to 'native' load order
       is_installed = Helper::get_dll_override(wine_prefix, "*d3dx9_43");
+    }
+    catch (const std::runtime_error& error)
+    {
+      std::cout << "Error: " << error.what() << std::endl;
+    }
+  }
+  return is_installed;
+}
+
+/**
+ * \brief Check is Gallium Nine Standalone (Direct3D 9 via the Mesa Gallium driver) is installed
+ * \return True if installed otherwise False
+ */
+bool BottleConfigureWindow::is_gallium_nine_installed()
+{
+  bool is_installed = false;
+  if (active_bottle_ != nullptr)
+  {
+    Glib::ustring wine_prefix = active_bottle_->wine_location();
+    try
+    {
+      // ninewinecfg -e (executed by winetricks) sets the 'd3d9' DLL override (without asterisk,
+      // unlike DXVK which uses '*d3d9') to 'native' load order when Gallium Nine is enabled
+      is_installed = Helper::get_dll_override(wine_prefix, "d3d9");
     }
     catch (const std::runtime_error& error)
     {
