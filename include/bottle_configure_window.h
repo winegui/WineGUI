@@ -36,6 +36,7 @@ class BottleConfigureWindow : public Gtk::Window
 public:
   // Signals
   sigc::signal<void(Gtk::Window*, const string&)> directx9;           /*!< Install d3dx9 for Direct3D 9 signal */
+  sigc::signal<void(Gtk::Window*)> gallium_nine;                      /*!< Install Gallium Nine Standalone for Direct3D 9 signal */
   sigc::signal<void(Gtk::Window*, const string&)> dxvk;               /*!< Install DXVK for Direct3D 9/10/11 using Vulkan signal */
   sigc::signal<void(Gtk::Window*)> vkd3d;                             /*!< Install VKD3D-proton for Direct3D 12 using Vulkan signal */
   sigc::signal<void(Gtk::Window*)> liberation_fonts;                  /*!< Install Liberation fonts signal */
@@ -68,9 +69,10 @@ protected:
   Gtk::FlowBox dotnet_flowbox;     /*!< Wine Mono & .NET packages page */
 
   // Graphics packages
-  Gtk::Button install_d3dx9_button; /*!< d3dx9 install button */
-  Gtk::Button install_dxvk_button;  /*!< DXVK install button */
-  Gtk::Button install_vkd3d_button; /*!< DKD3D install button */
+  Gtk::Button install_d3dx9_button;        /*!< d3dx9 install button */
+  Gtk::Button install_gallium_nine_button; /*!< Gallium Nine Standalone install button */
+  Gtk::Button install_dxvk_button;         /*!< DXVK install button */
+  Gtk::Button install_vkd3d_button;        /*!< DKD3D install button */
   // Font packages
   Gtk::Button install_liberation_fonts_button; /*!< Liberation fonts install button */
   Gtk::Button install_core_fonts_button;       /*!< Core fonts install button */
@@ -97,6 +99,7 @@ private:
   void create_layout();
   void add_name_and_icon_to_button(Gtk::Button& button, const std::string& label, bool is_installed);
   bool is_d3dx9_installed();
+  bool is_gallium_nine_installed();
   bool is_dxvk_installed();
   bool is_vkd3d_installed();
   bool is_liberation_installed();

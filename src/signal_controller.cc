@@ -144,6 +144,7 @@ void SignalController::dispatch_signals()
 
   // Settings gaming package buttons
   configure_window_.directx9.connect(sigc::mem_fun(manager_, &BottleManager::install_d3dx9));
+  configure_window_.gallium_nine.connect(sigc::mem_fun(manager_, &BottleManager::install_gallium_nine));
   configure_window_.dxvk.connect(sigc::mem_fun(manager_, &BottleManager::install_dxvk));
   configure_window_.vkd3d.connect(sigc::mem_fun(manager_, &BottleManager::install_vkd3d));
   // Settings additional package buttons

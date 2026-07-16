@@ -91,6 +91,7 @@ public:
   void open_log_file();
   void kill_processes();
   void install_d3dx9(Gtk::Window* parent, const string& version);
+  void install_gallium_nine(Gtk::Window* parent);
   void install_dxvk(Gtk::Window* parent, const string& version);
   void install_vkd3d(Gtk::Window* parent);
   void install_visual_cpp_package(Gtk::Window* parent, const string& version);
@@ -135,6 +136,7 @@ private:
   virtual void on_error_gpu_test();
   virtual void cleanup_install_update_winetricks_thread();
 
+  static bool add_gallium_nine_shortcut(const string& wine_prefix);
   void install_or_update_winetricks_thread(bool install);
   GeneralConfigData load_and_save_general_config();
   bool is_bottle_not_null();
