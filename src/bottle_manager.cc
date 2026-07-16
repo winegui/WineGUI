@@ -1148,7 +1148,7 @@ void BottleManager::install_gallium_nine(Gtk::Window* parent)
         [wine_prefix, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
          output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
-         finish_dispatcher = &finished_package_install_dispatcher]
+         update_bottles_dispatcher = &update_bottles_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
         {
           string output = Helper::run_program(wine_prefix, debug_log_level, program, "", {}, true, logging_stderr);
           if (debug_logging && !output.empty())
@@ -1161,10 +1161,67 @@ void BottleManager::install_gallium_nine(Gtk::Window* parent)
             write_log_dispatcher->emit();
           }
           Helper::wait_until_wineserver_is_terminated(wine_prefix);
+          // When the install actually succeeded (winetricks ran ninewinecfg -e, which sets the 'd3d9'
+          // DLL override), add a custom app shortcut for the Gallium Nine settings GUI (ninewinecfg.exe),
+          // so the user can enable/disable Gallium Nine afterwards (and remove the shortcut again if desired)
+          bool added_shortcut = false;
+          try
+          {
+            if (Helper::get_dll_override(wine_prefix, "d3d9"))
+            {
+              added_shortcut = BottleManager::add_gallium_nine_shortcut(wine_prefix);
+            }
+          }
+          catch (const std::runtime_error& error)
+          {
+            std::cout << "Error: " << error.what() << std::endl;
+          }
+          if (added_shortcut)
+          {
+            // Refresh the bottles so the new app shortcut shows up in the application list
+            update_bottles_dispatcher->emit();
+          }
           finish_dispatcher->emit();
         });
     t.detach();
   }
+}
+
+/**
+ * \brief Add a custom app shortcut for the Gallium Nine settings GUI (ninewinecfg.exe) to the bottle config,
+ * unless an app with the same command is already present in the app list (eg. added by a previous install)
+ * \param[in] wine_prefix Bottle prefix
+ * \return True when the shortcut is added, false when it was already present (or could not be saved)
+ */
+bool BottleManager::add_gallium_nine_shortcut(const string& wine_prefix)
+{
+  static const string gallium_nine_command = "ninewinecfg.exe";
+
+  // Read existing config data
+  BottleConfigData bottle_config;
+  std::map<int, ApplicationData> app_list;
+  std::tie(bottle_config, app_list) = BottleConfigFile::read_config_file(wine_prefix);
+
+  // Do not add the app shortcut again, if it's already present
+  for (const auto& [_, app_data] : app_list)
+  {
+    if (app_data.command == gallium_nine_command)
+      return false;
+  }
+
+  int new_index = (!app_list.empty()) ? std::prev(app_list.end())->first + 1 : 0;
+  ApplicationData new_app;
+  new_app.name = "Gallium Nine Settings";
+  new_app.description = "Gallium Nine settings panel (DirectX 9)";
+  new_app.command = gallium_nine_command;
+  app_list.insert(std::pair<int, ApplicationData>(new_index, new_app));
+
+  if (!BottleConfigFile::write_config_file(wine_prefix, bottle_config, app_list))
+  {
+    std::cout << "Error: Could not write bottle config file (during adding the Gallium Nine app shortcut)." << std::endl;
+    return false;
+  }
+  return true;
 }
 
 /**
