@@ -295,6 +295,7 @@ void BottleConfigureWindow::update_installed()
   // (and later versions like 2015-2019/2015-2022/2017-2026 supersede the earlier ones)
   struct VisualCppCheck
   {
+    // cppcheck-suppress uninitMemberVarNoCtor
     Gtk::Button& button;
     string label_year;
     string msvcp_dll_name;
