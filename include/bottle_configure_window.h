@@ -77,11 +77,17 @@ protected:
   Gtk::Button install_liberation_fonts_button; /*!< Liberation fonts install button */
   Gtk::Button install_core_fonts_button;       /*!< Core fonts install button */
   // Visual C++ packages
+  Gtk::Button install_visual_cpp_2003_button; /*!< MS Visual C++ 2003 libraries install button */
+  Gtk::Button install_visual_cpp_2005_button; /*!< MS Visual C++ 2005 Redistributable Package install button */
+  Gtk::Button install_visual_cpp_2008_button; /*!< MS Visual C++ 2008 Redistributable Package install button */
+  Gtk::Button install_visual_cpp_2010_button; /*!< MS Visual C++ 2010 Redistributable Package install button */
+  Gtk::Button install_visual_cpp_2012_button; /*!< MS Visual C++ 2012 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2013_button; /*!< MS Visual C++ 2013 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2015_button; /*!< MS Visual C++ 2015 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2017_button; /*!< MS Visual C++ 2017 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2019_button; /*!< MS Visual C++ 2019 Redistributable Package install button */
   Gtk::Button install_visual_cpp_2022_button; /*!< MS Visual C++ 2022 Redistributable Package install button */
+  Gtk::Button install_visual_cpp_2026_button; /*!< MS Visual C++ 2026 Redistributable Package install button */
   // Wine Mono & .NET packages
   Gtk::Button install_mono_button;        /*!< Wine Mono (re)install button */
   Gtk::Button install_dotnet4_0_button;   /*!< .NET v4.0 install button */
@@ -104,11 +110,8 @@ private:
   bool is_vkd3d_installed();
   bool is_liberation_installed();
   bool is_core_fonts_installed();
-  bool is_visual_cpp_2013_installed();
-  bool is_visual_cpp_2015_installed();
-  bool is_visual_cpp_2017_installed();
-  bool is_visual_cpp_2019_installed();
-  bool is_visual_cpp_2022_installed();
+  bool is_visual_cpp_2003_installed();
+  bool is_visual_cpp_installed(const string& msvcp_dll_name, const string& uninstaller_display_name_prefix);
   bool is_dotnet_installed(const string& uninstaller_key, const string& uninstaller_name);
   bool is_dotnet_runtime_installed(const string& major_version, const string& x86_uninstaller_key, const string& x64_uninstaller_key);
 };
