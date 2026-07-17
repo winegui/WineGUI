@@ -106,6 +106,8 @@ public:
   static string get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name, const string& wine_bin_path = "");
   static bool get_dll_override(const string& prefix_path, const string& dll_name, DLLOverride::LoadOrder load_order = DLLOverride::LoadOrder::Native);
   static string get_uninstaller(const string& prefix_path, const string& uninstallerKey);
+  static bool has_uninstaller_display_name_prefix(const string& prefix_path, const string& display_name_prefix);
+  static bool is_wine_builtin_dll(const string& dll_file_path);
   static string get_font_filename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName);
   static string get_image_location(const string& filename);
   static string get_dxvk_test_location();
