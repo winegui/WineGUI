@@ -1270,6 +1270,65 @@ string Helper::get_uninstaller(const string& prefix_path, const string& uninstal
 }
 
 /**
+ * \brief Check if any uninstaller entry has a display name starting with the given prefix.
+ * Scans all uninstaller subkeys, so no version-specific product GUIDs are needed
+ * (unlike get_uninstaller(), which breaks whenever the package build - and thus its GUID - changes).
+ * \param[in] prefix_path Bottle prefix
+ * \param[in] display_name_prefix The display name prefix to match (eg. "Microsoft Visual C++ 2010")
+ * \throws runtime_error when Windows registry could not be opened
+ * \return True when an uninstaller display name matches the prefix, otherwise false
+ */
+bool Helper::has_uninstaller_display_name_prefix(const string& prefix_path, const string& display_name_prefix)
+{
+  static const string uninstall_key_prefix = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\";
+  static const string display_name_pattern = "\"DisplayName\"=\"";
+  string file_path = Glib::build_filename(prefix_path, SystemReg);
+  auto lines = get_reg_file_lines(file_path);
+  if (!lines)
+  {
+    std::cerr << "Error: Couldn't open registry file during has_uninstaller_display_name_prefix(). Trying to read from file: " << file_path
+              << "(using display name prefix: " << display_name_prefix << ")" << std::endl;
+    throw std::runtime_error("Could not open registry file!");
+  }
+
+  bool inside_uninstall_section = false;
+  for (const string& line : *lines)
+  {
+    if (line.starts_with('['))
+    {
+      // New key section; check whether it's an uninstaller subkey
+      inside_uninstall_section = line.starts_with(uninstall_key_prefix);
+    }
+    else if (inside_uninstall_section && line.starts_with(display_name_pattern))
+    {
+      if (line.compare(display_name_pattern.size(), display_name_prefix.size(), display_name_prefix) == 0)
+        return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * \brief Check whether a DLL file inside the bottle is a Wine builtin DLL (and thus not a native/Microsoft DLL).
+ * Wine-built DLLs carry a "Wine builtin DLL" signature in the DOS stub of the PE header,
+ * which is also how winecfg distinguishes builtin from native DLL files.
+ * \param[in] dll_file_path Full path to the DLL file
+ * \return True when the file exists and is a Wine builtin DLL, false when it's a native DLL (or the file doesn't exist)
+ */
+bool Helper::is_wine_builtin_dll(const string& dll_file_path)
+{
+  static const string wine_builtin_signature = "Wine builtin DLL";
+  std::ifstream dll_file(dll_file_path, std::ios::binary);
+  if (!dll_file.is_open())
+    return false;
+  // The signature is located within the DOS stub, so reading the first 128 bytes is sufficient
+  char buffer[128] = {0};
+  dll_file.read(buffer, sizeof(buffer));
+  string header(buffer, static_cast<size_t>(dll_file.gcount()));
+  return header.find(wine_builtin_signature) != string::npos;
+}
+
+/**
  * \brief Retrieve a font file_path from the system registry
  * \param[in] prefix_path Bottle prefix
  * \param[in] bit Bottle bit (32 or 64) enum

@@ -134,6 +134,16 @@ void BottleConfigureWindow::create_layout()
   add_button(fonts_flowbox, install_core_fonts_button, "Installs Microsoft Core Fonts");
 
   // Visual C++ packages
+  install_visual_cpp_2003_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2003"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2003_button, "Installs Visual C++ 2003 libraries");
+  install_visual_cpp_2005_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2005"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2005_button, "Installs Visual C++ 2005");
+  install_visual_cpp_2008_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2008"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2008_button, "Installs Visual C++ 2008");
+  install_visual_cpp_2010_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2010"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2010_button, "Installs Visual C++ 2010");
+  install_visual_cpp_2012_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2012"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2012_button, "Installs Visual C++ 2012");
   install_visual_cpp_2013_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2013"));
   add_button(visual_cpp_flowbox, install_visual_cpp_2013_button, "Installs Visual C++ 2013");
   install_visual_cpp_2015_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2015"));
@@ -144,6 +154,8 @@ void BottleConfigureWindow::create_layout()
   add_button(visual_cpp_flowbox, install_visual_cpp_2019_button, "Installs Visual C++ 2015-2019");
   install_visual_cpp_2022_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2022"));
   add_button(visual_cpp_flowbox, install_visual_cpp_2022_button, "Installs Visual C++ 2015-2022");
+  install_visual_cpp_2026_button.signal_clicked().connect(sigc::bind(visual_cpp_package, this, "2026"));
+  add_button(visual_cpp_flowbox, install_visual_cpp_2026_button, "Installs Visual C++ 2017-2026");
 
   // Wine Mono & .NET packages
   install_mono_button.signal_clicked().connect(sigc::bind(mono, this));
@@ -272,54 +284,38 @@ void BottleConfigureWindow::update_installed()
     add_name_and_icon_to_button(install_core_fonts_button, "Install Core Fonts", false);
   }
 
-  // Check for Visual C++ 2013
-  if (is_visual_cpp_2013_installed())
+  // Check for Visual C++ 2003 (no DLL override nor uninstaller entry; only DLL files are extracted)
   {
-    add_name_and_icon_to_button(install_visual_cpp_2013_button, "Reinstall Visual C++ 2013", true);
-  }
-  else
-  {
-    add_name_and_icon_to_button(install_visual_cpp_2013_button, "Install Visual C++ 2013", false);
+    bool installed = is_visual_cpp_2003_installed();
+    add_name_and_icon_to_button(install_visual_cpp_2003_button, (installed ? "Reinstall" : "Install") + string(" Visual C++ 2003"), installed);
   }
 
-  // Check for Visual C++ 2015
-  if (is_visual_cpp_2015_installed())
+  // Check for the Visual C++ Redistributable packages, using the msvcp DLL override + the uninstaller display name.
+  // Note: 2015 and up all share the same msvcp140 DLL family; only the uninstaller display name differs
+  // (and later versions like 2015-2019/2015-2022/2017-2026 supersede the earlier ones)
+  struct VisualCppCheck
   {
-    add_name_and_icon_to_button(install_visual_cpp_2015_button, "Reinstall Visual C++ 2015", true);
-  }
-  else
+    Gtk::Button& button;
+    string label_year;
+    string msvcp_dll_name;
+    string uninstaller_display_name_prefix;
+  };
+  const VisualCppCheck visual_cpp_checks[] = {
+      {install_visual_cpp_2005_button, "2005", "*msvcp80", "Microsoft Visual C++ 2005 Redistributable"},
+      {install_visual_cpp_2008_button, "2008", "*msvcp90", "Microsoft Visual C++ 2008 Redistributable"},
+      {install_visual_cpp_2010_button, "2010", "*msvcp100", "Microsoft Visual C++ 2010"},
+      {install_visual_cpp_2012_button, "2012", "*msvcp110", "Microsoft Visual C++ 2012 Redistributable"},
+      {install_visual_cpp_2013_button, "2013", "*msvcp120", "Microsoft Visual C++ 2013 Redistributable"},
+      {install_visual_cpp_2015_button, "2015", "*msvcp140", "Microsoft Visual C++ 2015 Redistributable"},
+      {install_visual_cpp_2017_button, "2017", "*msvcp140", "Microsoft Visual C++ 2017 Redistributable"},
+      {install_visual_cpp_2019_button, "2019", "*msvcp140", "Microsoft Visual C++ 2015-2019 Redistributable"},
+      {install_visual_cpp_2022_button, "2022", "*msvcp140", "Microsoft Visual C++ 2015-2022 Redistributable"},
+      {install_visual_cpp_2026_button, "2026", "*msvcp140", "Microsoft Visual C++ 2017-2026 Redistributable"},
+  };
+  for (const auto& check : visual_cpp_checks)
   {
-    add_name_and_icon_to_button(install_visual_cpp_2015_button, "Install Visual C++ 2015", false);
-  }
-
-  // Check for Visual C++ 2017
-  if (is_visual_cpp_2017_installed())
-  {
-    add_name_and_icon_to_button(install_visual_cpp_2017_button, "Reinstall Visual C++ 2017", true);
-  }
-  else
-  {
-    add_name_and_icon_to_button(install_visual_cpp_2017_button, "Install Visual C++ 2017", false);
-  }
-
-  // Check for Visual C++ 2019
-  if (is_visual_cpp_2019_installed())
-  {
-    add_name_and_icon_to_button(install_visual_cpp_2019_button, "Reinstall Visual C++ 2019", true);
-  }
-  else
-  {
-    add_name_and_icon_to_button(install_visual_cpp_2019_button, "Install Visual C++ 2019", false);
-  }
-
-  // Check for Visual C++ 2022
-  if (is_visual_cpp_2022_installed())
-  {
-    add_name_and_icon_to_button(install_visual_cpp_2022_button, "Reinstall Visual C++ 2022", true);
-  }
-  else
-  {
-    add_name_and_icon_to_button(install_visual_cpp_2022_button, "Install Visual C++ 2022", false);
+    bool installed = is_visual_cpp_installed(check.msvcp_dll_name, check.uninstaller_display_name_prefix);
+    add_name_and_icon_to_button(check.button, (installed ? "Reinstall" : "Install") + string(" Visual C++ ") + check.label_year, installed);
   }
 
   // Wine Mono can always be (re)installed to repair a broken Mono/.NET support
@@ -572,51 +568,33 @@ bool BottleConfigureWindow::is_core_fonts_installed()
 }
 
 /**
- * \brief Check if MS Visual C++ 2013 installed
+ * \brief Check if MS Visual C++ 2003 libraries are installed.
+ * The winetricks vcrun2003 verb only extracts the native DLLs into system32
+ * (no DLL override nor uninstaller entry). Wine also ships a builtin msvcp71.dll,
+ * so additionally check the file isn't the Wine builtin DLL but the native (Microsoft) one.
  * \return True if installed otherwise False
  */
-bool BottleConfigureWindow::is_visual_cpp_2013_installed()
+bool BottleConfigureWindow::is_visual_cpp_2003_installed()
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
   {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    try
-    {
-      // Check if DLL is set to 'native, builtin' load order
-      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp120", DLLOverride::LoadOrder::NativeBuiltin);
-      if (is_dll_override)
-      {
-        // Next, check if package can be found to be uninstalled
-        string name = Helper::get_uninstaller(wine_prefix, "{61087a79-ac85-455c-934d-1fa22cc64f36}");
-        // Strings has last occurrence
-        is_installed = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
-
-        // Try the 64-bit package (fallback)
-        if (!is_installed)
-        {
-          name = Helper::get_uninstaller(wine_prefix, "{ef6b00ec-13e1-4c25-9064-b2f383cb8412}");
-          is_installed = (name.rfind("Microsoft Visual C++ 2013 Redistributable") == 0);
-        }
-      }
-      else
-      {
-        is_installed = false;
-      }
-    }
-    catch (const std::runtime_error& error)
-    {
-      std::cout << "Error: " << error.what() << std::endl;
-    }
+    string dll_path = Glib::build_filename(active_bottle_->wine_location(), "drive_c", "windows", "system32", "msvcp71.dll");
+    is_installed = Helper::file_exists(dll_path) && !Helper::is_wine_builtin_dll(dll_path);
   }
   return is_installed;
 }
 
 /**
- * \brief Check if MS Visual C++ 2015 installed
+ * \brief Check if a MS Visual C++ Redistributable package is installed,
+ * using the msvcp DLL override + the uninstaller display name prefix.
+ * The display name scan works for both the 32-bit and 64-bit packages and doesn't depend
+ * on version-specific MSI product GUIDs (which change with every package build).
+ * \param[in] msvcp_dll_name The msvcp DLL override name (eg. "*msvcp140")
+ * \param[in] uninstaller_display_name_prefix The uninstaller display name prefix (eg. "Microsoft Visual C++ 2015-2022 Redistributable")
  * \return True if installed otherwise False
  */
-bool BottleConfigureWindow::is_visual_cpp_2015_installed()
+bool BottleConfigureWindow::is_visual_cpp_installed(const string& msvcp_dll_name, const string& uninstaller_display_name_prefix)
 {
   bool is_installed = false;
   if (active_bottle_ != nullptr)
@@ -625,147 +603,11 @@ bool BottleConfigureWindow::is_visual_cpp_2015_installed()
     try
     {
       // Check if DLL is set to 'native, builtin' load order
-      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp140", DLLOverride::LoadOrder::NativeBuiltin);
+      bool is_dll_override = Helper::get_dll_override(wine_prefix, msvcp_dll_name, DLLOverride::LoadOrder::NativeBuiltin);
       if (is_dll_override)
       {
-        // Next, check if package can be found to be uninstalled
-        string name = Helper::get_uninstaller(wine_prefix, "{462f63a8-6347-4894-a1b3-dbfe3a4c981d}");
-        // Strings has last occurrence
-        is_installed = (name.rfind("Microsoft Visual C++ 2015 Redistributable") == 0);
-
-        // Try the 64-bit package (fallback)
-        if (!is_installed)
-        {
-          name = Helper::get_uninstaller(wine_prefix, "{F20396E5-D84E-3505-A7A8-7358F0155F6C}");
-          is_installed = (name.rfind("Microsoft Visual C++ 2015 Redistributable") == 0);
-        }
-      }
-      else
-      {
-        is_installed = false;
-      }
-    }
-    catch (const std::runtime_error& error)
-    {
-      std::cout << "Error: " << error.what() << std::endl;
-    }
-  }
-  return is_installed;
-}
-
-/**
- * \brief Check if MS Visual C++ 2017 installed
- * \return True if installed otherwise False
- */
-bool BottleConfigureWindow::is_visual_cpp_2017_installed()
-{
-  bool is_installed = false;
-  if (active_bottle_ != nullptr)
-  {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    try
-    {
-      // Check if DLL is set to 'native, builtin' load order
-      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp140", DLLOverride::LoadOrder::NativeBuiltin);
-      if (is_dll_override)
-      {
-        // Next, check if package can be found to be uninstalled
-        string name = Helper::get_uninstaller(wine_prefix, "{624ba875-fdfc-4efa-9c66-b170dfebc3ec}");
-        // Strings has last occurrence
-        is_installed = (name.rfind("Microsoft Visual C++ 2017 Redistributable") == 0);
-
-        // Try the 64-bit package (fallback)
-        if (!is_installed)
-        {
-          name = Helper::get_uninstaller(wine_prefix, "{65835E57-3712-4382-990A-8D39008A8E0B}");
-          is_installed = (name.rfind("Microsoft Visual C++ 2017") == 0);
-        }
-      }
-      else
-      {
-        is_installed = false;
-      }
-    }
-    catch (const std::runtime_error& error)
-    {
-      std::cout << "Error: " << error.what() << std::endl;
-    }
-  }
-  return is_installed;
-}
-
-/**
- * \brief Check if MS Visual C++ 2019 installed
- * \return True if installed otherwise False
- */
-bool BottleConfigureWindow::is_visual_cpp_2019_installed()
-{
-  bool is_installed = false;
-  if (active_bottle_ != nullptr)
-  {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    try
-    {
-      // Check if DLL is set to 'native, builtin' load order
-      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp140", DLLOverride::LoadOrder::NativeBuiltin);
-      if (is_dll_override)
-      {
-        // Next, check if package can be found to be uninstalled
-        string name = Helper::get_uninstaller(wine_prefix, "{e3aefa8b-a2ea-42b8-a384-95f2ff6df681}");
-        // Strings has last occurrence
-        is_installed = (name.rfind("Microsoft Visual C++ 2015-2019 Redistributable") == 0);
-
-        // Try the 64-bit package (fallback)
-        if (!is_installed)
-        {
-          name = Helper::get_uninstaller(wine_prefix, "{0F03096E-F81F-48D0-AEE0-9F8513CD883F}");
-          is_installed = (name.rfind("Microsoft Visual C++ 2019") == 0);
-        }
-      }
-      else
-      {
-        is_installed = false;
-      }
-    }
-    catch (const std::runtime_error& error)
-    {
-      std::cout << "Error: " << error.what() << std::endl;
-    }
-  }
-  return is_installed;
-}
-
-/**
- * \brief Check if MS Visual C++ 2022 installed
- * \return True if installed otherwise False
- */
-bool BottleConfigureWindow::is_visual_cpp_2022_installed()
-{
-  bool is_installed = false;
-  if (active_bottle_ != nullptr)
-  {
-    Glib::ustring wine_prefix = active_bottle_->wine_location();
-    try
-    {
-      // Check if DLL is set to 'native, builtin' load order
-      bool is_dll_override = Helper::get_dll_override(wine_prefix, "*msvcp140", DLLOverride::LoadOrder::NativeBuiltin);
-      if (is_dll_override)
-      {
-        // Next, check if package can be found to be uninstalled
-        string name = Helper::get_uninstaller(wine_prefix, "{2cfeba4a-21f8-4ea7-9927-c5a5c6f13cc9}");
-        // Strings has last occurrence
-        is_installed = (name.rfind("Microsoft Visual C++ 2015-2022 Redistributable") == 0);
-
-        // Try the 64-bit package (fallback)
-        if (!is_installed)
-        {
-          name = Helper::get_uninstaller(wine_prefix, "{1CA7421F-A225-4A9C-B320-A36981A2B789}");
-          is_installed = (name.rfind("Microsoft Visual C++ 2022") == 0);
-        }
-      }
-      else
-      {
-        is_installed = false;
+        // Next, check if the package can be found to be uninstalled
+        is_installed = Helper::has_uninstaller_display_name_prefix(wine_prefix, uninstaller_display_name_prefix);
       }
     }
     catch (const std::runtime_error& error)
