@@ -21,6 +21,7 @@
 #include "bottle_edit_window.h"
 #include "bottle_item.h"
 #include "wine_defaults.h"
+#include "wine_runner_manager.h"
 
 /**
  * \brief Constructor
@@ -32,6 +33,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       header_edit_label("Edit Machine"),
       name_label("Name: "),
       folder_name_label("Folder Name: "),
+      wine_runner_label("Wine Runner: "),
       wine_bin_path_label("Wine Binary Path: "),
       windows_version_label("Windows Version: "),
       audio_driver_label("Audio Driver:"),
@@ -40,7 +42,6 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       description_label("Description:"),
       environment_variables_label("Environment Variables:"),
       hud_label("Performance Overlay:"),
-      system_wine_bin_path_check("Use System Wine Binary Path"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
       enable_logging_check("Enable debug logging"),
       hbox_hud_checks(Gtk::Orientation::HORIZONTAL, 12),
@@ -48,6 +49,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       gallium_hud_check("Gallium HUD"),
       mangohud_check("MangoHud"),
       configure_environment_variables_button("Configure Environment Variables"),
+      manage_runners_button("Manage..."),
       wine_bin_path_button("Select folder..."),
       save_button("Save"),
       cancel_button("Cancel"),
@@ -72,7 +74,8 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   wine_bin_path_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_select_wine_bin_path));
   configure_environment_variables_button.signal_clicked().connect(configure_environment_variables);
   delete_button.signal_clicked().connect(sigc::bind(remove_bottle, this));
-  system_wine_bin_path_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_system_wine_bin_path_toggle));
+  manage_runners_button.signal_clicked().connect(sigc::bind(manage_runners, this));
+  wine_runner_combobox.signal_changed().connect(sigc::mem_fun(*this, &BottleEditWindow::on_wine_runner_changed));
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
   enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
@@ -108,6 +111,7 @@ void BottleEditWindow::create_layout()
 
   name_label.set_halign(Gtk::Align::END);
   folder_name_label.set_halign(Gtk::Align::END);
+  wine_runner_label.set_halign(Gtk::Align::END);
   wine_bin_path_label.set_halign(Gtk::Align::END);
   windows_version_label.set_halign(Gtk::Align::END);
   audio_driver_label.set_halign(Gtk::Align::END);
@@ -118,6 +122,7 @@ void BottleEditWindow::create_layout()
   description_label.set_halign(Gtk::Align::START);
   name_label.set_tooltip_text("Change the machine name");
   folder_name_label.set_tooltip_text("Change the folder. NOTE: This break your shortcuts!");
+  wine_runner_label.set_tooltip_text("Select the Wine build used by this machine (system Wine, a downloaded Wine runner or a custom path)");
   wine_bin_path_label.set_tooltip_text("Change the path to the 'wine' binary for this machine");
   windows_version_label.set_tooltip_text("Change the Windows version");
   audio_driver_label.set_tooltip_text("Change the audio driver");
@@ -140,7 +145,6 @@ void BottleEditWindow::create_layout()
   {
     audio_driver_combobox.append(std::to_string(i), BottleTypes::to_string(BottleTypes::AudioDriver(i)));
   }
-  system_wine_bin_path_check.set_active(false);
   virtual_desktop_check.set_active(false);
   virtual_desktop_resolution_entry.set_text("1024x768");
   enable_logging_check.set_active(false);
@@ -159,7 +163,8 @@ void BottleEditWindow::create_layout()
   name_entry.set_hexpand(true);
   folder_name_entry.set_hexpand(true);
   wine_bin_path_entry.set_hexpand(true);
-  system_wine_bin_path_check.set_tooltip_text("Use system Wine binary path");
+  wine_runner_combobox.set_hexpand(true);
+  manage_runners_button.set_tooltip_text("Download & manage Wine runners");
   windows_version_combobox.set_hexpand(true);
   audio_driver_combobox.set_hexpand(true);
   log_level_combobox.set_hexpand(true);
@@ -177,7 +182,9 @@ void BottleEditWindow::create_layout()
   edit_grid.attach(name_entry, 1, row++, 2);
   edit_grid.attach(folder_name_label, 0, row);
   edit_grid.attach(folder_name_entry, 1, row++, 2);
-  edit_grid.attach(system_wine_bin_path_check, 0, row++, 3);
+  edit_grid.attach(wine_runner_label, 0, row);
+  edit_grid.attach(wine_runner_combobox, 1, row);
+  edit_grid.attach(manage_runners_button, 2, row++);
   edit_grid.attach(wine_bin_path_label, 0, row);
   edit_grid.attach(wine_bin_path_entry, 1, row);
   edit_grid.attach(wine_bin_path_button, 2, row++);
@@ -220,7 +227,11 @@ void BottleEditWindow::create_layout()
   vbox.append(hbox_buttons);
   set_child(vbox);
 
-  // Gray-out virtual desktop & log level by default
+  // Fill the wine runner combobox (with at least: System Wine & Custom path)
+  refresh_wine_runner_list();
+
+  // Gray-out custom wine binary path, virtual desktop & log level by default
+  custom_wine_bin_path_sensitive(false);
   virtual_desktop_resolution_sensitive(false);
   log_level_sensitive(false);
 }
@@ -245,9 +256,22 @@ void BottleEditWindow::show()
     // Set description
     description_text_view.get_buffer()->set_text(active_bottle_->description());
 
-    // Set wine binary path
-    wine_bin_path_entry.set_text(active_bottle_->wine_bin_path());
-    system_wine_bin_path_check.set_active(active_bottle_->wine_bin_path().empty());
+    // Set wine runner selection & binary path (refresh the runner list first, it may have changed)
+    refresh_wine_runner_list();
+    Glib::ustring wine_bin_path = active_bottle_->wine_bin_path();
+    wine_bin_path_entry.set_text(wine_bin_path);
+    if (wine_bin_path.empty())
+    {
+      wine_runner_combobox.set_active_id("system");
+    }
+    else if (std::optional<WineRunner::InstalledRunner> runner = WineRunnerManager::find_runner_by_bin_dir(wine_bin_path))
+    {
+      wine_runner_combobox.set_active_id(runner->bin_dir);
+    }
+    else
+    {
+      wine_runner_combobox.set_active_id("custom");
+    }
 
     // Clear list
     windows_version_combobox.remove_all();
@@ -328,6 +352,36 @@ void BottleEditWindow::bottle_removed()
 }
 
 /**
+ * \brief (Re)fill the wine runner combobox with: System Wine, the installed Wine runners & Custom path.
+ * Keeps the current selection when possible. Also called when the set of installed runners changed.
+ */
+void BottleEditWindow::refresh_wine_runner_list()
+{
+  Glib::ustring previous_selection = wine_runner_combobox.get_active_id();
+  wine_runner_combobox.remove_all();
+  wine_runner_combobox.append("system", "System Wine (default)");
+  for (const WineRunner::InstalledRunner& runner : WineRunnerManager::get_installed_runners())
+  {
+    Glib::ustring text = runner.display_name;
+    if (!runner.wine_version.empty())
+      text += " — Wine " + runner.wine_version;
+    // The absolute wine binary directory doubles as unique combobox ID (it can never collide with "system"/"custom")
+    wine_runner_combobox.append(runner.bin_dir, text);
+  }
+  wine_runner_combobox.append("custom", "Custom path...");
+  if (previous_selection.empty())
+  {
+    wine_runner_combobox.set_active_id("system");
+  }
+  else if (!wine_runner_combobox.set_active_id(previous_selection))
+  {
+    // The previously selected runner was removed, fall back to a custom path (keeping the path as text)
+    wine_bin_path_entry.set_text(previous_selection);
+    wine_runner_combobox.set_active_id("custom");
+  }
+}
+
+/**
  * \brief Handler when the bottle is updated.
  */
 void BottleEditWindow::on_bottle_updated()
@@ -337,10 +391,10 @@ void BottleEditWindow::on_bottle_updated()
 }
 
 /**
- * \brief Enable/disable Wine binary path fields.
+ * \brief Enable/disable the custom Wine binary path fields.
  * \param sensitive Set true to enable, false for disable
  */
-void BottleEditWindow::system_wine_bin_path_sensitive(bool sensitive)
+void BottleEditWindow::custom_wine_bin_path_sensitive(bool sensitive)
 {
   wine_bin_path_label.set_sensitive(sensitive);
   wine_bin_path_entry.set_sensitive(sensitive);
@@ -386,12 +440,12 @@ void BottleEditWindow::on_debug_logging_toggle()
 }
 
 /**
- * \brief Signal handler when the 'Use System Wine Binary Path' checkbox is toggled.
- * It will enable/disable the 'Wine Binary Path' text and button widgets.
+ * \brief Signal handler when the Wine runner selection changed.
+ * The 'Wine Binary Path' text and button widgets are only enabled for the 'Custom path...' option.
  */
-void BottleEditWindow::on_system_wine_bin_path_toggle()
+void BottleEditWindow::on_wine_runner_changed()
 {
-  system_wine_bin_path_sensitive(!system_wine_bin_path_check.get_active());
+  custom_wine_bin_path_sensitive(wine_runner_combobox.get_active_id() == "custom");
 }
 
 /**
@@ -460,11 +514,18 @@ void BottleEditWindow::on_save_button_clicked()
 
   update_bottle_struct.name = name_entry.get_text();
   update_bottle_struct.folder_name = folder_name_entry.get_text();
-  if (!system_wine_bin_path_check.get_active())
+  const Glib::ustring runner_id = wine_runner_combobox.get_active_id();
+  if (runner_id == "custom")
   {
-    // Set Wine binary path only if checkbox is not selected (otherwise use default empty string)
+    // Custom Wine binary path (whatever the user entered)
     update_bottle_struct.wine_bin_path = wine_bin_path_entry.get_text();
   }
+  else if (runner_id != "system" && !runner_id.empty())
+  {
+    // An installed Wine runner is selected, its ID is the wine binary directory
+    update_bottle_struct.wine_bin_path = runner_id;
+  }
+  // Otherwise: system Wine (keep the default empty string)
 
   update_bottle_struct.description = description_text_view.get_buffer()->get_text();
   bool is_desktop_enabled = virtual_desktop_check.get_active();

@@ -21,25 +21,30 @@
 #include "bottle_new_assistant.h"
 #include "bottle_types.h"
 #include "wine_defaults.h"
+#include "wine_runner_manager.h"
 
-#define LOADING_PAGE_INDEX 2 /*!< The loading page, 3rd page (2 when start counting from zero) */
+#define LOADING_PAGE_INDEX 3 /*!< The loading page, 4th page (3 when start counting from zero) */
 
 /**
  * \brief Constructor
  */
 BottleNewAssistant::BottleNewAssistant()
     : vbox(Gtk::Orientation::VERTICAL, 4),
+      vbox_runner(Gtk::Orientation::VERTICAL, 4),
       vbox2(Gtk::Orientation::VERTICAL, 4),
       vbox3(Gtk::Orientation::VERTICAL, 4),
       hbox_name(Gtk::Orientation::HORIZONTAL, 12),
       hbox_win(Gtk::Orientation::HORIZONTAL, 12),
+      hbox_runner(Gtk::Orientation::HORIZONTAL, 12),
       name_label("Name:"),
       windows_version_label("Windows Version:"),
+      runner_label("Wine Runner:"),
       audio_driver_label("Audio Driver:"),
       virtual_desktop_resolution_label("Window Resolution:"),
       confirm_label("Confirmation page"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
-      disable_gecko_mono_check("Disable Gecko & Mono")
+      disable_gecko_mono_check("Disable Gecko & Mono"),
+      manage_runners_button("Manage runners...")
 {
   set_default_size(640, 400);
   // Only focus on assistant, disable interaction with other windows in app
@@ -48,6 +53,9 @@ BottleNewAssistant::BottleNewAssistant()
   vbox.set_margin(8);
   vbox.set_hexpand(true);
   vbox.set_vexpand(true);
+  vbox_runner.set_margin(8);
+  vbox_runner.set_hexpand(true);
+  vbox_runner.set_vexpand(true);
   vbox2.set_margin(8);
   vbox2.set_hexpand(true);
   vbox2.set_vexpand(true);
@@ -59,6 +67,7 @@ BottleNewAssistant::BottleNewAssistant()
 
   // Create pages
   create_first_page();
+  create_runner_page();
   create_second_page();
   create_third_page();
 
@@ -97,6 +106,7 @@ void BottleNewAssistant::set_default_values()
   apply_label.set_text("Please wait, changes are getting applied.");
   name_entry.set_text("");
   windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
+  wine_runner_combobox.set_active_id("system");
   audio_driver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
   virtual_desktop_check.set_active(false);
   disable_gecko_mono_check.set_active(false);
@@ -150,7 +160,38 @@ void BottleNewAssistant::create_first_page()
 }
 
 /**
- * \brief Second page of the wizard
+ * \brief Second page of the wizard: choose the Wine runner (defaults to system Wine)
+ */
+void BottleNewAssistant::create_runner_page()
+{
+  runner_intro_label.set_markup("<big><b>Choose a Wine Runner</b></big>\n"
+                                "Select which Wine build this machine will use. Keep <b>System Wine</b> unless you want "
+                                "a specific Wine build.\nUse the 'Manage runners...' button to download additional Wine builds "
+                                "(like Wine Staging, Wine Staging-TkG or GE-Proton).");
+  runner_intro_label.set_halign(Gtk::Align::START);
+  runner_intro_label.set_margin_bottom(25);
+  vbox_runner.append(runner_intro_label);
+
+  wine_runner_combobox.set_hexpand(true);
+  hbox_runner.append(runner_label);
+  hbox_runner.append(wine_runner_combobox);
+  hbox_runner.append(manage_runners_button);
+  vbox_runner.append(hbox_runner);
+
+  // Fill the runner combobox initially
+  refresh_wine_runner_list();
+
+  manage_runners_button.signal_clicked().connect(sigc::bind(manage_runners, this));
+
+  append_page(vbox_runner);
+  // System Wine is a valid default, so the page is always complete
+  set_page_complete(vbox_runner, true);
+  set_page_type(vbox_runner, Gtk::AssistantPage::Type::CONTENT);
+  set_page_title(*get_nth_page(1), "Choose Wine Runner");
+}
+
+/**
+ * \brief Third page of the wizard: additional settings
  */
 void BottleNewAssistant::create_second_page()
 {
@@ -185,7 +226,7 @@ void BottleNewAssistant::create_second_page()
   append_page(vbox2);
   set_page_complete(vbox2, true);
   set_page_type(vbox2, Gtk::AssistantPage::Type::CONFIRM);
-  set_page_title(*get_nth_page(1), "Additional settings");
+  set_page_title(*get_nth_page(2), "Additional settings");
 }
 
 /**
@@ -200,14 +241,37 @@ void BottleNewAssistant::create_third_page()
   // Wait before we close the window
   set_page_complete(vbox3, false);
   set_page_type(vbox3, Gtk::AssistantPage::Type::PROGRESS);
-  set_page_title(*get_nth_page(2), "Applying changes");
+  set_page_title(*get_nth_page(3), "Applying changes");
+}
+
+/**
+ * \brief (Re)fill the wine runner combobox with: System Wine & the installed Wine runners.
+ * Keeps the current selection when possible. Also called when the set of installed runners changed.
+ */
+void BottleNewAssistant::refresh_wine_runner_list()
+{
+  Glib::ustring previous_selection = wine_runner_combobox.get_active_id();
+  wine_runner_combobox.remove_all();
+  wine_runner_combobox.append("system", "System Wine (default)");
+  for (const WineRunner::InstalledRunner& runner : WineRunnerManager::get_installed_runners())
+  {
+    Glib::ustring text = runner.display_name;
+    if (!runner.wine_version.empty())
+      text += " — Wine " + runner.wine_version;
+    // The absolute wine binary directory doubles as unique combobox ID (it can never collide with "system")
+    wine_runner_combobox.append(runner.bin_dir, text);
+  }
+  if (previous_selection.empty() || !wine_runner_combobox.set_active_id(previous_selection))
+  {
+    wine_runner_combobox.set_active_id("system");
+  }
 }
 
 /**
  * \brief Retrieve the results (after the wizard is finished).
  * And reset the values to default values again.
  */
-BottleNewAssistant::Result BottleNewAssistant::get_result()
+NewBottleStruct BottleNewAssistant::get_result()
 {
   std::string::size_type sz;
   auto windows_version = WineDefaults::WindowsOs;
@@ -216,6 +280,14 @@ BottleNewAssistant::Result BottleNewAssistant::get_result()
   auto name = name_entry.get_text();
   auto vd_res = Glib::ustring("");
   auto disable_gecko_mono = false;
+  auto wine_bin_path = Glib::ustring("");
+
+  // An installed Wine runner selection carries the wine binary directory as ID ("system" = system Wine)
+  const Glib::ustring runner_id = wine_runner_combobox.get_active_id();
+  if (runner_id != "system" && !runner_id.empty())
+  {
+    wine_bin_path = runner_id;
+  }
 
   try
   {
@@ -263,7 +335,7 @@ BottleNewAssistant::Result BottleNewAssistant::get_result()
   catch (const std::out_of_range& e)
   {
   }
-  return {name, windows_version, bit, vd_res, disable_gecko_mono, audio};
+  return {name, windows_version, bit, vd_res, disable_gecko_mono, audio, wine_bin_path};
 }
 
 /**
@@ -336,7 +408,7 @@ void BottleNewAssistant::on_assistant_cancel()
  */
 void BottleNewAssistant::on_assistant_prepare(Gtk::Widget* /* widget*/)
 {
-  set_title(Glib::ustring::compose("Gtk::Assistant example (Page %1 of %2)", get_current_page() + 1, get_n_pages()));
+  set_title(Glib::ustring::compose("Create a New Machine (Step %1 of %2)", get_current_page() + 1, get_n_pages()));
 
   /* The last page is the progress page.  The
    * user clicked Apply to get here so we tell the assistant to commit,
