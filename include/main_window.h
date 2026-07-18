@@ -59,15 +59,15 @@ public:
   sigc::signal<void()> show_remove_app_window;                  /*!< show remove application window signal */
   sigc::signal<void(std::vector<ShortcutAppData>)> prepare_create_shortcut; /*!< provide the create shortcut window with the full app list */
   sigc::signal<void()> show_create_shortcut_window;                         /*!< show create shortcut window signal */
-  sigc::signal<void(Glib::ustring&, BottleTypes::Windows, BottleTypes::Bit, Glib::ustring&, bool&, BottleTypes::AudioDriver)>
-      new_bottle;                                  /*!< Create new Wine Bottle Signal */
-  sigc::signal<void(string, bool)> run_executable; /*!< Run an EXE or MSI application in Wine with provided filename */
-  sigc::signal<void(string)> run_program;          /*!< Run program in Wine */
-  sigc::signal<void()> open_c_drive;               /*!< Open C: drive signal */
-  sigc::signal<void()> reboot_bottle;              /*!< Emulate reboot signal */
-  sigc::signal<void()> update_bottle;              /*!< Update Wine bottle signal */
-  sigc::signal<void()> open_log_file;              /*!< Open log file signal */
-  sigc::signal<void()> kill_running_processes;     /*!< Kill all running processes signal */
+  sigc::signal<void(const NewBottleStruct&)> new_bottle;                    /*!< Create new Wine Bottle Signal */
+  sigc::signal<void(Gtk::Window*)> show_wine_runner_window; /*!< show Wine runner window signal (with parent window, eg. the modal assistant) */
+  sigc::signal<void(string, bool)> run_executable;          /*!< Run an EXE or MSI application in Wine with provided filename */
+  sigc::signal<void(string)> run_program;                   /*!< Run program in Wine */
+  sigc::signal<void()> open_c_drive;                        /*!< Open C: drive signal */
+  sigc::signal<void()> reboot_bottle;                       /*!< Emulate reboot signal */
+  sigc::signal<void()> update_bottle;                       /*!< Update Wine bottle signal */
+  sigc::signal<void()> open_log_file;                       /*!< Open log file signal */
+  sigc::signal<void()> kill_running_processes;              /*!< Kill all running processes signal */
   // TODO: Right menu click won't work anymore in GTK4
   // sigc::signal<bool(GdkEventButton*)> right_click_menu; /*!< Right-mouse click in list box signal */
 
@@ -76,6 +76,7 @@ public:
 
   void set_wine_bottles(std::list<BottleItem>& bottles);
   void select_row_bottle(BottleItem& bottle);
+  void refresh_wine_runner_assistant();
   void reset_detailed_info();
   void reset_application_list();
   void set_general_config(const GeneralConfigData& config_data);

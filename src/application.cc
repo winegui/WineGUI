@@ -11,6 +11,7 @@
 #include "preferences_window.h"
 #include "remove_app_window.h"
 #include "signal_controller.h"
+#include "wine_runner_window.h"
 #include <iostream>
 
 Application::Application() : Gtk::Application("org.melroy.winegui", Gio::Application::Flags::DEFAULT_FLAGS)
@@ -35,10 +36,11 @@ Application::Application() : Gtk::Application("org.melroy.winegui", Gio::Applica
     add_app_window_ = Gtk::make_managed<AddAppWindow>(*main_window_);
     remove_app_window_ = Gtk::make_managed<RemoveAppWindow>(*main_window_);
     create_shortcut_window_ = Gtk::make_managed<CreateShortcutWindow>(*main_window_);
+    wine_runner_window_ = Gtk::make_managed<WineRunnerWindow>(*main_window_);
     manager_ = std::make_shared<BottleManager>(*main_window_);
     signal_controller_ =
         std::make_shared<SignalController>(main_window_, *manager_, *preferences_window_, *edit_window_, *clone_window_, *configure_env_var_window_,
-                                           *configure_window_, *add_app_window_, *remove_app_window_, *create_shortcut_window_);
+                                           *configure_window_, *add_app_window_, *remove_app_window_, *create_shortcut_window_, *wine_runner_window_);
   }
   else
   {
@@ -57,6 +59,7 @@ void Application::on_startup()
 
   // Add actions and keyboard accelerators for the menu.
   add_action("preferences", sigc::mem_fun(*preferences_window_, &PreferencesWindow::show));
+  add_action("wine_runners", sigc::mem_fun(*wine_runner_window_, &WineRunnerWindow::show));
   add_action("quit", sigc::mem_fun(*this, &Application::on_action_quit));
   add_action("refresh_view", sigc::bind(sigc::mem_fun(*manager_, &BottleManager::update_config_and_bottles), "", false));
   add_action("remove_bottle", sigc::bind(sigc::mem_fun(*manager_, &BottleManager::delete_bottle), main_window_));
@@ -69,6 +72,7 @@ void Application::on_startup()
 
   // Add accelerators
   set_accel_for_action("app.preferences", "<Ctrl>P");
+  set_accel_for_action("app.wine_runners", "<Ctrl><Alt>W");
   set_accel_for_action("app.quit", "<Ctrl>Q");
   set_accel_for_action("app.refresh_view", "<Ctrl><Alt>R");
   set_accel_for_action("app.remove_bottle", "<Ctrl>Delete");
@@ -91,6 +95,7 @@ void Application::on_startup()
       auto icon = Gio::Icon::create("edit-cut");
       item->set_icon(icon); // This is not working ;(
       section->append_item(item);
+      section->append_item(Gio::MenuItem::create("Wine Runners...", "app.wine_runners"));
       file_menu->append_section(section);
     }
     {

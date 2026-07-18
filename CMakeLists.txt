@@ -69,6 +69,19 @@ find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-4.0>=4.10)
 
+# JSON parser (header-only, used for the GitHub API responses of the Wine runner downloads)
+# Debian/Ubuntu package: nlohmann-json3-dev. Fallback: fetch a checksum-pinned copy at configure time.
+find_package(nlohmann_json 3.10 QUIET)
+if(NOT nlohmann_json_FOUND)
+  message(STATUS "nlohmann_json not found on the system, fetching it via FetchContent instead")
+  include(FetchContent)
+  FetchContent_Declare(nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+    URL_HASH SHA256=42f6e95cad6ec532fd372391373363b62a14af6d771056dbfc86160e6dfff7aa
+  )
+  FetchContent_MakeAvailable(nlohmann_json)
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set (DATADIR share CACHE PATH "datadir")
@@ -105,6 +118,10 @@ set(HEADERS
   include/general_config_file.h
   include/helper.h
   include/signal_controller.h
+  include/wine_runner_types.h
+  include/wine_runner_manager.h
+  include/wine_runner_install_task.h
+  include/wine_runner_window.h
 )
 
 set(SOURCES
@@ -130,6 +147,9 @@ set(SOURCES
   src/general_config_file.cc
   src/helper.cc
   src/signal_controller.cc
+  src/wine_runner_manager.cc
+  src/wine_runner_install_task.cc
+  src/wine_runner_window.cc
   ${HEADERS}
 )
 
@@ -143,8 +163,8 @@ if(NOT UNITTEST)
   set_target_properties(${PROJECT_TARGET} PROPERTIES CXX_STANDARD 23)
   set_target_properties(${PROJECT_TARGET} PROPERTIES CXX_EXTENSIONS OFF)
 
-  # Linking Threads and GTKMM
-  target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES})
+  # Linking Threads, GTKMM and nlohmann JSON
+  target_link_libraries(${PROJECT_TARGET} Threads::Threads ${CMAKE_THREAD_LIBS_INIT} ${GTKMM_LIBRARIES} nlohmann_json::nlohmann_json)
 
   target_include_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
   target_link_directories(${PROJECT_TARGET} PRIVATE ${GTKMM_LIBRARY_DIRS})
@@ -169,9 +189,10 @@ if(NOT UNITTEST)
 ## Below for Unit testing only ##
 else()
   # Build separate libraries for unit testing
-  add_library(${PROJECT_TEST_TARGET_LIB}-bottle-config STATIC 
+  add_library(${PROJECT_TEST_TARGET_LIB}-bottle-config STATIC
     src/bottle_config_file.cc
     src/helper.cc
+    src/wine_runner_manager.cc
   )
 
   # Set C++23 for all libs
@@ -186,6 +207,7 @@ else()
   )
   target_link_libraries(${PROJECT_TEST_TARGET_LIB}-bottle-config PUBLIC
     ${GTKMM_LIBRARIES}
+    nlohmann_json::nlohmann_json
   )
   target_link_directories(${PROJECT_TEST_TARGET_LIB}-bottle-config PUBLIC
     ${GTKMM_LIBRARY_DIRS}

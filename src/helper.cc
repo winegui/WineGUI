@@ -52,8 +52,9 @@ static const std::vector<std::string> defaultWineDir{Glib::get_home_dir(), ".win
 static const string DefaultBottleWineDir = Glib::build_path(G_DIR_SEPARATOR_S, defaultWineDir);
 
 // Wine & Winetricks exec
-static const string WineExecutable = "wine";     /*!< Currently expect to be installed globally */
-static const string WineExecutable64 = "wine64"; /*!< Currently expect to be installed globally */
+static const string WineExecutable = "wine";             /*!< Currently expect to be installed globally */
+static const string WineExecutable64 = "wine64";         /*!< Currently expect to be installed globally */
+static const string WineServerExecutable = "wineserver"; /*!< Currently expect to be installed globally */
 static const string WinetricksExecutable =
     Glib::build_filename(WineGuiDataDir, "winetricks"); /*!< winetricks shall be located within the WineGUI data directory */
 
@@ -321,10 +322,15 @@ string Helper::get_log_file_path(const string& logging_bottle_prefix)
 
 /**
  * \brief Blocking wait (with timeout functionality) until wineserver is terminated.
+ * \param[in] prefix_path The path to bottle wine directory
+ * \param[in] wine_bin_path (Optionally) Path to a custom Wine binary directory; its wineserver is used when present
  */
-void Helper::wait_until_wineserver_is_terminated(const string& prefix_path)
+void Helper::wait_until_wineserver_is_terminated(const string& prefix_path, const string& wine_bin_path)
 {
-  const auto& [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" timeout 60 wineserver -w 2>&1");
+  // Use the wineserver that belongs to the bottle's custom Wine build (if any),
+  // the system wineserver might be a different (incompatible) version
+  string wineserver_executable = get_wineserver_executable_location(wine_bin_path);
+  const auto& [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" timeout 60 \"" + wineserver_executable + "\" -w 2>&1");
   if (exit_code == 124)
   {
     std::cout << "INFO: Time-out of wineserver wait command triggered (wineserver is still running..)" << std::endl;
@@ -369,12 +375,41 @@ string Helper::get_wine_executable_location(bool bit64, const string& wine_bin_p
 
   if (!wine_bin_path.empty())
   {
-    return Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, wine_executable});
+    string wine_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, wine_executable});
+    if (bit64 && !file_exists(wine_path))
+    {
+      // Modern WoW64 Wine builds no longer ship a separate wine64 binary,
+      // their unified wine binary runs 64-bit applications as well
+      string wine_fallback_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineExecutable});
+      if (file_exists(wine_fallback_path))
+      {
+        return wine_fallback_path;
+      }
+    }
+    return wine_path;
   }
   else
   {
     return wine_executable;
   }
+}
+
+/**
+ * \brief Retrieve the Wineserver executable (full path if applicable)
+ * \param wine_bin_path (Optionally) Custom Wine binary directory; its wineserver is returned when present
+ * \return Wineserver binary location
+ */
+string Helper::get_wineserver_executable_location(const string& wine_bin_path)
+{
+  if (!wine_bin_path.empty())
+  {
+    string wineserver_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineServerExecutable});
+    if (file_exists(wineserver_path))
+    {
+      return wineserver_path;
+    }
+  }
+  return WineServerExecutable;
 }
 
 /**

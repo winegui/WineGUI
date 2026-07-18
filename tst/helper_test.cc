@@ -341,6 +341,54 @@ TEST_F(HelperTest, GetWineExecutableLocationWithTrailingSlash) {
   EXPECT_EQ(result, "/opt/wine/bin/wine64");
 }
 
+TEST_F(HelperTest, GetWineExecutableLocationWow64FallbackToWine) {
+  // WoW64 builds ship no separate wine64 binary, the unified wine binary should be used instead
+  std::string bin_dir = test_dir + "/wow64-build/bin";
+  fs::create_directories(bin_dir);
+  std::ofstream wine_file(bin_dir + "/wine");
+  wine_file << "fake";
+  wine_file.close();
+
+  std::string result = Helper::get_wine_executable_location(true, bin_dir);
+  EXPECT_EQ(result, bin_dir + "/wine");
+}
+
+TEST_F(HelperTest, GetWineExecutableLocationPrefersWine64WhenPresent) {
+  std::string bin_dir = test_dir + "/classic-build/bin";
+  fs::create_directories(bin_dir);
+  std::ofstream wine_file(bin_dir + "/wine");
+  wine_file << "fake";
+  wine_file.close();
+  std::ofstream wine64_file(bin_dir + "/wine64");
+  wine64_file << "fake";
+  wine64_file.close();
+
+  std::string result = Helper::get_wine_executable_location(true, bin_dir);
+  EXPECT_EQ(result, bin_dir + "/wine64");
+}
+
+// Test get_wineserver_executable_location function
+TEST_F(HelperTest, GetWineserverExecutableLocationDefault) {
+  EXPECT_EQ(Helper::get_wineserver_executable_location(""), "wineserver");
+}
+
+TEST_F(HelperTest, GetWineserverExecutableLocationCustomPath) {
+  std::string bin_dir = test_dir + "/runner/bin";
+  fs::create_directories(bin_dir);
+  std::ofstream wineserver_file(bin_dir + "/wineserver");
+  wineserver_file << "fake";
+  wineserver_file.close();
+
+  EXPECT_EQ(Helper::get_wineserver_executable_location(bin_dir), bin_dir + "/wineserver");
+}
+
+TEST_F(HelperTest, GetWineserverExecutableLocationCustomPathWithoutWineserver) {
+  // Fall back to the global wineserver when the custom directory has none
+  std::string bin_dir = test_dir + "/runner-no-server/bin";
+  fs::create_directories(bin_dir);
+  EXPECT_EQ(Helper::get_wineserver_executable_location(bin_dir), "wineserver");
+}
+
 // Test get_c_letter_drive function
 TEST_F(HelperTest, GetCLetterDriveSuccess) {
   // Create a mock Wine prefix structure
