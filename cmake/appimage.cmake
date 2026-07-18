@@ -7,6 +7,8 @@
 #
 # The AppImage itself only bundles the GTK stack (via linuxdeploy-plugin-gtk);
 # Wine v9+ and winetricks remain host run-time dependencies (resolved from PATH).
+# The same holds for wget, tar and xz, which are used to download & extract the
+# optional Wine runner builds (present on virtually every Linux system).
 #
 # NOTE: The pinned versions/hashes below occasionally need bumping. To update:
 #   1. Pick a new tag (linuxdeploy / appimagetool) or commit (gtk plugin).
