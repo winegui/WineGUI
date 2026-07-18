@@ -33,6 +33,7 @@ Install the package and you are ready to go! WineGUI should be listed in your me
 
 - **Graphical user-interface** on top of [Wine](https://www.winehq.org/)
 - Creating a new machine using an **easy step-by-step wizard**
+- **Download & switch Wine versions** with a single click (Vanilla, Staging, Staging-TkG, Proton and GE-Proton builds), selectable per machine
 - **Application list** per machine (with _search feature_ and refresh button)
 - Editing, removing and cloning Windows machines _in a breeze_
 - Configure window **installing additional software** with just a single click (like installing DirectX)
