@@ -26,11 +26,13 @@
 #include "bottle_configure_window.h"
 #include "bottle_edit_window.h"
 #include "bottle_manager.h"
+#include "bottle_new_assistant.h"
 #include "create_shortcut_window.h"
 #include "helper.h"
 #include "main_window.h"
 #include "preferences_window.h"
 #include "remove_app_window.h"
+#include "wine_runner_window.h"
 
 /**
  * \brief Signal Dispatcher Constructor
@@ -44,7 +46,8 @@ SignalController::SignalController(MainWindow* main_window,
                                    BottleConfigureWindow& configure_window,
                                    AddAppWindow& add_app_window,
                                    RemoveAppWindow& remove_app_window,
-                                   CreateShortcutWindow& create_shortcut_window)
+                                   CreateShortcutWindow& create_shortcut_window,
+                                   WineRunnerWindow& wine_runner_window)
     : main_window_(main_window),
       manager_(manager),
       preferences_window_(preferences_window),
@@ -54,7 +57,8 @@ SignalController::SignalController(MainWindow* main_window,
       configure_window_(configure_window),
       add_app_window_(add_app_window),
       remove_app_window_(remove_app_window),
-      create_shortcut_window_(create_shortcut_window)
+      create_shortcut_window_(create_shortcut_window),
+      wine_runner_window_(wine_runner_window)
 {
   // Nothing
 }
@@ -165,6 +169,18 @@ void SignalController::dispatch_signals()
 
   // Preference Window
   preferences_window_.config_saved.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
+
+  // Wine Runner Window
+  // Open the runner window from the edit window & the new bottle assistant (transient for those modal windows)
+  edit_window_.manage_runners.connect(sigc::mem_fun(wine_runner_window_, &WineRunnerWindow::show_for));
+  main_window_->show_wine_runner_window.connect(sigc::mem_fun(wine_runner_window_, &WineRunnerWindow::show_for));
+  // Provide the bottle wine binary paths for the runner in-use check (before removal)
+  wine_runner_window_.set_bottle_wine_bin_paths_provider([this]() { return manager_.get_bottle_wine_bin_paths(); });
+  // When the set of installed runners changed: refresh the runner selections in the edit window & assistant,
+  // and refresh the bottles (so runner display names & wine versions update)
+  wine_runner_window_.runners_changed.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::refresh_wine_runner_list));
+  wine_runner_window_.runners_changed.connect(sigc::mem_fun(*main_window_, &MainWindow::refresh_wine_runner_assistant));
+  wine_runner_window_.runners_changed.connect(sigc::bind(sigc::mem_fun(manager_, &BottleManager::update_config_and_bottles), "", false));
 }
 
 /**
@@ -263,12 +279,7 @@ void SignalController::cleanup_bottle_manager_thread()
 /**
  * \brief New Bottle signal, starting new_bottle() within thread
  */
-void SignalController::on_new_bottle(Glib::ustring& name,
-                                     BottleTypes::Windows windows_version,
-                                     BottleTypes::Bit bit,
-                                     Glib::ustring& virtual_desktop_resolution,
-                                     bool& disable_geck_mono,
-                                     BottleTypes::AudioDriver audio)
+void SignalController::on_new_bottle(const NewBottleStruct& new_bottle_struct)
 {
   if (thread_bottle_manager_)
   {
@@ -280,8 +291,12 @@ void SignalController::on_new_bottle(Glib::ustring& name,
   {
     // Start a new manager thread
     thread_bottle_manager_ = std::make_unique<std::thread>(
-        [this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio]
-        { manager_.new_bottle(this, name, windows_version, bit, virtual_desktop_resolution, disable_geck_mono, audio); });
+        [this, new_bottle_struct]
+        {
+          manager_.new_bottle(this, new_bottle_struct.name, new_bottle_struct.windows_version, new_bottle_struct.bit,
+                              new_bottle_struct.virtual_desktop_resolution, new_bottle_struct.disable_gecko_mono, new_bottle_struct.audio,
+                              new_bottle_struct.wine_bin_path);
+        });
   }
 }
 

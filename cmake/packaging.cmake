@@ -29,17 +29,18 @@ endif ()
 
 if(${LINUX_DISTRO} MATCHES "openSUSE")
   # OpenSuse (Leap, Tumbleweed)
-  set(CPACK_RPM_PACKAGE_REQUIRES "libgtkmm-4_0-0, cabextract, unzip, p7zip, wget, zenity")
+  set(CPACK_RPM_PACKAGE_REQUIRES "libgtkmm-4_0-0, cabextract, unzip, p7zip, wget, zenity, tar, xz")
 else()
   # Fedora/CentOS/Redhat/etc.
-  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm4.0, cabextract, unzip, p7zip, wget, zenity")
+  set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm4.0, cabextract, unzip, p7zip, wget, zenity, tar, xz")
 endif()
 # Optional RPM packages
 set(CPACK_RPM_PACKAGE_SUGGESTS "vulkan, vulkan-loader")
 
 # Debian trixie, forky, sid, Ubuntu Noble Numbat, Linux Mint 22 (libgtkmm-4.0-0)
 # If needed we can add multiple minor versions eg. via libgtkmm-4.0-0 | libgtkmm-4.0-1
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-4.0-0, cabextract, unzip, p7zip, wget, zenity")
+# Note: xz-utils is needed to extract the Wine runner tar.xz archives (tar itself is an Essential package)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-4.0-0, cabextract, unzip, p7zip, wget, zenity, xz-utils")
 # Optional deb packages
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "libvulkan1, libvulkan1:i386, mesa-vulkan-drivers, mesa-vulkan-drivers:i386")
 

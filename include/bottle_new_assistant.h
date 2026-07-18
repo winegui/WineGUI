@@ -24,56 +24,66 @@
 #include <gtkmm.h>
 
 /**
+ * \struct NewBottleStruct
+ * \brief Custom struct for new bottle data information
+ */
+struct NewBottleStruct
+{
+  Glib::ustring name;
+  BottleTypes::Windows windows_version = BottleTypes::Windows::Unknown;
+  BottleTypes::Bit bit = BottleTypes::Bit::win32;
+  Glib::ustring virtual_desktop_resolution;
+  bool disable_gecko_mono = false;
+  BottleTypes::AudioDriver audio = BottleTypes::AudioDriver::pulseaudio;
+  Glib::ustring wine_bin_path; /*!< Wine binary directory of the selected Wine runner (empty string = system Wine) */
+};
+
+/**
  * \class BottleNewAssistant
  * \brief New Wine Bottle GTK Assistant class
  */
 class BottleNewAssistant : public Gtk::Assistant
 {
 public:
-  // Signal
+  // Signals
   sigc::signal<void(const Glib::ustring&)> new_bottle_finished; /*!< Signal when New Bottle Assistant is finished with the just created bottle name */
-  /*
-   * \struct Result
-   * \brief Result struct for New Bottle Assistant
-   */
-  struct Result
-  {
-    Glib::ustring name;
-    BottleTypes::Windows windows_version = BottleTypes::Windows::Unknown;
-    BottleTypes::Bit bit = BottleTypes::Bit::win32;
-    Glib::ustring virtual_desktop_resolution;
-    bool disable_gecko_mono = false;
-    BottleTypes::AudioDriver audio = BottleTypes::AudioDriver::pulseaudio;
-  };
+  sigc::signal<void(Gtk::Window*)> manage_runners;              /*!< Signal when the manage wine runners button is clicked */
 
   BottleNewAssistant();
   virtual ~BottleNewAssistant();
 
-  Result get_result();
+  NewBottleStruct get_result();
   void bottle_created();
+  void refresh_wine_runner_list();
 
   // Child widgets
   Gtk::Box vbox;
+  Gtk::Box vbox_runner;
   Gtk::Box vbox2;
   Gtk::Box vbox3;
   Gtk::Box hbox_name;
   Gtk::Box hbox_win;
+  Gtk::Box hbox_runner;
   Gtk::Box hbox_audio;
   Gtk::Box hbox_virtual_desktop;
   Gtk::Label intro_label;
   Gtk::Label name_label;
   Gtk::Label windows_version_label;
+  Gtk::Label runner_intro_label;
+  Gtk::Label runner_label;
   Gtk::Label additional_label;
   Gtk::Label audio_driver_label;
   Gtk::Label virtual_desktop_resolution_label;
   Gtk::Label confirm_label;
   Gtk::Label apply_label;
   Gtk::ComboBoxText windows_version_combobox;
+  Gtk::ComboBoxText wine_runner_combobox;
   Gtk::ComboBoxText audio_driver_combobox;
   Gtk::CheckButton virtual_desktop_check;
   Gtk::CheckButton disable_gecko_mono_check;
   Gtk::Entry name_entry;
   Gtk::Entry virtual_desktop_resolution_entry;
+  Gtk::Button manage_runners_button;
   Gtk::ProgressBar loading_bar;
 
 private:
@@ -90,6 +100,7 @@ private:
   // Member functions
   void set_default_values();
   void create_first_page();
+  void create_runner_page();
   void create_second_page();
   void create_third_page();
 };
