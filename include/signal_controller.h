@@ -35,6 +35,8 @@ class BottleConfigureWindow;
 class AddAppWindow;
 class RemoveAppWindow;
 class CreateShortcutWindow;
+class WineRunnerWindow;
+struct NewBottleStruct;
 struct UpdateBottleStruct;
 struct CloneBottleStruct;
 
@@ -56,7 +58,8 @@ public:
                    BottleConfigureWindow& configure_window,
                    AddAppWindow& add_app_window,
                    RemoveAppWindow& remove_app_window,
-                   CreateShortcutWindow& create_shortcut_window);
+                   CreateShortcutWindow& create_shortcut_window,
+                   WineRunnerWindow& wine_runner_window);
   virtual ~SignalController();
   void dispatch_signals();
 
@@ -77,12 +80,7 @@ private:
 
   // slots
   // virtual bool on_mouse_button_pressed(GdkEventButton* event);
-  virtual void on_new_bottle(Glib::ustring& name,
-                             BottleTypes::Windows windows_version,
-                             BottleTypes::Bit bit,
-                             Glib::ustring& virtual_desktop_resolution,
-                             bool& disable_geck_mono,
-                             BottleTypes::AudioDriver audio);
+  virtual void on_new_bottle(const NewBottleStruct& new_bottle_struct);
   virtual void on_update_bottle(const UpdateBottleStruct& update_bottle_struct);
   virtual void on_clone_bottle(const CloneBottleStruct& clone_bottle_struct);
   virtual void on_new_bottle_created();
@@ -102,6 +100,7 @@ private:
   AddAppWindow& add_app_window_;
   RemoveAppWindow& remove_app_window_;
   CreateShortcutWindow& create_shortcut_window_;
+  WineRunnerWindow& wine_runner_window_;
 
   // Dispatchers for handling signals from the thread towards a GUI thread
   Glib::Dispatcher bottle_created_dispatcher_;

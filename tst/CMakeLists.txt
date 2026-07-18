@@ -38,9 +38,24 @@ target_link_libraries(helper_test PRIVATE
 )
 add_test(NAME helper_test COMMAND helper_test)
 
+add_executable(wine_runner_test
+  wine_runner_test.cc
+)
+target_compile_features(wine_runner_test PUBLIC cxx_std_23)
+set_target_properties(wine_runner_test PROPERTIES CXX_EXTENSIONS OFF)
+target_include_directories(wine_runner_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_BINARY_DIR}
+)
+target_link_libraries(wine_runner_test PRIVATE
+  ${PROJECT_TEST_TARGET_LIB}-bottle-config
+  gtest_main
+)
+add_test(NAME wine_runner_test COMMAND wine_runner_test)
+
 add_custom_target(tests
   COMMAND env GTEST_COLOR=1 ${CMAKE_CTEST_COMMAND} --verbose --output-on-failure
-  DEPENDS bottle_config_migration_test helper_test
+  DEPENDS bottle_config_migration_test helper_test wine_runner_test
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tst
   COMMENT "Execute all unit tests"
   VERBATIM

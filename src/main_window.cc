@@ -24,6 +24,7 @@
 #include "gtkmm/enums.h"
 #include "helper.h"
 #include "project_config.h"
+#include "wine_runner_manager.h"
 
 /**
  * \brief Constructor
@@ -172,6 +173,8 @@ MainWindow::MainWindow()
   new_bottle_assistant_.signal_apply().connect(sigc::mem_fun(*this, &MainWindow::on_new_bottle_apply));
   // Connect the new bottle assistant signal to the mainWindow signal
   new_bottle_assistant_.new_bottle_finished.connect(finished_new_bottle);
+  // Forward the manage wine runners request from the assistant
+  new_bottle_assistant_.manage_runners.connect(show_wine_runner_window);
 
   // Application search
   app_list_search_entry.signal_search_changed().connect(sigc::mem_fun(*this, &MainWindow::on_app_list_search));
@@ -469,8 +472,18 @@ void MainWindow::hide_busy_dialog()
  */
 void MainWindow::on_new_bottle_button_clicked()
 {
+  // Refresh the wine runner list (the installed set may have changed)
+  new_bottle_assistant_.refresh_wine_runner_list();
   new_bottle_assistant_.set_transient_for(*this);
   new_bottle_assistant_.present();
+}
+
+/**
+ * \brief Refresh the wine runner list of the new bottle assistant (called when the set of installed runners changed)
+ */
+void MainWindow::refresh_wine_runner_assistant()
+{
+  new_bottle_assistant_.refresh_wine_runner_list();
 }
 
 /**
@@ -800,11 +813,8 @@ void MainWindow::create_shortcut_for(const Glib::ustring& name, const Glib::ustr
  */
 void MainWindow::on_new_bottle_apply()
 {
-  // Retrieve assistant results
-  auto [name, windows_version, bit, vd_res, disable_gecko_mono, audio] = new_bottle_assistant_.get_result();
-
-  // Emit new bottle signal (see dispatcher)
-  new_bottle.emit(name, windows_version, bit, vd_res, disable_gecko_mono, audio);
+  // Emit new bottle signal with the assistant results (see dispatcher)
+  new_bottle.emit(new_bottle_assistant_.get_result());
 }
 
 /**
@@ -909,7 +919,21 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
   if (!bottle.is_debug_logging())
     debug_log_level_str = "<s>" + debug_log_level_str + "</s>"; // Strikethrough when logging is disabled
 
-  Glib::ustring wine_bin_path_text = (bottle.wine_bin_path().empty()) ? "System Default" : bottle.wine_bin_path();
+  Glib::ustring wine_bin_path_text = "System Default";
+  wine_bin_path_label.set_tooltip_text("");
+  if (!bottle.wine_bin_path().empty())
+  {
+    // Show the runner display name when the path belongs to an installed Wine runner, otherwise the raw (custom) path
+    if (std::optional<WineRunner::InstalledRunner> runner = WineRunnerManager::find_runner_by_bin_dir(bottle.wine_bin_path()))
+    {
+      wine_bin_path_text = runner->display_name;
+      wine_bin_path_label.set_tooltip_text(bottle.wine_bin_path()); // Keep the real path discoverable
+    }
+    else
+    {
+      wine_bin_path_text = bottle.wine_bin_path();
+    }
+  }
   if (wine_version == "?")
   {
     // Wine version could be found, this is a red flag.
@@ -1184,7 +1208,12 @@ void MainWindow::check_wine_binary()
   int wineStatus = Helper::determine_wine_executable();
   if (wineStatus == -1)
   {
-    show_error_message("Could not find the 'wine' binary in your system PATH.\n\nPlease install Wine and try again.");
+    // A system without system Wine is still fine when downloaded Wine runners are present (machines can use those)
+    if (WineRunnerManager::get_installed_runners().empty())
+    {
+      show_error_message("Could not find the 'wine' binary in your system PATH.\n\nPlease install Wine and try again. Or download a Wine runner via "
+                         "File -> Wine Runners.");
+    }
   }
 }
 
