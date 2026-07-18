@@ -66,7 +66,7 @@ The following build dependencies should be met first:
 - ninja-build
 - libgtkmm-4.0-dev (implicit dependency with libgtk-4-dev and other dev packages)
 - libjson-glib-dev
-- nlohmann-json3-dev (when missing, CMake fetches a pinned copy automatically)
+- nlohmann-json3-dev
 - pkg-config
 
 Optionally:
