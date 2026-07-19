@@ -920,14 +920,14 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
     debug_log_level_str = "<s>" + debug_log_level_str + "</s>"; // Strikethrough when logging is disabled
 
   Glib::ustring wine_bin_path_text = "System Default";
-  wine_bin_path_label.set_tooltip_text("");
+  // Always show the actual wine binary path on hover
+  wine_bin_path_label.set_tooltip_text(Helper::get_wine_executable_location(bottle.use_wine64(), bottle.wine_bin_path()));
   if (!bottle.wine_bin_path().empty())
   {
     // Show the runner display name when the path belongs to an installed Wine runner, otherwise the raw (custom) path
     if (std::optional<WineRunner::InstalledRunner> runner = WineRunnerManager::find_runner_by_bin_dir(bottle.wine_bin_path()))
     {
       wine_bin_path_text = runner->display_name;
-      wine_bin_path_label.set_tooltip_text(bottle.wine_bin_path()); // Keep the real path discoverable
     }
     else
     {
@@ -1462,32 +1462,31 @@ void MainWindow::create_right_panel()
   detail_grid.attach(*wine_icon, 0, 8, 1, 1);
   detail_grid.attach_next_to(*wine_label, *wine_icon, Gtk::PositionType::RIGHT, 1, 1);
 
+  // Wine binary (the full path is shown as a tooltip on hover, set in set_detailed_info)
+  Gtk::Label* wine_bin_path_text_label = Gtk::manage(new Gtk::Label("Wine Binary:", Gtk::Align::START, Gtk::Align::CENTER));
+  detail_grid.attach(*wine_bin_path_text_label, 0, 9, 2, 1);
+  detail_grid.attach_next_to(wine_bin_path_label, *wine_bin_path_text_label, Gtk::PositionType::RIGHT, 1, 1);
+
   // Wine version
   Gtk::Label* wine_version_text_label = Gtk::manage(new Gtk::Label("Wine Version:", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*wine_version_text_label, 0, 9, 2, 1);
+  detail_grid.attach(*wine_version_text_label, 0, 10, 2, 1);
   detail_grid.attach_next_to(wine_version_label, *wine_version_text_label, Gtk::PositionType::RIGHT, 1, 1);
-
-  // Wine debug log level
-  Gtk::Label* wine_log_level_text_label = Gtk::manage(new Gtk::Label("Log level:", Gtk::Align::START, Gtk::Align::CENTER));
-  debug_log_level_label.set_tooltip_text("Enable debug logging in Edit Window");
-  detail_grid.attach(*wine_log_level_text_label, 0, 10, 2, 1);
-  detail_grid.attach_next_to(debug_log_level_label, *wine_log_level_text_label, Gtk::PositionType::RIGHT, 1, 1);
-
-  // Wine binary path
-  Gtk::Label* wine_bin_path_text_label = Gtk::manage(new Gtk::Label("Wine Binary Path:", Gtk::Align::START, Gtk::Align::CENTER));
-  wine_bin_path_label.set_tooltip_text("Custom Wine binary path (set in Edit Window)");
-  detail_grid.attach(*wine_bin_path_text_label, 0, 11, 2, 1);
-  detail_grid.attach_next_to(wine_bin_path_label, *wine_bin_path_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine location
   Gtk::Label* wine_location_text_label = Gtk::manage(new Gtk::Label("Wine Location:", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*wine_location_text_label, 0, 12, 2, 1);
+  detail_grid.attach(*wine_location_text_label, 0, 11, 2, 1);
   detail_grid.attach_next_to(wine_location_label, *wine_location_text_label, Gtk::PositionType::RIGHT, 1, 1);
 
   // Wine last changed
   Gtk::Label* wine_last_changed_text_label = Gtk::manage(new Gtk::Label("Wine Last Changed:", Gtk::Align::START, Gtk::Align::CENTER));
-  detail_grid.attach(*wine_last_changed_text_label, 0, 13, 2, 1);
+  detail_grid.attach(*wine_last_changed_text_label, 0, 12, 2, 1);
   detail_grid.attach_next_to(wine_last_changed_label, *wine_last_changed_text_label, Gtk::PositionType::RIGHT, 1, 1);
+
+  // Wine debug log level (kept at the bottom of the Wine details section)
+  Gtk::Label* wine_log_level_text_label = Gtk::manage(new Gtk::Label("Log level:", Gtk::Align::START, Gtk::Align::CENTER));
+  debug_log_level_label.set_tooltip_text("Enable debug logging in Edit Window");
+  detail_grid.attach(*wine_log_level_text_label, 0, 13, 2, 1);
+  detail_grid.attach_next_to(debug_log_level_label, *wine_log_level_text_label, Gtk::PositionType::RIGHT, 1, 1);
   // End Wine
   detail_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, 14, 3, 1);
 
