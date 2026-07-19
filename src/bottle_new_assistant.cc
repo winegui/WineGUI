@@ -65,9 +65,9 @@ BottleNewAssistant::BottleNewAssistant()
   vbox3.set_halign(Gtk::Align::CENTER);
   vbox3.set_valign(Gtk::Align::CENTER);
 
-  // Create pages
-  create_first_page();
+  // Create pages (the Wine runner is chosen first, because it constrains which Windows versions are valid)
   create_runner_page();
+  create_first_page();
   create_second_page();
   create_third_page();
 
@@ -105,8 +105,11 @@ void BottleNewAssistant::set_default_values()
 {
   apply_label.set_text("Please wait, changes are getting applied.");
   name_entry.set_text("");
-  windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
+  // Reset to System Wine first: this re-filters the Windows version list to the full 32 & 64-bit set,
+  // then select the default Windows version within that (repopulated) list.
   wine_runner_combobox.set_active_id("system");
+  refresh_windows_version_list();
+  windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
   audio_driver_combobox.set_active_id(std::to_string(BottleTypes::DefaultAudioDriverIndex));
   virtual_desktop_check.set_active(false);
   disable_gecko_mono_check.set_active(false);
@@ -128,9 +131,9 @@ void BottleNewAssistant::set_default_values()
  */
 void BottleNewAssistant::create_first_page()
 {
-  // Intro page
-  intro_label.set_markup("<big><b>Create a New Machine</b></big>\n"
-                         "Please use a descriptive name for the Windows machine,"
+  // Name & Windows version page
+  intro_label.set_markup("<big><b>Name &amp; Windows Version</b></big>\n"
+                         "Please use a descriptive name for the Windows machine, "
                          "and select which Windows version you want to use.");
   intro_label.set_halign(Gtk::Align::START);
   intro_label.set_margin_bottom(25);
@@ -140,13 +143,8 @@ void BottleNewAssistant::create_first_page()
   hbox_name.append(name_entry);
   vbox.append(hbox_name);
 
-  // Fill-in Windows versions in combobox
-  for (std::vector<BottleTypes::WindowsAndBit>::iterator it = BottleTypes::SupportedWindowsVersions.begin();
-       it != BottleTypes::SupportedWindowsVersions.end(); ++it)
-  {
-    auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
-    windows_version_combobox.append(std::to_string(index), BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
-  }
+  // Fill-in Windows versions in combobox (filtered by the selected Wine runner)
+  refresh_windows_version_list();
 
   hbox_win.append(windows_version_label);
   hbox_win.append(windows_version_combobox);
@@ -155,8 +153,8 @@ void BottleNewAssistant::create_first_page()
   name_entry.signal_changed().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_entry_changed));
 
   append_page(vbox);
-  set_page_type(vbox, Gtk::AssistantPage::Type::INTRO);
-  set_page_title(*get_nth_page(0), "Choose Name & Windows version");
+  set_page_type(vbox, Gtk::AssistantPage::Type::CONTENT);
+  set_page_title(*get_nth_page(1), "Choose Name & Windows version");
 }
 
 /**
@@ -164,10 +162,11 @@ void BottleNewAssistant::create_first_page()
  */
 void BottleNewAssistant::create_runner_page()
 {
-  runner_intro_label.set_markup("<big><b>Choose a Wine Runner</b></big>\n"
-                                "Select which Wine build this machine will use. Keep <b>System Wine</b> unless you want "
+  runner_intro_label.set_markup("<big><b>Create a New Machine</b></big>\n"
+                                "First, select which Wine build this machine will use. Keep <b>System Wine</b> unless you want "
                                 "a specific Wine build.\nUse the 'Manage runners...' button to download additional Wine builds "
-                                "(like Wine Staging, Wine Staging-TkG or GE-Proton).");
+                                "(like Wine Staging, Wine Staging-TkG or GE-Proton).\n\n"
+                                "<i>Note:</i> a WoW64 build only supports 64-bit Windows versions.");
   runner_intro_label.set_halign(Gtk::Align::START);
   runner_intro_label.set_margin_bottom(25);
   vbox_runner.append(runner_intro_label);
@@ -181,13 +180,16 @@ void BottleNewAssistant::create_runner_page()
   // Fill the runner combobox initially
   refresh_wine_runner_list();
 
+  // Re-filter the Windows version list whenever the runner selection changes
+  wine_runner_combobox.signal_changed().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_wine_runner_changed));
+
   manage_runners_button.signal_clicked().connect(sigc::bind(manage_runners, this));
 
   append_page(vbox_runner);
   // System Wine is a valid default, so the page is always complete
   set_page_complete(vbox_runner, true);
-  set_page_type(vbox_runner, Gtk::AssistantPage::Type::CONTENT);
-  set_page_title(*get_nth_page(1), "Choose Wine Runner");
+  set_page_type(vbox_runner, Gtk::AssistantPage::Type::INTRO);
+  set_page_title(*get_nth_page(0), "Choose Wine Runner");
 }
 
 /**
@@ -252,6 +254,7 @@ void BottleNewAssistant::refresh_wine_runner_list()
 {
   Glib::ustring previous_selection = wine_runner_combobox.get_active_id();
   wine_runner_combobox.remove_all();
+  runner_is_wow64_.clear();
   wine_runner_combobox.append("system", "System Wine (default)");
   for (const WineRunner::InstalledRunner& runner : WineRunnerManager::get_installed_runners())
   {
@@ -260,11 +263,53 @@ void BottleNewAssistant::refresh_wine_runner_list()
       text += " — Wine " + runner.wine_version;
     // The absolute wine binary directory doubles as unique combobox ID (it can never collide with "system")
     wine_runner_combobox.append(runner.bin_dir, text);
+    // Remember the WoW64 (64-bit only) capability, used to filter the Windows version list
+    runner_is_wow64_[runner.bin_dir] = runner.wow64;
   }
   if (previous_selection.empty() || !wine_runner_combobox.set_active_id(previous_selection))
   {
     wine_runner_combobox.set_active_id("system");
   }
+}
+
+/**
+ * \brief (Re)fill the Windows version combobox, filtered by the currently selected Wine runner.
+ * A WoW64 runner cannot create a 32-bit (WINEARCH=win32) prefix, so only 64-bit Windows versions are offered
+ * for it. System Wine and regular (non-WoW64) runners offer the full 32 & 64-bit list.
+ */
+void BottleNewAssistant::refresh_windows_version_list()
+{
+  const Glib::ustring runner_id = wine_runner_combobox.get_active_id();
+  bool only_64bit = false;
+  if (runner_id != "system" && !runner_id.empty())
+  {
+    auto it = runner_is_wow64_.find(runner_id);
+    only_64bit = (it != runner_is_wow64_.end()) && it->second;
+  }
+
+  const Glib::ustring previous_selection = windows_version_combobox.get_active_id();
+  windows_version_combobox.remove_all();
+  for (std::vector<BottleTypes::WindowsAndBit>::iterator it = BottleTypes::SupportedWindowsVersions.begin();
+       it != BottleTypes::SupportedWindowsVersions.end(); ++it)
+  {
+    if (only_64bit && (*it).second != BottleTypes::Bit::win64)
+      continue; // Skip 32-bit Windows versions, a WoW64 build cannot host them
+    auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
+    windows_version_combobox.append(std::to_string(index), BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
+  }
+  // Keep the previous selection when it survives the filter, otherwise fall back to a sensible 64-bit default
+  if (previous_selection.empty() || !windows_version_combobox.set_active_id(previous_selection))
+  {
+    windows_version_combobox.set_active_id(std::to_string(BottleTypes::DefaultBottleIndex));
+  }
+}
+
+/**
+ * \brief Signal handler when the Wine runner selection changed: re-filter the Windows version list
+ */
+void BottleNewAssistant::on_wine_runner_changed()
+{
+  refresh_windows_version_list();
 }
 
 /**

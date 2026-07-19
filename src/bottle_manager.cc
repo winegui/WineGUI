@@ -323,7 +323,8 @@ void BottleManager::new_bottle(SignalController* caller,
                                BottleTypes::AudioDriver audio,
                                const Glib::ustring& wine_bin_path)
 {
-  bool wine_64_bit = is_wine64_bit_;
+  // New bottles always use the plain "wine" binary (it creates both 32-bit and 64-bit prefixes).
+  // The wine64 binary is a per-bottle opt-in the user can enable afterwards in the Edit window.
   if (wine_bin_path.empty())
   {
     // First check if wine is installed
@@ -340,11 +341,8 @@ void BottleManager::new_bottle(SignalController* caller,
   }
   else
   {
-    // A custom Wine runner is selected, validate its wine binary instead of the system Wine.
-    // Runner builds are 64-bit by construction (get_wine_executable_location() falls back to the
-    // unified wine binary for WoW64 builds without a separate wine64 binary).
-    wine_64_bit = true;
-    if (!Helper::file_exists(Helper::get_wine_executable_location(true, wine_bin_path)))
+    // A custom Wine runner is selected, validate its wine binary (the unified wine binary) instead of the system Wine
+    if (!Helper::file_exists(Helper::get_wine_executable_location(false, wine_bin_path)))
     {
       {
         std::lock_guard<std::mutex> lock(error_message_mutex_);
@@ -375,8 +373,8 @@ void BottleManager::new_bottle(SignalController* caller,
 
   try
   {
-    // Now create a new Wine Bottle
-    Helper::create_wine_bottle(wine_64_bit, prefix_path, bit, disable_gecko_mono, wine_bin_path);
+    // Now create a new Wine Bottle (always via the plain wine binary; use_wine64 defaults to false)
+    Helper::create_wine_bottle(false, prefix_path, bit, disable_gecko_mono, wine_bin_path);
     // Create default Bottle config data struct
     BottleConfigData bottle_config = BottleConfigFile::get_default_config(prefix_path);
     bottle_config.name = name;
@@ -492,7 +490,8 @@ void BottleManager::update_bottle(SignalController* caller,
                                   int debug_log_level,
                                   bool enable_dxvk_hud,
                                   bool enable_gallium_hud,
-                                  bool enable_mangohud)
+                                  bool enable_mangohud,
+                                  bool use_wine64)
 {
   if (active_bottle_ != nullptr)
   {
@@ -520,6 +519,11 @@ void BottleManager::update_bottle(SignalController* caller,
     if (active_bottle_->is_debug_logging() != is_debug_logging)
     {
       bottle_config.logging_enabled = is_debug_logging;
+      need_update_bottle_config_file = true;
+    }
+    if (active_bottle_->use_wine64() != use_wine64)
+    {
+      bottle_config.use_wine64 = use_wine64;
       need_update_bottle_config_file = true;
     }
     if (active_bottle_->debug_log_level() != debug_log_level)
@@ -829,7 +833,7 @@ void BottleManager::run_executable(string program, bool is_msi_file = false)
     auto& env_vars = active_bottle_->env_vars();
 
     std::thread t(
-        [wine64 = active_bottle_->is_wine64_bit(), wine_bin_path, wine_prefix, debug_log_level, program, working_directory, env_vars,
+        [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, program, working_directory, env_vars,
          logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
          output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
@@ -879,7 +883,7 @@ void BottleManager::run_program(string program)
       env_vars.insert(env_vars.begin(), {"DXVK_HUD", "full"});
 
       std::thread t(
-          [wine64 = active_bottle_->is_wine64_bit(), wine_bin_path, wine_prefix, debug_log_level, program, env_vars,
+          [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, program, env_vars,
            logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
            output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
            output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
@@ -933,7 +937,7 @@ void BottleManager::run_program(string program)
       auto& env_vars = active_bottle_->env_vars();
 
       std::thread t(
-          [wine64 = active_bottle_->is_wine64_bit(), wine_bin_path, wine_prefix, debug_log_level, program, working_directory, env_vars,
+          [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, program, working_directory, env_vars,
            logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
            output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
            output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
@@ -1003,7 +1007,7 @@ void BottleManager::reboot()
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     std::thread t(
-        [wine64 = active_bottle_->is_wine64_bit(), wine_bin_path, wine_prefix, debug_log_level, logging_stderr = std::move(is_logging_stderr_),
+        [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_]
@@ -1037,11 +1041,10 @@ void BottleManager::update()
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     std::thread t(
-        [wine64 = active_bottle_->is_wine64_bit(), wine_bin_path, wine_prefix, debug_log_level,
-         update_bottles_dispatcher = &update_bottles_dispatcher_, logging_stderr = std::move(is_logging_stderr_),
-         debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
-         logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_]
+        [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, update_bottles_dispatcher = &update_bottles_dispatcher_,
+         logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+         output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
         {
           string output =
               Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", "", {}, true, logging_stderr, wine_bin_path);
@@ -1098,7 +1101,7 @@ void BottleManager::kill_processes()
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     std::thread t(
-        [wine64 = active_bottle_->is_wine64_bit(), wine_bin_path, wine_prefix, debug_log_level, logging_stderr = std::move(is_logging_stderr_),
+        [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_]
@@ -1499,7 +1502,7 @@ void BottleManager::install_mono(Gtk::Window* parent)
     // correct Wine Mono MSI, matching the bottle's Wine version.
     // Force mscoree to 'builtin' so Wine's Mono auto-installer is triggered, even when a
     // previous native .NET install left mscoree overridden to 'native'.
-    string wine_exec = Helper::get_wine_executable_location(active_bottle_->bit() == BottleTypes::Bit::win64, wine_bin_path);
+    string wine_exec = Helper::get_wine_executable_location(active_bottle_->use_wine64(), wine_bin_path);
     string install_command = "WINEDLLOVERRIDES=\"mscoree=b\" \"" + wine_exec + "\" wineboot -u";
     // First deinstall Mono (if present) then let Wine (re)install it
     string program = (!deinstall_command.empty()) ? (deinstall_command + "; " + install_command) : install_command;
@@ -1650,7 +1653,7 @@ std::vector<std::pair<string, string>> BottleManager::get_winetricks_env_vars()
     string wine_bin_path = active_bottle_->wine_bin_path();
     if (!wine_bin_path.empty())
     {
-      env_vars.emplace_back("WINE", Helper::get_wine_executable_location(active_bottle_->is_wine64_bit(), wine_bin_path));
+      env_vars.emplace_back("WINE", Helper::get_wine_executable_location(active_bottle_->use_wine64(), wine_bin_path));
       env_vars.emplace_back("WINESERVER", Helper::get_wineserver_executable_location(wine_bin_path));
     }
   }
@@ -1669,12 +1672,12 @@ string BottleManager::get_deinstall_mono_command()
   {
     string wine_prefix = active_bottle_->wine_location();
     string wine_bin_path = active_bottle_->wine_bin_path();
-    string guid = Helper::get_wine_guid(active_bottle_->is_wine64_bit(), wine_prefix, "Wine Mono Runtime", wine_bin_path);
+    string guid = Helper::get_wine_guid(active_bottle_->use_wine64(), wine_prefix, "Wine Mono Runtime", wine_bin_path);
 
     if (!guid.empty())
     {
       // Use the bottle's own Wine binary (custom Wine build or system Wine)
-      string uninstaller_wine = Helper::get_wine_executable_location(active_bottle_->bit() == BottleTypes::Bit::win64, wine_bin_path);
+      string uninstaller_wine = Helper::get_wine_executable_location(active_bottle_->use_wine64(), wine_bin_path);
       command = "\"" + uninstaller_wine + "\" uninstaller --remove '{" + guid + "}'";
     }
   }
@@ -1685,14 +1688,13 @@ string BottleManager::get_deinstall_mono_command()
  * \brief Try to get Wine version
  * \return Wine version
  */
-string BottleManager::get_wine_version(const string& prefix_path, const string& wine_bin_path)
+string BottleManager::get_wine_version(const string& prefix_path, const string& wine_bin_path, bool use_wine64)
 {
   string wine_version = "?";
   try
   {
-    // Custom Wine build directories are 64-bit by construction (with a wine binary fallback for WoW64 builds)
-    bool wine_64_bit = wine_bin_path.empty() ? is_wine64_bit_ : true;
-    wine_version = Helper::get_wine_version(wine_64_bit, prefix_path, wine_bin_path);
+    // Use the per-bottle wine64 opt-in (runners ignore it and prefer the unified wine binary anyway)
+    wine_version = Helper::get_wine_version(use_wine64, prefix_path, wine_bin_path);
   }
   catch (const std::runtime_error& error)
   {
@@ -1820,12 +1822,14 @@ std::list<BottleItem> BottleManager::create_wine_bottles(const std::vector<strin
     Glib::ustring wine_bin_path_u(bottle_config.wine_bin_path);
     Glib::ustring description(bottle_config.description);
     Glib::ustring prefix_path(prefix);
-    Glib::ustring wine_version = get_wine_version(prefix, bottle_config.wine_bin_path);
-    // Bottles with a custom Wine build are 64-bit by construction, otherwise use the system Wine bitness
+    Glib::ustring wine_version = get_wine_version(prefix, bottle_config.wine_bin_path, bottle_config.use_wine64);
+    // Informational only: whether the system Wine provides a separate wine64 binary. The actual binary
+    // selection is driven by the per-bottle use_wine64 opt-in (default: the unified wine binary).
     bool is_bottle_wine64_bit = bottle_config.wine_bin_path.empty() ? is_wine64_bit_ : true;
-    BottleItem* bottle = new BottleItem(name, folder_name, wine_bin_path_u, description, status, windows, bit, wine_version, is_bottle_wine64_bit,
-                                        prefix_path, c_drive_location, last_time_wine_updated, audio_driver, virtual_desktop,
-                                        bottle_config.logging_enabled, bottle_config.debug_log_level, bottle_config.env_vars, bottle_app_list);
+    BottleItem* bottle =
+        new BottleItem(name, folder_name, wine_bin_path_u, description, status, windows, bit, wine_version, is_bottle_wine64_bit, prefix_path,
+                       c_drive_location, last_time_wine_updated, audio_driver, virtual_desktop, bottle_config.logging_enabled,
+                       bottle_config.debug_log_level, bottle_config.use_wine64, bottle_config.env_vars, bottle_app_list);
     bottles.emplace_back(*bottle);
   }
   return bottles;
