@@ -316,44 +316,60 @@ TEST_F(HelperTest, GetLogFilePathEmpty) {
 }
 
 // Test get_wine_executable_location function
-TEST_F(HelperTest, GetWineExecutableLocation32Bit) {
+TEST_F(HelperTest, GetWineExecutableLocationSystemDefaultsToWine) {
+  // System Wine defaults to the plain "wine" binary (it runs both 32-bit and 64-bit prefixes)
   std::string result = Helper::get_wine_executable_location(false, "");
   EXPECT_EQ(result, "wine");
+  // And with no arguments at all
+  EXPECT_EQ(Helper::get_wine_executable_location(), "wine");
 }
 
-TEST_F(HelperTest, GetWineExecutableLocation64Bit) {
+TEST_F(HelperTest, GetWineExecutableLocationSystemOptInWine64) {
+  // With the opt-in set, system Wine returns "wine64" when a wine64 binary is on PATH, otherwise it
+  // gracefully falls back to "wine". Both are valid depending on the test environment.
   std::string result = Helper::get_wine_executable_location(true, "");
-  EXPECT_EQ(result, "wine64");
+  EXPECT_TRUE(result == "wine64" || result == "wine") << "unexpected: " << result;
 }
 
-TEST_F(HelperTest, GetWineExecutableLocationWithCustomPath32Bit) {
-  std::string result = Helper::get_wine_executable_location(false, "/opt/wine/bin");
-  EXPECT_EQ(result, "/opt/wine/bin/wine");
-}
-
-TEST_F(HelperTest, GetWineExecutableLocationWithCustomPath64Bit) {
-  std::string result = Helper::get_wine_executable_location(true, "/opt/wine/bin");
-  EXPECT_EQ(result, "/opt/wine/bin/wine64");
-}
-
-TEST_F(HelperTest, GetWineExecutableLocationWithTrailingSlash) {
-  std::string result = Helper::get_wine_executable_location(true, "/opt/wine/bin/");
-  EXPECT_EQ(result, "/opt/wine/bin/wine64");
-}
-
-TEST_F(HelperTest, GetWineExecutableLocationWow64FallbackToWine) {
-  // WoW64 builds ship no separate wine64 binary, the unified wine binary should be used instead
-  std::string bin_dir = test_dir + "/wow64-build/bin";
+TEST_F(HelperTest, GetWineExecutableLocationRunnerDefaultsToWine) {
+  // A runner with only a unified "wine" binary uses it for both the default and the wine64 opt-in
+  // (the opt-in gracefully falls back to wine when no wine64 binary is present)
+  std::string bin_dir = test_dir + "/runner/bin";
   fs::create_directories(bin_dir);
   std::ofstream wine_file(bin_dir + "/wine");
   wine_file << "fake";
   wine_file.close();
 
-  std::string result = Helper::get_wine_executable_location(true, bin_dir);
+  EXPECT_EQ(Helper::get_wine_executable_location(false, bin_dir), bin_dir + "/wine");
+  EXPECT_EQ(Helper::get_wine_executable_location(true, bin_dir), bin_dir + "/wine");
+}
+
+TEST_F(HelperTest, GetWineExecutableLocationWithTrailingSlash) {
+  std::string bin_dir = test_dir + "/runner-slash/bin";
+  fs::create_directories(bin_dir);
+  std::ofstream wine_file(bin_dir + "/wine");
+  wine_file << "fake";
+  wine_file.close();
+
+  std::string result = Helper::get_wine_executable_location(true, bin_dir + "/");
   EXPECT_EQ(result, bin_dir + "/wine");
 }
 
-TEST_F(HelperTest, GetWineExecutableLocationPrefersWine64WhenPresent) {
+TEST_F(HelperTest, GetWineExecutableLocationRunnerFallsBackToWine64WhenNoWine) {
+  // Only when a runner ships no unified "wine" binary do we fall back to "wine64"
+  std::string bin_dir = test_dir + "/wine64-only/bin";
+  fs::create_directories(bin_dir);
+  std::ofstream wine64_file(bin_dir + "/wine64");
+  wine64_file << "fake";
+  wine64_file.close();
+
+  EXPECT_EQ(Helper::get_wine_executable_location(true, bin_dir), bin_dir + "/wine64");
+  EXPECT_EQ(Helper::get_wine_executable_location(false, bin_dir), bin_dir + "/wine64");
+}
+
+TEST_F(HelperTest, GetWineExecutableLocationRunnerHonorsWine64OptInWhenPresent) {
+  // When a runner ships both binaries, the default uses "wine" (32-bit safe) but the wine64 opt-in
+  // honors the user's choice and returns "wine64"
   std::string bin_dir = test_dir + "/classic-build/bin";
   fs::create_directories(bin_dir);
   std::ofstream wine_file(bin_dir + "/wine");
@@ -363,8 +379,8 @@ TEST_F(HelperTest, GetWineExecutableLocationPrefersWine64WhenPresent) {
   wine64_file << "fake";
   wine64_file.close();
 
-  std::string result = Helper::get_wine_executable_location(true, bin_dir);
-  EXPECT_EQ(result, bin_dir + "/wine64");
+  EXPECT_EQ(Helper::get_wine_executable_location(false, bin_dir), bin_dir + "/wine");
+  EXPECT_EQ(Helper::get_wine_executable_location(true, bin_dir), bin_dir + "/wine64");
 }
 
 // Test get_wineserver_executable_location function
@@ -435,8 +451,8 @@ TEST_F(HelperTest, GetImageLocationExistingFile) {
 
 TEST_F(HelperTest, BuildDesktopExecLineUnixPath) {
   // A Unix-style path should be wrapped with 'start /unix' and include the WINEPREFIX
-  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", "", "/home/user/.wine/drive_c/game.exe");
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" wine64 start /unix \"/home/user/.wine/drive_c/game.exe\"");
+  std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "/home/user/.wine/drive_c/game.exe");
+  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" wine start /unix \"/home/user/.wine/drive_c/game.exe\"");
 }
 
 TEST_F(HelperTest, BuildDesktopExecLineWindowsCommand) {
@@ -448,8 +464,8 @@ TEST_F(HelperTest, BuildDesktopExecLineWindowsCommand) {
 TEST_F(HelperTest, BuildDesktopExecLineWithEnvVars) {
   // Environment variables should be added to the env prefix
   std::vector<std::pair<std::string, std::string>> env_vars = {{"DXVK_HUD", "fps"}};
-  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", "", "notepad", env_vars);
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" DXVK_HUD=\"fps\" wine64 start \"notepad\"");
+  std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "notepad", env_vars);
+  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" DXVK_HUD=\"fps\" wine start \"notepad\"");
 }
 
 TEST_F(HelperTest, BuildDesktopExecLineCustomWineBinPath) {
@@ -462,6 +478,27 @@ TEST_F(HelperTest, BuildDesktopExecLineWinetricks) {
   // Winetricks is a special case and does not run through the Wine binary
   std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", "", "/some/path/winetricks --gui -q");
   EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" /some/path/winetricks --gui -q");
+}
+
+TEST_F(HelperTest, BuildDesktopExecLineRunnerHonorsWine64OptIn) {
+  // With the wine64 opt-in and a runner that actually ships a wine64 binary, the exec line uses wine64
+  std::string bin_dir = test_dir + "/runner/bin";
+  fs::create_directories(bin_dir);
+  std::ofstream(bin_dir + "/wine") << "fake";
+  std::ofstream(bin_dir + "/wine64") << "fake";
+
+  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", bin_dir, "notepad");
+  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" " + bin_dir + "/wine64 start \"notepad\"");
+}
+
+TEST_F(HelperTest, BuildDesktopExecLineRunnerWine64OptInFallsBackToWine) {
+  // With the wine64 opt-in but a runner that ships no wine64 binary, the exec line falls back to wine
+  std::string bin_dir = test_dir + "/runner-nowine64/bin";
+  fs::create_directories(bin_dir);
+  std::ofstream(bin_dir + "/wine") << "fake";
+
+  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", bin_dir, "notepad");
+  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" " + bin_dir + "/wine start \"notepad\"");
 }
 
 // Test create_desktop_file function
