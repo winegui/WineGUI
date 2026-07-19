@@ -345,17 +345,17 @@ void Helper::wait_until_wineserver_is_terminated(const string& prefix_path, cons
 int Helper::determine_wine_executable()
 {
   int return_status = -1;
-  // Try wine 32-bit
-  const auto& [exit_code32, _] = exec("command -v " + Helper::get_wine_executable_location(false));
+  // Try wine (32-bit or unified binary)
+  const auto& [exit_code32, _] = exec("command -v " + WineExecutable);
   if (exit_code32 == 0)
   {
     return_status = 0;
   }
-  // Try wine 64-bit
+  // Try the separate wine64 binary
   if (return_status != 0)
   {
     // cppcheck-suppress shadowVariable
-    const auto& [exit_code64, _] = exec("command -v " + Helper::get_wine_executable_location(true));
+    const auto& [exit_code64, _] = exec("command -v " + WineExecutable64);
     if (exit_code64 == 0)
     {
       return_status = 1;
@@ -370,9 +370,10 @@ int Helper::determine_wine_executable()
  * The unified "wine" binary is preferred by default because it runs BOTH 32-bit and 64-bit prefixes
  * (even a 32-bit ELF wine binary can create and run a WINEARCH=win64 prefix). The "wine64" binary is
  * more restrictive (64-bit only, no 32-bit application support), so it is only used when the caller
- * explicitly opts in via prefer_wine64 (a per-bottle setting).
+ * explicitly opts in via prefer_wine64 (a per-bottle setting). When wine64 is preferred but not present,
+ * this gracefully falls back to the plain "wine" binary (so an opt-in without a wine64 binary never fails).
  *
- * \param prefer_wine64 When true, use the wine64 binary instead of wine (per-bottle opt-in, default false)
+ * \param prefer_wine64 When true, prefer the wine64 binary if present (per-bottle opt-in, default false)
  * \param wine_bin_path (Optionally) Custom Wine binary directory of a Wine runner
  * \return Wine binary location
  */
@@ -380,19 +381,34 @@ string Helper::get_wine_executable_location(bool prefer_wine64, const string& wi
 {
   if (!wine_bin_path.empty())
   {
-    // For a Wine runner, always prefer the unified "wine" binary (it handles both 32-bit and 64-bit
-    // prefixes). Only fall back to "wine64" when the runner ships no "wine" binary at all.
     string wine_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineExecutable});
+    string wine64_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineExecutable64});
+    // When the user prefers wine64, use it only if the runner actually ships it; otherwise gracefully
+    // fall back to the unified "wine" binary (which handles both 32-bit and 64-bit prefixes anyway).
+    if (prefer_wine64 && file_exists(wine64_path))
+    {
+      return wine64_path;
+    }
+    // Default: prefer the unified "wine" binary, falling back to "wine64" only when no "wine" exists
     if (file_exists(wine_path))
     {
       return wine_path;
     }
-    return Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineExecutable64});
+    return wine64_path;
   }
   else
   {
-    // System Wine: default to the plain "wine" binary, use "wine64" only on explicit opt-in
-    return prefer_wine64 ? WineExecutable64 : WineExecutable;
+    // System Wine: use "wine64" only when the user opted in and a wine64 binary is actually on PATH,
+    // otherwise gracefully fall back to the plain "wine" binary
+    if (prefer_wine64)
+    {
+      const auto& [exit_code, _] = exec("command -v " + WineExecutable64);
+      if (exit_code == 0)
+      {
+        return WineExecutable64;
+      }
+    }
+    return WineExecutable;
   }
 }
 

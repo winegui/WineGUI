@@ -44,7 +44,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       hud_label("Performance Overlay:"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
       enable_logging_check("Enable debug logging"),
-      use_wine64_check("Use the wine64 binary instead of wine (advanced)"),
+      use_wine64_check("Prefer the wine64 binary instead of wine (advanced)"),
       hbox_hud_checks(Gtk::Orientation::HORIZONTAL, 12),
       dxvk_hud_check("DXVK HUD"),
       gallium_hud_check("Gallium HUD"),
@@ -172,9 +172,10 @@ void BottleEditWindow::create_layout()
   description_text_view.set_hexpand(true);
   virtual_desktop_check.set_tooltip_text("Enable emulate virtual desktop resolution");
   enable_logging_check.set_tooltip_text("Enable output logging to disk");
-  use_wine64_check.set_tooltip_text("Advanced: use the wine64 binary instead of the regular wine binary.\n"
+  use_wine64_check.set_tooltip_text("Advanced: prefer the wine64 binary over the regular wine binary when it is available.\n"
                                     "Leave this off unless you know you need it. The wine64 binary can only run 64-bit "
-                                    "applications, so 32-bit applications will no longer work in this machine.");
+                                    "applications, so 32-bit applications will no longer work in this machine.\n"
+                                    "When no wine64 binary is present, the regular wine binary is used instead.");
   folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name instead, see above.");
 
   description_scrolled_window.set_child(description_text_view);

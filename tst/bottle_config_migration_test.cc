@@ -54,6 +54,23 @@ protected:
     config_file << "DebugLevel=2\n";
     config_file.close();
   }
+
+  void CreateVersion3ConfigFile() {
+    std::ofstream config_file(config_file_path);
+    config_file << "[General]\n";
+    config_file << "ConfigVersion=3\n";
+    config_file << "Name=Test Bottle V3\n";
+    config_file << "Description=Config with version 3\n";
+    config_file << "\n";
+    config_file << "[Wine]\n";
+    config_file << "BinaryPath=/opt/wine/bin\n";
+    config_file << "UseWine64=true\n";
+    config_file << "\n";
+    config_file << "[Logging]\n";
+    config_file << "Enabled=false\n";
+    config_file << "DebugLevel=1\n";
+    config_file.close();
+  }
 };
 
 TEST_F(BottleConfigMigrationTest, MigrateLegacyConfigToCurrentVersion) {
@@ -104,6 +121,22 @@ TEST_F(BottleConfigMigrationTest, MigrateVersion2ToVersion3) {
   EXPECT_EQ(keyfile->get_integer("General", "ConfigVersion"), 3);
   EXPECT_TRUE(keyfile->has_key("Wine", "UseWine64"));
   EXPECT_FALSE(keyfile->get_boolean("Wine", "UseWine64"));
+}
+
+TEST_F(BottleConfigMigrationTest, NoMigrationNeededForVersion3) {
+  // A current-version (v3) config is read back unchanged, preserving use_wine64
+  CreateVersion3ConfigFile();
+
+  BottleConfigData config;
+  std::map<int, ApplicationData> app_list;
+  std::tie(config, app_list) = BottleConfigFile::read_config_file(test_dir);
+
+  EXPECT_EQ(config.name, "Test Bottle V3");
+  EXPECT_EQ(config.wine_bin_path, "/opt/wine/bin");
+  EXPECT_TRUE(config.use_wine64);
+  EXPECT_FALSE(config.logging_enabled);
+  EXPECT_EQ(config.debug_log_level, 1);
+  EXPECT_EQ(config.config_version, 3);
 }
 
 TEST_F(BottleConfigMigrationTest, CreateNewConfigFileWhenMissing) {
