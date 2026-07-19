@@ -72,7 +72,7 @@ public:
   static string get_log_file_path(const string& logging_bottle_prefix);
   static void wait_until_wineserver_is_terminated(const string& prefix_path, const string& wine_bin_path = "");
   static int determine_wine_executable();
-  static string get_wine_executable_location(bool bit64, const string& wine_bin_path = "");
+  static string get_wine_executable_location(bool prefer_wine64 = false, const string& wine_bin_path = "");
   static string get_wineserver_executable_location(const string& wine_bin_path = "");
   static string get_winetricks_location();
   static string get_wine_version(bool wine_64_bit, const string& prefix_path, const string& wine_bin_path = "");

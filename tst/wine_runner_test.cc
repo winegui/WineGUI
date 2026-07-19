@@ -278,11 +278,31 @@ TEST_F(WineRunnerTest, GetInstalledRunnersScansLayouts)
   EXPECT_EQ(runners.at(0).display_name, "Wine 11.13 Staging");
   EXPECT_EQ(runners.at(0).bin_dir, base_dir + "/wine-11.13-staging-amd64/bin");
   EXPECT_TRUE(runners.at(0).has_wine64);
+  EXPECT_FALSE(runners.at(0).wow64); // "amd64" (no -wow64 token) -> supports 32 & 64-bit
   // Fake wine binary -> wine --version fails -> empty version (must not throw)
   EXPECT_EQ(runners.at(0).wine_version, "");
   EXPECT_EQ(runners.at(1).name, "GE-Proton11-1");
   EXPECT_EQ(runners.at(1).bin_dir, base_dir + "/GE-Proton11-1/files/bin");
   EXPECT_FALSE(runners.at(1).has_wine64);
+  EXPECT_FALSE(runners.at(1).wow64); // GE-Proton has no -wow64 variant -> supports 32 & 64-bit
+}
+
+// The WoW64 flag is derived from the "-wow64" token in the runner directory name (the only reliable signal;
+// neither wine64 nor the i386-unix tree presence predicts 32-bit capability).
+TEST_F(WineRunnerTest, GetInstalledRunnersDetectsWow64FromDirectoryName)
+{
+  std::string base_dir = test_dir + "/runners";
+  // Proton WoW64 ships a wine64 binary AND is 64-bit-only: proves the flag comes from the name, not from wine64.
+  create_fake_file(base_dir + "/wine-proton-10.0-2-amd64-wow64/bin/wine");
+  create_fake_file(base_dir + "/wine-proton-10.0-2-amd64-wow64/bin/wine64");
+  create_fake_file(base_dir + "/wine-11.13-staging-amd64-wow64/bin/wine");
+
+  auto runners = WineRunnerManager::get_installed_runners(base_dir);
+  ASSERT_EQ(runners.size(), 2u);
+  for (const auto& runner : runners)
+  {
+    EXPECT_TRUE(runner.wow64) << "expected WoW64 for " << runner.name;
+  }
 }
 
 TEST_F(WineRunnerTest, GetInstalledRunnersMissingDir)

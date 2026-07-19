@@ -73,7 +73,8 @@ public:
                      int debug_log_level,
                      bool enable_dxvk_hud,
                      bool enable_gallium_hud,
-                     bool enable_mangohud);
+                     bool enable_mangohud,
+                     bool use_wine64);
   void clone_bottle(SignalController* caller,
                     const Glib::ustring& name,
                     const Glib::ustring& folder_name,
@@ -144,7 +145,7 @@ private:
   bool is_bottle_not_null();
   std::vector<std::pair<string, string>> get_winetricks_env_vars();
   string get_deinstall_mono_command();
-  string get_wine_version(const string& prefix_path, const string& wine_bin_path = "");
+  string get_wine_version(const string& prefix_path, const string& wine_bin_path = "", bool use_wine64 = false);
   std::vector<string> get_bottle_paths();
   std::list<BottleItem> create_wine_bottles(const std::vector<string>& bottle_dirs);
 };

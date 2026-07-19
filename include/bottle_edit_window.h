@@ -47,6 +47,7 @@ struct UpdateBottleStruct
   bool enable_dxvk_hud = false;
   bool enable_gallium_hud = false;
   bool enable_mangohud = false;
+  bool use_wine64 = false;
 };
 
 /**
@@ -101,6 +102,7 @@ protected:
   Gtk::ComboBoxText audio_driver_combobox;            /*!< audio driver combobox */
   Gtk::CheckButton virtual_desktop_check;             /*!< virtual desktop checkbox */
   Gtk::CheckButton enable_logging_check;              /**!< debug logging checkbox */
+  Gtk::CheckButton use_wine64_check;                  /*!< use wine64 binary checkbox (advanced; disables 32-bit support) */
   Gtk::Box hbox_hud_checks;                           /*!< box for the HUD overlay checkboxes */
   Gtk::CheckButton dxvk_hud_check;                    /*!< DXVK HUD overlay checkbox */
   Gtk::CheckButton gallium_hud_check;                 /*!< Gallium (Mesa) HUD overlay checkbox */

@@ -207,7 +207,7 @@ private:
 
   // Private methods
   void set_detailed_info(const BottleItem& bottle);
-  void set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_List);
+  void set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_List, BottleTypes::Bit bit);
   void add_application(const string& name, const string& description, const string& command, const string& icon_name, bool is_icon_full_path = false);
   void cleanup_check_version_thread();
   void check_wine_binary();
