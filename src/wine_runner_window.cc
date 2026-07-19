@@ -243,8 +243,9 @@ void WineRunnerWindow::refresh_installed_list()
     name_label->set_xalign(0.0);
     auto* sub_label = Gtk::make_managed<Gtk::Label>();
     Glib::ustring wine_version = runner.wine_version.empty() ? "unknown" : runner.wine_version;
-    sub_label->set_markup("<small>Wine version: " + Glib::Markup::escape_text(wine_version) + " — " + Glib::Markup::escape_text(runner.name) +
-                          "</small>");
+    Glib::ustring arch = runner.wow64 ? "WoW64 · 64-bit only" : "32 &amp; 64-bit";
+    sub_label->set_markup("<small>Wine version: " + Glib::Markup::escape_text(wine_version) + " — " + Glib::Markup::escape_text(runner.name) + " — " +
+                          arch + "</small>");
     sub_label->set_xalign(0.0);
     sub_label->add_css_class("dim-label");
 
@@ -320,6 +321,9 @@ Glib::ustring WineRunnerWindow::format_release_label(const WineRunner::Release& 
     details = release.published_at.substr(0, 10);
   if (release.size_bytes > 0)
     details += (details.empty() ? "" : ", ") + Glib::format_size(release.size_bytes);
+  // Architecture: WoW64 builds create 64-bit-only prefixes, regular builds do 32 & 64-bit.
+  // Also disambiguates the two Kron4ek assets per version (amd64 vs amd64-wow64).
+  details += (details.empty() ? "" : ", ") + Glib::ustring(release.wow64 ? "WoW64" : "64-bit");
   if (!details.empty())
     label += " (" + details + ")";
   if (WineRunnerManager::is_installed(release))
