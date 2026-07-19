@@ -479,6 +479,11 @@ std::vector<WineRunner::InstalledRunner> WineRunnerManager::get_installed_runner
       runner.runner_dir = runner_dir;
       runner.bin_dir = bin_dir.value();
       runner.has_wine64 = fs::is_regular_file(fs::path(runner.bin_dir) / "wine64", error_code);
+      // WoW64 (64-bit-only) is reliably signalled only by the "-wow64" token in the archive/directory name,
+      // which is preserved as the runner directory name. Neither a missing wine64 nor a missing i386-unix tree
+      // is a reliable signal (eg. Proton WoW64 ships both yet still refuses a 32-bit prefix).
+      std::optional<WineRunner::Release> classified = classify_kron4ek_asset(entry_name + ".tar.xz");
+      runner.wow64 = classified.has_value() && classified->wow64;
       try
       {
         // Request the 64-bit binary, get_wine_executable_location() falls back to the unified wine binary for WoW64 builds
