@@ -63,6 +63,7 @@ public:
     swap(a.bit_, b.bit_);
     swap(a.wine_version_, b.wine_version_);
     swap(a.is_wine64_bit_, b.is_wine64_bit_);
+    swap(a.use_wine64_, b.use_wine64_);
     swap(a.wine_c_drive_, b.wine_c_drive_);
     swap(a.wine_last_changed_, b.wine_last_changed_);
     swap(a.audio_driver_, b.audio_driver_);
@@ -98,6 +99,7 @@ public:
              Glib::ustring& virtual_desktop,
              bool is_debug_logging,
              int debug_log_level,
+             bool use_wine64,
              std::vector<std::pair<std::string, std::string>>& env_vars,
              std::map<int, ApplicationData>& app_list);
 
@@ -198,6 +200,16 @@ public:
   bool is_wine64_bit() const
   {
     return is_wine64_bit_;
+  };
+  /// set use the wine64 binary instead of wine (advanced; disables 32-bit application support)
+  void use_wine64(bool use_wine64)
+  {
+    use_wine64_ = use_wine64;
+  };
+  /// get use the wine64 binary instead of wine (advanced; disables 32-bit application support)
+  bool use_wine64() const
+  {
+    return use_wine64_;
   };
   /// set Wine location
   void wine_location(const Glib::ustring& wine_location)
@@ -309,6 +321,7 @@ private:
   BottleTypes::Bit bit_;
   Glib::ustring wine_version_;
   bool is_wine64_bit_;
+  bool use_wine64_;
   Glib::ustring wine_location_;
   Glib::ustring wine_c_drive_;
   Glib::ustring wine_last_changed_;

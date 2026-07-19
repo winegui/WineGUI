@@ -44,6 +44,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       hud_label("Performance Overlay:"),
       virtual_desktop_check("Enable Virtual Desktop Window"),
       enable_logging_check("Enable debug logging"),
+      use_wine64_check("Use the wine64 binary instead of wine (advanced)"),
       hbox_hud_checks(Gtk::Orientation::HORIZONTAL, 12),
       dxvk_hud_check("DXVK HUD"),
       gallium_hud_check("Gallium HUD"),
@@ -171,6 +172,9 @@ void BottleEditWindow::create_layout()
   description_text_view.set_hexpand(true);
   virtual_desktop_check.set_tooltip_text("Enable emulate virtual desktop resolution");
   enable_logging_check.set_tooltip_text("Enable output logging to disk");
+  use_wine64_check.set_tooltip_text("Advanced: use the wine64 binary instead of the regular wine binary.\n"
+                                    "Leave this off unless you know you need it. The wine64 binary can only run 64-bit "
+                                    "applications, so 32-bit applications will no longer work in this machine.");
   folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name instead, see above.");
 
   description_scrolled_window.set_child(description_text_view);
@@ -205,6 +209,10 @@ void BottleEditWindow::create_layout()
   hbox_hud_checks.append(mangohud_check);
   edit_grid.attach(hud_label, 0, row);
   edit_grid.attach(hbox_hud_checks, 1, row++, 2);
+  // Advanced option: most users should keep the plain wine binary (it supports both 32-bit and 64-bit
+  // applications). Switching to wine64 disables 32-bit application support. Placed above the description
+  // (last of the settings), so it doesn't get orphaned below the expanding description text area.
+  edit_grid.attach(use_wine64_check, 0, row++, 3);
   edit_grid.attach(*Gtk::manage(new Gtk::Separator(Gtk::Orientation::HORIZONTAL)), 0, row++, 3);
   edit_grid.attach(description_label, 0, row++, 3);
   edit_grid.attach(description_scrolled_window, 0, row++, 3);
@@ -302,6 +310,7 @@ void BottleEditWindow::show()
 
     enable_logging_check.set_active(active_bottle_->is_debug_logging());
     log_level_combobox.set_active_id(std::to_string((int)active_bottle_->debug_log_level()));
+    use_wine64_check.set_active(active_bottle_->use_wine64());
 
     // Reflect the current HUD environment variables in the checkboxes
     bool has_dxvk_hud = false, has_gallium_hud = false, has_mangohud = false;
@@ -537,6 +546,7 @@ void BottleEditWindow::on_save_button_clicked()
   update_bottle_struct.enable_dxvk_hud = dxvk_hud_check.get_active();
   update_bottle_struct.enable_gallium_hud = gallium_hud_check.get_active();
   update_bottle_struct.enable_mangohud = mangohud_check.get_active();
+  update_bottle_struct.use_wine64 = use_wine64_check.get_active();
   try
   {
     update_bottle_struct.debug_log_level = std::stoi(log_level_combobox.get_active_id(), &sz);

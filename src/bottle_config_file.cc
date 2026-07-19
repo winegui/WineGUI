@@ -59,6 +59,7 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
     keyfile->set_string("General", "Name", bottle_config.name);
     keyfile->set_string("General", "Description", bottle_config.description);
     keyfile->set_string("Wine", "BinaryPath", bottle_config.wine_bin_path);
+    keyfile->set_boolean("Wine", "UseWine64", bottle_config.use_wine64);
     keyfile->set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
     keyfile->set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
     // Iterate over the key/value environment variable pairs (if present)
@@ -119,6 +120,7 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       bottle_config.name = keyfile->get_string("General", "Name");
       bottle_config.description = keyfile->get_string("General", "Description");
       bottle_config.wine_bin_path = keyfile->get_string("Wine", "BinaryPath");
+      bottle_config.use_wine64 = keyfile->get_boolean("Wine", "UseWine64");
       bottle_config.logging_enabled = keyfile->get_boolean("Logging", "Enabled");
       bottle_config.debug_log_level = keyfile->get_integer("Logging", "DebugLevel");
       bottle_config.config_version = CONFIG_VERSION_CURRENT;
@@ -197,6 +199,7 @@ BottleConfigData BottleConfigFile::get_default_config(const std::string& prefix_
   }
   config.description = "";
   config.wine_bin_path = "";
+  config.use_wine64 = false;
   config.logging_enabled = false;
   config.debug_log_level = 1;
   config.config_version = CONFIG_VERSION_CURRENT;
@@ -224,11 +227,17 @@ bool BottleConfigFile::migrate_config(Glib::RefPtr<Glib::KeyFile>& keyfile, int 
     current_version = 2;
   }
 
-  // Placeholder for future migrations
-  // if (current_version < 3) {
-  //   // Migration logic for version 3
-  //   current_version = 3;
-  // }
+  if (current_version < 3)
+  {
+    std::cout << "Migrating config from version " << current_version << " to version 3..." << std::endl;
+    // The wine64 opt-in was added in version 3; default it to false (use the plain wine binary)
+    if (!keyfile->has_group("Wine") || !keyfile->has_key("Wine", "UseWine64"))
+    {
+      keyfile->set_boolean("Wine", "UseWine64", false);
+    }
+    // cppcheck-suppress unreadVariable
+    current_version = 3;
+  }
 
   // Always write version if it doesn't match current
   if (from_version != CONFIG_VERSION_CURRENT)

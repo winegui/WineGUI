@@ -316,44 +316,58 @@ TEST_F(HelperTest, GetLogFilePathEmpty) {
 }
 
 // Test get_wine_executable_location function
-TEST_F(HelperTest, GetWineExecutableLocation32Bit) {
+TEST_F(HelperTest, GetWineExecutableLocationSystemDefaultsToWine) {
+  // System Wine defaults to the plain "wine" binary (it runs both 32-bit and 64-bit prefixes)
   std::string result = Helper::get_wine_executable_location(false, "");
   EXPECT_EQ(result, "wine");
+  // And with no arguments at all
+  EXPECT_EQ(Helper::get_wine_executable_location(), "wine");
 }
 
-TEST_F(HelperTest, GetWineExecutableLocation64Bit) {
+TEST_F(HelperTest, GetWineExecutableLocationSystemOptInWine64) {
+  // Only when the per-bottle opt-in is set does system Wine use "wine64"
   std::string result = Helper::get_wine_executable_location(true, "");
   EXPECT_EQ(result, "wine64");
 }
 
-TEST_F(HelperTest, GetWineExecutableLocationWithCustomPath32Bit) {
-  std::string result = Helper::get_wine_executable_location(false, "/opt/wine/bin");
-  EXPECT_EQ(result, "/opt/wine/bin/wine");
-}
-
-TEST_F(HelperTest, GetWineExecutableLocationWithCustomPath64Bit) {
-  std::string result = Helper::get_wine_executable_location(true, "/opt/wine/bin");
-  EXPECT_EQ(result, "/opt/wine/bin/wine64");
-}
-
-TEST_F(HelperTest, GetWineExecutableLocationWithTrailingSlash) {
-  std::string result = Helper::get_wine_executable_location(true, "/opt/wine/bin/");
-  EXPECT_EQ(result, "/opt/wine/bin/wine64");
-}
-
-TEST_F(HelperTest, GetWineExecutableLocationWow64FallbackToWine) {
-  // WoW64 builds ship no separate wine64 binary, the unified wine binary should be used instead
-  std::string bin_dir = test_dir + "/wow64-build/bin";
+TEST_F(HelperTest, GetWineExecutableLocationRunnerAlwaysPrefersWine) {
+  // A runner always resolves to the unified "wine" binary (handles both arches), regardless of the flag
+  std::string bin_dir = test_dir + "/runner/bin";
   fs::create_directories(bin_dir);
   std::ofstream wine_file(bin_dir + "/wine");
   wine_file << "fake";
   wine_file.close();
 
-  std::string result = Helper::get_wine_executable_location(true, bin_dir);
+  EXPECT_EQ(Helper::get_wine_executable_location(false, bin_dir), bin_dir + "/wine");
+  EXPECT_EQ(Helper::get_wine_executable_location(true, bin_dir), bin_dir + "/wine");
+}
+
+TEST_F(HelperTest, GetWineExecutableLocationWithTrailingSlash) {
+  std::string bin_dir = test_dir + "/runner-slash/bin";
+  fs::create_directories(bin_dir);
+  std::ofstream wine_file(bin_dir + "/wine");
+  wine_file << "fake";
+  wine_file.close();
+
+  std::string result = Helper::get_wine_executable_location(true, bin_dir + "/");
   EXPECT_EQ(result, bin_dir + "/wine");
 }
 
-TEST_F(HelperTest, GetWineExecutableLocationPrefersWine64WhenPresent) {
+TEST_F(HelperTest, GetWineExecutableLocationRunnerFallsBackToWine64WhenNoWine) {
+  // Only when a runner ships no unified "wine" binary do we fall back to "wine64"
+  std::string bin_dir = test_dir + "/wine64-only/bin";
+  fs::create_directories(bin_dir);
+  std::ofstream wine64_file(bin_dir + "/wine64");
+  wine64_file << "fake";
+  wine64_file.close();
+
+  EXPECT_EQ(Helper::get_wine_executable_location(true, bin_dir), bin_dir + "/wine64");
+  EXPECT_EQ(Helper::get_wine_executable_location(false, bin_dir), bin_dir + "/wine64");
+}
+
+TEST_F(HelperTest, GetWineExecutableLocationRunnerPrefersWineWhenBothPresent) {
+  // Even when a separate wine64 exists (eg. Proton builds), prefer the unified "wine" binary so
+  // 32-bit application/bottle support keeps working
   std::string bin_dir = test_dir + "/classic-build/bin";
   fs::create_directories(bin_dir);
   std::ofstream wine_file(bin_dir + "/wine");
@@ -363,8 +377,8 @@ TEST_F(HelperTest, GetWineExecutableLocationPrefersWine64WhenPresent) {
   wine64_file << "fake";
   wine64_file.close();
 
-  std::string result = Helper::get_wine_executable_location(true, bin_dir);
-  EXPECT_EQ(result, bin_dir + "/wine64");
+  EXPECT_EQ(Helper::get_wine_executable_location(false, bin_dir), bin_dir + "/wine");
+  EXPECT_EQ(Helper::get_wine_executable_location(true, bin_dir), bin_dir + "/wine");
 }
 
 // Test get_wineserver_executable_location function

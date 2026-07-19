@@ -67,7 +67,7 @@ static const string UserReg = "user.reg";
 // This avoids re-reading the same user.reg/system.reg from disk multiple times during a single
 // bottle enumeration pass. Every lookup re-validates the entry against the file's current
 // mtime + size (a single stat() call, no file read), so the cache can never serve data that
-// changed on disk — registry files are also rewritten outside WineGUI (winetricks, running
+// changed on disk. Registry files are also rewritten outside WineGUI (winetricks, running
 // Windows programs, regedit, manual edits). On top of that the cache is cleared at the start &
 // end of every bottle refresh (see BottleManager::update_config_and_bottles) and invalidated
 // per-prefix by the reg mutating setters, keeping it empty at rest.
@@ -366,31 +366,33 @@ int Helper::determine_wine_executable()
 
 /**
  * \brief Retrieve the Wine executable (full path if applicable)
- * \param bit64 Use Wine 64 bit or 32 bit binary
+ *
+ * The unified "wine" binary is preferred by default because it runs BOTH 32-bit and 64-bit prefixes
+ * (even a 32-bit ELF wine binary can create and run a WINEARCH=win64 prefix). The "wine64" binary is
+ * more restrictive (64-bit only, no 32-bit application support), so it is only used when the caller
+ * explicitly opts in via prefer_wine64 (a per-bottle setting).
+ *
+ * \param prefer_wine64 When true, use the wine64 binary instead of wine (per-bottle opt-in, default false)
+ * \param wine_bin_path (Optionally) Custom Wine binary directory of a Wine runner
  * \return Wine binary location
  */
-string Helper::get_wine_executable_location(bool bit64, const string& wine_bin_path)
+string Helper::get_wine_executable_location(bool prefer_wine64, const string& wine_bin_path)
 {
-  string wine_executable = bit64 ? WineExecutable64 : WineExecutable;
-
   if (!wine_bin_path.empty())
   {
-    string wine_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, wine_executable});
-    if (bit64 && !file_exists(wine_path))
+    // For a Wine runner, always prefer the unified "wine" binary (it handles both 32-bit and 64-bit
+    // prefixes). Only fall back to "wine64" when the runner ships no "wine" binary at all.
+    string wine_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineExecutable});
+    if (file_exists(wine_path))
     {
-      // Modern WoW64 Wine builds no longer ship a separate wine64 binary,
-      // their unified wine binary runs 64-bit applications as well
-      string wine_fallback_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineExecutable});
-      if (file_exists(wine_fallback_path))
-      {
-        return wine_fallback_path;
-      }
+      return wine_path;
     }
-    return wine_path;
+    return Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineExecutable64});
   }
   else
   {
-    return wine_executable;
+    // System Wine: default to the plain "wine" binary, use "wine64" only on explicit opt-in
+    return prefer_wine64 ? WineExecutable64 : WineExecutable;
   }
 }
 

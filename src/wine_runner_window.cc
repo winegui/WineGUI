@@ -243,9 +243,10 @@ void WineRunnerWindow::refresh_installed_list()
     name_label->set_xalign(0.0);
     auto* sub_label = Gtk::make_managed<Gtk::Label>();
     Glib::ustring wine_version = runner.wine_version.empty() ? "unknown" : runner.wine_version;
-    Glib::ustring arch = runner.wow64 ? "WoW64 · 64-bit only" : "32 &amp; 64-bit";
-    sub_label->set_markup("<small>Wine version: " + Glib::Markup::escape_text(wine_version) + " — " + Glib::Markup::escape_text(runner.name) + " — " +
-                          arch + "</small>");
+    // Only flag WoW64 builds (64-bit-only); regular builds support both 32 & 64-bit bottles.
+    Glib::ustring arch = runner.wow64 ? " — WoW64" : "";
+    sub_label->set_markup("<small>Wine version: " + Glib::Markup::escape_text(wine_version) + " — " + Glib::Markup::escape_text(runner.name) + arch +
+                          "</small>");
     sub_label->set_xalign(0.0);
     sub_label->add_css_class("dim-label");
 
@@ -311,7 +312,7 @@ void WineRunnerWindow::fill_version_combobox(SourcePage& page)
 /**
  * \brief Display label for a release in the version combobox
  * \param[in] release Release
- * \return Label, eg. "11.13 (2026-07-11, 102.0 MB) — installed"
+ * \return Label, eg. "11.13 (2026-07-11, 102.0 MB, WoW64)", with "installed" appended when already installed
  */
 Glib::ustring WineRunnerWindow::format_release_label(const WineRunner::Release& release)
 {
@@ -321,9 +322,11 @@ Glib::ustring WineRunnerWindow::format_release_label(const WineRunner::Release& 
     details = release.published_at.substr(0, 10);
   if (release.size_bytes > 0)
     details += (details.empty() ? "" : ", ") + Glib::format_size(release.size_bytes);
-  // Architecture: WoW64 builds create 64-bit-only prefixes, regular builds do 32 & 64-bit.
-  // Also disambiguates the two Kron4ek assets per version (amd64 vs amd64-wow64).
-  details += (details.empty() ? "" : ", ") + Glib::ustring(release.wow64 ? "WoW64" : "64-bit");
+  // Only flag WoW64 builds (64-bit-only prefixes). Regular builds support both 32 & 64-bit bottles,
+  // so labelling them "64-bit" would be misleading. This also disambiguates the two Kron4ek assets
+  // per version (amd64 vs amd64-wow64).
+  if (release.wow64)
+    details += (details.empty() ? "" : ", ") + Glib::ustring("WoW64");
   if (!details.empty())
     label += " (" + details + ")";
   if (WineRunnerManager::is_installed(release))

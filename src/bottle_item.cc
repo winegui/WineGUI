@@ -49,6 +49,7 @@ BottleItem::BottleItem(const BottleItem& bottle_item) : BottleItem()
     bit_ = bottle_item.bit();
     wine_version_ = bottle_item.wine_version();
     is_wine64_bit_ = bottle_item.is_wine64_bit();
+    use_wine64_ = bottle_item.use_wine64();
     wine_location_ = bottle_item.wine_location();
     wine_c_drive_ = bottle_item.wine_c_drive();
     wine_last_changed_ = bottle_item.wine_last_changed();
@@ -83,6 +84,7 @@ BottleItem::BottleItem(Glib::ustring& name,
       bit_(BottleTypes::Bit::win32),
       wine_version_(wine_version),
       is_wine64_bit_(is_wine64_bit),
+      use_wine64_(false),
       wine_location_(wine_location),
       wine_c_drive_(wine_c_drive),
       wine_last_changed_(wine_last_changed),
@@ -112,6 +114,7 @@ BottleItem::BottleItem(Glib::ustring& name,
                        Glib::ustring& virtual_desktop,
                        bool is_debug_logging,
                        int debug_log_level,
+                       bool use_wine64,
                        std::vector<std::pair<std::string, std::string>>& env_vars,
                        std::map<int, ApplicationData>& app_list)
     : name_(name),
@@ -123,6 +126,7 @@ BottleItem::BottleItem(Glib::ustring& name,
       bit_(bit),
       wine_version_(wine_version),
       is_wine64_bit_(is_wine64_bit),
+      use_wine64_(use_wine64),
       wine_location_(wine_location),
       wine_c_drive_(wine_c_drive),
       wine_last_changed_(wine_last_changed),
