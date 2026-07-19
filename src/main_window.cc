@@ -572,7 +572,7 @@ void MainWindow::on_refresh_app_list_button_clicked()
   {
     // Refresh the current app list
     const auto* current_bottle = dynamic_cast<BottleItem*>(selected_row);
-    set_application_list(current_bottle->wine_location(), current_bottle->app_list());
+    set_application_list(current_bottle->wine_location(), current_bottle->app_list(), current_bottle->bit());
   }
 }
 
@@ -642,7 +642,7 @@ void MainWindow::on_bottle_row_clicked(Gtk::ListBoxRow* row)
     // Set bottle details
     set_detailed_info(*current_bottle);
     // Set application list
-    set_application_list(current_bottle->wine_location(), current_bottle->app_list());
+    set_application_list(current_bottle->wine_location(), current_bottle->app_list(), current_bottle->bit());
     // Clear the application filter
     app_list_search_entry.set_text("");
 
@@ -961,7 +961,7 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
  * \param prefix_path Wine bottle prefix
  * \param app_List Custom application list for this bottle
  */
-void MainWindow::set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_list)
+void MainWindow::set_application_list(const string& prefix_path, const std::map<int, ApplicationData>& app_list, BottleTypes::Bit bit)
 {
   // First clear list + clear search entry
   reset_application_list();
@@ -1150,9 +1150,10 @@ void MainWindow::set_application_list(const string& prefix_path, const std::map<
   add_application("Command Prompt", "Command-line interpreter", "wineconsole", "command_prompt");
   add_application("Registry editor", "Windows registry editor", "regedit", "regedit");
   add_application("Wine OLE View", "Windows OLE object viewer", "oleview", "oleview");
-  // Only show the DXVK GPU test if the bundled test executable is found
+  // Only show the DXVK GPU test if the bundled test executable is found.
+  // The bundled d3d11-triangle.exe is 64-bit, so it only runs on 64-bit bottles.
   string dxvk_test_location = Helper::get_dxvk_test_location();
-  if (!dxvk_test_location.empty())
+  if (!dxvk_test_location.empty() && bit == BottleTypes::Bit::win64)
   {
     add_application("DXVK GPU Test", "Direct3D 11 GPU test + DXVK HUD", dxvk_test_location, "dxvk_test");
   }
