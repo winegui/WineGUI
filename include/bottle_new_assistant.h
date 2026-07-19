@@ -104,7 +104,7 @@ private:
   void set_default_values();
   void refresh_windows_version_list();
   void create_first_page();
-  void create_runner_page();
   void create_second_page();
   void create_third_page();
+  void create_fourth_page();
 };
