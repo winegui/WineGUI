@@ -66,10 +66,10 @@ BottleNewAssistant::BottleNewAssistant()
   vbox3.set_valign(Gtk::Align::CENTER);
 
   // Create pages (the Wine runner is chosen first, because it constrains which Windows versions are valid)
-  create_runner_page();
   create_first_page();
   create_second_page();
   create_third_page();
+  create_fourth_page();
 
   // Initial set defaults
   set_default_values();
@@ -127,40 +127,9 @@ void BottleNewAssistant::set_default_values()
 }
 
 /**
- * \brief First page of the wizard
+ * \brief First page of the wizard: choose the Wine runner (defaults to system Wine)
  */
 void BottleNewAssistant::create_first_page()
-{
-  // Name & Windows version page
-  intro_label.set_markup("<big><b>Name &amp; Windows Version</b></big>\n"
-                         "Please use a descriptive name for the Windows machine, "
-                         "and select which Windows version you want to use.");
-  intro_label.set_halign(Gtk::Align::START);
-  intro_label.set_margin_bottom(25);
-  vbox.append(intro_label);
-
-  hbox_name.append(name_label);
-  hbox_name.append(name_entry);
-  vbox.append(hbox_name);
-
-  // Fill-in Windows versions in combobox (filtered by the selected Wine runner)
-  refresh_windows_version_list();
-
-  hbox_win.append(windows_version_label);
-  hbox_win.append(windows_version_combobox);
-  vbox.append(hbox_win);
-
-  name_entry.signal_changed().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_entry_changed));
-
-  append_page(vbox);
-  set_page_type(vbox, Gtk::AssistantPage::Type::CONTENT);
-  set_page_title(*get_nth_page(1), "Choose Name & Windows version");
-}
-
-/**
- * \brief Second page of the wizard: choose the Wine runner (defaults to system Wine)
- */
-void BottleNewAssistant::create_runner_page()
 {
   runner_intro_label.set_markup("<big><b>Create a New Machine</b></big>\n"
                                 "First, select which Wine build this machine will use. Keep <b>System Wine</b> unless you want "
@@ -193,9 +162,40 @@ void BottleNewAssistant::create_runner_page()
 }
 
 /**
- * \brief Third page of the wizard: additional settings
+ * \brief Second page of the wizard
  */
 void BottleNewAssistant::create_second_page()
+{
+  // Name & Windows version page
+  intro_label.set_markup("<big><b>Name &amp; Windows Version</b></big>\n"
+                         "Please use a descriptive name for the Windows machine, "
+                         "and select which Windows version you want to use.");
+  intro_label.set_halign(Gtk::Align::START);
+  intro_label.set_margin_bottom(25);
+  vbox.append(intro_label);
+
+  hbox_name.append(name_label);
+  hbox_name.append(name_entry);
+  vbox.append(hbox_name);
+
+  // Fill-in Windows versions in combobox (filtered by the selected Wine runner)
+  refresh_windows_version_list();
+
+  hbox_win.append(windows_version_label);
+  hbox_win.append(windows_version_combobox);
+  vbox.append(hbox_win);
+
+  name_entry.signal_changed().connect(sigc::mem_fun(*this, &BottleNewAssistant::on_entry_changed));
+
+  append_page(vbox);
+  set_page_type(vbox, Gtk::AssistantPage::Type::CONTENT);
+  set_page_title(*get_nth_page(1), "Choose Name & Windows version");
+}
+
+/**
+ * \brief Third page of the wizard: additional settings
+ */
+void BottleNewAssistant::create_third_page()
 {
   // Additional page
   additional_label.set_markup("<big><b>Additional Settings</b></big>\n"
@@ -234,7 +234,7 @@ void BottleNewAssistant::create_second_page()
 /**
  * \brief Last page of the wizard
  */
-void BottleNewAssistant::create_third_page()
+void BottleNewAssistant::create_fourth_page()
 {
   vbox3.append(apply_label);
   vbox3.append(loading_bar);
