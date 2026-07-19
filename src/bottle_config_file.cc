@@ -238,6 +238,12 @@ bool BottleConfigFile::migrate_config(Glib::RefPtr<Glib::KeyFile>& keyfile, int 
     current_version = 3;
   }
 
+  // Placeholder for future migrations
+  // if (current_version < 4) {
+  //   // Migration logic for version 4
+  //   current_version = 4;
+  // }
+
   // Always write version if it doesn't match current
   if (from_version != CONFIG_VERSION_CURRENT)
   {
