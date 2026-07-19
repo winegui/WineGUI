@@ -22,6 +22,7 @@
 
 #include "bottle_types.h"
 #include <gtkmm.h>
+#include <map>
 
 /**
  * \struct NewBottleStruct
@@ -87,18 +88,21 @@ public:
   Gtk::ProgressBar loading_bar;
 
 private:
-  sigc::connection timer_; /*!< Timer connection */
+  sigc::connection timer_;                        /*!< Timer connection */
+  std::map<Glib::ustring, bool> runner_is_wow64_; /*!< Wine runner bin dir -> WoW64 (64-bit only), used to filter the Windows version list */
 
   // Signal handlers
   void on_assistant_apply();
   void on_assistant_cancel();
   void on_assistant_prepare(Gtk::Widget* widget);
   void on_entry_changed();
+  void on_wine_runner_changed();
   void on_virtual_desktop_toggle();
   bool apply_changes_gradually();
 
   // Member functions
   void set_default_values();
+  void refresh_windows_version_list();
   void create_first_page();
   void create_runner_page();
   void create_second_page();

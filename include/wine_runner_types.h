@@ -89,7 +89,8 @@ namespace WineRunner
     std::string runner_dir;   /*!< Absolute path of the runner directory (deleted on remove) */
     std::string bin_dir;      /*!< Absolute directory containing the wine binary (value for the bottle wine_bin_path) */
     std::string wine_version; /*!< Output of "wine --version" (empty when it failed) */
-    bool has_wine64 = false;  /*!< True when a separate wine64 binary exists (false for WoW64 builds) */
+    bool has_wine64 = false;  /*!< True when a separate wine64 binary exists (used by the binary resolver, not a 32/64-bit capability signal) */
+    bool wow64 = false;       /*!< True for WoW64 builds (64-bit-only prefixes; derived from the "-wow64" asset token in the runner directory name) */
   };
 
   /**
