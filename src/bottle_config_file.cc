@@ -223,7 +223,6 @@ bool BottleConfigFile::migrate_config(Glib::RefPtr<Glib::KeyFile>& keyfile, int 
     {
       keyfile->set_string("Wine", "BinaryPath", "");
     }
-    // cppcheck-suppress unreadVariable
     current_version = 2;
   }
 
