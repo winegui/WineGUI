@@ -43,14 +43,15 @@ public:
   static const WineRunner::Source& get_source(WineRunner::SourceId source_id);
 
   // -- Release listing (network; cached per session; throws std::runtime_error)
-  static std::vector<WineRunner::Release> get_releases(WineRunner::SourceId source_id);
+  static std::vector<WineRunner::Release> get_releases(WineRunner::SourceId source_id, const std::atomic<bool>* cancel = nullptr);
   static void invalidate_release_cache();
 
   // -- Install (network + tar subprocess; throws std::runtime_error)
   static bool download_and_install(const WineRunner::Release& release,
                                    const std::function<void(std::uint64_t, std::uint64_t)>& progress_cb,
                                    const std::function<void(WineRunner::InstallPhase)>& phase_cb,
-                                   const std::atomic<bool>& cancel);
+                                   const std::atomic<bool>& cancel,
+                                   bool* checksum_verified = nullptr);
 
   // -- Local enumeration (filesystem only; never throws, returns what it finds)
   static std::vector<WineRunner::InstalledRunner> get_installed_runners();
@@ -61,6 +62,7 @@ public:
 
   // -- Removal (throws std::runtime_error on failure or on a path-safety violation)
   static void remove_runner(const WineRunner::InstalledRunner& runner);
+  static void remove_runner(const WineRunner::InstalledRunner& runner, const std::string& runners_base_dir);
   static bool is_runner_used_by_bottle(const WineRunner::InstalledRunner& runner, const std::vector<std::string>& bottle_wine_bin_paths);
 
   // -- Pure helpers, public for unit testing
@@ -69,21 +71,27 @@ public:
   static std::optional<WineRunner::Release> classify_geproton_asset(const std::string& asset_name);
   static std::string expected_install_dir_name(const WineRunner::Release& release);
   static std::string derive_display_name(const std::string& runner_dir_name);
+  static std::string variant_display_name(const std::string& variant);
   static std::optional<std::string> find_wine_bin_dir(const std::string& runner_dir);
   static std::optional<std::string> parse_checksum_file(const std::string& file_content, const std::string& asset_name);
+  static bool is_safe_file_name(const std::string& name);
 
 private:
   WineRunnerManager() = delete;
 
-  static std::string fetch_url(const std::string& url);
+  static bool spawn_wait_cancellable(const std::vector<std::string>& argv,
+                                     const std::atomic<bool>* cancel,
+                                     const std::function<void()>& poll_cb,
+                                     const std::string& failure_message);
+  static std::string fetch_url(const std::string& url, const std::atomic<bool>* cancel = nullptr);
   static bool download_file(const std::string& url,
                             const std::string& dest_path,
                             std::uint64_t expected_size,
                             const std::function<void(std::uint64_t, std::uint64_t)>& progress_cb,
                             const std::atomic<bool>& cancel);
-  static void extract_archive(const std::string& archive_path, const std::string& staging_dir);
+  static void extract_archive(const std::string& archive_path, const std::string& staging_dir, const std::atomic<bool>& cancel);
   static std::string compute_checksum(const std::string& file_path, WineRunner::ChecksumType checksum_type);
-  static void verify_archive_checksum(const WineRunner::Release& release, const std::string& archive_path);
+  static bool verify_archive_checksum(const WineRunner::Release& release, const std::string& archive_path, const std::atomic<bool>& cancel);
   static void sweep_leftover_temp_dirs(const std::string& runners_dir);
-  static bool is_safe_file_name(const std::string& name);
+  static void invalidate_wine_version_cache();
 };

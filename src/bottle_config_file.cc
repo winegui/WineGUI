@@ -120,7 +120,10 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       bottle_config.name = keyfile->get_string("General", "Name");
       bottle_config.description = keyfile->get_string("General", "Description");
       bottle_config.wine_bin_path = keyfile->get_string("Wine", "BinaryPath");
-      bottle_config.use_wine64 = keyfile->get_boolean("Wine", "UseWine64");
+      // Tolerate a missing key (eg. a hand-edited config): throwing here would discard the whole
+      // config file, including the name, description, environment variables and application list
+      if (keyfile->has_group("Wine") && keyfile->has_key("Wine", "UseWine64"))
+        bottle_config.use_wine64 = keyfile->get_boolean("Wine", "UseWine64");
       bottle_config.logging_enabled = keyfile->get_boolean("Logging", "Enabled");
       bottle_config.debug_log_level = keyfile->get_integer("Logging", "DebugLevel");
       bottle_config.config_version = CONFIG_VERSION_CURRENT;

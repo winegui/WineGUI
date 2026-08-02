@@ -325,6 +325,149 @@ TEST_F(WineRunnerTest, IsRunnerUsedByBottle)
   EXPECT_FALSE(WineRunnerManager::is_runner_used_by_bottle(runner, {}));
 }
 
+// Test remove_runner function (path safety guards around a recursive delete)
+
+TEST_F(WineRunnerTest, RemoveRunnerRemovesTheRunnerDirectory)
+{
+  std::string runners_dir = test_dir + "/runners";
+  create_fake_file(runners_dir + "/wine-11.13-amd64/bin/wine");
+  create_fake_file(runners_dir + "/wine-11.14-amd64/bin/wine");
+
+  WineRunner::InstalledRunner runner;
+  runner.name = "wine-11.13-amd64";
+  runner.runner_dir = runners_dir + "/wine-11.13-amd64";
+  runner.bin_dir = runner.runner_dir + "/bin";
+
+  EXPECT_NO_THROW(WineRunnerManager::remove_runner(runner, runners_dir));
+  EXPECT_FALSE(fs::exists(runner.runner_dir));
+  // Only the requested runner is removed
+  EXPECT_TRUE(fs::exists(runners_dir + "/wine-11.14-amd64/bin/wine"));
+}
+
+TEST_F(WineRunnerTest, RemoveRunnerRefusesDirectoryOutsideTheRunnersDir)
+{
+  std::string runners_dir = test_dir + "/runners";
+  fs::create_directories(runners_dir);
+  create_fake_file(test_dir + "/somewhere-else/important.txt");
+
+  WineRunner::InstalledRunner runner;
+  runner.name = "somewhere-else";
+  runner.runner_dir = test_dir + "/somewhere-else";
+
+  EXPECT_THROW(WineRunnerManager::remove_runner(runner, runners_dir), std::runtime_error);
+  EXPECT_TRUE(fs::exists(test_dir + "/somewhere-else/important.txt"));
+}
+
+TEST_F(WineRunnerTest, RemoveRunnerRefusesTraversalOutOfTheRunnersDir)
+{
+  std::string runners_dir = test_dir + "/runners";
+  fs::create_directories(runners_dir);
+  create_fake_file(test_dir + "/somewhere-else/important.txt");
+
+  WineRunner::InstalledRunner runner;
+  runner.name = "somewhere-else";
+  // A traversal that normalizes to a directory outside of the runners directory
+  runner.runner_dir = runners_dir + "/../somewhere-else";
+
+  EXPECT_THROW(WineRunnerManager::remove_runner(runner, runners_dir), std::runtime_error);
+  EXPECT_TRUE(fs::exists(test_dir + "/somewhere-else/important.txt"));
+}
+
+TEST_F(WineRunnerTest, RemoveRunnerRefusesTheRunnersDirItself)
+{
+  std::string runners_dir = test_dir + "/runners";
+  create_fake_file(runners_dir + "/wine-11.13-amd64/bin/wine");
+
+  WineRunner::InstalledRunner runner;
+  runner.name = "runners";
+  runner.runner_dir = runners_dir;
+
+  EXPECT_THROW(WineRunnerManager::remove_runner(runner, runners_dir), std::runtime_error);
+  EXPECT_TRUE(fs::exists(runners_dir + "/wine-11.13-amd64/bin/wine"));
+}
+
+TEST_F(WineRunnerTest, RemoveRunnerRefusesInvalidRunnerNames)
+{
+  std::string runners_dir = test_dir + "/runners";
+  create_fake_file(runners_dir + "/wine-11.13-amd64/bin/wine");
+
+  WineRunner::InstalledRunner runner;
+  runner.runner_dir = runners_dir + "/wine-11.13-amd64";
+  for (const std::string invalid_name : {"", ".", "..", ".hidden", "with space", "with/slash", "semi;colon"})
+  {
+    runner.name = invalid_name;
+    EXPECT_THROW(WineRunnerManager::remove_runner(runner, runners_dir), std::runtime_error) << "name: " << invalid_name;
+  }
+  EXPECT_TRUE(fs::exists(runners_dir + "/wine-11.13-amd64/bin/wine"));
+}
+
+TEST_F(WineRunnerTest, RemoveRunnerRefusesWhenTheDirectoryDoesNotMatchTheName)
+{
+  std::string runners_dir = test_dir + "/runners";
+  create_fake_file(runners_dir + "/wine-11.13-amd64/bin/wine");
+  create_fake_file(runners_dir + "/wine-11.14-amd64/bin/wine");
+
+  WineRunner::InstalledRunner runner;
+  runner.name = "wine-11.13-amd64";
+  runner.runner_dir = runners_dir + "/wine-11.14-amd64"; // Points at a different runner
+
+  EXPECT_THROW(WineRunnerManager::remove_runner(runner, runners_dir), std::runtime_error);
+  EXPECT_TRUE(fs::exists(runners_dir + "/wine-11.14-amd64/bin/wine"));
+}
+
+// Test is_safe_file_name function
+
+TEST_F(WineRunnerTest, IsSafeFileName)
+{
+  EXPECT_TRUE(WineRunnerManager::is_safe_file_name("wine-11.13-staging-amd64.tar.xz"));
+  EXPECT_TRUE(WineRunnerManager::is_safe_file_name("GE-Proton11-3"));
+  EXPECT_TRUE(WineRunnerManager::is_safe_file_name("wine_build+1"));
+
+  EXPECT_FALSE(WineRunnerManager::is_safe_file_name(""));
+  EXPECT_FALSE(WineRunnerManager::is_safe_file_name("."));
+  EXPECT_FALSE(WineRunnerManager::is_safe_file_name(".."));
+  EXPECT_FALSE(WineRunnerManager::is_safe_file_name(".hidden"));
+  EXPECT_FALSE(WineRunnerManager::is_safe_file_name("with space"));
+  EXPECT_FALSE(WineRunnerManager::is_safe_file_name("with/slash"));
+  EXPECT_FALSE(WineRunnerManager::is_safe_file_name("semi;colon"));
+  EXPECT_FALSE(WineRunnerManager::is_safe_file_name("dollar$sign"));
+}
+
+// Test variant_display_name function
+
+TEST_F(WineRunnerTest, VariantDisplayName)
+{
+  EXPECT_EQ(WineRunnerManager::variant_display_name("vanilla"), "Vanilla");
+  EXPECT_EQ(WineRunnerManager::variant_display_name("staging"), "Staging");
+  EXPECT_EQ(WineRunnerManager::variant_display_name("staging-tkg"), "Staging-TkG");
+  EXPECT_EQ(WineRunnerManager::variant_display_name("staging-tkg-ntsync"), "Staging-TkG-NTSync");
+  EXPECT_EQ(WineRunnerManager::variant_display_name("proton"), "Proton");
+  // Unknown tokens are capitalised, so a future variant still gets a readable label
+  EXPECT_EQ(WineRunnerManager::variant_display_name("rc1-staging"), "Rc1-Staging");
+}
+
+// Variants without a dedicated UI page must still classify, so the catch-all page can show them
+
+TEST_F(WineRunnerTest, ClassifyKron4ekUncategorisedVariants)
+{
+  auto ntsync = WineRunnerManager::classify_kron4ek_asset("wine-10.10-staging-tkg-ntsync-amd64.tar.xz");
+  ASSERT_TRUE(ntsync.has_value());
+  EXPECT_EQ(ntsync->version, "10.10");
+  EXPECT_EQ(ntsync->variant, "staging-tkg-ntsync");
+
+  auto release_candidate = WineRunnerManager::classify_kron4ek_asset("wine-11.0-rc1-staging-amd64.tar.xz");
+  ASSERT_TRUE(release_candidate.has_value());
+  EXPECT_EQ(release_candidate->version, "11.0");
+  EXPECT_EQ(release_candidate->variant, "rc1-staging");
+}
+
+// Test find_runner_by_bin_dir function
+
+TEST_F(WineRunnerTest, FindRunnerByBinDirEmptyPath)
+{
+  EXPECT_FALSE(WineRunnerManager::find_runner_by_bin_dir("").has_value());
+}
+
 // Test get_sources function
 
 TEST_F(WineRunnerTest, GetSources)

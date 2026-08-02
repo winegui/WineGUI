@@ -149,6 +149,12 @@ void WineRunnerWindow::create_layout()
   create_source_page(WineRunner::SourceId::Kron4ekWineBuilds, "proton", "Wine Proton (Kron4ek)",
                      "Wine builds with Valve's Proton patches (primarily for a better gaming experience) as a regular Wine build, compiled by "
                      "Kron4ek.");
+  // Catch-all page, so a build variant without a dedicated page above (eg. the NTSync, FSync and
+  // release-candidate builds) is still reachable instead of being silently dropped
+  create_source_page(WineRunner::SourceId::Kron4ekWineBuilds, "other", "Wine Other Builds",
+                     "Less common Wine builds by Kron4ek that have no category of their own, such as the NTSync, FSync and release candidate "
+                     "(rc) builds. The build variant is shown in front of every version.",
+                     true);
   create_source_page(WineRunner::SourceId::GEProton, "GE-Proton", "GE-Proton",
                      "Proton builds by GloriousEggroll with extra patches and media codecs, the successor of Wine-GE. Note: these are large "
                      "downloads (about 500 MB) and primarily made for the Steam runtime.");
@@ -170,16 +176,16 @@ void WineRunnerWindow::create_layout()
  * \param[in] variant Build variant the page shows (used as stack page name)
  * \param[in] title Page title (shown in the sidebar)
  * \param[in] description Variant description
+ * \param[in] catch_all True for the page collecting every variant of this source without a dedicated page
  * \return Pointer to the created page
  */
-WineRunnerWindow::SourcePage* WineRunnerWindow::create_source_page(WineRunner::SourceId source_id,
-                                                                   const std::string& variant,
-                                                                   const Glib::ustring& title,
-                                                                   const Glib::ustring& description)
+WineRunnerWindow::SourcePage* WineRunnerWindow::create_source_page(
+    WineRunner::SourceId source_id, const std::string& variant, const Glib::ustring& title, const Glib::ustring& description, bool catch_all)
 {
   auto page = std::make_unique<SourcePage>();
   page->source_id = source_id;
   page->variant = variant;
+  page->catch_all = catch_all;
 
   page->description_label.set_markup(description);
   page->description_label.set_wrap(true);
@@ -298,7 +304,7 @@ void WineRunnerWindow::fill_version_combobox(SourcePage& page)
   page.version_combobox.remove_all();
   for (std::size_t i = 0; i < page.releases.size(); ++i)
   {
-    page.version_combobox.append(std::to_string(i), format_release_label(page.releases.at(i)));
+    page.version_combobox.append(std::to_string(i), format_release_label(page.releases.at(i), page.catch_all));
   }
   if (!page.releases.empty())
   {
@@ -310,13 +316,34 @@ void WineRunnerWindow::fill_version_combobox(SourcePage& page)
 }
 
 /**
+ * \brief Whether a release belongs on the given page.
+ * A regular page shows exactly its own variant; the catch-all page shows every variant of the same
+ * source that no other page claims, so no published build can silently disappear from the UI.
+ * \param[in] page Page
+ * \param[in] release Release
+ * \return True when the release should be listed on this page
+ */
+bool WineRunnerWindow::page_shows_release(const SourcePage& page, const WineRunner::Release& release) const
+{
+  if (release.source != page.source_id)
+    return false;
+  if (!page.catch_all)
+    return release.variant == page.variant;
+  return std::none_of(source_pages_.begin(), source_pages_.end(), [&release](const std::unique_ptr<SourcePage>& other)
+                      { return !other->catch_all && other->source_id == release.source && other->variant == release.variant; });
+}
+
+/**
  * \brief Display label for a release in the version combobox
  * \param[in] release Release
+ * \param[in] show_variant Prefix the label with the build variant (used on the catch-all page)
  * \return Label, eg. "11.13 (2026-07-11, 102.0 MB, WoW64)", with "installed" appended when already installed
  */
-Glib::ustring WineRunnerWindow::format_release_label(const WineRunner::Release& release)
+Glib::ustring WineRunnerWindow::format_release_label(const WineRunner::Release& release, bool show_variant)
 {
   Glib::ustring label = release.version;
+  if (show_variant)
+    label = Glib::ustring(WineRunnerManager::variant_display_name(release.variant)) + " " + label;
   Glib::ustring details;
   if (release.published_at.size() >= 10)
     details = release.published_at.substr(0, 10);
@@ -549,7 +576,7 @@ void WineRunnerWindow::on_releases_fetched()
     page->releases.clear();
     for (const WineRunner::Release& release : releases)
     {
-      if (release.variant == page->variant)
+      if (page_shows_release(*page, release))
         page->releases.emplace_back(release);
     }
     page->fetched = true;
@@ -631,6 +658,14 @@ void WineRunnerWindow::on_install_finished()
     refresh_installed_list();
     refresh_version_comboboxes();
     runners_changed.emit();
+    if (!task_.was_checksum_verified())
+    {
+      // Older releases of both sources ship without a checksum file; installing those is allowed,
+      // but the user should know the archive could not be verified
+      show_info_message(installing_display_name_ +
+                        " is installed, but could not be verified.\n\nThis release does not publish a checksum, so the integrity of the "
+                        "downloaded archive could not be checked. Prefer a newer release when possible.");
+    }
     break;
   case WineRunner::InstallStatus::Cancelled:
     break;

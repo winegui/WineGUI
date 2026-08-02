@@ -26,15 +26,15 @@
 
 /**
  * \brief Constructor. Construct on the GUI thread (Glib::Dispatcher requirement).
- * The internal cleanup handlers are connected first, so they run before any UI handler
- * connected to the same dispatchers.
+ * The internal completion handlers are connected first, so they run before any UI handler
+ * connected to the same dispatchers (which may start a new operation).
  */
 WineRunnerInstallTask::WineRunnerInstallTask()
 {
-  releases_fetched.connect(sigc::mem_fun(*this, &WineRunnerInstallTask::cleanup_thread));
-  fetch_failed.connect(sigc::mem_fun(*this, &WineRunnerInstallTask::cleanup_thread));
-  install_finished.connect(sigc::mem_fun(*this, &WineRunnerInstallTask::cleanup_thread));
-  remove_finished.connect(sigc::mem_fun(*this, &WineRunnerInstallTask::cleanup_thread));
+  releases_fetched.connect(sigc::mem_fun(*this, &WineRunnerInstallTask::finish_operation));
+  fetch_failed.connect(sigc::mem_fun(*this, &WineRunnerInstallTask::finish_operation));
+  install_finished.connect(sigc::mem_fun(*this, &WineRunnerInstallTask::finish_operation));
+  remove_finished.connect(sigc::mem_fun(*this, &WineRunnerInstallTask::finish_operation));
 }
 
 /**
@@ -76,22 +76,26 @@ void WineRunnerInstallTask::fetch_releases_async(WineRunner::SourceId source_id)
       {
         try
         {
-          std::vector<WineRunner::Release> releases = WineRunnerManager::get_releases(source_id);
+          std::vector<WineRunner::Release> releases = WineRunnerManager::get_releases(source_id, &cancel_requested_);
           {
             std::lock_guard<std::mutex> lock(data_mutex_);
             releases_ = std::move(releases);
           }
           fetched_source_id_.store(source_id);
-          is_busy_.store(false);
+          // is_busy_ is cleared on the GUI thread (see finish_operation), never here: the GUI thread
+          // could otherwise start a new operation before the dispatcher below is handled, after which
+          // the pending dispatcher would join that brand new worker thread and freeze the UI.
           releases_fetched.emit();
         }
-        catch (const std::runtime_error& error)
+        // Catch every standard exception (incl. Glib::Error), not just std::runtime_error: an
+        // exception escaping this thread function would terminate the whole application, so any
+        // unexpected one has to become a failed operation instead
+        catch (const std::exception& error)
         {
           {
             std::lock_guard<std::mutex> lock(data_mutex_);
             error_message_ = error.what();
           }
-          is_busy_.store(false);
           fetch_failed.emit();
         }
       });
@@ -116,6 +120,7 @@ void WineRunnerInstallTask::install_async(const WineRunner::Release& release)
       {
         try
         {
+          bool checksum_verified = false;
           bool success = WineRunnerManager::download_and_install(
               release,
               [this](std::uint64_t bytes_done, std::uint64_t bytes_total)
@@ -129,10 +134,12 @@ void WineRunnerInstallTask::install_async(const WineRunner::Release& release)
                 phase_.store(phase);
                 progress_changed.emit();
               },
-              cancel_requested_);
+              cancel_requested_, &checksum_verified);
+          checksum_verified_.store(checksum_verified);
           status_.store(success ? WineRunner::InstallStatus::Success : WineRunner::InstallStatus::Cancelled);
         }
-        catch (const std::runtime_error& error)
+        // See fetch_releases_async(): an escaping exception would terminate the application
+        catch (const std::exception& error)
         {
           {
             std::lock_guard<std::mutex> lock(data_mutex_);
@@ -141,7 +148,6 @@ void WineRunnerInstallTask::install_async(const WineRunner::Release& release)
           status_.store(WineRunner::InstallStatus::Error);
         }
         phase_.store(WineRunner::InstallPhase::Idle);
-        is_busy_.store(false);
         install_finished.emit();
       });
 }
@@ -165,7 +171,8 @@ void WineRunnerInstallTask::remove_async(const WineRunner::InstalledRunner& runn
         {
           WineRunnerManager::remove_runner(runner);
         }
-        catch (const std::runtime_error& error)
+        // See fetch_releases_async(): an escaping exception would terminate the application
+        catch (const std::exception& error)
         {
           error_message = error.what();
         }
@@ -173,7 +180,6 @@ void WineRunnerInstallTask::remove_async(const WineRunner::InstalledRunner& runn
           std::lock_guard<std::mutex> lock(data_mutex_);
           error_message_ = error_message;
         }
-        is_busy_.store(false);
         remove_finished.emit();
       });
 }
@@ -234,6 +240,15 @@ WineRunner::InstallStatus WineRunnerInstallTask::get_install_status() const
 }
 
 /**
+ * \brief Whether the last install was verified against a published checksum
+ * \return True when verified, false when the source published no checksum for that release
+ */
+bool WineRunnerInstallTask::was_checksum_verified() const
+{
+  return checksum_verified_.load();
+}
+
+/**
  * \brief Get the error message of the last operation
  * \return Error message (empty string when there was no error)
  */
@@ -248,7 +263,18 @@ Glib::ustring WineRunnerInstallTask::get_error_message() const
  *************************************************************/
 
 /**
- * \brief Join & release a finished worker thread (called on the GUI thread via the dispatchers)
+ * \brief Complete a finished operation on the GUI thread: join the worker thread and release the busy flag.
+ * Connected to every completion dispatcher before the UI handlers, so a UI handler that starts a
+ * follow-up operation always sees a joined thread and a cleared busy flag.
+ */
+void WineRunnerInstallTask::finish_operation()
+{
+  cleanup_thread();
+  is_busy_.store(false);
+}
+
+/**
+ * \brief Join & release a finished worker thread (called on the GUI thread)
  */
 void WineRunnerInstallTask::cleanup_thread()
 {
