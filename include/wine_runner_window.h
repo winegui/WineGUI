@@ -83,6 +83,7 @@ private:
     std::vector<WineRunner::Release> releases;                                /*!< Fetched releases of this variant (newest first) */
     bool fetched = false;                                                     /*!< True when the release list was fetched successfully */
     bool fetch_pending = false;                                               /*!< True when a fetch is queued (another operation was running) */
+    bool catch_all = false; /*!< True for the page that collects every variant of the source without a dedicated page */
   };
 
   Gtk::Window& default_parent_;                                              /*!< Main window (default transient parent) */
@@ -109,8 +110,12 @@ private:
 
   // Member functions
   void create_layout();
-  SourcePage*
-  create_source_page(WineRunner::SourceId source_id, const std::string& variant, const Glib::ustring& title, const Glib::ustring& description);
+  SourcePage* create_source_page(WineRunner::SourceId source_id,
+                                 const std::string& variant,
+                                 const Glib::ustring& title,
+                                 const Glib::ustring& description,
+                                 bool catch_all = false);
+  bool page_shows_release(const SourcePage& page, const WineRunner::Release& release) const;
   void refresh_installed_list();
   void refresh_version_comboboxes();
   void fill_version_combobox(SourcePage& page);
@@ -122,5 +127,5 @@ private:
   void remove_runner_confirmed(const WineRunner::InstalledRunner& runner);
   void show_error_message(const Glib::ustring& message);
   void show_info_message(const Glib::ustring& message);
-  static Glib::ustring format_release_label(const WineRunner::Release& release);
+  static Glib::ustring format_release_label(const WineRunner::Release& release, bool show_variant = false);
 };

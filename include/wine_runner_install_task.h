@@ -64,9 +64,11 @@ public:
   std::pair<std::uint64_t, std::uint64_t> get_progress() const;
   WineRunner::InstallPhase get_phase() const;
   WineRunner::InstallStatus get_install_status() const;
+  bool was_checksum_verified() const;
   Glib::ustring get_error_message() const;
 
 private:
+  void finish_operation();
   void cleanup_thread();
 
   std::unique_ptr<std::thread> thread_;                                                          /*!< Worker thread for all operations */
@@ -76,6 +78,7 @@ private:
   std::atomic<std::uint64_t> bytes_total_{0};                                                    /*!< Download progress: bytes total (0 = unknown) */
   std::atomic<WineRunner::InstallPhase> phase_{WineRunner::InstallPhase::Idle};                  /*!< Current install phase */
   std::atomic<WineRunner::InstallStatus> status_{WineRunner::InstallStatus::Success};            /*!< Final install status */
+  std::atomic<bool> checksum_verified_{false};                                                   /*!< Last install was checksum verified */
   std::atomic<WineRunner::SourceId> fetched_source_id_{WineRunner::SourceId::Kron4ekWineBuilds}; /*!< Source the fetched releases belong to */
   mutable std::mutex data_mutex_;                                                                /*!< Protects releases_ & error_message_ */
   std::vector<WineRunner::Release> releases_;                                                    /*!< Fetched releases (guarded by data_mutex_) */

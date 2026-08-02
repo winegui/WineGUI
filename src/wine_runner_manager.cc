@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <cctype>
 #include <cerrno>
+#include <charconv>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -34,7 +36,9 @@
 #include <glibmm/spawn.h>
 #include <glibmm/timer.h>
 #include <iostream>
+#include <limits>
 #include <map>
+#include <mutex>
 #include <nlohmann/json.hpp>
 #include <signal.h>
 #include <sstream>
@@ -56,6 +60,14 @@ static const std::vector<WineRunner::Source> RunnerSources = {
 /// Per-session cache of the fetched GitHub release lists (protects against the GitHub API rate limit)
 static std::map<WineRunner::SourceId, std::vector<WineRunner::Release>> release_cache;
 static std::mutex release_cache_mutex;
+
+/// Per-session cache of the "wine --version" output per runner binary directory.
+/// Determining the version spawns a wine subprocess, while get_installed_runners() is called from the
+/// GUI thread on every bottle selection (see MainWindow::set_detailed_info). An installed runner never
+/// changes on disk, so the version is cached until a runner is installed or removed. Only successful
+/// lookups are cached, so a temporarily broken runner is retried.
+static std::map<std::string, std::string> wine_version_cache;
+static std::mutex wine_version_cache_mutex;
 
 /**
  * \brief Split a string into parts by delimiter
@@ -91,8 +103,10 @@ static std::string join_string(const std::vector<std::string>& parts, std::size_
 
 /**
  * \brief Human readable name of a build variant (eg. "staging-tkg" becomes "Staging-TkG")
+ * \param[in] variant Build variant token, eg. "staging-tkg-ntsync"
+ * \return Human readable variant name
  */
-static std::string variant_display_name(const std::string& variant)
+std::string WineRunnerManager::variant_display_name(const std::string& variant)
 {
   static const std::map<std::string, std::string> KnownVariantNames = {
       {"vanilla", "Vanilla"}, {"staging", "Staging"}, {"tkg", "TkG"}, {"proton", "Proton"}, {"ntsync", "NTSync"}};
@@ -144,10 +158,11 @@ const WineRunner::Source& WineRunnerManager::get_source(WineRunner::SourceId sou
  * \brief Fetch the list of downloadable releases of a runner provider from the GitHub API.
  * The result is cached for the rest of the session (see also invalidate_release_cache()).
  * \param[in] source_id Source ID
+ * \param[in] cancel (Optionally) Cancellation flag, polled while the HTTP request is running
  * \throws std::runtime_error when the list could not be fetched or parsed (eg. offline or GitHub rate limit)
- * \return List of releases, newest first
+ * \return List of releases, newest first (empty when cancelled)
  */
-std::vector<WineRunner::Release> WineRunnerManager::get_releases(WineRunner::SourceId source_id)
+std::vector<WineRunner::Release> WineRunnerManager::get_releases(WineRunner::SourceId source_id, const std::atomic<bool>* cancel)
 {
   {
     std::lock_guard<std::mutex> lock(release_cache_mutex);
@@ -160,7 +175,7 @@ std::vector<WineRunner::Release> WineRunnerManager::get_releases(WineRunner::Sou
   std::string json_body;
   try
   {
-    json_body = fetch_url(url);
+    json_body = fetch_url(url, cancel);
   }
   catch (const std::runtime_error& error)
   {
@@ -168,6 +183,9 @@ std::vector<WineRunner::Release> WineRunnerManager::get_releases(WineRunner::Sou
                              " from GitHub.\n\nEither you are offline or the GitHub API rate limit was reached (max 60 requests per hour).\nAlready "
                              "installed runners keep working. Please, try again later.");
   }
+  // Cancelled (eg. the application is shutting down): don't parse or cache a truncated body
+  if (cancel != nullptr && cancel->load())
+    return {};
   std::vector<WineRunner::Release> releases = parse_github_releases_json(source_id, json_body);
 
   std::lock_guard<std::mutex> lock(release_cache_mutex);
@@ -440,6 +458,47 @@ std::string WineRunnerManager::get_runners_dir()
 }
 
 /**
+ * \brief Get the "wine --version" output of a runner binary directory, using the per-session cache.
+ * Spawning wine is relatively expensive and this runs on the GUI thread, so a successful lookup is
+ * remembered until a runner is installed or removed (an installed runner never changes on disk).
+ * \param[in] bin_dir Runner binary directory
+ * \return Wine version string (empty when it could not be determined)
+ */
+static std::string get_cached_wine_version(const std::string& bin_dir)
+{
+  {
+    std::lock_guard<std::mutex> lock(wine_version_cache_mutex);
+    if (auto it = wine_version_cache.find(bin_dir); it != wine_version_cache.end())
+      return it->second;
+  }
+  std::string wine_version;
+  try
+  {
+    // Request the 64-bit binary, get_wine_executable_location() falls back to the unified wine binary for WoW64 builds
+    wine_version = Helper::get_wine_version(true, "", bin_dir);
+  }
+  catch (const std::runtime_error& version_error)
+  {
+    return ""; // Don't cache a failure, so a temporarily broken runner is retried
+  }
+  if (!wine_version.empty())
+  {
+    std::lock_guard<std::mutex> lock(wine_version_cache_mutex);
+    wine_version_cache[bin_dir] = wine_version;
+  }
+  return wine_version;
+}
+
+/**
+ * \brief Clear the cached Wine versions (after a runner was installed or removed)
+ */
+void WineRunnerManager::invalidate_wine_version_cache()
+{
+  std::lock_guard<std::mutex> lock(wine_version_cache_mutex);
+  wine_version_cache.clear();
+}
+
+/**
  * \brief List the installed Wine runners in the default runners directory
  * \return List of installed runners (never throws, returns what it finds)
  */
@@ -484,15 +543,7 @@ std::vector<WineRunner::InstalledRunner> WineRunnerManager::get_installed_runner
       // is a reliable signal (eg. Proton WoW64 ships both yet still refuses a 32-bit prefix).
       std::optional<WineRunner::Release> classified = classify_kron4ek_asset(entry_name + ".tar.xz");
       runner.wow64 = classified.has_value() && classified->wow64;
-      try
-      {
-        // Request the 64-bit binary, get_wine_executable_location() falls back to the unified wine binary for WoW64 builds
-        runner.wine_version = Helper::get_wine_version(true, "", runner.bin_dir);
-      }
-      catch (const std::runtime_error& version_error)
-      {
-        runner.wine_version = "";
-      }
+      runner.wine_version = get_cached_wine_version(runner.bin_dir);
       runners.emplace_back(runner);
     }
   }
@@ -558,15 +609,33 @@ bool WineRunnerManager::is_installed(const WineRunner::Release& release)
  */
 void WineRunnerManager::remove_runner(const WineRunner::InstalledRunner& runner)
 {
-  if (runner.name.empty() || runner.name[0] == '.' || !is_safe_file_name(runner.name))
+  remove_runner(runner, get_runners_dir());
+}
+
+/**
+ * \brief Remove an installed Wine runner from disk.
+ * Refuses to remove anything outside the given runners directory.
+ * \param[in] runner Installed runner
+ * \param[in] runners_base_dir Runners directory the runner must be located directly in (parameter mainly exists for unit testing)
+ * \throws std::runtime_error on failure or on a path-safety violation
+ */
+void WineRunnerManager::remove_runner(const WineRunner::InstalledRunner& runner, const std::string& runners_base_dir)
+{
+  if (!is_safe_file_name(runner.name))
   {
     throw std::runtime_error("Refusing to remove the Wine runner: invalid runner name.");
   }
-  fs::path runners_dir = normalize_path(get_runners_dir());
+  fs::path runners_dir = normalize_path(runners_base_dir);
   fs::path target_dir = normalize_path(runner.runner_dir);
   if (target_dir.parent_path() != runners_dir || target_dir == runners_dir)
   {
     throw std::runtime_error("Refusing to remove the Wine runner: it's located outside the WineGUI runners directory.");
+  }
+  // The directory name must match the validated runner name, so a crafted runner_dir can never
+  // point the removal at a sibling directory
+  if (target_dir.filename().string() != runner.name)
+  {
+    throw std::runtime_error("Refusing to remove the Wine runner: the directory does not match the runner name.");
   }
   std::error_code error_code;
   fs::remove_all(target_dir, error_code);
@@ -574,6 +643,7 @@ void WineRunnerManager::remove_runner(const WineRunner::InstalledRunner& runner)
   {
     throw std::runtime_error("Could not remove the Wine runner: " + error_code.message());
   }
+  invalidate_wine_version_cache();
 }
 
 /**
@@ -629,15 +699,20 @@ std::optional<std::string> WineRunnerManager::parse_checksum_file(const std::str
  * \param[in] release Release to install
  * \param[in] progress_cb Progress callback (bytes done, bytes total), invoked from the calling thread; may be empty
  * \param[in] phase_cb Phase change callback, invoked from the calling thread; may be empty
- * \param[in] cancel Cancellation flag (polled during the download and between phases)
+ * \param[in] cancel Cancellation flag (polled during the download, the extraction and between phases)
+ * \param[out] checksum_verified (Optionally) Set to true when the archive was verified against a published
+ *                               checksum, false when the source published no checksum for this release
  * \throws std::runtime_error on failure
  * \return True on success, false when cancelled
  */
 bool WineRunnerManager::download_and_install(const WineRunner::Release& release,
                                              const std::function<void(std::uint64_t, std::uint64_t)>& progress_cb,
                                              const std::function<void(WineRunner::InstallPhase)>& phase_cb,
-                                             const std::atomic<bool>& cancel)
+                                             const std::atomic<bool>& cancel,
+                                             bool* checksum_verified)
 {
+  if (checksum_verified != nullptr)
+    *checksum_verified = false;
   // Never use unvalidated names from the GitHub API in filesystem paths
   if (!is_safe_file_name(release.asset_name))
   {
@@ -656,14 +731,17 @@ bool WineRunnerManager::download_and_install(const WineRunner::Release& release,
     throw std::runtime_error("This Wine runner version is already installed.");
   }
 
-  std::string tmp_dir = Glib::build_filename(runners_dir, ".tmp");
+  // Both transient directories are scoped to this process, so a second WineGUI instance
+  // installing a runner at the same time can never touch our in-flight download (see sweep_leftover_temp_dirs)
+  std::string process_id = std::to_string(getpid());
+  std::string tmp_dir = Glib::build_filename(runners_dir, ".tmp-" + process_id);
   fs::create_directories(tmp_dir, error_code);
   if (error_code)
   {
     throw std::runtime_error("Could not create the temporary download directory: " + tmp_dir);
   }
   std::string archive_path = Glib::build_filename(tmp_dir, release.asset_name);
-  std::string staging_dir = Glib::build_filename(runners_dir, ".staging-" + std::to_string(getpid()));
+  std::string staging_dir = Glib::build_filename(runners_dir, ".staging-" + process_id);
 
   // Remove the transient download & staging files again in every exit path (success, cancel & error)
   struct TransientFilesCleanup
@@ -678,7 +756,7 @@ bool WineRunnerManager::download_and_install(const WineRunner::Release& release,
       }
     }
   } cleanup;
-  cleanup.paths = {archive_path, archive_path + ".part", staging_dir};
+  cleanup.paths = {tmp_dir, staging_dir};
 
   if (phase_cb)
     phase_cb(WineRunner::InstallPhase::Downloading);
@@ -696,7 +774,9 @@ bool WineRunnerManager::download_and_install(const WineRunner::Release& release,
 
   if (phase_cb)
     phase_cb(WineRunner::InstallPhase::Verifying);
-  verify_archive_checksum(release, archive_path);
+  bool verified = verify_archive_checksum(release, archive_path, cancel);
+  if (checksum_verified != nullptr)
+    *checksum_verified = verified;
   if (cancel.load())
     return false;
 
@@ -707,7 +787,7 @@ bool WineRunnerManager::download_and_install(const WineRunner::Release& release,
   {
     throw std::runtime_error("Could not create the staging directory: " + staging_dir);
   }
-  extract_archive(archive_path, staging_dir);
+  extract_archive(archive_path, staging_dir, cancel);
   if (cancel.load())
     return false;
 
@@ -752,6 +832,7 @@ bool WineRunnerManager::download_and_install(const WineRunner::Release& release,
   {
     throw std::runtime_error("Could not move the Wine runner into place: " + error_code.message());
   }
+  invalidate_wine_version_cache();
   return true;
 }
 
@@ -760,30 +841,109 @@ bool WineRunnerManager::download_and_install(const WineRunner::Release& release,
  *************************************************************/
 
 /**
- * \brief Fetch a (small) file over HTTPS into memory, using a wget subprocess (no shell involved)
- * \param[in] url URL to fetch
- * \throws std::runtime_error on failure
- * \return Response body
+ * \brief Run a subprocess (no shell involved) and wait for it, while polling the cancellation flag.
+ * On cancellation the subprocess is terminated. This keeps every blocking subprocess interruptible,
+ * so the application can shut down without waiting for a wget timeout or a large extraction.
+ * \param[in] argv Command and arguments
+ * \param[in] cancel (Optionally) Cancellation flag, polled roughly 4 times per second
+ * \param[in] poll_cb (Optionally) Called on every poll tick (used for download progress); may be empty
+ * \param[in] failure_message Error message thrown when the subprocess exits non-zero
+ * \throws std::runtime_error when the subprocess could not be started, was killed or exited non-zero
+ * \return True on success, false when cancelled
  */
-std::string WineRunnerManager::fetch_url(const std::string& url)
+bool WineRunnerManager::spawn_wait_cancellable(const std::vector<std::string>& argv,
+                                               const std::atomic<bool>* cancel,
+                                               const std::function<void()>& poll_cb,
+                                               const std::string& failure_message)
 {
-  std::string standard_output;
-  std::string standard_error;
-  int wait_status = 0;
+  Glib::Pid pid = 0;
   try
   {
-    const std::vector<std::string> argv{"wget", "--quiet", "--timeout=30", "--tries=2", "--output-document=-", url};
-    Glib::spawn_sync("", argv, Glib::SpawnFlags::SEARCH_PATH, {}, &standard_output, &standard_error, &wait_status);
+    Glib::spawn_async("", argv, Glib::SpawnFlags::SEARCH_PATH | Glib::SpawnFlags::DO_NOT_REAP_CHILD, {}, &pid);
   }
   catch (const Glib::Error& error)
   {
-    throw std::runtime_error("Could not start wget: " + std::string(error.what()));
+    throw std::runtime_error("Could not start " + argv.at(0) + ": " + std::string(error.what()));
   }
-  if (!WIFEXITED(wait_status) || WEXITSTATUS(wait_status) != 0)
+
+  bool cancelled = false;
+  int wait_status = 0;
+  while (true)
   {
-    throw std::runtime_error("Could not fetch: " + url);
+    pid_t wait_result = waitpid(pid, &wait_status, WNOHANG);
+    if (wait_result == pid)
+      break; // Process exited
+    if (wait_result < 0)
+    {
+      // waitpid() failed, we cannot tell whether the process succeeded. Never treat this as success.
+      Glib::spawn_close_pid(pid);
+      throw std::runtime_error("Could not wait for " + argv.at(0) + ": " + std::string(std::strerror(errno)));
+    }
+    if (cancel != nullptr && cancel->load())
+    {
+      kill(pid, SIGTERM);
+      waitpid(pid, &wait_status, 0);
+      cancelled = true;
+      break;
+    }
+    if (poll_cb)
+      poll_cb();
+    Glib::usleep(250000); // 250 ms
   }
-  return standard_output;
+  Glib::spawn_close_pid(pid);
+
+  if (cancelled)
+    return false;
+  if (!WIFEXITED(wait_status) || WEXITSTATUS(wait_status) != 0)
+    throw std::runtime_error(failure_message);
+  return true;
+}
+
+/**
+ * \brief Fetch a (small) file over HTTPS into memory, using a wget subprocess (no shell involved).
+ * The response is downloaded to a temporary file, so the request stays cancellable (wget would
+ * otherwise block for up to its timeout, freezing the application shutdown).
+ * \param[in] url URL to fetch
+ * \param[in] cancel (Optionally) Cancellation flag, polled while the request is running
+ * \throws std::runtime_error on failure
+ * \return Response body (empty string when cancelled)
+ */
+std::string WineRunnerManager::fetch_url(const std::string& url, const std::atomic<bool>* cancel)
+{
+  std::string tmp_path;
+  try
+  {
+    int file_descriptor = Glib::file_open_tmp(tmp_path, "winegui-runner-fetch");
+    close(file_descriptor);
+  }
+  catch (const Glib::FileError& file_error)
+  {
+    throw std::runtime_error("Could not create a temporary file: " + std::string(file_error.what()));
+  }
+  // Remove the temporary file again in every exit path (success, cancel & error)
+  struct TempFileCleanup
+  {
+    std::string path;
+    ~TempFileCleanup()
+    {
+      std::error_code cleanup_error;
+      fs::remove(path, cleanup_error);
+    }
+  } cleanup{tmp_path};
+
+  const std::vector<std::string> argv{"wget", "--quiet", "--timeout=30", "--tries=2", "--output-document=" + tmp_path, url};
+  if (!spawn_wait_cancellable(argv, cancel, {}, "Could not fetch: " + url))
+  {
+    return ""; // Cancelled
+  }
+  std::ifstream file(tmp_path, std::ios::binary);
+  if (!file.is_open())
+  {
+    throw std::runtime_error("Could not read the fetched response of: " + url);
+  }
+  std::ostringstream body;
+  body << file.rdbuf();
+  return body.str();
 }
 
 /**
@@ -803,53 +963,34 @@ bool WineRunnerManager::download_file(const std::string& url,
                                       const std::function<void(std::uint64_t, std::uint64_t)>& progress_cb,
                                       const std::atomic<bool>& cancel)
 {
-  Glib::Pid pid = 0;
+  const std::vector<std::string> argv{"wget", "--quiet", "--timeout=30", "--output-document=" + dest_path, url};
+  // Report progress by polling the growing destination file size
+  auto poll_cb = [&dest_path, expected_size, &progress_cb]()
+  {
+    if (!progress_cb)
+      return;
+    std::error_code error_code;
+    std::uint64_t downloaded_size = fs::file_size(dest_path, error_code);
+    if (!error_code)
+      progress_cb(downloaded_size, expected_size);
+  };
+
+  bool completed = false;
   try
   {
-    const std::vector<std::string> argv{"wget", "--quiet", "--timeout=30", "--output-document=" + dest_path, url};
-    Glib::spawn_async("", argv, Glib::SpawnFlags::SEARCH_PATH | Glib::SpawnFlags::DO_NOT_REAP_CHILD, {}, &pid);
+    completed = spawn_wait_cancellable(argv, &cancel, poll_cb, "Download failed. Are you still online?\n\nURL: " + url);
   }
-  catch (const Glib::Error& error)
-  {
-    throw std::runtime_error("Could not start wget: " + std::string(error.what()));
-  }
-
-  bool cancelled = false;
-  int wait_status = 0;
-  while (true)
-  {
-    pid_t wait_result = waitpid(pid, &wait_status, WNOHANG);
-    if (wait_result != 0)
-      break; // Process exited (or waitpid failed)
-    if (cancel.load())
-    {
-      kill(pid, SIGTERM);
-      waitpid(pid, &wait_status, 0);
-      cancelled = true;
-      break;
-    }
-    if (progress_cb)
-    {
-      std::error_code error_code;
-      std::uint64_t downloaded_size = fs::file_size(dest_path, error_code);
-      if (!error_code)
-        progress_cb(downloaded_size, expected_size);
-    }
-    Glib::usleep(250000); // 250 ms
-  }
-  Glib::spawn_close_pid(pid);
-
-  if (cancelled)
+  catch (const std::runtime_error& error)
   {
     std::error_code error_code;
     fs::remove(dest_path, error_code);
-    return false;
+    throw;
   }
-  if (!WIFEXITED(wait_status) || WEXITSTATUS(wait_status) != 0)
+  if (!completed)
   {
     std::error_code error_code;
     fs::remove(dest_path, error_code);
-    throw std::runtime_error("Download failed. Are you still online?\n\nURL: " + url);
+    return false; // Cancelled
   }
   if (progress_cb)
     progress_cb(expected_size, expected_size);
@@ -861,26 +1002,14 @@ bool WineRunnerManager::download_file(const std::string& url,
  * GNU tar refuses absolute paths & ".." members by default, which keeps the extraction within the staging directory.
  * \param[in] archive_path Archive file path
  * \param[in] staging_dir Directory to extract into
+ * \param[in] cancel Cancellation flag (extracting a ~500 MB runner takes a while, so it stays interruptible)
  * \throws std::runtime_error on failure
  */
-void WineRunnerManager::extract_archive(const std::string& archive_path, const std::string& staging_dir)
+void WineRunnerManager::extract_archive(const std::string& archive_path, const std::string& staging_dir, const std::atomic<bool>& cancel)
 {
-  std::string standard_output;
-  std::string standard_error;
-  int wait_status = 0;
-  try
-  {
-    const std::vector<std::string> argv{"tar", "-xf", archive_path, "-C", staging_dir, "--no-same-owner"};
-    Glib::spawn_sync("", argv, Glib::SpawnFlags::SEARCH_PATH, {}, &standard_output, &standard_error, &wait_status);
-  }
-  catch (const Glib::Error& error)
-  {
-    throw std::runtime_error("Could not start tar: " + std::string(error.what()));
-  }
-  if (!WIFEXITED(wait_status) || WEXITSTATUS(wait_status) != 0)
-  {
-    throw std::runtime_error("Could not extract the archive.\n\n" + standard_error);
-  }
+  const std::vector<std::string> argv{"tar", "-xf", archive_path, "-C", staging_dir, "--no-same-owner"};
+  // The staging directory is removed by the caller's cleanup, so a cancelled extraction leaves nothing behind
+  spawn_wait_cancellable(argv, &cancel, {}, "Could not extract the archive.\n\nThe download may be corrupted or incomplete.");
 }
 
 /**
@@ -910,17 +1039,22 @@ std::string WineRunnerManager::compute_checksum(const std::string& file_path, Wi
  * \brief Verify the downloaded archive against the checksum published by the runner source
  * \param[in] release Release the archive belongs to
  * \param[in] archive_path Downloaded archive file path
+ * \param[in] cancel Cancellation flag (polled while the checksum file is fetched)
  * \throws std::runtime_error on a checksum mismatch (the archive is removed by the caller's cleanup)
+ * \return True when the archive was verified, false when the source published no checksum for this release
  */
-void WineRunnerManager::verify_archive_checksum(const WineRunner::Release& release, const std::string& archive_path)
+bool WineRunnerManager::verify_archive_checksum(const WineRunner::Release& release, const std::string& archive_path, const std::atomic<bool>& cancel)
 {
   if (release.checksum_type == WineRunner::ChecksumType::None || release.checksum_url.empty())
   {
-    // Both supported sources publish checksums for every release nowadays, only very old releases lack them
+    // Both supported sources publish checksums for every release nowadays, only very old releases lack them.
+    // The caller surfaces this to the user, so an unverified install is never silent.
     std::cout << "WARN: No checksum published for " << release.asset_name << ", skipping the verification." << std::endl;
-    return;
+    return false;
   }
-  std::string checksum_file_content = fetch_url(release.checksum_url);
+  std::string checksum_file_content = fetch_url(release.checksum_url, &cancel);
+  if (cancel.load())
+    return false;
   std::optional<std::string> expected_digest = parse_checksum_file(checksum_file_content, release.asset_name);
   if (!expected_digest.has_value())
   {
@@ -932,24 +1066,65 @@ void WineRunnerManager::verify_archive_checksum(const WineRunner::Release& relea
     throw std::runtime_error("Checksum verification of the downloaded archive failed!\n\nThe download is possibly corrupted (or tampered with). "
                              "Please, try again.");
   }
+  return true;
 }
 
 /**
- * \brief Remove leftover transient directories/files from a previously crashed or killed session
+ * \brief Whether a process with the given ID is still running
+ * \param[in] process_id Process ID
+ * \return True when the process is alive (or we are not allowed to signal it)
+ */
+static bool is_process_alive(pid_t process_id)
+{
+  if (process_id <= 0)
+    return false;
+  // Signal 0 performs the error checking without actually sending a signal
+  if (kill(process_id, 0) == 0)
+    return true;
+  return errno != ESRCH;
+}
+
+/**
+ * \brief Remove leftover transient directories from a previously crashed or killed session.
+ * Transient directories are suffixed with the process ID that owns them, so directories belonging
+ * to a second, still running WineGUI instance are left alone (removing them would break its install).
  * \param[in] runners_dir Runners directory
  */
 void WineRunnerManager::sweep_leftover_temp_dirs(const std::string& runners_dir)
 {
+  static const std::vector<std::string> transient_prefixes = {".tmp-", ".staging-"};
   try
   {
     Glib::Dir dir(runners_dir);
     for (const auto& entry_name : dir)
     {
-      if (entry_name == ".tmp" || entry_name.starts_with(".staging-"))
+      std::string owner_id;
+      for (const std::string& prefix : transient_prefixes)
       {
-        std::error_code error_code;
-        fs::remove_all(fs::path(runners_dir) / entry_name, error_code);
+        if (entry_name.starts_with(prefix))
+          owner_id = entry_name.substr(prefix.size());
       }
+      // Legacy leftover of an older WineGUI version, which used a shared (not process scoped) directory
+      bool is_legacy_tmp_dir = (entry_name == ".tmp");
+      if (owner_id.empty() && !is_legacy_tmp_dir)
+        continue;
+      if (!is_legacy_tmp_dir)
+      {
+        // Parse without throwing: a malformed (eg. absurdly long) suffix must never take the
+        // application down, since this runs on the install worker thread
+        std::int64_t owner_process_id = 0;
+        const char* first = owner_id.data();
+        const char* last = owner_id.data() + owner_id.size();
+        auto [parse_end, parse_error] = std::from_chars(first, last, owner_process_id);
+        if (parse_error != std::errc() || parse_end != last)
+          continue; // Not a plain number, leave it alone
+        if (owner_process_id <= 0 || owner_process_id > static_cast<std::int64_t>(std::numeric_limits<pid_t>::max()))
+          continue; // Out of the valid process ID range, leave it alone
+        if (is_process_alive(static_cast<pid_t>(owner_process_id)))
+          continue; // Owned by another running WineGUI instance
+      }
+      std::error_code error_code;
+      fs::remove_all(fs::path(runners_dir) / entry_name, error_code);
     }
   }
   catch (const Glib::FileError& file_error)
