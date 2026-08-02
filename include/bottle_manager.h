@@ -109,12 +109,14 @@ private:
   mutable std::mutex output_loging_mutex_;
   mutable std::mutex error_message_winetricks_mutex_;
   mutable std::mutex error_message_gpu_test_mutex_;
+  mutable std::mutex error_message_thread_mutex_;
   std::unique_ptr<std::thread> thread_install_update_winetricks_; /*!< Thread for installing/updating winetricks binary */
   Glib::Dispatcher update_bottles_dispatcher_;                    /*!< Dispatcher if the bottle list needs to be updated, from thread */
   Glib::Dispatcher write_log_dispatcher_;                         /*!< Dispatcher if we can write the output logging to disk */
   Glib::Dispatcher error_message_winetricks_dispatcher_; /*!< Dispatcher when there is an error message during winetricks install/update thread */
   Glib::Dispatcher winetricks_finished_dispatcher_;      /*!< Dispatcher when the Winetricks install is completed */
   Glib::Dispatcher error_message_gpu_test_dispatcher_;   /*!< Dispatcher when the DXVK GPU test exited with a failure */
+  Glib::Dispatcher error_message_thread_dispatcher_;     /*!< Dispatcher when a detached worker thread failed with an exception */
 
   MainWindow& main_window_;
   string bottle_location_;
@@ -130,6 +132,7 @@ private:
   Glib::ustring error_message_;
   Glib::ustring error_message_winetricks_;
   Glib::ustring error_message_gpu_test_;
+  Glib::ustring error_message_thread_;
   std::string logging_bottle_prefix_;
   std::string output_logging_;
 
@@ -137,6 +140,7 @@ private:
   virtual void write_log_to_file();
   virtual void on_error_winetricks();
   virtual void on_error_gpu_test();
+  virtual void on_error_thread();
   virtual void cleanup_install_update_winetricks_thread();
 
   static bool add_gallium_nine_shortcut(const string& wine_prefix);
