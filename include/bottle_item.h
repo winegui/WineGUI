@@ -316,19 +316,21 @@ private:
   Glib::ustring folder_name_;
   Glib::ustring wine_bin_path_;
   Glib::ustring description_;
-  bool is_status_ok_;
+  // The default constructor leaves the members to their defaults (GTK default-constructs an item
+  // before copying into it), so every primitive member needs a default initializer here
+  bool is_status_ok_ = false;
   BottleTypes::Windows win_;
   BottleTypes::Bit bit_;
   Glib::ustring wine_version_;
-  bool is_wine64_bit_;
-  bool use_wine64_;
+  bool is_wine64_bit_ = false;
+  bool use_wine64_ = false;
   Glib::ustring wine_location_;
   Glib::ustring wine_c_drive_;
   Glib::ustring wine_last_changed_;
   BottleTypes::AudioDriver audio_driver_;
   Glib::ustring virtual_desktop_;
-  bool is_debug_logging_;
-  int debug_log_level_;
+  bool is_debug_logging_ = false;
+  int debug_log_level_ = 0;
   std::vector<std::pair<std::string, std::string>> env_vars_;
   std::map<int, ApplicationData> app_list_;
 

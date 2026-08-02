@@ -399,11 +399,17 @@ string Helper::get_wine_executable_location(bool prefer_wine64, const string& wi
   else
   {
     // System Wine: use "wine64" only when the user opted in and a wine64 binary is actually on PATH,
-    // otherwise gracefully fall back to the plain "wine" binary
+    // otherwise gracefully fall back to the plain "wine" binary.
+    // The PATH lookup spawns a subprocess while this is called from the GUI thread on every bottle
+    // selection, so the (static) outcome is only determined once per session.
     if (prefer_wine64)
     {
-      const auto& [exit_code, _] = exec("command -v " + WineExecutable64);
-      if (exit_code == 0)
+      static const bool has_system_wine64 = []()
+      {
+        const auto& [exit_code, _] = exec("command -v " + WineExecutable64);
+        return exit_code == 0;
+      }();
+      if (has_system_wine64)
       {
         return WineExecutable64;
       }
