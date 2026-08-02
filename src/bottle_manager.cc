@@ -49,7 +49,8 @@ BottleManager::BottleManager(MainWindow& main_window)
       is_logging_stderr_(true),
       error_message_(),
       error_message_winetricks_(),
-      error_message_gpu_test_()
+      error_message_gpu_test_(),
+      error_message_thread_()
 {
   // Connect internal dispatcher(s)
   update_bottles_dispatcher_.connect(sigc::bind(sigc::mem_fun(*this, &BottleManager::update_config_and_bottles), "", false));
@@ -57,6 +58,7 @@ BottleManager::BottleManager(MainWindow& main_window)
   error_message_winetricks_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::on_error_winetricks));
   winetricks_finished_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::cleanup_install_update_winetricks_thread));
   error_message_gpu_test_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::on_error_gpu_test));
+  error_message_thread_dispatcher_.connect(sigc::mem_fun(*this, &BottleManager::on_error_thread));
 }
 
 /**
@@ -141,6 +143,15 @@ void BottleManager::on_error_gpu_test()
 }
 
 /**
+ * \brief Show the failure message of a detached worker thread to the main window
+ */
+void BottleManager::on_error_thread()
+{
+  std::lock_guard<std::mutex> lock(error_message_thread_mutex_);
+  main_window_.show_error_message(error_message_thread_);
+}
+
+/**
  * \brief Install or self-update Winetricks within a thread.
  * \param install True to install/update winetricks, false to self-update
  */
@@ -167,7 +178,9 @@ void BottleManager::install_or_update_winetricks_thread(bool install)
           {
             std::cout << "WARN: " << msg.what() << std::endl;
           }
-          catch (const std::runtime_error& error)
+          // Catch every standard exception, not just std::runtime_error: an exception escaping this
+          // thread function would terminate WineGUI instead of failing the operation
+          catch (const std::exception& error)
           {
             {
               std::lock_guard<std::mutex> lock(error_message_winetricks_mutex_);
@@ -836,18 +849,32 @@ void BottleManager::run_executable(string program, bool is_msi_file = false)
         [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, program, working_directory, env_vars,
          logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
          output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
-         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
+         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+         error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true,
-                                                         logging_stderr, wine_bin_path);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead
+          try
+          {
+            string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true,
+                                                           logging_stderr, wine_bin_path);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex);
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
         });
     t.detach();
@@ -890,27 +917,39 @@ void BottleManager::run_program(string program)
            error_message_mutex = std::ref(error_message_gpu_test_mutex_), error_message = std::ref(error_message_gpu_test_),
            error_dispatcher = &error_message_gpu_test_dispatcher_]
           {
-            int exit_code = 0;
-            string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, "", env_vars, false, logging_stderr,
-                                                           wine_bin_path, &exit_code);
-            if (exit_code != 0)
+            // An exception escaping a detached thread function terminates WineGUI, so report it instead
+            try
             {
-              // Only show the last part of the output (the most relevant error lines are at the end)
-              string output_tail = (output.size() > 1500) ? "...\n" + output.substr(output.size() - 1500) : output;
+              int exit_code = 0;
+              string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, "", env_vars, false, logging_stderr,
+                                                             wine_bin_path, &exit_code);
+              if (exit_code != 0)
+              {
+                // Only show the last part of the output (the most relevant error lines are at the end)
+                string output_tail = (output.size() > 1500) ? "...\n" + output.substr(output.size() - 1500) : output;
+                {
+                  std::lock_guard<std::mutex> lock(error_message_mutex.get());
+                  error_message.get() = "The GPU test (Direct3D 11 triangle) exited with an error.\n\nTest output:\n" + output_tail;
+                }
+                error_dispatcher->emit();
+              }
+              if (debug_logging && !output.empty())
+              {
+                {
+                  std::lock_guard<std::mutex> lock(output_logging_mutex);
+                  logging_bottle_prefix.get() = wine_prefix;
+                  output_logging.get() = output;
+                }
+                write_log_dispatcher->emit();
+              }
+            }
+            catch (const std::exception& error)
+            {
               {
                 std::lock_guard<std::mutex> lock(error_message_mutex.get());
-                error_message.get() = "The GPU test (Direct3D 11 triangle) exited with an error.\n\nTest output:\n" + output_tail;
+                error_message.get() = "The GPU test could not be started.\n\n" + Glib::ustring(error.what());
               }
               error_dispatcher->emit();
-            }
-            if (debug_logging && !output.empty())
-            {
-              {
-                std::lock_guard<std::mutex> lock(output_logging_mutex);
-                logging_bottle_prefix.get() = wine_prefix;
-                output_logging.get() = output;
-              }
-              write_log_dispatcher->emit();
             }
           });
       t.detach();
@@ -940,18 +979,32 @@ void BottleManager::run_program(string program)
           [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, program, working_directory, env_vars,
            logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
            output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
-           output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
+           output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+           error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+           error_dispatcher = &error_message_thread_dispatcher_]
           {
-            string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true,
-                                                           logging_stderr, wine_bin_path);
-            if (debug_logging && !output.empty())
+            // An exception escaping a detached thread function terminates WineGUI, so report it instead
+            try
+            {
+              string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true,
+                                                             logging_stderr, wine_bin_path);
+              if (debug_logging && !output.empty())
+              {
+                {
+                  std::lock_guard<std::mutex> lock(output_logging_mutex);
+                  logging_bottle_prefix.get() = wine_prefix;
+                  output_logging.get() = output;
+                }
+                write_log_dispatcher->emit();
+              }
+            }
+            catch (const std::exception& error)
             {
               {
-                std::lock_guard<std::mutex> lock(output_logging_mutex);
-                logging_bottle_prefix.get() = wine_prefix;
-                output_logging.get() = output;
+                std::lock_guard<std::mutex> lock(error_message_mutex.get());
+                error_message.get() = error.what();
               }
-              write_log_dispatcher->emit();
+              error_dispatcher->emit();
             }
           });
       t.detach();
@@ -963,17 +1016,30 @@ void BottleManager::run_program(string program)
           [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
            debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
            logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-           write_log_dispatcher = &write_log_dispatcher_]
+           write_log_dispatcher = &write_log_dispatcher_, error_message_mutex = std::ref(error_message_thread_mutex_),
+           error_message = std::ref(error_message_thread_), error_dispatcher = &error_message_thread_dispatcher_]
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-            if (debug_logging && !output.empty())
+            // An exception escaping a detached thread function terminates WineGUI, so report it instead
+            try
+            {
+              string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+              if (debug_logging && !output.empty())
+              {
+                {
+                  std::lock_guard<std::mutex> lock(output_logging_mutex);
+                  logging_bottle_prefix.get() = wine_prefix;
+                  output_logging.get() = output;
+                }
+                write_log_dispatcher->emit();
+              }
+            }
+            catch (const std::exception& error)
             {
               {
-                std::lock_guard<std::mutex> lock(output_logging_mutex);
-                logging_bottle_prefix.get() = wine_prefix;
-                output_logging.get() = output;
+                std::lock_guard<std::mutex> lock(error_message_mutex.get());
+                error_message.get() = error.what();
               }
-              write_log_dispatcher->emit();
+              error_dispatcher->emit();
             }
           });
       t.detach();
@@ -1010,18 +1076,31 @@ void BottleManager::reboot()
         [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_]
+         write_log_dispatcher = &write_log_dispatcher_, error_message_mutex = std::ref(error_message_thread_mutex_),
+         error_message = std::ref(error_message_thread_), error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output =
-              Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -r", "", {}, true, logging_stderr, wine_bin_path);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead
+          try
+          {
+            string output =
+                Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -r", "", {}, true, logging_stderr, wine_bin_path);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
         });
     t.detach();
@@ -1044,20 +1123,35 @@ void BottleManager::update()
         [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, update_bottles_dispatcher = &update_bottles_dispatcher_,
          logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
          output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
-         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_]
+         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+         error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output =
-              Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", "", {}, true, logging_stderr, wine_bin_path);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+          // The bottles are refreshed in every case, also on failure, so the list never shows stale state.
+          try
+          {
+            string output =
+                Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", "", {}, true, logging_stderr, wine_bin_path);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+            Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
-          Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
           // Emit update bottles (via dispatcher, so the GUI update can take place in the GUI thread)
           update_bottles_dispatcher->emit();
         });
@@ -1104,18 +1198,31 @@ void BottleManager::kill_processes()
         [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_]
+         write_log_dispatcher = &write_log_dispatcher_, error_message_mutex = std::ref(error_message_thread_mutex_),
+         error_message = std::ref(error_message_thread_), error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output =
-              Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -k", "", {}, true, logging_stderr, wine_bin_path);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead
+          try
+          {
+            string output =
+                Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -k", "", {}, true, logging_stderr, wine_bin_path);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
         });
     t.detach();
@@ -1151,19 +1258,36 @@ void BottleManager::install_d3dx9(Gtk::Window* parent, const string& version)
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
+         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
+         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+         error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+          // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
+          // would stay open forever. Note that a non-zero exit code does not throw (see
+          // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
+          try
+          {
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+            Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
-          Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
           finish_dispatcher->emit();
         });
     t.detach();
@@ -1197,38 +1321,53 @@ void BottleManager::install_gallium_nine(Gtk::Window* parent)
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
          write_log_dispatcher = &write_log_dispatcher_, update_bottles_dispatcher = &update_bottles_dispatcher_,
-         finish_dispatcher = &finished_package_install_dispatcher]
+         finish_dispatcher = &finished_package_install_dispatcher, error_message_mutex = std::ref(error_message_thread_mutex_),
+         error_message = std::ref(error_message_thread_), error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-          if (debug_logging && !output.empty())
-          {
-            {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
-            }
-            write_log_dispatcher->emit();
-          }
-          Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
-          // When the install actually succeeded (winetricks ran ninewinecfg -e, which sets the 'd3d9'
-          // DLL override), add a custom app shortcut for the Gallium Nine settings GUI (ninewinecfg.exe),
-          // so the user can enable/disable Gallium Nine afterwards (and remove the shortcut again if desired)
-          bool added_shortcut = false;
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+          // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
+          // would stay open forever.
           try
           {
-            if (Helper::get_dll_override(wine_prefix, "d3d9"))
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            if (debug_logging && !output.empty())
             {
-              added_shortcut = BottleManager::add_gallium_nine_shortcut(wine_prefix);
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+            Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+            // When the install actually succeeded (winetricks ran ninewinecfg -e, which sets the 'd3d9'
+            // DLL override), add a custom app shortcut for the Gallium Nine settings GUI (ninewinecfg.exe),
+            // so the user can enable/disable Gallium Nine afterwards (and remove the shortcut again if desired)
+            bool added_shortcut = false;
+            try
+            {
+              if (Helper::get_dll_override(wine_prefix, "d3d9"))
+              {
+                added_shortcut = BottleManager::add_gallium_nine_shortcut(wine_prefix);
+              }
+            }
+            catch (const std::runtime_error& error)
+            {
+              std::cout << "Error: " << error.what() << std::endl;
+            }
+            if (added_shortcut)
+            {
+              // Refresh the bottles so the new app shortcut shows up in the application list
+              update_bottles_dispatcher->emit();
             }
           }
-          catch (const std::runtime_error& error)
+          catch (const std::exception& error)
           {
-            std::cout << "Error: " << error.what() << std::endl;
-          }
-          if (added_shortcut)
-          {
-            // Refresh the bottles so the new app shortcut shows up in the application list
-            update_bottles_dispatcher->emit();
+            {
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
+            }
+            error_dispatcher->emit();
           }
           finish_dispatcher->emit();
         });
@@ -1302,19 +1441,36 @@ void BottleManager::install_dxvk(Gtk::Window* parent, const string& version)
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
+         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
+         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+         error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+          // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
+          // would stay open forever. Note that a non-zero exit code does not throw (see
+          // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
+          try
+          {
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+            Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
-          Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
           finish_dispatcher->emit();
         });
     t.detach();
@@ -1344,19 +1500,36 @@ void BottleManager::install_vkd3d(Gtk::Window* parent)
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
+         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
+         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+         error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+          // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
+          // would stay open forever. Note that a non-zero exit code does not throw (see
+          // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
+          try
+          {
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+            Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
-          Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
           finish_dispatcher->emit();
         });
     t.detach();
@@ -1387,19 +1560,36 @@ void BottleManager::install_visual_cpp_package(Gtk::Window* parent, const string
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
+         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
+         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+         error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+          // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
+          // would stay open forever. Note that a non-zero exit code does not throw (see
+          // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
+          try
+          {
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+            Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
-          Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
           finish_dispatcher->emit();
         });
     t.detach();
@@ -1454,19 +1644,35 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
                 [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
                  debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
                  logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-                 write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
+                 write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
+                 error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+                 error_dispatcher = &error_message_thread_dispatcher_]
                 {
-                  string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-                  if (debug_logging && !output.empty())
+                  // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+                  // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
+                  // would stay open forever.
+                  try
+                  {
+                    string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+                    if (debug_logging && !output.empty())
+                    {
+                      {
+                        std::lock_guard<std::mutex> lock(output_logging_mutex);
+                        logging_bottle_prefix.get() = wine_prefix;
+                        output_logging.get() = output;
+                      }
+                      write_log_dispatcher->emit();
+                    }
+                    Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+                  }
+                  catch (const std::exception& error)
                   {
                     {
-                      std::lock_guard<std::mutex> lock(output_logging_mutex);
-                      logging_bottle_prefix.get() = wine_prefix;
-                      output_logging.get() = output;
+                      std::lock_guard<std::mutex> lock(error_message_mutex.get());
+                      error_message.get() = error.what();
                     }
-                    write_log_dispatcher->emit();
+                    error_dispatcher->emit();
                   }
-                  Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
                   finish_dispatcher->emit();
                 });
             t.detach();
@@ -1511,19 +1717,36 @@ void BottleManager::install_mono(Gtk::Window* parent)
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
+         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
+         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+         error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+          // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
+          // would stay open forever. Note that a non-zero exit code does not throw (see
+          // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
+          try
+          {
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+            Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
-          Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
           finish_dispatcher->emit();
         });
     t.detach();
@@ -1552,19 +1775,36 @@ void BottleManager::install_core_fonts(Gtk::Window* parent)
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
+         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
+         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+         error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+          // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
+          // would stay open forever. Note that a non-zero exit code does not throw (see
+          // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
+          try
+          {
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+            Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
-          Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
           finish_dispatcher->emit();
         });
     t.detach();
@@ -1593,19 +1833,36 @@ void BottleManager::install_liberation(Gtk::Window* parent)
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
          debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
          logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher]
+         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
+         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+         error_dispatcher = &error_message_thread_dispatcher_]
         {
-          string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
-          if (debug_logging && !output.empty())
+          // An exception escaping a detached thread function terminates WineGUI, so report it instead.
+          // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
+          // would stay open forever. Note that a non-zero exit code does not throw (see
+          // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
+          try
+          {
+            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            if (debug_logging && !output.empty())
+            {
+              {
+                std::lock_guard<std::mutex> lock(output_logging_mutex);
+                logging_bottle_prefix.get() = wine_prefix;
+                output_logging.get() = output;
+              }
+              write_log_dispatcher->emit();
+            }
+            Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
+          }
+          catch (const std::exception& error)
           {
             {
-              std::lock_guard<std::mutex> lock(output_logging_mutex);
-              logging_bottle_prefix.get() = wine_prefix;
-              output_logging.get() = output;
+              std::lock_guard<std::mutex> lock(error_message_mutex.get());
+              error_message.get() = error.what();
             }
-            write_log_dispatcher->emit();
+            error_dispatcher->emit();
           }
-          Helper::wait_until_wineserver_is_terminated(wine_prefix, wine_bin_path);
           finish_dispatcher->emit();
         });
     t.detach();
