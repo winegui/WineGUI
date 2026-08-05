@@ -68,6 +68,7 @@ private:
   WineRunnerWindow* wine_runner_window_;
   std::shared_ptr<BottleManager> manager_;
   std::shared_ptr<SignalController> signal_controller_;
+  bool initialized_ = false;
 
   void on_action_quit();
 };
