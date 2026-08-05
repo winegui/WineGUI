@@ -156,17 +156,18 @@ void Application::on_startup()
 
 void Application::on_activate()
 {
-  // Configure the signal controller signals
-  signal_controller_->dispatch_signals();
+  // on_activate() runs for the first launch and for every later launch forwarded by
+  // GApplication. Only the first activation may set up signal handlers or start the
+  // bottle manager: repeating either duplicates callbacks and collides with its worker.
+  if (!initialized_)
+  {
+    signal_controller_->dispatch_signals();
+    manager_->prepare();
+    add_window(*main_window_);
+    initialized_ = true;
+  }
 
-  // Call the Bottle Manager prepare method,
-  // it will prepare Winetricks & retrieve Wine Bottles from disk
-  manager_->prepare();
-
-  // Make sure that the application runs for as long this window is still open.
-  add_window(*main_window_);
-
-  // Show the main window
+  // A forwarded launch should only bring the existing window to the foreground.
   main_window_->set_show_menubar();
   main_window_->present();
 }
