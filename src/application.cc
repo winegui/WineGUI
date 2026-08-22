@@ -11,7 +11,10 @@
 #include "preferences_window.h"
 #include "remove_app_window.h"
 #include "signal_controller.h"
+#include "umu_launcher_manager.h"
+#include "wine_runner_manager.h"
 #include "wine_runner_window.h"
+#include <algorithm>
 #include <iostream>
 
 Application::Application() : Gtk::Application("org.melroy.winegui", Gio::Application::Flags::DEFAULT_FLAGS)
@@ -163,6 +166,7 @@ void Application::on_activate()
   {
     signal_controller_->dispatch_signals();
     manager_->prepare();
+    prepare_existing_geproton_support();
     add_window(*main_window_);
     initialized_ = true;
   }
@@ -174,7 +178,41 @@ void Application::on_activate()
 
 void Application::on_shutdown()
 {
+  geproton_support_cancelled_.store(true);
+  if (geproton_support_thread_.joinable())
+    geproton_support_thread_.join();
   Gtk::Application::on_shutdown();
+}
+
+/**
+ * \brief Prepare WineGUI's private GE-Proton support component in the background when a
+ * compatibility-tool runner from an earlier session is already installed.
+ */
+void Application::prepare_existing_geproton_support()
+{
+  if (UmuLauncherManager::is_ready())
+    return;
+  const auto runners = WineRunnerManager::get_installed_runners();
+  const bool geproton_installed = std::any_of(runners.begin(), runners.end(), [](const WineRunner::InstalledRunner& runner)
+                                              { return runner.launch_strategy == WineRunner::LaunchStrategy::UmuProton; });
+  if (!geproton_installed)
+    return;
+
+  geproton_support_cancelled_.store(false);
+  geproton_support_thread_ = std::thread(
+      [this]()
+      {
+        try
+        {
+          UmuLauncherManager::ensure_installed(&geproton_support_cancelled_);
+        }
+        catch (const std::exception& error)
+        {
+          // Startup preparation is best-effort. An actual GE-Proton operation retries and
+          // reports the friendly error; startup should not interrupt users of regular Wine.
+          std::cerr << "WARN: Background GE-Proton support preparation failed: " << error.what() << std::endl;
+        }
+      });
 }
 
 void Application::on_action_quit()

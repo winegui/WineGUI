@@ -88,8 +88,8 @@ public:
   Gtk::ProgressBar loading_bar;
 
 private:
-  sigc::connection timer_;                        /*!< Timer connection */
-  std::map<Glib::ustring, bool> runner_is_wow64_; /*!< Wine runner bin dir -> WoW64 (64-bit only), used to filter the Windows version list */
+  sigc::connection timer_;                              /*!< Timer connection */
+  std::map<Glib::ustring, bool> runner_supports_win32_; /*!< Runner bin dir -> true when its supported backend can create win32 prefixes */
 
   // Signal handlers
   void on_assistant_apply();

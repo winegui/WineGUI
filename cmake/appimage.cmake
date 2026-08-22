@@ -5,8 +5,8 @@
 # a developer does not need to install them system-wide. scripts/build-appimage.sh
 # then drives these tools to produce a WineGUI-v<version>-x86_64.AppImage.
 #
-# The AppImage itself only bundles the GTK stack (via linuxdeploy-plugin-gtk);
-# Wine v9+ and winetricks remain host run-time dependencies (resolved from PATH).
+# The AppImage bundles GTK and a Python >= 3.10 runtime for WineGUI's managed
+# GE-Proton launcher; Wine v9+ remains a host run-time dependency.
 # The same holds for wget, tar and xz, which are used to download & extract the
 # optional Wine runner builds (present on virtually every Linux system).
 #

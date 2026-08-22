@@ -4,8 +4,8 @@
 #  A single self-contained, executable file that runs on most Linux
 #  distributions without installation or root.
 #
-# The AppImage bundles only the GTK stack (via linuxdeploy-plugin-gtk).
-# Wine v9+ and winetricks remain host run-time dependencies (found via PATH).
+# The AppImage bundles the GTK stack and a Python runtime used by WineGUI's
+# automatically managed GE-Proton support. Wine itself remains a host dependency.
 #
 # The linuxdeploy / linuxdeploy-plugin-gtk / appimagetool tools are downloaded
 # by CMake (see cmake/appimage.cmake) when configured with -DAPPIMAGE=ON, so no
@@ -104,6 +104,18 @@ TOOLS_DIR="${PWD}/${BUILD_DIR}/appimage-tools"
 LINUXDEPLOY="${TOOLS_DIR}/linuxdeploy-x86_64.AppImage"
 APPIMAGETOOL="${TOOLS_DIR}/appimagetool-x86_64.AppImage"
 
+# The managed GE-Proton launcher is a Python zipapp. Bundle Python >= 3.10 and its
+# standard library so AppImage users never have to install Python themselves.
+PYTHON3_EXECUTABLE="$(command -v python3)"
+if [[ -z "${PYTHON3_EXECUTABLE}" ]] || ! "${PYTHON3_EXECUTABLE}" -c 'import sys; raise SystemExit(sys.version_info < (3, 10))'; then
+    echo "ERROR: Python 3.10 or newer is required to build the AppImage." >&2
+    exit 1
+fi
+PYTHON_STDLIB="$("${PYTHON3_EXECUTABLE}" -c 'import sysconfig; print(sysconfig.get_path("stdlib"))')"
+PYTHON_VERSION_DIR="python$("${PYTHON3_EXECUTABLE}" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+mkdir -p "${APPDIR}/usr/lib/${PYTHON_VERSION_DIR}"
+cp -a "${PYTHON_STDLIB}/." "${APPDIR}/usr/lib/${PYTHON_VERSION_DIR}/"
+
 # linuxdeploy discovers plugins named 'linuxdeploy-plugin-<name>' on PATH.
 export PATH="${TOOLS_DIR}:${PATH}"
 
@@ -122,6 +134,7 @@ export APPIMAGETOOL
 echo "INFO: Building AppImage (version ${VERSION})..."
 "${LINUXDEPLOY}" \
     --appdir "${APPDIR}" \
+    --executable "${PYTHON3_EXECUTABLE}" \
     --plugin gtk \
     --output appimage \
     --desktop-file "${APPIMAGE_DESKTOP}" \

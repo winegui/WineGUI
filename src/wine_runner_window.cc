@@ -156,8 +156,10 @@ void WineRunnerWindow::create_layout()
                      "(rc) builds. The build variant is shown in front of every version.",
                      true);
   create_source_page(WineRunner::SourceId::GEProton, "GE-Proton", "GE-Proton",
-                     "Proton builds by GloriousEggroll with extra patches and media codecs, the successor of Wine-GE. Note: these are large "
-                     "downloads (about 500 MB) and primarily made for the Steam runtime.");
+                     "Proton builds by GloriousEggroll with extra patches and media codecs. GE-Proton runs without requiring Steam. Note: these "
+                     "are large downloads (about 500 MB).\n\n"
+                     "GE-Proton supports 64-bit/WoW64 machines through its complete managed runtime. For a true 32-bit machine, choose a regular "
+                     "Wine runner instead.");
 
   sidebar_stack_box.append(sidebar);
   sidebar_stack_box.append(stack);
@@ -248,7 +250,7 @@ void WineRunnerWindow::refresh_installed_list()
     name_label->set_markup("<b>" + Glib::Markup::escape_text(runner.display_name) + "</b>");
     name_label->set_xalign(0.0);
     auto* sub_label = Gtk::make_managed<Gtk::Label>();
-    Glib::ustring wine_version = runner.wine_version.empty() ? "unknown" : runner.wine_version;
+    Glib::ustring wine_version = runner.wine_version.empty() ? "not queried" : runner.wine_version;
     // Only flag WoW64 builds (64-bit-only); regular builds support both 32 & 64-bit bottles.
     Glib::ustring arch = runner.wow64 ? " — WoW64" : "";
     sub_label->set_markup("<small>Wine version: " + Glib::Markup::escape_text(wine_version) + " — " + Glib::Markup::escape_text(runner.name) + arch +
@@ -631,11 +633,15 @@ void WineRunnerWindow::on_progress_changed()
       busy_dialog_.set_message("Installing " + installing_display_name_, "Extracting the archive...");
       busy_dialog_.set_pulsing();
       break;
+    case WineRunner::InstallPhase::PreparingSupport:
+      busy_dialog_.set_message("Installing " + installing_display_name_, "Preparing GE-Proton support...");
+      busy_dialog_.set_pulsing();
+      break;
     case WineRunner::InstallPhase::Idle:
       break;
     }
   }
-  if (phase == WineRunner::InstallPhase::Downloading)
+  if (phase == WineRunner::InstallPhase::Downloading || phase == WineRunner::InstallPhase::PreparingSupport)
   {
     const auto& [bytes_done, bytes_total] = task_.get_progress();
     if (bytes_total > 0)

@@ -20,8 +20,14 @@
  */
 #pragma once
 
+#include "busy_dialog.h"
+
+#include <atomic>
 #include <gtkmm.h>
+#include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <vector>
 
@@ -58,14 +64,23 @@ protected:
   Gtk::ListBox app_list_box;           /*!< list of applications */
   Gtk::Box hbox_buttons;               /*!< box for the bottom buttons */
   Gtk::Button close_button;            /*!< close button */
+  BusyDialog preparation_dialog_;      /*!< Progress while private GE-Proton support is prepared */
 
 private:
   BottleItem* active_bottle_;                 /*!< Current active bottle */
   std::vector<ShortcutAppData> applications_; /*!< Applications to show in the list */
+  Glib::Dispatcher preparation_finished_;
+  std::unique_ptr<std::thread> preparation_thread_;
+  std::atomic<bool> preparation_cancelled_{false};
+  std::mutex preparation_mutex_;
+  std::string preparation_error_;
+  std::tuple<Glib::ustring, Glib::ustring, std::string, bool> pending_shortcut_;
 
   // Signal handlers
   void on_close_button_clicked();
-  void on_create_clicked(const Glib::ustring& name, const Glib::ustring& description, const std::string& command, bool to_desktop);
+  bool on_create_clicked(const Glib::ustring& name, const Glib::ustring& description, const std::string& command, bool to_desktop);
+  bool create_shortcut(const Glib::ustring& name, const Glib::ustring& description, const std::string& command, bool to_desktop);
+  void on_preparation_finished();
 
   // Member functions
   void clear_list();

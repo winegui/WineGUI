@@ -1,3 +1,4 @@
+#include "helper.h"
 #include "wine_runner_manager.h"
 #include <filesystem>
 #include <fstream>
@@ -98,11 +99,18 @@ TEST_F(WineRunnerTest, ClassifyKron4ekRejectsOtherFiles)
 
 TEST_F(WineRunnerTest, ClassifyGEProtonAsset)
 {
-  auto release = WineRunnerManager::classify_geproton_asset("GE-Proton11-1.tar.gz");
-  ASSERT_TRUE(release.has_value());
-  EXPECT_EQ(release->source, WineRunner::SourceId::GEProton);
-  EXPECT_EQ(release->variant, "GE-Proton");
-  EXPECT_EQ(release->version, "11-1");
+  auto legacy_release = WineRunnerManager::classify_geproton_asset("GE-Proton11-3.tar.gz");
+  ASSERT_TRUE(legacy_release.has_value());
+  EXPECT_EQ(legacy_release->source, WineRunner::SourceId::GEProton);
+  EXPECT_EQ(legacy_release->variant, "GE-Proton");
+  EXPECT_EQ(legacy_release->version, "11-3");
+
+  auto architecture_release = WineRunnerManager::classify_geproton_asset("GE-Proton11-5-x86_64.tar.gz");
+  ASSERT_TRUE(architecture_release.has_value());
+  EXPECT_EQ(architecture_release->source, WineRunner::SourceId::GEProton);
+  EXPECT_EQ(architecture_release->variant, "GE-Proton");
+  EXPECT_EQ(architecture_release->version, "11-5");
+  EXPECT_EQ(architecture_release->asset_name, "GE-Proton11-5-x86_64.tar.gz");
 }
 
 TEST_F(WineRunnerTest, ClassifyGEProtonRejectsAarch64AndChecksumFiles)
@@ -155,6 +163,18 @@ TEST_F(WineRunnerTest, ParseGithubReleasesJsonGEProton)
 {
   std::string json_body = R"([
     {
+      "tag_name": "GE-Proton11-5",
+      "published_at": "2026-08-11T08:55:03Z",
+      "draft": false,
+      "prerelease": false,
+      "assets": [
+        {"name": "GE-Proton11-5-aarch64.sha512sum", "browser_download_url": "https://example.com/GE-Proton11-5-aarch64.sha512sum", "size": 159},
+        {"name": "GE-Proton11-5-aarch64.tar.gz", "browser_download_url": "https://example.com/GE-Proton11-5-aarch64.tar.gz", "size": 615986170},
+        {"name": "GE-Proton11-5-x86_64.sha512sum", "browser_download_url": "https://example.com/GE-Proton11-5-x86_64.sha512sum", "size": 158},
+        {"name": "GE-Proton11-5-x86_64.tar.gz", "browser_download_url": "https://example.com/GE-Proton11-5-x86_64.tar.gz", "size": 533066604}
+      ]
+    },
+    {
       "tag_name": "GE-Proton11-1",
       "published_at": "2026-06-24T02:06:49Z",
       "draft": false,
@@ -168,10 +188,14 @@ TEST_F(WineRunnerTest, ParseGithubReleasesJsonGEProton)
     }
   ])";
   auto releases = WineRunnerManager::parse_github_releases_json(WineRunner::SourceId::GEProton, json_body);
-  ASSERT_EQ(releases.size(), 1u); // aarch64 & checksum assets rejected
-  EXPECT_EQ(releases.at(0).version, "11-1");
+  ASSERT_EQ(releases.size(), 2u); // both naming generations accepted; aarch64 and checksum assets rejected
+  EXPECT_EQ(releases.at(0).version, "11-5");
+  EXPECT_EQ(releases.at(0).asset_name, "GE-Proton11-5-x86_64.tar.gz");
   EXPECT_EQ(releases.at(0).checksum_type, WineRunner::ChecksumType::Sha512);
-  EXPECT_EQ(releases.at(0).checksum_url, "https://example.com/GE-Proton11-1.sha512sum");
+  EXPECT_EQ(releases.at(0).checksum_url, "https://example.com/GE-Proton11-5-x86_64.sha512sum");
+  EXPECT_EQ(releases.at(1).version, "11-1");
+  EXPECT_EQ(releases.at(1).checksum_type, WineRunner::ChecksumType::Sha512);
+  EXPECT_EQ(releases.at(1).checksum_url, "https://example.com/GE-Proton11-1.sha512sum");
 }
 
 TEST_F(WineRunnerTest, ParseGithubReleasesJsonInvalidJsonThrows)
@@ -192,6 +216,10 @@ TEST_F(WineRunnerTest, ExpectedInstallDirName)
   auto ge_release = WineRunnerManager::classify_geproton_asset("GE-Proton11-1.tar.gz");
   ASSERT_TRUE(ge_release.has_value());
   EXPECT_EQ(WineRunnerManager::expected_install_dir_name(ge_release.value()), "GE-Proton11-1");
+
+  auto ge_arch_release = WineRunnerManager::classify_geproton_asset("GE-Proton11-5-x86_64.tar.gz");
+  ASSERT_TRUE(ge_arch_release.has_value());
+  EXPECT_EQ(WineRunnerManager::expected_install_dir_name(ge_arch_release.value()), "GE-Proton11-5");
 }
 
 TEST_F(WineRunnerTest, DeriveDisplayName)
@@ -247,9 +275,32 @@ TEST_F(WineRunnerTest, FindWineBinDirProtonLayout)
 {
   std::string runner_dir = test_dir + "/GE-Proton11-1";
   create_fake_file(runner_dir + "/files/bin/wine");
+  create_fake_file(runner_dir + "/proton");
+  create_fake_file(runner_dir + "/toolmanifest.vdf");
   auto bin_dir = WineRunnerManager::find_wine_bin_dir(runner_dir);
   ASSERT_TRUE(bin_dir.has_value());
   EXPECT_EQ(bin_dir.value(), runner_dir + "/files/bin");
+}
+
+TEST_F(WineRunnerTest, FindWineBinDirRejectsIncompleteProtonLayout)
+{
+  std::string runner_dir = test_dir + "/not-a-compatibility-tool";
+  create_fake_file(runner_dir + "/files/bin/wine");
+  EXPECT_FALSE(WineRunnerManager::find_wine_bin_dir(runner_dir).has_value());
+  EXPECT_FALSE(Helper::is_geproton_layout(runner_dir));
+}
+
+TEST_F(WineRunnerTest, FindGEProtonRootFromLegacyBinPath)
+{
+  std::string runner_dir = test_dir + "/GE-Proton11-1";
+  create_fake_file(runner_dir + "/files/bin/wine");
+  create_fake_file(runner_dir + "/proton");
+  create_fake_file(runner_dir + "/toolmanifest.vdf");
+
+  auto root = Helper::find_geproton_root(runner_dir + "/files/bin/");
+  ASSERT_TRUE(root.has_value());
+  EXPECT_EQ(root.value(), runner_dir);
+  EXPECT_FALSE(Helper::find_geproton_root(runner_dir + "/bin").has_value());
 }
 
 TEST_F(WineRunnerTest, FindWineBinDirNoWineBinary)
@@ -267,6 +318,8 @@ TEST_F(WineRunnerTest, GetInstalledRunnersScansLayouts)
   create_fake_file(base_dir + "/wine-11.13-staging-amd64/bin/wine");
   create_fake_file(base_dir + "/wine-11.13-staging-amd64/bin/wine64");
   create_fake_file(base_dir + "/GE-Proton11-1/files/bin/wine");
+  create_fake_file(base_dir + "/GE-Proton11-1/proton");
+  create_fake_file(base_dir + "/GE-Proton11-1/toolmanifest.vdf");
   fs::create_directories(base_dir + "/broken-runner"); // No wine binary -> skipped
   create_fake_file(base_dir + "/.tmp/wine-download.tar.xz.part");
   fs::create_directories(base_dir + "/.staging-1234"); // Hidden dirs -> skipped
@@ -277,14 +330,18 @@ TEST_F(WineRunnerTest, GetInstalledRunnersScansLayouts)
   EXPECT_EQ(runners.at(0).name, "wine-11.13-staging-amd64");
   EXPECT_EQ(runners.at(0).display_name, "Wine 11.13 Staging");
   EXPECT_EQ(runners.at(0).bin_dir, base_dir + "/wine-11.13-staging-amd64/bin");
+  EXPECT_EQ(runners.at(0).launch_strategy, WineRunner::LaunchStrategy::WineBinary);
   EXPECT_TRUE(runners.at(0).has_wine64);
   EXPECT_FALSE(runners.at(0).wow64); // "amd64" (no -wow64 token) -> supports 32 & 64-bit
+  EXPECT_TRUE(runners.at(0).supports_win32);
   // Fake wine binary -> wine --version fails -> empty version (must not throw)
   EXPECT_EQ(runners.at(0).wine_version, "");
   EXPECT_EQ(runners.at(1).name, "GE-Proton11-1");
   EXPECT_EQ(runners.at(1).bin_dir, base_dir + "/GE-Proton11-1/files/bin");
+  EXPECT_EQ(runners.at(1).launch_strategy, WineRunner::LaunchStrategy::UmuProton);
   EXPECT_FALSE(runners.at(1).has_wine64);
-  EXPECT_FALSE(runners.at(1).wow64); // GE-Proton has no -wow64 variant -> supports 32 & 64-bit
+  EXPECT_FALSE(runners.at(1).wow64); // Capability comes from the managed backend, not the directory token
+  EXPECT_FALSE(runners.at(1).supports_win32);
 }
 
 // The WoW64 flag is derived from the "-wow64" token in the runner directory name (the only reliable signal;
@@ -302,6 +359,7 @@ TEST_F(WineRunnerTest, GetInstalledRunnersDetectsWow64FromDirectoryName)
   for (const auto& runner : runners)
   {
     EXPECT_TRUE(runner.wow64) << "expected WoW64 for " << runner.name;
+    EXPECT_FALSE(runner.supports_win32) << "expected no true win32 support for " << runner.name;
   }
 }
 
