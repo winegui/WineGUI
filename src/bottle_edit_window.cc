@@ -20,6 +20,7 @@
  */
 #include "bottle_edit_window.h"
 #include "bottle_item.h"
+#include "helper.h"
 #include "wine_defaults.h"
 #include "wine_runner_manager.h"
 
@@ -275,7 +276,15 @@ void BottleEditWindow::show()
     }
     else if (std::optional<WineRunner::InstalledRunner> runner = WineRunnerManager::find_runner_by_bin_dir(wine_bin_path))
     {
-      wine_runner_combobox.set_active_id(runner->bin_dir);
+      if (active_bottle_->bit() == BottleTypes::Bit::win32 && !runner->supports_win32)
+      {
+        wine_runner_combobox.set_active_id("system");
+        wine_bin_path_entry.set_text("");
+      }
+      else
+      {
+        wine_runner_combobox.set_active_id(runner->bin_dir);
+      }
     }
     else
     {
@@ -372,6 +381,8 @@ void BottleEditWindow::refresh_wine_runner_list()
   wine_runner_combobox.append("system", "System Wine (default)");
   for (const WineRunner::InstalledRunner& runner : WineRunnerManager::get_installed_runners())
   {
+    if (active_bottle_ != nullptr && active_bottle_->bit() == BottleTypes::Bit::win32 && !runner.supports_win32)
+      continue;
     Glib::ustring text = runner.display_name;
     if (!runner.wine_version.empty())
       text += " — Wine " + runner.wine_version;
@@ -506,6 +517,19 @@ void BottleEditWindow::on_cancel_button_clicked()
  */
 void BottleEditWindow::on_save_button_clicked()
 {
+  const Glib::ustring selected_runner = wine_runner_combobox.get_active_id();
+  const Glib::ustring selected_wine_path = selected_runner == "custom" ? wine_bin_path_entry.get_text() : selected_runner;
+  if (active_bottle_ != nullptr && active_bottle_->bit() == BottleTypes::Bit::win32 && selected_runner != "system" &&
+      Helper::is_geproton_runner(selected_wine_path))
+  {
+    Gtk::MessageDialog dialog(*this, "GE-Proton supports only 64-bit WineGUI bottles. Select system Wine or a regular Wine runner instead.", false,
+                              Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
+    dialog.set_title("Unsupported Wine runner");
+    dialog.set_modal(true);
+    dialog.present();
+    return;
+  }
+
   // First disable save button (avoid multiple presses)
   save_button.set_sensitive(false);
 

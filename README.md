@@ -25,15 +25,26 @@ Download the WineGUI package you require for your Linux distribution. I provide 
 
 Install the package and you are ready to go! WineGUI should be listed in your menu.
 
-> **Note:** The AppImage bundles only the GTK stack, not Wine itself. As with every WineGUI package, **Wine v9 or higher must be installed on the host** (see below).
+> **Note:** The AppImage does not bundle Wine itself. As with every WineGUI package, **Wine v9 or higher must be installed on the host** (see below).
 
 **Run-time requirement:** Wine v9 or higher.
+
+GE-Proton runners use a WineGUI-managed non-Steam runtime for Proton initialization, bundled components, and protonfixes. WineGUI downloads and
+verifies its small launcher component automatically under `~/.local/share/winegui/umu`; users do not install or configure it themselves. Steam is
+not required. WineGUI never falls back to launching GE-Proton's embedded `files/bin/wine` directly when the managed runtime is unavailable.
+
+GE-Proton is available for win64/WoW64 bottles through its complete managed runtime. Proton removes `WINEARCH` during initialization and cannot
+create a true win32 prefix through its supported launch path, so WineGUI does not offer 32-bit Windows versions with GE-Proton. Choose a regular
+Wine runner when a true 32-bit bottle is required.
+
+The managed runtime uses a generic compatibility identity when no game metadata is configured. Advanced users can set `GAMEID` and `STORE` in a
+machine's environment variables to select a matching [compatibility database](https://umu.openwinecomponents.org/) entry and its application-specific protonfixes.
 
 ## Features
 
 - **Graphical user-interface** on top of [Wine](https://www.winehq.org/)
 - Creating a new machine using an **easy step-by-step wizard**
-- **Download & switch Wine versions** with a single click (Vanilla, Staging, Staging-TkG, Proton and GE-Proton builds), selectable per machine
+- **Download & switch Wine versions** with a single click (Vanilla, Staging, Staging-TkG, Wine-Proton, and GE-Proton), selectable per machine
 - **Application list** per machine (with _search feature_ and _add shortcuts_ to desktop or your menu)
 - Editing, removing and cloning Windows machines _in a breeze_
 - Configure window **installing additional software** with just a single click (like installing DirectX, DXVK, ..)
@@ -219,7 +230,11 @@ This produces `build_prod/WineGUI-v<version>-x86_64.AppImage`.
 
 The required tools (`linuxdeploy`, `linuxdeploy-plugin-gtk` and `appimagetool`) do **not** need to be installed system-wide: they are downloaded automatically (with pinned checksums) into the build directory when CMake is configured with `-DAPPIMAGE=ON`, which the script does for you. To bump the pinned tool versions, edit `cmake/appimage.cmake`.
 
-The AppImage bundles the GTK stack via `linuxdeploy-plugin-gtk`. Note that this plugin is officially GTK+2/3 only; if a produced AppImage fails to run on target systems due to GTK4 bundling issues, consider switching the script to [sharun](https://github.com/VHSgunzo/sharun) / `quick-sharun` as an alternative deployment tool.
+The AppImage bundles the GTK stack via `linuxdeploy-plugin-gtk` and Python for WineGUI's automatically managed GE-Proton support. Note that the GTK plugin is officially GTK+2/3 only; if a produced AppImage fails to run on target systems due to GTK4 bundling issues, consider switching the script to [sharun](https://github.com/VHSgunzo/sharun) / `quick-sharun` as an alternative deployment tool.
+
+The standalone binary `.tar.gz` package requires Python 3.10 or newer when using GE-Proton. WineGUI still downloads and manages the launcher itself;
+the Python interpreter is the only platform prerequisite for that package format. DEB/RPM packages install it as a package dependency and the
+AppImage bundles it.
 
 ### Build Doxygen
 

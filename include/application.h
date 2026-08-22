@@ -21,7 +21,9 @@
 #pragma once
 
 #include "signal_controller.h"
+#include <atomic>
 #include <gtkmm.h>
+#include <thread>
 
 class MainWindow;
 class BottleManager;
@@ -69,6 +71,9 @@ private:
   std::shared_ptr<BottleManager> manager_;
   std::shared_ptr<SignalController> signal_controller_;
   bool initialized_ = false;
+  std::thread geproton_support_thread_;
+  std::atomic<bool> geproton_support_cancelled_{false};
 
   void on_action_quit();
+  void prepare_existing_geproton_support();
 };

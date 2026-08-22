@@ -21,6 +21,9 @@
 #include "create_shortcut_window.h"
 #include "bottle_item.h"
 #include "helper.h"
+#include "umu_launcher_manager.h"
+
+#include <iostream>
 
 /**
  * \brief Constructor
@@ -31,6 +34,7 @@ CreateShortcutWindow::CreateShortcutWindow(Gtk::Window& parent)
       header_label("Create menu or desktop shortcuts"),
       description_label("For each application below, add a shortcut to your applications menu or to your desktop."),
       close_button("Close"),
+      preparation_dialog_(*this),
       active_bottle_(nullptr)
 {
   set_transient_for(parent);
@@ -74,6 +78,7 @@ CreateShortcutWindow::CreateShortcutWindow(Gtk::Window& parent)
 
   // Signals
   close_button.signal_clicked().connect(sigc::mem_fun(*this, &CreateShortcutWindow::on_close_button_clicked));
+  preparation_finished_.connect(sigc::mem_fun(*this, &CreateShortcutWindow::on_preparation_finished));
   // Hide window instead of destroy
   signal_close_request().connect(
       [this]() -> bool
@@ -89,6 +94,9 @@ CreateShortcutWindow::CreateShortcutWindow(Gtk::Window& parent)
  */
 CreateShortcutWindow::~CreateShortcutWindow()
 {
+  preparation_cancelled_.store(true);
+  if (preparation_thread_ && preparation_thread_->joinable())
+    preparation_thread_->join();
 }
 
 /**
@@ -179,14 +187,14 @@ void CreateShortcutWindow::populate_list()
     menu_button->signal_clicked().connect(
         [this, cap_name, cap_description, cap_command, menu_button]()
         {
-          on_create_clicked(cap_name, cap_description, cap_command, false);
-          menu_button->set_label("Added ✓");
+          if (on_create_clicked(cap_name, cap_description, cap_command, false))
+            menu_button->set_label("Added ✓");
         });
     desktop_button->signal_clicked().connect(
         [this, cap_name, cap_description, cap_command, desktop_button]()
         {
-          on_create_clicked(cap_name, cap_description, cap_command, true);
-          desktop_button->set_label("Added ✓");
+          if (on_create_clicked(cap_name, cap_description, cap_command, true))
+            desktop_button->set_label("Added ✓");
         });
 
     row_box->append(*menu_button);
@@ -210,7 +218,7 @@ void CreateShortcutWindow::on_close_button_clicked()
  * \param[in] command Application command
  * \param[in] to_desktop If true add to the desktop, otherwise to the applications menu
  */
-void CreateShortcutWindow::on_create_clicked(const Glib::ustring& name, const Glib::ustring& description, const std::string& command, bool to_desktop)
+bool CreateShortcutWindow::on_create_clicked(const Glib::ustring& name, const Glib::ustring& description, const std::string& command, bool to_desktop)
 {
   if (active_bottle_ == nullptr)
   {
@@ -219,8 +227,58 @@ void CreateShortcutWindow::on_create_clicked(const Glib::ustring& name, const Gl
     dialog.set_title("Error during shortcut creation");
     dialog.set_modal(true);
     dialog.present();
-    return;
+    return false;
   }
+
+  if (Helper::is_geproton_runner(active_bottle_->wine_bin_path()) && active_bottle_->bit() == BottleTypes::Bit::win32)
+  {
+    Gtk::MessageDialog dialog(*this, "GE-Proton supports only 64-bit WineGUI bottles. Select a regular Wine runner for this 32-bit bottle.", false,
+                              Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
+    dialog.set_title("Error during shortcut creation");
+    dialog.set_modal(true);
+    dialog.present();
+    return false;
+  }
+
+  if (Helper::is_geproton_runner(active_bottle_->wine_bin_path()) && !UmuLauncherManager::is_ready())
+  {
+    if (preparation_thread_ && preparation_thread_->joinable())
+      return false;
+    pending_shortcut_ = {name, description, command, to_desktop};
+    preparation_cancelled_.store(false);
+    {
+      std::lock_guard<std::mutex> lock(preparation_mutex_);
+      preparation_error_.clear();
+    }
+    preparation_dialog_.set_message("Preparing GE-Proton support", "Downloading and verifying the required components...");
+    preparation_dialog_.set_cancelable(false);
+    preparation_dialog_.set_pulsing();
+    preparation_dialog_.present();
+    preparation_thread_ = std::make_unique<std::thread>(
+        [this]()
+        {
+          try
+          {
+            UmuLauncherManager::ensure_installed(&preparation_cancelled_);
+          }
+          catch (const std::exception& error)
+          {
+            std::cerr << "ERROR: Could not prepare the managed GE-Proton launcher for a shortcut: " << error.what() << std::endl;
+            std::lock_guard<std::mutex> lock(preparation_mutex_);
+            preparation_error_ = UmuLauncherManager::user_error_message();
+          }
+          preparation_finished_.emit();
+        });
+    return false;
+  }
+
+  return create_shortcut(name, description, command, to_desktop);
+}
+
+bool CreateShortcutWindow::create_shortcut(const Glib::ustring& name, const Glib::ustring& description, const std::string& command, bool to_desktop)
+{
+  if (active_bottle_ == nullptr)
+    return false;
 
   // Resolve the target directory
   std::string target_dir;
@@ -254,7 +312,7 @@ void CreateShortcutWindow::on_create_clicked(const Glib::ustring& name, const Gl
     dialog.set_title("Error during shortcut creation");
     dialog.set_modal(true);
     dialog.present();
-    return;
+    return false;
   }
 
   // For the applications menu, best-effort refresh the desktop database (ignore failure, not always present)
@@ -262,4 +320,30 @@ void CreateShortcutWindow::on_create_clicked(const Glib::ustring& name, const Gl
   {
     Glib::spawn_command_line_async("update-desktop-database \"" + target_dir + "\"");
   }
+  return true;
+}
+
+void CreateShortcutWindow::on_preparation_finished()
+{
+  if (preparation_thread_ && preparation_thread_->joinable())
+    preparation_thread_->join();
+  preparation_thread_.reset();
+  preparation_dialog_.hide();
+
+  std::string error_message;
+  {
+    std::lock_guard<std::mutex> lock(preparation_mutex_);
+    error_message = preparation_error_;
+  }
+  if (!error_message.empty())
+  {
+    Gtk::MessageDialog dialog(*this, error_message, false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
+    dialog.set_title("Error during shortcut creation");
+    dialog.set_modal(true);
+    dialog.present();
+    return;
+  }
+
+  const auto& [name, description, command, to_desktop] = pending_shortcut_;
+  create_shortcut(name, description, command, to_desktop);
 }

@@ -85,6 +85,7 @@ public:
   void show_error_message(const Glib::ustring& message, bool markup = false);
   DialogWindow* show_question_dialog(Gtk::Window* parent, const Glib::ustring& message, bool markup = false);
   void show_busy_install_dialog(Gtk::Window& parent, const Glib::ustring& message);
+  void show_busy_geproton_dialog();
   void hide_busy_dialog();
 
   // Signal handlers
