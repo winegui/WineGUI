@@ -37,6 +37,7 @@ target_link_libraries(helper_test PRIVATE
   gtest_main
 )
 add_test(NAME helper_test COMMAND helper_test)
+set_tests_properties(helper_test PROPERTIES ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg")
 
 add_executable(wine_runner_test
   wine_runner_test.cc
@@ -53,9 +54,24 @@ target_link_libraries(wine_runner_test PRIVATE
 )
 add_test(NAME wine_runner_test COMMAND wine_runner_test)
 
+add_executable(umu_launcher_manager_test
+  umu_launcher_manager_test.cc
+)
+target_compile_features(umu_launcher_manager_test PUBLIC cxx_std_23)
+set_target_properties(umu_launcher_manager_test PROPERTIES CXX_EXTENSIONS OFF)
+target_include_directories(umu_launcher_manager_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_BINARY_DIR}
+)
+target_link_libraries(umu_launcher_manager_test PRIVATE
+  ${PROJECT_TEST_TARGET_LIB}-bottle-config
+  gtest_main
+)
+add_test(NAME umu_launcher_manager_test COMMAND umu_launcher_manager_test)
+
 add_custom_target(tests
   COMMAND env GTEST_COLOR=1 ${CMAKE_CTEST_COMMAND} --verbose --output-on-failure
-  DEPENDS bottle_config_migration_test helper_test wine_runner_test
+  DEPENDS bottle_config_migration_test helper_test wine_runner_test umu_launcher_manager_test
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tst
   COMMENT "Execute all unit tests"
   VERBATIM

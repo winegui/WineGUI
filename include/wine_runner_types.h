@@ -36,6 +36,16 @@ namespace WineRunner
   };
 
   /**
+   * \enum LaunchStrategy
+   * \brief How an installed runner must be started
+   */
+  enum class LaunchStrategy
+  {
+    WineBinary, /*!< Regular Wine build, invoked through bin/wine */
+    UmuProton,  /*!< Proton compatibility tool, invoked through umu-run */
+  };
+
+  /**
    * \enum ChecksumType
    * \brief Type of checksum published by the runner source (used to verify the downloaded archive)
    */
@@ -89,8 +99,10 @@ namespace WineRunner
     std::string runner_dir;   /*!< Absolute path of the runner directory (deleted on remove) */
     std::string bin_dir;      /*!< Absolute directory containing the wine binary (value for the bottle wine_bin_path) */
     std::string wine_version; /*!< Output of "wine --version" (empty when it failed) */
-    bool has_wine64 = false;  /*!< True when a separate wine64 binary exists (used by the binary resolver, not a 32/64-bit capability signal) */
-    bool wow64 = false;       /*!< True for WoW64 builds (64-bit-only prefixes; derived from the "-wow64" asset token in the runner directory name) */
+    LaunchStrategy launch_strategy = LaunchStrategy::WineBinary; /*!< Required runner launch backend */
+    bool has_wine64 = false; /*!< True when a separate wine64 binary exists (used by the binary resolver, not a 32/64-bit capability signal) */
+    bool wow64 = false;      /*!< True for WoW64 builds (64-bit-only prefixes; derived from the "-wow64" asset token in the runner directory name) */
+    bool supports_win32 = true; /*!< True when the supported launch backend can create true WINEARCH=win32 prefixes */
   };
 
   /**
@@ -99,10 +111,11 @@ namespace WineRunner
    */
   enum class InstallPhase
   {
-    Idle,        /*!< No install running */
-    Downloading, /*!< Downloading the archive */
-    Verifying,   /*!< Verifying the archive checksum */
-    Extracting,  /*!< Extracting the archive */
+    Idle,             /*!< No install running */
+    Downloading,      /*!< Downloading the archive */
+    Verifying,        /*!< Verifying the archive checksum */
+    Extracting,       /*!< Extracting the archive */
+    PreparingSupport, /*!< Preparing WineGUI-managed support required by the selected runner */
   };
 
   /**

@@ -25,10 +25,85 @@
 #include "helper.h"
 #include "main_window.h"
 #include "signal_controller.h"
+#include "umu_launcher_manager.h"
 #include "wine_defaults.h"
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 
 #include <stdexcept>
+
+namespace
+{
+  void prepare_geproton_support(const std::string& wine_bin_path)
+  {
+    if (!Helper::is_geproton_runner(wine_bin_path) || UmuLauncherManager::is_ready())
+      return;
+    try
+    {
+      UmuLauncherManager::ensure_installed();
+    }
+    catch (const std::exception& error)
+    {
+      std::cerr << "ERROR: Could not prepare the managed GE-Proton launcher: " << error.what() << std::endl;
+      throw std::runtime_error(UmuLauncherManager::user_error_message());
+    }
+  }
+
+  std::filesystem::path geproton_runtime_marker(const std::string& wine_prefix)
+  {
+    return std::filesystem::path(wine_prefix) / ".winegui-geproton-runtime-ready";
+  }
+
+  bool geproton_runtime_is_prepared(const std::string& wine_prefix, const std::string& wine_bin_path)
+  {
+    if (!Helper::is_geproton_runner(wine_bin_path))
+      return true;
+    // Do not attempt managed runtime preparation for a legacy/manual win32 GE-Proton
+    // configuration. The execution helper reports the unsupported combination instead.
+    if (Helper::is_wine_prefix_initialized(wine_prefix) && Helper::get_windows_bitness(wine_prefix) == BottleTypes::Bit::win32)
+      return true;
+    std::ifstream marker(geproton_runtime_marker(wine_prefix));
+    std::string recorded_root;
+    std::getline(marker, recorded_root);
+    return Helper::find_geproton_root(wine_bin_path) == recorded_root;
+  }
+
+  void prepare_geproton_runtime(const std::string& wine_prefix,
+                                const std::string& wine_bin_path,
+                                int debug_log_level,
+                                const std::vector<std::pair<std::string, std::string>>& env_vars,
+                                Glib::Dispatcher* finish_dispatcher = nullptr)
+  {
+    try
+    {
+      if (!geproton_runtime_is_prepared(wine_prefix, wine_bin_path))
+      {
+        prepare_geproton_support(wine_bin_path);
+        int exit_code = 0;
+        const std::string output =
+            Helper::run_program_under_wine(false, wine_prefix, debug_log_level, "\"\"", "", env_vars, false, true, wine_bin_path, &exit_code);
+        if (exit_code != 0 && !Helper::is_wine_prefix_initialized(wine_prefix))
+        {
+          std::cerr << "ERROR: GE-Proton first-use runtime preparation failed with exit code " << exit_code << ": " << output << std::endl;
+          throw std::runtime_error(UmuLauncherManager::user_error_message());
+        }
+        std::ofstream marker(geproton_runtime_marker(wine_prefix), std::ios::trunc);
+        marker << Helper::find_geproton_root(wine_bin_path).value() << '\n';
+        if (!marker.good())
+          std::cerr << "WARN: Could not record completed GE-Proton runtime preparation for " << wine_prefix << std::endl;
+      }
+    }
+    catch (...)
+    {
+      if (finish_dispatcher != nullptr)
+        finish_dispatcher->emit();
+      throw;
+    }
+    if (finish_dispatcher != nullptr)
+      finish_dispatcher->emit();
+  }
+} // namespace
 
 /*************************************************************
  * Public member functions                                   *
@@ -354,8 +429,24 @@ void BottleManager::new_bottle(SignalController* caller,
   }
   else
   {
-    // A custom Wine runner is selected, validate its wine binary (the unified wine binary) instead of the system Wine
-    if (!Helper::file_exists(Helper::get_wine_executable_location(false, wine_bin_path)))
+    if (Helper::is_geproton_runner(wine_bin_path))
+    {
+      try
+      {
+        prepare_geproton_support(wine_bin_path);
+      }
+      catch (const std::runtime_error& error)
+      {
+        {
+          std::lock_guard<std::mutex> lock(error_message_mutex_);
+          error_message_ = error.what();
+        }
+        caller->signal_error_message_during_create();
+        return;
+      }
+    }
+    // A regular custom Wine runner must provide a unified wine binary.
+    else if (!Helper::file_exists(Helper::get_wine_executable_location(false, wine_bin_path)))
     {
       {
         std::lock_guard<std::mutex> lock(error_message_mutex_);
@@ -388,6 +479,12 @@ void BottleManager::new_bottle(SignalController* caller,
   {
     // Now create a new Wine Bottle (always via the plain wine binary; use_wine64 defaults to false)
     Helper::create_wine_bottle(false, prefix_path, bit, disable_gecko_mono, wine_bin_path);
+    if (bit == BottleTypes::Bit::win64 && Helper::is_geproton_runner(wine_bin_path))
+    {
+      const auto proton_root = Helper::find_geproton_root(wine_bin_path);
+      std::ofstream marker(geproton_runtime_marker(prefix_path), std::ios::trunc);
+      marker << proton_root.value() << '\n';
+    }
     // Create default Bottle config data struct
     BottleConfigData bottle_config = BottleConfigFile::get_default_config(prefix_path);
     bottle_config.name = name;
@@ -844,18 +941,23 @@ void BottleManager::run_executable(string program, bool is_msi_file = false)
     // Be-sure to execute the program between quotes (due to spaces)
     program = program_prefix + " \"" + program + "\"";
     auto& env_vars = active_bottle_->env_vars();
+    bool preparing_geproton = !geproton_runtime_is_prepared(wine_prefix, wine_bin_path);
+    if (preparing_geproton)
+      main_window_.show_busy_geproton_dialog();
 
     std::thread t(
         [wine64 = active_bottle_->use_wine64(), wine_bin_path, wine_prefix, debug_log_level, program, working_directory, env_vars,
          logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
          output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
          output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+         preparation_dispatcher = preparing_geproton ? &finished_geproton_preparation_dispatcher : nullptr,
          error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
          error_dispatcher = &error_message_thread_dispatcher_]
         {
           // An exception escaping a detached thread function terminates WineGUI, so report it instead
           try
           {
+            prepare_geproton_runtime(wine_prefix, wine_bin_path, debug_log_level, env_vars, preparation_dispatcher);
             string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true,
                                                            logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
@@ -894,12 +996,14 @@ void BottleManager::run_program(string program)
     auto winetricks_env_vars = get_winetricks_env_vars();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
+    bool preparing_geproton = !geproton_runtime_is_prepared(wine_prefix, wine_bin_path);
+    if (preparing_geproton)
+      main_window_.show_busy_geproton_dialog();
     // DXVK GPU test (bundled d3d11-triangle.exe)
     if (program.ends_with("d3d11-triangle.exe"))
     {
       // Run the test executable directly (so without 'start /unix'), meaning Wine waits for the program to exit
       // and we receive the real exit code. Which allows us to inform the user when the GPU test failed (incl. the test output).
-      program = "\"" + program + "\"";
       auto env_vars = active_bottle_->env_vars();
       // Use the bundled DXVK + d3dcompiler DLLs, which are located next to the test executable (Wine loads DLLs
       // from the application directory first). The override only applies to this single test process,
@@ -914,12 +1018,17 @@ void BottleManager::run_program(string program)
            logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
            output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
            output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+           preparation_dispatcher = preparing_geproton ? &finished_geproton_preparation_dispatcher : nullptr,
            error_message_mutex = std::ref(error_message_gpu_test_mutex_), error_message = std::ref(error_message_gpu_test_),
-           error_dispatcher = &error_message_gpu_test_dispatcher_]
+           error_dispatcher = &error_message_gpu_test_dispatcher_] mutable
           {
             // An exception escaping a detached thread function terminates WineGUI, so report it instead
             try
             {
+              prepare_geproton_runtime(wine_prefix, wine_bin_path, debug_log_level, env_vars, preparation_dispatcher);
+              if (Helper::is_geproton_runner(wine_bin_path))
+                program = Helper::prepare_dxvk_test_for_geproton(program);
+              program = "\"" + program + "\"";
               int exit_code = 0;
               string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, "", env_vars, false, logging_stderr,
                                                              wine_bin_path, &exit_code);
@@ -980,12 +1089,14 @@ void BottleManager::run_program(string program)
            logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
            output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
            output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+           preparation_dispatcher = preparing_geproton ? &finished_geproton_preparation_dispatcher : nullptr,
            error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
            error_dispatcher = &error_message_thread_dispatcher_]
           {
             // An exception escaping a detached thread function terminates WineGUI, so report it instead
             try
             {
+              prepare_geproton_runtime(wine_prefix, wine_bin_path, debug_log_level, env_vars, preparation_dispatcher);
               string output = Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, program, working_directory, env_vars, true,
                                                              logging_stderr, wine_bin_path);
               if (debug_logging && !output.empty())
@@ -1011,18 +1122,23 @@ void BottleManager::run_program(string program)
     }
     else
     {
-      // We have an exception for winetricks, since that doesn't need the wine command
+      // Winetricks uses UMU's bundled integration for GE-Proton and the WineGUI script for regular Wine.
+      program = "winetricks --gui -q";
       std::thread t(
           [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
            debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
            logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-           write_log_dispatcher = &write_log_dispatcher_, error_message_mutex = std::ref(error_message_thread_mutex_),
-           error_message = std::ref(error_message_thread_), error_dispatcher = &error_message_thread_dispatcher_]
+           write_log_dispatcher = &write_log_dispatcher_,
+           preparation_dispatcher = preparing_geproton ? &finished_geproton_preparation_dispatcher : nullptr,
+           error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
+           error_dispatcher = &error_message_thread_dispatcher_]
           {
             // An exception escaping a detached thread function terminates WineGUI, so report it instead
             try
             {
-              string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+              prepare_geproton_runtime(wine_prefix, wine_bin_path, debug_log_level, winetricks_env_vars, preparation_dispatcher);
+              string output = Helper::run_program_under_wine(false, wine_prefix, debug_log_level, program, "", winetricks_env_vars, true,
+                                                             logging_stderr, wine_bin_path);
               if (debug_logging && !output.empty())
               {
                 {
@@ -1082,6 +1198,7 @@ void BottleManager::reboot()
           // An exception escaping a detached thread function terminates WineGUI, so report it instead
           try
           {
+            prepare_geproton_support(wine_bin_path);
             string output =
                 Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -r", "", {}, true, logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
@@ -1131,6 +1248,7 @@ void BottleManager::update()
           // The bottles are refreshed in every case, also on failure, so the list never shows stale state.
           try
           {
+            prepare_geproton_support(wine_bin_path);
             string output =
                 Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -u", "", {}, true, logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
@@ -1204,6 +1322,7 @@ void BottleManager::kill_processes()
           // An exception escaping a detached thread function terminates WineGUI, so report it instead
           try
           {
+            prepare_geproton_support(wine_bin_path);
             string output =
                 Helper::run_program_under_wine(wine64, wine_prefix, debug_log_level, "wineboot -k", "", {}, true, logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
@@ -1252,7 +1371,7 @@ void BottleManager::install_d3dx9(Gtk::Window* parent, const string& version)
     auto winetricks_env_vars = get_winetricks_env_vars();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    string program = Helper::get_winetricks_location() + " -q " + package;
+    string program = "winetricks -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t(
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
@@ -1268,7 +1387,9 @@ void BottleManager::install_d3dx9(Gtk::Window* parent, const string& version)
           // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
           try
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            prepare_geproton_support(wine_bin_path);
+            string output = Helper::run_program_under_wine(false, wine_prefix, debug_log_level, program, "", winetricks_env_vars, true,
+                                                           logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
             {
               {
@@ -1314,7 +1435,7 @@ void BottleManager::install_gallium_nine(Gtk::Window* parent)
     auto winetricks_env_vars = get_winetricks_env_vars();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    string program = Helper::get_winetricks_location() + " -q " + package;
+    string program = "winetricks -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t(
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
@@ -1329,7 +1450,9 @@ void BottleManager::install_gallium_nine(Gtk::Window* parent)
           // would stay open forever.
           try
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            prepare_geproton_support(wine_bin_path);
+            string output = Helper::run_program_under_wine(false, wine_prefix, debug_log_level, program, "", winetricks_env_vars, true,
+                                                           logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
             {
               {
@@ -1422,6 +1545,17 @@ void BottleManager::install_dxvk(Gtk::Window* parent, const string& version)
 {
   if (is_bottle_not_null())
   {
+    if (Helper::is_geproton_runner(active_bottle_->wine_bin_path()))
+    {
+      if (active_bottle_->bit() == BottleTypes::Bit::win32)
+      {
+        main_window_.show_error_message(
+            "GE-Proton supports only 64-bit WineGUI bottles. Select a regular Wine runner before installing DXVK in this 32-bit bottle.");
+        return;
+      }
+      main_window_.show_info_message("GE-Proton already manages its bundled DXVK. WineGUI will not overwrite that installation.");
+      return;
+    }
     // Before we execute the install, show busy dialog
     main_window_.show_busy_install_dialog(*parent, "Installing DXVK (Vulkan-based implementation of DirectX 9, 10 and 11).\n");
 
@@ -1435,7 +1569,7 @@ void BottleManager::install_dxvk(Gtk::Window* parent, const string& version)
     auto winetricks_env_vars = get_winetricks_env_vars();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    string program = Helper::get_winetricks_location() + " -q " + package;
+    string program = "winetricks -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t(
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
@@ -1451,7 +1585,9 @@ void BottleManager::install_dxvk(Gtk::Window* parent, const string& version)
           // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
           try
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            prepare_geproton_support(wine_bin_path);
+            string output = Helper::run_program_under_wine(false, wine_prefix, debug_log_level, program, "", winetricks_env_vars, true,
+                                                           logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
             {
               {
@@ -1485,6 +1621,17 @@ void BottleManager::install_vkd3d(Gtk::Window* parent)
 {
   if (is_bottle_not_null())
   {
+    if (Helper::is_geproton_runner(active_bottle_->wine_bin_path()))
+    {
+      if (active_bottle_->bit() == BottleTypes::Bit::win32)
+      {
+        main_window_.show_error_message(
+            "GE-Proton supports only 64-bit WineGUI bottles. Select a regular Wine runner before installing VKD3D-Proton in this 32-bit bottle.");
+        return;
+      }
+      main_window_.show_info_message("GE-Proton already manages its bundled VKD3D-Proton. WineGUI will not overwrite that installation.");
+      return;
+    }
     // Before we execute the install, show busy dialog
     main_window_.show_busy_install_dialog(*parent, "Installing VKD3D (Vulkan-based implementation of DirectX 12).\n");
 
@@ -1494,7 +1641,7 @@ void BottleManager::install_vkd3d(Gtk::Window* parent)
     auto winetricks_env_vars = get_winetricks_env_vars();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    string program = Helper::get_winetricks_location() + " -q " + package;
+    string program = "winetricks -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t(
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
@@ -1510,7 +1657,9 @@ void BottleManager::install_vkd3d(Gtk::Window* parent)
           // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
           try
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            prepare_geproton_support(wine_bin_path);
+            string output = Helper::run_program_under_wine(false, wine_prefix, debug_log_level, program, "", winetricks_env_vars, true,
+                                                           logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
             {
               {
@@ -1554,7 +1703,7 @@ void BottleManager::install_visual_cpp_package(Gtk::Window* parent, const string
     auto winetricks_env_vars = get_winetricks_env_vars();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    string program = Helper::get_winetricks_location() + " -q " + package;
+    string program = "winetricks -q " + package;
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t(
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
@@ -1570,7 +1719,9 @@ void BottleManager::install_visual_cpp_package(Gtk::Window* parent, const string
           // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
           try
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            prepare_geproton_support(wine_bin_path);
+            string output = Helper::run_program_under_wine(false, wine_prefix, debug_log_level, program, "", winetricks_env_vars, true,
+                                                           logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
             {
               {
@@ -1625,35 +1776,32 @@ void BottleManager::install_dot_net(Gtk::Window* parent, const string& version)
             string wine_prefix = active_bottle_->wine_location();
             string wine_bin_path = active_bottle_->wine_bin_path();
             auto winetricks_env_vars = get_winetricks_env_vars();
+            bool wine_64_bit = active_bottle_->use_wine64();
             bool is_debug_logging = active_bottle_->is_debug_logging();
             int debug_log_level = active_bottle_->debug_log_level();
             // I can't use -q with .NET installs
-            string install_command = Helper::get_winetricks_location() + " " + package;
-            string program = "";
-            if (!deinstall_command.empty())
-            {
-              // First deinstall Mono then install native .NET
-              program = deinstall_command + "; " + install_command;
-            }
-            else
-            {
-              program = install_command;
-            }
+            string install_command = "winetricks " + package;
             // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
             std::thread t(
-                [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
-                 debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
-                 logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-                 write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
-                 error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
-                 error_dispatcher = &error_message_thread_dispatcher_]
+                [wine_prefix, wine_bin_path, winetricks_env_vars, wine_64_bit, debug_log_level, deinstall_command, install_command,
+                 logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+                 output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+                 output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+                 finish_dispatcher = &finished_package_install_dispatcher, error_message_mutex = std::ref(error_message_thread_mutex_),
+                 error_message = std::ref(error_message_thread_), error_dispatcher = &error_message_thread_dispatcher_]
                 {
                   // An exception escaping a detached thread function terminates WineGUI, so report it instead.
                   // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
                   // would stay open forever.
                   try
                   {
-                    string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+                    prepare_geproton_support(wine_bin_path);
+                    string output;
+                    if (!deinstall_command.empty())
+                      output += Helper::run_program_under_wine(wine_64_bit, wine_prefix, debug_log_level, deinstall_command, "", winetricks_env_vars,
+                                                               true, logging_stderr, wine_bin_path);
+                    output += Helper::run_program_under_wine(wine_64_bit, wine_prefix, debug_log_level, install_command, "", winetricks_env_vars,
+                                                             true, logging_stderr, wine_bin_path);
                     if (debug_logging && !output.empty())
                     {
                       {
@@ -1702,24 +1850,24 @@ void BottleManager::install_mono(Gtk::Window* parent)
     string wine_prefix = active_bottle_->wine_location();
     string wine_bin_path = active_bottle_->wine_bin_path();
     auto winetricks_env_vars = get_winetricks_env_vars();
+    auto mono_install_env_vars = winetricks_env_vars;
+    mono_install_env_vars.emplace_back("WINEDLLOVERRIDES", "mscoree=b");
+    bool wine_64_bit = active_bottle_->use_wine64();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
     // A Wine boot update makes Wine detect the missing Mono and (re)install the
     // correct Wine Mono MSI, matching the bottle's Wine version.
     // Force mscoree to 'builtin' so Wine's Mono auto-installer is triggered, even when a
     // previous native .NET install left mscoree overridden to 'native'.
-    string wine_exec = Helper::get_wine_executable_location(active_bottle_->use_wine64(), wine_bin_path);
-    string install_command = "WINEDLLOVERRIDES=\"mscoree=b\" \"" + wine_exec + "\" wineboot -u";
-    // First deinstall Mono (if present) then let Wine (re)install it
-    string program = (!deinstall_command.empty()) ? (deinstall_command + "; " + install_command) : install_command;
+    string install_command = "wineboot -u";
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t(
-        [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
-         debug_logging = std::move(is_debug_logging), output_logging_mutex = std::ref(output_loging_mutex_),
-         logging_bottle_prefix = std::ref(logging_bottle_prefix_), output_logging = std::ref(output_logging_),
-         write_log_dispatcher = &write_log_dispatcher_, finish_dispatcher = &finished_package_install_dispatcher,
-         error_message_mutex = std::ref(error_message_thread_mutex_), error_message = std::ref(error_message_thread_),
-         error_dispatcher = &error_message_thread_dispatcher_]
+        [wine_prefix, wine_bin_path, winetricks_env_vars, mono_install_env_vars, wine_64_bit, debug_log_level, deinstall_command, install_command,
+         logging_stderr = std::move(is_logging_stderr_), debug_logging = std::move(is_debug_logging),
+         output_logging_mutex = std::ref(output_loging_mutex_), logging_bottle_prefix = std::ref(logging_bottle_prefix_),
+         output_logging = std::ref(output_logging_), write_log_dispatcher = &write_log_dispatcher_,
+         finish_dispatcher = &finished_package_install_dispatcher, error_message_mutex = std::ref(error_message_thread_mutex_),
+         error_message = std::ref(error_message_thread_), error_dispatcher = &error_message_thread_dispatcher_]
         {
           // An exception escaping a detached thread function terminates WineGUI, so report it instead.
           // The finish dispatcher is emitted in every case, also on failure, otherwise the busy dialog
@@ -1727,7 +1875,13 @@ void BottleManager::install_mono(Gtk::Window* parent)
           // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
           try
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            prepare_geproton_support(wine_bin_path);
+            string output;
+            if (!deinstall_command.empty())
+              output += Helper::run_program_under_wine(wine_64_bit, wine_prefix, debug_log_level, deinstall_command, "", winetricks_env_vars, true,
+                                                       logging_stderr, wine_bin_path);
+            output += Helper::run_program_under_wine(wine_64_bit, wine_prefix, debug_log_level, install_command, "", mono_install_env_vars, true,
+                                                     logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
             {
               {
@@ -1769,7 +1923,7 @@ void BottleManager::install_core_fonts(Gtk::Window* parent)
     auto winetricks_env_vars = get_winetricks_env_vars();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    string program = Helper::get_winetricks_location() + " -q corefonts";
+    string program = "winetricks -q corefonts";
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t(
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
@@ -1785,7 +1939,9 @@ void BottleManager::install_core_fonts(Gtk::Window* parent)
           // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
           try
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            prepare_geproton_support(wine_bin_path);
+            string output = Helper::run_program_under_wine(false, wine_prefix, debug_log_level, program, "", winetricks_env_vars, true,
+                                                           logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
             {
               {
@@ -1827,7 +1983,7 @@ void BottleManager::install_liberation(Gtk::Window* parent)
     auto winetricks_env_vars = get_winetricks_env_vars();
     bool is_debug_logging = active_bottle_->is_debug_logging();
     int debug_log_level = active_bottle_->debug_log_level();
-    string program = Helper::get_winetricks_location() + " -q liberation";
+    string program = "winetricks -q liberation";
     // finished_package_install_dispatcher signal is needed in order to close the busy dialog again
     std::thread t(
         [wine_prefix, wine_bin_path, winetricks_env_vars, debug_log_level, program, logging_stderr = std::move(is_logging_stderr_),
@@ -1843,7 +1999,9 @@ void BottleManager::install_liberation(Gtk::Window* parent)
           // Helper::close_exec_stream), so a failing winetricks verb still follows its usual path.
           try
           {
-            string output = Helper::run_program(wine_prefix, debug_log_level, program, "", winetricks_env_vars, true, logging_stderr);
+            prepare_geproton_support(wine_bin_path);
+            string output = Helper::run_program_under_wine(false, wine_prefix, debug_log_level, program, "", winetricks_env_vars, true,
+                                                           logging_stderr, wine_bin_path);
             if (debug_logging && !output.empty())
             {
               {
@@ -1908,7 +2066,7 @@ std::vector<std::pair<string, string>> BottleManager::get_winetricks_env_vars()
   if (active_bottle_ != nullptr)
   {
     string wine_bin_path = active_bottle_->wine_bin_path();
-    if (!wine_bin_path.empty())
+    if (!wine_bin_path.empty() && !Helper::is_geproton_runner(wine_bin_path))
     {
       env_vars.emplace_back("WINE", Helper::get_wine_executable_location(active_bottle_->use_wine64(), wine_bin_path));
       env_vars.emplace_back("WINESERVER", Helper::get_wineserver_executable_location(wine_bin_path));
@@ -1933,9 +2091,7 @@ string BottleManager::get_deinstall_mono_command()
 
     if (!guid.empty())
     {
-      // Use the bottle's own Wine binary (custom Wine build or system Wine)
-      string uninstaller_wine = Helper::get_wine_executable_location(active_bottle_->use_wine64(), wine_bin_path);
-      command = "\"" + uninstaller_wine + "\" uninstaller --remove '{" + guid + "}'";
+      command = "uninstaller --remove '{" + guid + "}'";
     }
   }
   return command;

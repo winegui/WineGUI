@@ -100,6 +100,7 @@ void SignalController::dispatch_signals()
   manager_.bottle_removed.connect(sigc::mem_fun(edit_window_, &BottleEditWindow::bottle_removed));
   // Package install finished (in settings window), hide the busy dialog & refresh the settings window
   manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(*main_window_, &MainWindow::hide_busy_dialog));
+  manager_.finished_geproton_preparation_dispatcher.connect(sigc::mem_fun(*main_window_, &MainWindow::hide_busy_dialog));
   manager_.finished_package_install_dispatcher.connect(sigc::mem_fun(configure_window_, &BottleConfigureWindow::update_installed));
 
   // Toolbar actions

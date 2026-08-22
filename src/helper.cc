@@ -27,6 +27,7 @@
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
+#include <filesystem>
 #include <fstream>
 #include <giomm/file.h>
 #include <glibmm/fileutils.h>
@@ -286,8 +287,18 @@ string Helper::run_program_under_wine(bool wine_64_bit,
                                       const string& wine_bin_path,
                                       int* exit_code)
 {
-  return Helper::run_program(prefix_path, debug_log_level, Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) + " " + program,
-                             working_directory, env_vars, give_error, stderr_output, exit_code);
+  if (is_geproton_runner(wine_bin_path))
+  {
+    if (get_windows_bitness(prefix_path) == BottleTypes::Bit::win32)
+      throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");
+    require_umu_available();
+  }
+  string runner_program;
+  if (program.starts_with("winetricks "))
+    runner_program = build_winetricks_command(wine_bin_path, program.substr(string("winetricks ").size()));
+  else
+    runner_program = build_runner_command(wine_64_bit, wine_bin_path, program);
+  return Helper::run_program(prefix_path, debug_log_level, runner_program, working_directory, env_vars, give_error, stderr_output, exit_code);
 }
 
 /**
@@ -327,6 +338,10 @@ string Helper::get_log_file_path(const string& logging_bottle_prefix)
  */
 void Helper::wait_until_wineserver_is_terminated(const string& prefix_path, const string& wine_bin_path)
 {
+  // Proton owns wineserver lifecycle inside its managed runtime. Never call the embedded
+  // GE-Proton wineserver outside that supported environment.
+  if (is_geproton_runner(wine_bin_path))
+    return;
   // Use the wineserver that belongs to the bottle's custom Wine build (if any),
   // the system wineserver might be a different (incompatible) version
   string wineserver_executable = get_wineserver_executable_location(wine_bin_path);
@@ -381,6 +396,8 @@ string Helper::get_wine_executable_location(bool prefer_wine64, const string& wi
 {
   if (!wine_bin_path.empty())
   {
+    if (is_geproton_runner(wine_bin_path))
+      throw std::runtime_error("GE-Proton must be launched through umu-run, not through its embedded Wine binary.");
     string wine_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineExecutable});
     string wine64_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineExecutable64});
     // When the user prefers wine64, use it only if the runner actually ships it; otherwise gracefully
@@ -427,6 +444,8 @@ string Helper::get_wineserver_executable_location(const string& wine_bin_path)
 {
   if (!wine_bin_path.empty())
   {
+    if (is_geproton_runner(wine_bin_path))
+      throw std::runtime_error("GE-Proton wineserver lifecycle is managed by umu-run.");
     string wineserver_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineServerExecutable});
     if (file_exists(wineserver_path))
     {
@@ -434,6 +453,130 @@ string Helper::get_wineserver_executable_location(const string& wine_bin_path)
     }
   }
   return WineServerExecutable;
+}
+
+/**
+ * \brief Check whether a configured binary directory belongs to a complete GE-Proton compatibility tool.
+ */
+bool Helper::is_geproton_runner(const string& wine_bin_path)
+{
+  return find_geproton_root(wine_bin_path).has_value();
+}
+
+/**
+ * \brief Check for the complete compatibility-tool layout required to launch GE-Proton through UMU.
+ */
+bool Helper::is_geproton_layout(const string& runner_dir)
+{
+  const std::filesystem::path root(runner_dir);
+  std::error_code error_code;
+  return std::filesystem::is_regular_file(root / "proton", error_code) && std::filesystem::is_regular_file(root / "toolmanifest.vdf", error_code) &&
+         std::filesystem::is_regular_file(root / "files" / "bin" / "wine", error_code);
+}
+
+/**
+ * \brief Resolve a legacy GE-Proton files/bin setting back to its compatibility-tool root.
+ */
+std::optional<string> Helper::find_geproton_root(const string& wine_bin_path)
+{
+  if (wine_bin_path.empty())
+    return std::nullopt;
+  std::error_code error_code;
+  std::filesystem::path bin_dir = std::filesystem::weakly_canonical(std::filesystem::path(wine_bin_path), error_code);
+  if (error_code)
+    bin_dir = std::filesystem::path(wine_bin_path).lexically_normal();
+  if (bin_dir.filename() != "bin" || bin_dir.parent_path().filename() != "files")
+    return std::nullopt;
+  const std::filesystem::path root = bin_dir.parent_path().parent_path();
+  if (!is_geproton_layout(root.string()))
+    return std::nullopt;
+  return root.string();
+}
+
+/**
+ * \brief Return WineGUI's stable private Proton launcher path.
+ */
+string Helper::get_umu_executable_location()
+{
+  return Glib::build_filename(WineGuiDataDir, "umu", "umu-run");
+}
+
+/**
+ * \brief Check whether WineGUI's private Proton launcher is available.
+ */
+bool Helper::is_umu_available()
+{
+  const string executable = get_umu_executable_location();
+  return file_exists(executable) && access(executable.c_str(), X_OK) == 0;
+}
+
+/**
+ * \brief Refuse unsupported direct GE-Proton execution when UMU is unavailable.
+ */
+void Helper::require_umu_available()
+{
+  if (!is_umu_available())
+  {
+    throw std::runtime_error("WineGUI could not prepare GE-Proton support.\n\nCheck your internet connection and try again.");
+  }
+}
+
+/**
+ * \brief Quote one value for the existing shell-based command execution layer.
+ */
+string Helper::shell_quote(const string& value)
+{
+  string quoted = "'";
+  for (const char character : value)
+  {
+    if (character == '\'')
+      quoted += "'\\''";
+    else
+      quoted += character;
+  }
+  quoted += "'";
+  return quoted;
+}
+
+/**
+ * \brief Build the runner-specific portion of a Wine/Proton command.
+ */
+string Helper::build_runner_command(bool prefer_wine64, const string& wine_bin_path, const string& program)
+{
+  if (const std::optional<string> proton_root = find_geproton_root(wine_bin_path))
+  {
+    // UMU supplies the safe generic defaults (GAMEID=umu-default, no store) when WineGUI's
+    // existing bottle environment-variable configuration does not provide an override.
+    // `run` preserves WineGUI's ability to launch multiple processes in one bottle. UMU's
+    // waitforexitandrun default blocks each subsequent launch until wineserver exits.
+    return "env PROTONPATH=" + shell_quote(proton_root.value()) + " PROTON_VERB=run " + shell_quote(get_umu_executable_location()) + " " + program;
+  }
+  return get_wine_executable_location(prefer_wine64, wine_bin_path) + " " + program;
+}
+
+/**
+ * \brief Build a winetricks command for the selected runner.
+ */
+string Helper::build_winetricks_command(const string& wine_bin_path, const string& arguments)
+{
+  if (const std::optional<string> proton_root = find_geproton_root(wine_bin_path))
+  {
+    // UMU recognizes `winetricks` as a special native tool and chooses the correct Proton
+    // verb itself. Forcing runinprefix makes Proton treat the shell script as a Windows
+    // executable on a fresh invocation. UMU will still re-enter an active prefix container.
+    return "env PROTONPATH=" + shell_quote(proton_root.value()) + " " + shell_quote(get_umu_executable_location()) + " winetricks " + arguments;
+  }
+  return get_winetricks_location() + " " + arguments;
+}
+
+/**
+ * \brief Human-readable executable/backend description for the bottle details tooltip.
+ */
+string Helper::get_runner_entrypoint_description(bool prefer_wine64, const string& wine_bin_path)
+{
+  if (const std::optional<string> proton_root = find_geproton_root(wine_bin_path))
+    return "Managed GE-Proton compatibility environment (" + proton_root.value() + ")";
+  return get_wine_executable_location(prefer_wine64, wine_bin_path);
 }
 
 /**
@@ -464,6 +607,13 @@ string Helper::get_winetricks_location()
  */
 string Helper::get_wine_version(bool wine_64_bit, const string& prefix_path, const string& wine_bin_path)
 {
+  if (const std::optional<string> proton_root = find_geproton_root(wine_bin_path))
+  {
+    string version = Glib::path_get_basename(proton_root.value());
+    if (version.starts_with("GE-Proton"))
+      version.erase(0, string("GE-Proton").size());
+    return version;
+  }
   const auto& [exit_code, output] = exec(Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) + " --version 2>&1");
   if (exit_code == 0 && !output.empty())
   {
@@ -554,10 +704,20 @@ void Helper::create_wine_bottle(
     break;
   }
   string wine_dll_overrides = (disable_gecko_mono) ? " WINEDLLOVERRIDES=\"mscoree=d;mshtml=d\"" : "";
-  string command = "WINEPREFIX=\"" + prefix_path + "\"" + wine_arch + wine_dll_overrides + " " +
-                   Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) + " wineboot";
+  const bool geproton = is_geproton_runner(wine_bin_path);
+  if (geproton)
+  {
+    if (bit == BottleTypes::Bit::win32)
+      throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");
+    require_umu_available();
+  }
+  const string runner_program =
+      geproton ? build_runner_command(false, wine_bin_path, "\"\"") : build_runner_command(wine_64_bit, wine_bin_path, "wineboot");
+  string command = "WINEPREFIX=" + shell_quote(prefix_path) + wine_arch + wine_dll_overrides + " " + runner_program;
   const auto& [exit_code, output] = exec(command + " 2>&1");
-  if (exit_code != 0)
+  // UMU currently exits with status 1 for its intentional empty-command initialization after
+  // Proton has successfully created the prefix. The resulting prefix is the authoritative signal.
+  if (exit_code != 0 && !(geproton && bit == BottleTypes::Bit::win64 && is_wine_prefix_initialized(prefix_path)))
   {
     std::cerr << "Error: Couldn't create Wine bottle. Command: " << command << ", output: " << output << std::endl;
     throw std::runtime_error("Failed to create Wine prefix: " + get_folder_name(prefix_path) + ". \n\nWith the following output:\n\n" + output +
@@ -688,6 +848,17 @@ BottleTypes::Bit Helper::get_windows_bitness(const string& prefix_path)
     throw std::runtime_error("Could not determine Windows system bit, for Wine machine: " + get_folder_name(prefix_path) +
                              "\n\nFull location: " + prefix_path);
   }
+}
+
+/**
+ * \brief Check whether Wine or Proton created the minimum expected prefix structure.
+ */
+bool Helper::is_wine_prefix_initialized(const string& prefix_path)
+{
+  const std::filesystem::path prefix(prefix_path);
+  std::error_code error_code;
+  return std::filesystem::is_regular_file(prefix / "system.reg", error_code) && std::filesystem::is_regular_file(prefix / "user.reg", error_code) &&
+         std::filesystem::is_directory(prefix / "drive_c" / "windows", error_code);
 }
 
 /**
@@ -1288,13 +1459,21 @@ string Helper::log_level_to_winedebug_string(int log_level)
  */
 string Helper::get_wine_guid(bool wine_64_bit, const string& prefix_path, const string& application_name, const string& wine_bin_path)
 {
-  auto [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" " + Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) +
-                                  " uninstaller --list | grep \"" + application_name + "\" | cut -d \"{\" -f2 | cut -d \"}\" -f1 2>&1");
-  if (exit_code == 0 && !output.empty())
+  int exit_code = 0;
+  string output = run_program_under_wine(wine_64_bit, prefix_path, 1, "uninstaller --list", "", {}, false, true, wine_bin_path, &exit_code);
+  if (exit_code == 0)
   {
-    output.erase(std::remove(output.begin(), output.end(), '\n'), output.end());
+    for (const string& line : split(output, '\n'))
+    {
+      if (!line.contains(application_name))
+        continue;
+      const auto guid_start = line.find('{');
+      const auto guid_end = line.find('}', guid_start);
+      if (guid_start != string::npos && guid_end != string::npos)
+        return line.substr(guid_start + 1, guid_end - guid_start - 1);
+    }
   }
-  return output;
+  return "";
 }
 
 /**
@@ -1488,6 +1667,75 @@ string Helper::get_dxvk_test_location()
 }
 
 /**
+ * \brief Copy the bundled DXVK GPU test into WineGUI's user data directory for GE-Proton.
+ *
+ * UMU cannot expose an application directory below /usr inside its container. Installed
+ * WineGUI packages keep the test and its native DLLs below /usr/share, so stage the complete
+ * test payload below the user's WineGUI data directory before launching it through UMU.
+ * \param[in] executable_path Absolute path to the bundled d3d11-triangle executable
+ * \return Absolute path to the staged executable
+ */
+string Helper::prepare_dxvk_test_for_geproton(const string& executable_path)
+{
+  static std::mutex staging_mutex;
+  const std::lock_guard<std::mutex> lock(staging_mutex);
+  const std::filesystem::path source_executable(executable_path);
+  if (source_executable.filename() != "d3d11-triangle.exe")
+    throw std::runtime_error("Could not prepare the bundled GPU test: unexpected executable name.");
+
+  const std::filesystem::path source_directory = source_executable.parent_path();
+  const std::filesystem::path target_directory = std::filesystem::path(WineGuiDataDir) / "apps" / "dxvk-test";
+  const std::array<const char*, 4> payload{"d3d11-triangle.exe", "d3d11.dll", "d3dcompiler_47.dll", "dxgi.dll"};
+  std::error_code error_code;
+  std::filesystem::create_directories(target_directory, error_code);
+  if (error_code)
+    throw std::runtime_error("Could not prepare the bundled GPU test in WineGUI's user data directory: " + error_code.message());
+
+  for (const char* filename : payload)
+  {
+    const std::filesystem::path source = source_directory / filename;
+    const std::filesystem::path target = target_directory / filename;
+    if (!std::filesystem::is_regular_file(source, error_code) || error_code)
+      throw std::runtime_error("Could not prepare the bundled GPU test: required file is missing: " + source.string());
+
+    bool requires_copy = !std::filesystem::is_regular_file(target, error_code) || error_code;
+    error_code.clear();
+    if (!requires_copy)
+    {
+      const std::uintmax_t source_size = std::filesystem::file_size(source, error_code);
+      if (error_code)
+        throw std::runtime_error("Could not inspect the bundled GPU test: " + error_code.message());
+      const std::uintmax_t target_size = std::filesystem::file_size(target, error_code);
+      requires_copy = error_code || source_size != target_size;
+      error_code.clear();
+      if (!requires_copy)
+      {
+        const std::filesystem::file_time_type source_time = std::filesystem::last_write_time(source, error_code);
+        if (error_code)
+          throw std::runtime_error("Could not inspect the bundled GPU test: " + error_code.message());
+        const std::filesystem::file_time_type target_time = std::filesystem::last_write_time(target, error_code);
+        requires_copy = error_code || source_time != target_time;
+      }
+    }
+    error_code.clear();
+    if (!requires_copy)
+      continue;
+
+    const std::filesystem::path temporary = target.string() + ".tmp-" + std::to_string(getpid());
+    std::filesystem::copy_file(source, temporary, std::filesystem::copy_options::overwrite_existing, error_code);
+    if (error_code)
+      throw std::runtime_error("Could not prepare the bundled GPU test: " + error_code.message());
+    std::filesystem::rename(temporary, target, error_code);
+    if (error_code)
+    {
+      std::filesystem::remove(temporary);
+      throw std::runtime_error("Could not activate the bundled GPU test: " + error_code.message());
+    }
+  }
+  return (target_directory / source_executable.filename()).string();
+}
+
+/**
  * \brief Check if the prefix is equal to the default wine bottle path (~/.wine)
  * \return True if it's the default wine bottle path, otherwise false
  */
@@ -1632,6 +1880,12 @@ string Helper::build_desktop_exec_line(
   // Winetricks is a special case: it doesn't run through the Wine binary (see BottleManager::run_program)
   if (command.ends_with("winetricks --gui -q"))
   {
+    if (is_geproton_runner(wine_bin_path))
+    {
+      if (get_windows_bitness(prefix_path) == BottleTypes::Bit::win32)
+        throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");
+      return env_prefix + build_winetricks_command(wine_bin_path, "--gui -q");
+    }
     return env_prefix + command;
   }
 
@@ -1648,7 +1902,9 @@ string Helper::build_desktop_exec_line(
     wrapped_program = "start \"" + command + "\"";
   }
 
-  return env_prefix + Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) + " " + wrapped_program;
+  if (is_geproton_runner(wine_bin_path) && get_windows_bitness(prefix_path) == BottleTypes::Bit::win32)
+    throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");
+  return env_prefix + Helper::build_runner_command(wine_64_bit, wine_bin_path, wrapped_program);
 }
 
 /**

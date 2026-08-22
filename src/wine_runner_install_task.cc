@@ -20,8 +20,10 @@
  */
 #include "wine_runner_install_task.h"
 
+#include "umu_launcher_manager.h"
 #include "wine_runner_manager.h"
 
+#include <iostream>
 #include <stdexcept>
 
 /**
@@ -92,6 +94,7 @@ void WineRunnerInstallTask::fetch_releases_async(WineRunner::SourceId source_id)
         // unexpected one has to become a failed operation instead
         catch (const std::exception& error)
         {
+          std::cerr << "ERROR: Wine runner installation failed: " << error.what() << std::endl;
           {
             std::lock_guard<std::mutex> lock(data_mutex_);
             error_message_ = error.what();
@@ -120,6 +123,28 @@ void WineRunnerInstallTask::install_async(const WineRunner::Release& release)
       {
         try
         {
+          if (release.source == WineRunner::SourceId::GEProton && !UmuLauncherManager::is_ready())
+          {
+            phase_.store(WineRunner::InstallPhase::PreparingSupport);
+            bytes_done_.store(0);
+            bytes_total_.store(UmuLauncherManager::pinned_release().size_bytes);
+            progress_changed.emit();
+            if (!UmuLauncherManager::ensure_installed(&cancel_requested_,
+                                                      [this](std::uint64_t bytes_done, std::uint64_t bytes_total)
+                                                      {
+                                                        bytes_done_.store(bytes_done);
+                                                        bytes_total_.store(bytes_total);
+                                                        progress_changed.emit();
+                                                      }))
+            {
+              status_.store(WineRunner::InstallStatus::Cancelled);
+              phase_.store(WineRunner::InstallPhase::Idle);
+              install_finished.emit();
+              return;
+            }
+          }
+          bytes_done_.store(0);
+          bytes_total_.store(release.size_bytes);
           bool checksum_verified = false;
           bool success = WineRunnerManager::download_and_install(
               release,
@@ -143,7 +168,10 @@ void WineRunnerInstallTask::install_async(const WineRunner::Release& release)
         {
           {
             std::lock_guard<std::mutex> lock(data_mutex_);
-            error_message_ = error.what();
+            if (release.source == WineRunner::SourceId::GEProton && !UmuLauncherManager::is_ready())
+              error_message_ = UmuLauncherManager::user_error_message();
+            else
+              error_message_ = error.what();
           }
           status_.store(WineRunner::InstallStatus::Error);
         }

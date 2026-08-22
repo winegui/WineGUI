@@ -135,7 +135,7 @@ void BottleNewAssistant::create_first_page()
                                 "First, select which Wine build this machine will use. Keep <b>System Wine</b> unless you want "
                                 "a specific Wine build.\nUse the 'Manage runners...' button to download additional Wine builds "
                                 "(like Wine Staging, Wine Staging-TkG or GE-Proton).\n\n"
-                                "<i>Note:</i> a WoW64 build only supports 64-bit Windows versions.");
+                                "<i>Note:</i> WoW64 and GE-Proton runners support only 64-bit Windows machines.");
   runner_intro_label.set_halign(Gtk::Align::START);
   runner_intro_label.set_margin_bottom(25);
   vbox_runner.append(runner_intro_label);
@@ -254,7 +254,7 @@ void BottleNewAssistant::refresh_wine_runner_list()
 {
   Glib::ustring previous_selection = wine_runner_combobox.get_active_id();
   wine_runner_combobox.remove_all();
-  runner_is_wow64_.clear();
+  runner_supports_win32_.clear();
   wine_runner_combobox.append("system", "System Wine (default)");
   for (const WineRunner::InstalledRunner& runner : WineRunnerManager::get_installed_runners())
   {
@@ -263,8 +263,7 @@ void BottleNewAssistant::refresh_wine_runner_list()
       text += " — Wine " + runner.wine_version;
     // The absolute wine binary directory doubles as unique combobox ID (it can never collide with "system")
     wine_runner_combobox.append(runner.bin_dir, text);
-    // Remember the WoW64 (64-bit only) capability, used to filter the Windows version list
-    runner_is_wow64_[runner.bin_dir] = runner.wow64;
+    runner_supports_win32_[runner.bin_dir] = runner.supports_win32;
   }
   if (previous_selection.empty() || !wine_runner_combobox.set_active_id(previous_selection))
   {
@@ -274,8 +273,8 @@ void BottleNewAssistant::refresh_wine_runner_list()
 
 /**
  * \brief (Re)fill the Windows version combobox, filtered by the currently selected Wine runner.
- * A WoW64 runner cannot create a 32-bit (WINEARCH=win32) prefix, so only 64-bit Windows versions are offered
- * for it. System Wine and regular (non-WoW64) runners offer the full 32 & 64-bit list.
+ * Runners whose supported backend cannot create a true WINEARCH=win32 prefix (WoW64 or GE-Proton)
+ * offer only 64-bit Windows versions. System Wine and regular runners offer the full list.
  */
 void BottleNewAssistant::refresh_windows_version_list()
 {
@@ -283,8 +282,8 @@ void BottleNewAssistant::refresh_windows_version_list()
   bool only_64bit = false;
   if (runner_id != "system" && !runner_id.empty())
   {
-    auto it = runner_is_wow64_.find(runner_id);
-    only_64bit = (it != runner_is_wow64_.end()) && it->second;
+    auto it = runner_supports_win32_.find(runner_id);
+    only_64bit = (it != runner_supports_win32_.end()) && !it->second;
   }
 
   const Glib::ustring previous_selection = windows_version_combobox.get_active_id();
@@ -293,7 +292,7 @@ void BottleNewAssistant::refresh_windows_version_list()
        it != BottleTypes::SupportedWindowsVersions.end(); ++it)
   {
     if (only_64bit && (*it).second != BottleTypes::Bit::win64)
-      continue; // Skip 32-bit Windows versions, a WoW64 build cannot host them
+      continue;
     auto index = std::distance(BottleTypes::SupportedWindowsVersions.begin(), it);
     windows_version_combobox.append(std::to_string(index), BottleTypes::to_string((*it).first) + " (" + BottleTypes::to_string((*it).second) + ')');
   }
