@@ -460,6 +460,18 @@ void MainWindow::show_busy_install_dialog(Gtk::Window& parent, const Glib::ustri
 }
 
 /**
+ * \brief Show nontechnical first-use preparation progress for GE-Proton.
+ */
+void MainWindow::show_busy_geproton_dialog()
+{
+  busy_dialog_.set_message("Preparing GE-Proton support", "Preparing the GE-Proton runtime for first use...");
+  busy_dialog_.set_transient_for(*this);
+  busy_dialog_.set_cancelable(false);
+  busy_dialog_.set_pulsing();
+  busy_dialog_.present();
+}
+
+/**
  * \brief Hide the busy dialog again
  */
 void MainWindow::hide_busy_dialog()
@@ -921,7 +933,7 @@ void MainWindow::set_detailed_info(const BottleItem& bottle)
 
   Glib::ustring wine_bin_path_text = "System Default";
   // Always show the actual wine binary path on hover
-  wine_bin_path_label.set_tooltip_text(Helper::get_wine_executable_location(bottle.use_wine64(), bottle.wine_bin_path()));
+  wine_bin_path_label.set_tooltip_text(Helper::get_runner_entrypoint_description(bottle.use_wine64(), bottle.wine_bin_path()));
   if (!bottle.wine_bin_path().empty())
   {
     // Show the runner display name when the path belongs to an installed Wine runner, otherwise the raw (custom) path

@@ -24,6 +24,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -74,6 +75,15 @@ public:
   static int determine_wine_executable();
   static string get_wine_executable_location(bool prefer_wine64 = false, const string& wine_bin_path = "");
   static string get_wineserver_executable_location(const string& wine_bin_path = "");
+  static bool is_geproton_layout(const string& runner_dir);
+  static std::optional<string> find_geproton_root(const string& wine_bin_path);
+  static bool is_geproton_runner(const string& wine_bin_path);
+  static string get_umu_executable_location();
+  static bool is_umu_available();
+  static void require_umu_available();
+  static string build_runner_command(bool prefer_wine64, const string& wine_bin_path, const string& program);
+  static string build_winetricks_command(const string& wine_bin_path, const string& arguments);
+  static string get_runner_entrypoint_description(bool prefer_wine64, const string& wine_bin_path);
   static string get_winetricks_location();
   static string get_wine_version(bool wine_64_bit, const string& prefix_path, const string& wine_bin_path = "");
   static string open_file_from_uri(const string& uri);
@@ -84,6 +94,7 @@ public:
   static void copy_wine_bottle_folder(const string& source_prefix_path, const string& destination_prefix_path);
   static string get_folder_name(const string& prefix_path);
   static BottleTypes::Bit get_windows_bitness(const string& prefix_path);
+  static bool is_wine_prefix_initialized(const string& prefix_path);
   static BottleTypes::AudioDriver get_audio_driver(const string& prefix_path);
   static string get_virtual_desktop(const string& prefix_path);
   static string get_last_wine_updated(const string& prefix_path);
@@ -112,6 +123,7 @@ public:
   static string get_font_filename(const string& prefix_path, BottleTypes::Bit bit, const string& fontName);
   static string get_image_location(const string& filename);
   static string get_dxvk_test_location();
+  static string prepare_dxvk_test_for_geproton(const string& executable_path);
   static bool is_default_wine_bottle(const string& prefix_path);
   static string encode_text(const string& text);
   static string string_to_icon(const string& filename);
@@ -168,4 +180,5 @@ private:
   static string unescape_reg_key_data(const string& src);
   static string string2hex(const string& str, bool capital = false);
   static string hex2string(const string& hexstr);
+  static string shell_quote(const string& value);
 };

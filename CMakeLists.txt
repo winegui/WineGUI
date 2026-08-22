@@ -122,6 +122,7 @@ set(HEADERS
   include/wine_runner_manager.h
   include/wine_runner_install_task.h
   include/wine_runner_window.h
+  include/umu_launcher_manager.h
 )
 
 set(SOURCES
@@ -150,6 +151,7 @@ set(SOURCES
   src/wine_runner_manager.cc
   src/wine_runner_install_task.cc
   src/wine_runner_window.cc
+  src/umu_launcher_manager.cc
   ${HEADERS}
 )
 
@@ -193,6 +195,7 @@ else()
     src/bottle_config_file.cc
     src/helper.cc
     src/wine_runner_manager.cc
+    src/umu_launcher_manager.cc
   )
 
   # Set C++23 for all libs
@@ -226,4 +229,3 @@ endif()
 if(DOXYGEN)
   include(doxygen)
 endif()
-

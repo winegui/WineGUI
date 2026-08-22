@@ -276,7 +276,9 @@ std::vector<WineRunner::Release> WineRunnerManager::parse_github_releases_json(W
       }
       else if (source_id == WineRunner::SourceId::GEProton)
       {
-        std::string base_name = expected_install_dir_name(release.value());
+        // The checksum asset follows the archive asset name, including the explicit
+        // architecture suffix used by newer releases.
+        std::string base_name = release->asset_name.substr(0, release->asset_name.size() - std::string(".tar.gz").size());
         if (auto it = sha512sum_urls.find(base_name); it != sha512sum_urls.end())
         {
           release->checksum_type = WineRunner::ChecksumType::Sha512;
@@ -353,7 +355,9 @@ std::optional<WineRunner::Release> WineRunnerManager::classify_kron4ek_asset(con
 
 /**
  * \brief Classify a GE-Proton release asset file name.
- * Only the x86_64 tar.gz archives are accepted (eg. "GE-Proton11-1.tar.gz", rejecting the "-aarch64" variants).
+ * Accepts both the legacy unsuffixed x86_64 archives (eg. "GE-Proton11-3.tar.gz") and the
+ * explicit architecture format introduced with GE-Proton11-4 (eg. "GE-Proton11-4-x86_64.tar.gz").
+ * Other architectures are rejected until WineGUI selects assets according to the host architecture.
  * \param[in] asset_name Asset file name
  * \return Partially filled Release (variant/version/asset_name) or nullopt when the asset is not usable
  */
@@ -367,7 +371,11 @@ std::optional<WineRunner::Release> WineRunnerManager::classify_geproton_asset(co
     return std::nullopt;
 
   std::string version = asset_name.substr(prefix.size(), asset_name.size() - prefix.size() - suffix.size());
-  // Version must be digits/dots/dashes only (this rejects eg. "GE-Proton11-1-aarch64.tar.gz")
+  static const std::string x86_64_suffix = "-x86_64";
+  if (version.ends_with(x86_64_suffix))
+    version.erase(version.size() - x86_64_suffix.size());
+
+  // Version must be digits/dots/dashes only. This rejects aarch64 and unknown architecture suffixes.
   if (version.empty() || std::isdigit(static_cast<unsigned char>(version[0])) == 0)
     return std::nullopt;
   if (!std::all_of(version.begin(), version.end(),
@@ -389,6 +397,11 @@ std::optional<WineRunner::Release> WineRunnerManager::classify_geproton_asset(co
  */
 std::string WineRunnerManager::expected_install_dir_name(const WineRunner::Release& release)
 {
+  // Normalize both GE-Proton archive naming generations to the compatibility tool's version name.
+  // This also avoids installing the same version twice under architecture-specific asset names.
+  if (release.source == WineRunner::SourceId::GEProton)
+    return "GE-Proton" + release.version;
+
   std::string name = release.asset_name;
   for (const std::string& suffix : {std::string(".tar.xz"), std::string(".tar.gz")})
   {
@@ -438,13 +451,12 @@ std::string WineRunnerManager::derive_display_name(const std::string& runner_dir
  */
 std::optional<std::string> WineRunnerManager::find_wine_bin_dir(const std::string& runner_dir)
 {
-  const std::vector<fs::path> bin_dir_candidates = {fs::path(runner_dir) / "bin", fs::path(runner_dir) / "files" / "bin"};
-  for (const fs::path& bin_dir : bin_dir_candidates)
-  {
-    std::error_code error_code;
-    if (fs::is_regular_file(bin_dir / "wine", error_code) || fs::is_regular_file(bin_dir / "wine64", error_code))
-      return bin_dir.string();
-  }
+  std::error_code error_code;
+  const fs::path regular_bin_dir = fs::path(runner_dir) / "bin";
+  if (fs::is_regular_file(regular_bin_dir / "wine", error_code) || fs::is_regular_file(regular_bin_dir / "wine64", error_code))
+    return regular_bin_dir.string();
+  if (Helper::is_geproton_layout(runner_dir))
+    return (fs::path(runner_dir) / "files" / "bin").string();
   return std::nullopt;
 }
 
@@ -537,13 +549,19 @@ std::vector<WineRunner::InstalledRunner> WineRunnerManager::get_installed_runner
       runner.display_name = derive_display_name(entry_name);
       runner.runner_dir = runner_dir;
       runner.bin_dir = bin_dir.value();
+      runner.launch_strategy =
+          Helper::is_geproton_layout(runner_dir) ? WineRunner::LaunchStrategy::UmuProton : WineRunner::LaunchStrategy::WineBinary;
       runner.has_wine64 = fs::is_regular_file(fs::path(runner.bin_dir) / "wine64", error_code);
-      // WoW64 (64-bit-only) is reliably signalled only by the "-wow64" token in the archive/directory name,
-      // which is preserved as the runner directory name. Neither a missing wine64 nor a missing i386-unix tree
-      // is a reliable signal (eg. Proton WoW64 ships both yet still refuses a 32-bit prefix).
+      // WoW64 is reliably signalled by the "-wow64" token in Kron4ek's archive/directory
+      // name. GE-Proton is also 64-bit-only because its supported managed backend removes
+      // WINEARCH and cannot create a true win32 prefix.
       std::optional<WineRunner::Release> classified = classify_kron4ek_asset(entry_name + ".tar.xz");
       runner.wow64 = classified.has_value() && classified->wow64;
-      runner.wine_version = get_cached_wine_version(runner.bin_dir);
+      runner.supports_win32 = runner.launch_strategy != WineRunner::LaunchStrategy::UmuProton && !runner.wow64;
+      // Avoid executing a runner merely to populate display metadata. The compatibility-tool
+      // directory name already carries GE-Proton's useful version.
+      if (runner.launch_strategy == WineRunner::LaunchStrategy::WineBinary)
+        runner.wine_version = get_cached_wine_version(runner.bin_dir);
       runners.emplace_back(runner);
     }
   }
@@ -822,7 +840,9 @@ bool WineRunnerManager::download_and_install(const WineRunner::Release& release,
   }
 
   // Move the runner into place (atomic rename, staging is on the same filesystem)
-  std::string target_dir = Glib::build_filename(runners_dir, top_dir_name);
+  // Normalize the final directory name independently of the archive's top-level directory.
+  // New GE-Proton assets include an architecture suffix while existing WineGUI bottle paths do not.
+  std::string target_dir = Glib::build_filename(runners_dir, expected_install_dir_name(release));
   if (fs::exists(target_dir, error_code))
   {
     throw std::runtime_error("This Wine runner is already installed (directory already exists): " + target_dir);
