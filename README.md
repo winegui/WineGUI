@@ -230,7 +230,7 @@ This produces `build_prod/WineGUI-v<version>-x86_64.AppImage`.
 
 The required tools (`linuxdeploy`, `linuxdeploy-plugin-gtk` and `appimagetool`) do **not** need to be installed system-wide: they are downloaded automatically (with pinned checksums) into the build directory when CMake is configured with `-DAPPIMAGE=ON`, which the script does for you. To bump the pinned tool versions, edit `cmake/appimage.cmake`.
 
-The AppImage bundles the GTK stack via `linuxdeploy-plugin-gtk` and Python for WineGUI's automatically managed GE-Proton support. Note that the GTK plugin is officially GTK+2/3 only; if a produced AppImage fails to run on target systems due to GTK4 bundling issues, consider switching the script to [sharun](https://github.com/VHSgunzo/sharun) / `quick-sharun` as an alternative deployment tool.
+The AppImage bundles the GTK stack via `linuxdeploy-plugin-gtk`, GLib's `gio-launch-desktop` helper for cross-distribution desktop integration, and Python for WineGUI's automatically managed GE-Proton support. Note that the GTK plugin is officially GTK+2/3 only; if a produced AppImage fails to run on target systems due to GTK4 bundling issues, consider switching the script to [sharun](https://github.com/VHSgunzo/sharun) / `quick-sharun` as an alternative deployment tool.
 
 The standalone binary `.tar.gz` package requires Python 3.10 or newer when using GE-Proton. WineGUI still downloads and manages the launcher itself;
 the Python interpreter is the only platform prerequisite for that package format. DEB/RPM packages install it as a package dependency and the

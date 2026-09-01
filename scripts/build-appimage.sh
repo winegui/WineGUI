@@ -4,8 +4,9 @@
 #  A single self-contained, executable file that runs on most Linux
 #  distributions without installation or root.
 #
-# The AppImage bundles the GTK stack and a Python runtime used by WineGUI's
-# automatically managed GE-Proton support. Wine itself remains a host dependency.
+# The AppImage bundles the GTK stack, its gio-launch-desktop helper and a Python
+# runtime used by WineGUI's automatically managed GE-Proton support. Wine itself
+# remains a host dependency.
 #
 # The linuxdeploy / linuxdeploy-plugin-gtk / appimagetool tools are downloaded
 # by CMake (see cmake/appimage.cmake) when configured with -DAPPIMAGE=ON, so no
@@ -104,6 +105,60 @@ TOOLS_DIR="${PWD}/${BUILD_DIR}/appimage-tools"
 LINUXDEPLOY="${TOOLS_DIR}/linuxdeploy-x86_64.AppImage"
 APPIMAGETOOL="${TOOLS_DIR}/appimagetool-x86_64.AppImage"
 
+# Gio launches non-D-Bus desktop applications through gio-launch-desktop. The
+# GTK plugin bundles libgio but not this helper, while libgio first looks in a
+# distro-specific path compiled into the library. Bundle the helper from the same
+# GLib installation so the AppImage does not depend on the target distro using
+# Debian's multiarch path, openSUSE's /usr/libexec path, or exposing either on PATH.
+GLIB_LIBDIR="$(pkg-config --variable=libdir gio-2.0)"
+GLIB_PREFIX="$(pkg-config --variable=prefix gio-2.0)"
+GIO_LAUNCH_DESKTOP_EXECUTABLE=""
+GIO_LAUNCH_DESKTOP_CANDIDATES=(
+    "${GLIB_LIBDIR}/glib-2.0/gio-launch-desktop"
+    "${GLIB_PREFIX}/libexec/gio-launch-desktop"
+    "${GLIB_PREFIX}/lib/glib-2.0/gio-launch-desktop"
+)
+
+for candidate in "${GIO_LAUNCH_DESKTOP_CANDIDATES[@]}"; do
+    if [[ -x "${candidate}" ]]; then
+        GIO_LAUNCH_DESKTOP_EXECUTABLE="${candidate}"
+        break
+    fi
+done
+
+if [[ -z "${GIO_LAUNCH_DESKTOP_EXECUTABLE}" ]]; then
+    echo "ERROR: Could not find the gio-launch-desktop helper belonging to gio-2.0." >&2
+    printf 'Checked: %s\n' "${GIO_LAUNCH_DESKTOP_CANDIDATES[@]}" >&2
+    exit 1
+fi
+
+# linuxdeploy turns scripts in AppDir/apprun-hooks into startup hooks sourced by
+# the generated AppRun before WineGUI starts. GIO_APPRUN_HOOK_PATH is only the
+# build-time path where we write our hook; it is not an environment variable
+# interpreted by GLib or linuxdeploy.
+#
+# At runtime the hook exports GIO_LAUNCH_DESKTOP, which is GLib's explicit helper
+# override. This makes the bundled libgio execute the matching helper inside the
+# AppImage. Keep the override in a hook rather than prepending AppDir/usr/bin to
+# PATH, since WineGUI deliberately invokes host tools such as Wine and UMU.
+APPRUN_HOOK_DIR="${APPDIR}/apprun-hooks"
+GIO_APPRUN_HOOK_PATH="${APPRUN_HOOK_DIR}/winegui-gio-launch-desktop.sh"
+mkdir -p "${APPRUN_HOOK_DIR}"
+cat > "${GIO_APPRUN_HOOK_PATH}" <<'EOF'
+#!/usr/bin/env bash
+
+# APPDIR is normally supplied by the AppImage runtime. Derive it from AppRun
+# when the AppDir has been extracted and started directly.
+if [[ -z "${APPDIR:-}" ]]; then
+    APPDIR="$(dirname "$(readlink -f "$0")")"
+    export APPDIR
+fi
+
+# Tell libgio to use the helper bundled from the same GLib installation.
+export GIO_LAUNCH_DESKTOP="${APPDIR}/usr/bin/gio-launch-desktop"
+EOF
+chmod 755 "${GIO_APPRUN_HOOK_PATH}"
+
 # The managed GE-Proton launcher is a Python zipapp. Bundle Python >= 3.10 and its
 # standard library so AppImage users never have to install Python themselves.
 PYTHON3_EXECUTABLE="$(command -v python3)"
@@ -135,10 +190,28 @@ echo "INFO: Building AppImage (version ${VERSION})..."
 "${LINUXDEPLOY}" \
     --appdir "${APPDIR}" \
     --executable "${PYTHON3_EXECUTABLE}" \
+    --executable "${GIO_LAUNCH_DESKTOP_EXECUTABLE}" \
     --plugin gtk \
     --output appimage \
     --desktop-file "${APPIMAGE_DESKTOP}" \
     --icon-file "${PWD}/misc/winegui.svg"
+
+# Guard against future linuxdeploy/GLib layout changes silently recreating the
+# cross-distro launch failure. The helper must be packaged, the generated AppRun
+# must source our hook, and the minimal wrapper must be able to exec a host tool.
+BUNDLED_GIO_LAUNCH_DESKTOP="${APPDIR}/usr/bin/gio-launch-desktop"
+if [[ ! -x "${BUNDLED_GIO_LAUNCH_DESKTOP}" ]]; then
+    echo "ERROR: linuxdeploy did not bundle gio-launch-desktop." >&2
+    exit 1
+fi
+if ! grep -Fq "winegui-gio-launch-desktop.sh" "${APPDIR}/AppRun"; then
+    echo "ERROR: The generated AppRun does not source the Gio helper hook." >&2
+    exit 1
+fi
+if ! "${BUNDLED_GIO_LAUNCH_DESKTOP}" /bin/true; then
+    echo "ERROR: The bundled gio-launch-desktop helper could not execute a host program." >&2
+    exit 1
+fi
 
 # Collect the artifact alongside the other release packages (build_prod/), so the
 # CI 'gh release create build_prod/WineGUI-*' glob and the release links pick it up.
