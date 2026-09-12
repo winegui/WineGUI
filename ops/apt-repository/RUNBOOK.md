@@ -190,25 +190,137 @@ Do not enable the service until signing works unattended.
 
 ## 5. Install signing material
 
-Create the certifying primary key offline and add a dedicated signing subkey.
-Keep the primary secret key offline. Export:
+### 5.1 Create the master key on the workstation
 
-- only the secret signing subkey for the server;
-- the complete public keyring for WineGUI packages;
-- the full primary and signing-subkey fingerprints.
+Run this subsection as the normal workstation user. Do not use `sudo`. The
+working keyring is created below the user's home directory so every command is
+directly executable. Disconnect the workstation from the network while creating
+the key if practical.
 
-After securely transferring the secret subkey, copy it into the protected GPG
-home and import it:
+```sh
+umask 077
+WINEGUI_KEY_HOME="$HOME/.local/share/winegui-apt-master-key"
+install -d -m 0700 "$WINEGUI_KEY_HOME"
+
+gpg --homedir "$WINEGUI_KEY_HOME" \
+  --quick-generate-key \
+  "WineGUI APT Repository <melroy@melroy.org>" \
+  ed25519 cert 5y
+
+PRIMARY_FPR=$(
+  gpg --homedir "$WINEGUI_KEY_HOME" \
+    --with-colons --list-secret-keys |
+    awk -F: '$1 == "fpr" { print $10; exit }'
+)
+test -n "$PRIMARY_FPR"
+printf 'Primary fingerprint: %s\n' "$PRIMARY_FPR"
+
+gpg --homedir "$WINEGUI_KEY_HOME" \
+  --quick-add-key "$PRIMARY_FPR" ed25519 sign 2y
+
+gpg --homedir "$WINEGUI_KEY_HOME" \
+  --with-subkey-fingerprints --list-secret-keys "$PRIMARY_FPR"
+
+SIGNING_FPR=$(
+  gpg --homedir "$WINEGUI_KEY_HOME" \
+    --with-colons --list-secret-keys "$PRIMARY_FPR" |
+    awk -F: '$1 == "ssb" { subkey = 1; next }
+      subkey && $1 == "fpr" { print $10; exit }'
+)
+test -n "$SIGNING_FPR"
+printf 'Signing fingerprint: %s\n' "$SIGNING_FPR"
+
+WINEGUI_KEY_EXPORT="$HOME/.local/share/winegui-apt-key-export"
+install -d -m 0700 "$WINEGUI_KEY_EXPORT"
+gpg --homedir "$WINEGUI_KEY_HOME" --armor --export-options export-minimal \
+  --output "$WINEGUI_KEY_EXPORT/winegui-apt-public.asc" \
+  --export "$PRIMARY_FPR"
+gpg --homedir "$WINEGUI_KEY_HOME" \
+  --output "$WINEGUI_KEY_EXPORT/winegui-apt-secret-subkeys.gpg" \
+  --export-secret-subkeys "$PRIMARY_FPR"
+chmod 0600 "$WINEGUI_KEY_EXPORT"/*
+```
+
+The first GPG command asks for a new passphrase; it is not requesting an
+existing system password. Store the new passphrase in a password manager. The
+listing must show a certification-only primary key (`[C]`) and a signing subkey
+(`[S]`).
+
+The two export files are:
+
+- `winegui-apt-secret-subkeys.gpg`: server import containing a disabled primary
+  stub and the secret signing subkey;
+- `winegui-apt-public.asc`: public key supplied to package builds.
+
+Copy the complete `$WINEGUI_KEY_HOME` directory to encrypted offline storage
+before deleting the workstation copy. Preserve the printed primary and signing
+fingerprints with that backup. The primary secret key must never be copied to
+`ubuntu-server` or GitLab.
+
+### 5.2 Install the signing subkey on the server
+
+First transfer only the signing-subkey export from the workstation as the normal
+workstation user; do not use `sudo`:
+
+```sh
+scp "$WINEGUI_KEY_EXPORT/winegui-apt-secret-subkeys.gpg" \
+  ubuntu-server:/home/melroy/
+```
+
+Then run the following commands on `ubuntu-server`. These commands require
+`sudo` because they install into protected system paths:
 
 ```sh
 sudo install -o winegui-apt -g winegui-apt -m 0600 \
-  /path/to/secret-signing-subkey.gpg \
+  /home/melroy/winegui-apt-secret-subkeys.gpg \
   /var/lib/winegui-apt/gnupg/import.gpg
 sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
   gpg --batch --import /var/lib/winegui-apt/gnupg/import.gpg
 sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
   gpg --with-colons --list-secret-keys --fingerprint --fingerprint
 sudo rm /var/lib/winegui-apt/gnupg/import.gpg
+rm /home/melroy/winegui-apt-secret-subkeys.gpg
+```
+
+The signing subkey export retains the master-key passphrase. The publisher must
+sign unattended after reboot, so remove the passphrase from only the imported
+server-side signing subkey. The server account and mode `0700` GPG home become
+the protection for this operational copy; the offline primary remains
+passphrase-protected.
+
+```sh
+SIGNING_FPR=$(
+  sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
+    gpg --with-colons --list-secret-keys |
+    awk -F: '$1 == "ssb" { subkey = 1; next }
+      subkey && $1 == "fpr" { print $10; exit }'
+)
+SIGNING_KEYGRIP=$(
+  sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
+    gpg --with-colons --with-keygrip --list-secret-keys "$SIGNING_FPR" |
+    awk -F: '$1 == "ssb" { subkey = 1; next }
+      subkey && $1 == "grp" { print $10; exit }'
+)
+test -n "$SIGNING_FPR"
+test -n "$SIGNING_KEYGRIP"
+printf 'Signing fingerprint: %s\nSigning keygrip: %s\n' \
+  "$SIGNING_FPR" "$SIGNING_KEYGRIP"
+
+sudo -u winegui-apt env \
+  GNUPGHOME=/var/lib/winegui-apt/gnupg \
+  GPG_TTY="$(tty)" \
+  gpg-connect-agent "PASSWD $SIGNING_KEYGRIP" /bye
+```
+
+Enter the existing master-key passphrase when prompted. For the new passphrase,
+leave both entries empty and confirm the warning. This changes only the signing
+subkey identified by its keygrip.
+
+### 5.3 Configure the publisher and GitLab
+
+Run on `ubuntu-server`:
+
+```sh
 sudoedit /etc/winegui-apt-publisher.env
 ```
 
@@ -218,6 +330,16 @@ these protected GitLab CI/CD variables:
 - `WINEGUI_APT_PUBLIC_KEY_FILE`: file variable containing the public export;
 - `WINEGUI_APT_KEY_FINGERPRINTS`: full primary fingerprint;
 - `WINEGUI_APT_KEY_GENERATION`: `1` for the first key generation.
+
+### 5.4 Verify unattended signing
+
+Run on `ubuntu-server`. Killing the service account's GPG agent first proves
+that the test does not depend on a cached passphrase:
+
+```sh
+sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
+  gpgconf --kill gpg-agent
+```
 
 Test both signature formats as the service account:
 
