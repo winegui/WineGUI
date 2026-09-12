@@ -441,7 +441,8 @@ the latest WineGUI version, select an older retained version, and upgrade again.
 ## 7. Routine operation
 
 Normal tagged releases require no server command. The path unit starts the
-publisher when a completed batch arrives; the timer retries interrupted work.
+publisher when a completed batch arrives; the hourly timer is a fallback for
+missed path events, restart recovery, and interrupted work.
 
 After a supported client OS upgrade, reconfigure or reinstall the current
 WineGUI DEB. Its maintainer script updates an unchanged managed source to the

@@ -3,8 +3,8 @@ Description=Reconcile WineGUI APT publisher state
 
 [Timer]
 OnBootSec=2min
-OnUnitActiveSec=5min
-RandomizedDelaySec=30s
+OnUnitActiveSec=1h
+RandomizedDelaySec=5min
 Persistent=true
 Unit=winegui-apt-publisher.service
 
