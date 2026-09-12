@@ -1,21 +1,26 @@
 FROM ubuntu:24.04 AS build
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG REPREPRO_COMMIT=3afde91f87342b473bb624f3bf3c5cc0341b75e8
+ARG REPREPRO_VERSION=5.5.1
+ARG REPREPRO_TAG=reprepro-5.5.1
+ARG REPREPRO_COMMIT=2833265135bff5fc5b01c8e256cf9b46d602a59c
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      build-essential ca-certificates git libarchive-dev libbz2-dev libdb-dev \
+      autoconf automake build-essential ca-certificates git libarchive-dev libbz2-dev libdb-dev \
       libgpgme-dev liblzma-dev libzstd-dev pkg-config \
  && rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/ionos-cloud/reprepro.git /src/reprepro \
- && git -C /src/reprepro checkout --detach "$REPREPRO_COMMIT" \
+RUN git clone --branch "$REPREPRO_TAG" --depth 1 \
+      https://salsa.debian.org/debian/reprepro.git /src/reprepro \
  && test "$(git -C /src/reprepro rev-parse HEAD)" = "$REPREPRO_COMMIT" \
  && cd /src/reprepro \
+ && ./autogen.sh \
  && ./configure --prefix=/opt/winegui-reprepro \
  && make -C /src/reprepro -j"$(nproc)" \
  && install -D -m 0755 /src/reprepro/reprepro /out/bin/reprepro \
+ && test "$(/out/bin/reprepro --version 2>&1 | sed -n 's/^.*: This is reprepro version //p')" = "$REPREPRO_VERSION" \
+ && printf '%s\n' "$REPREPRO_VERSION" > /out/REPREPRO_VERSION \
  && printf '%s\n' "$REPREPRO_COMMIT" > /out/REPREPRO_COMMIT
 
 FROM ubuntu:24.04

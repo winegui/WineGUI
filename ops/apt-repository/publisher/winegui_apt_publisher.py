@@ -33,6 +33,7 @@ BATCH_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}([0-9a-f]{24})?$")
 VERSION_RE = re.compile(r"^[0-9]+(?:\.[0-9]+){1,3}(?:[+~.-][0-9A-Za-z.+~:-]+)?$")
+CONTROL_ARCHIVE_RE = re.compile(r"^control\.tar(?:\.(?:gz|xz|zst|bz2|lzma))?$")
 
 
 class PublishError(RuntimeError):
@@ -294,9 +295,10 @@ def validate_batch(batch: Path, dpkg_deb: str) -> tuple[dict, list[dict], str]:
         if deb.stat().st_size != package["size"] or sha256(deb) != package["sha256"]:
             raise PublishError(f"size or checksum mismatch: {package['filename']}")
         members = deb_members(deb)
-        if "debian-binary" not in members or "control.tar.gz" not in members:
+        control_archives = {member for member in members if CONTROL_ARCHIVE_RE.fullmatch(member)}
+        if "debian-binary" not in members or len(control_archives) != 1:
             raise PublishError(
-                f"{package['filename']} must use control.tar.gz for the pinned reprepro engine"
+                f"{package['filename']} must contain exactly one supported control.tar archive"
             )
         actual = {
             field: dpkg_field(deb, field, dpkg_deb)

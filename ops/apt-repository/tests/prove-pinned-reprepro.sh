@@ -2,8 +2,9 @@
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-COMMIT=3afde91f87342b473bb624f3bf3c5cc0341b75e8
-IMAGE=${WINEGUI_REPREPRO_IMAGE:-winegui/reprepro:${COMMIT}}
+# shellcheck source=../reprepro/version.env
+. "$SCRIPT_DIR/../reprepro/version.env"
+IMAGE=${WINEGUI_REPREPRO_IMAGE:-winegui/reprepro:${REPREPRO_VERSION}-${REPREPRO_COMMIT}}
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT HUP INT TERM
 
@@ -32,13 +33,12 @@ Priority: optional
 Maintainer: WineGUI proof <noreply@example.invalid>
 Description: Disposable multi-version proof package
 EOF
-  # This older reviewed fork predates control.tar.zst support; WineGUI's CPack
-  # artifacts use gzip members, so the proof package must match production.
-  dpkg-deb -Zgzip --build "$tree" "$TEST_ROOT/winegui_${version}_amd64.deb" >/dev/null
+  compression=$2
+  dpkg-deb "-Z$compression" --build "$tree" "$TEST_ROOT/winegui_${version}_amd64.deb" >/dev/null
 }
 
-build_deb '1.0-1~ubuntu24.04.1'
-build_deb '1.1-1~ubuntu24.04.1'
+build_deb '1.0-1~ubuntu24.04.1' gzip
+build_deb '1.1-1~ubuntu24.04.1' zstd
 
 run_reprepro() {
   docker run --rm --user "$(id -u):$(id -g)" \
@@ -46,6 +46,8 @@ run_reprepro() {
     --volume "$TEST_ROOT:/input:ro" \
     "$IMAGE" --basedir /repo --confdir /repo/conf --dbdir /repo/db --outdir /repo/out "$@"
 }
+
+test "$(docker run --rm "$IMAGE" --version 2>&1 | sed -n 's/^.*: This is reprepro version //p')" = "$REPREPRO_VERSION"
 
 run_reprepro includedeb noble /input/winegui_1.0-1~ubuntu24.04.1_amd64.deb
 run_reprepro includedeb noble /input/winegui_1.1-1~ubuntu24.04.1_amd64.deb
@@ -74,4 +76,4 @@ POLICY=$(apt-cache \
   -o "Dir::Etc::sourceparts=-" policy winegui)
 printf '%s\n' "$POLICY" | grep -q '1.0-1~ubuntu24.04.1'
 printf '%s\n' "$POLICY" | grep -q '1.1-1~ubuntu24.04.1'
-echo "PASS: pinned reprepro indexes both versions and APT exposes both candidates"
+echo "PASS: reprepro $REPREPRO_VERSION accepts gzip/zstd DEBs, indexes both versions, and APT exposes both candidates"

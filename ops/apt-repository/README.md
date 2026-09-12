@@ -29,7 +29,7 @@ The much slower, networked Docker proof is separate:
 ./ops/apt-repository/tests/prove-pinned-reprepro.sh
 ```
 
-The fast suite uses a fake `reprepro` and fake signer to test publisher contracts and failure recovery. It does **not** prove that upstream `reprepro`, GPG, APT, Angie, Docker user namespaces, or the production filesystem work together. The Docker proof builds reviewed IONOS commit `3afde91f87342b473bb624f3bf3c5cc0341b75e8` and proves two versions remain indexed and visible to APT in one suite. Both gates are required before production.
+The fast suite uses a fake `reprepro` and fake signer to test publisher contracts and failure recovery. It does **not** prove that upstream `reprepro`, GPG, APT, Angie, Docker user namespaces, or the production filesystem work together. The Docker proof builds the official upstream release and exact commit recorded in `reprepro/version.env`, proves its version, imports gzip and zstd DEBs, and proves two versions remain indexed and visible to APT in one suite. Both gates are required before production.
 
 ## Batch artifact contract
 

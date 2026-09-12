@@ -263,7 +263,7 @@ printf 'fake signature for %s\\n' "$input" > "$output"
         second.run_all()
         self.assertEqual("complete", json.loads((self.state / "journal/batch-1.json").read_text())["stage"])
 
-    def test_zstd_control_member_is_quarantined_for_pinned_engine(self):
+    def test_zstd_control_member_is_accepted_by_current_engine(self):
         ready = self.make_batch()
         payload = ready / publisher.PAYLOAD_DIRECTORY
         manifest = json.loads((payload / "manifest.json").read_text())
@@ -287,8 +287,8 @@ printf 'fake signature for %s\\n' "$input" > "$output"
         self.refresh_envelope(ready)
         instance = self.instance()
         instance.run_all()
-        reason = (self.spool / publisher.PUBLISHER_QUARANTINE / "batch-1/QUARANTINE_REASON.txt").read_text()
-        self.assertIn("control.tar.gz", reason)
+        self.assertTrue((self.spool / publisher.PUBLISHER_ARCHIVE / "batch-1").is_dir())
+        self.assertFalse((self.spool / publisher.PUBLISHER_QUARANTINE / "batch-1").exists())
 
     def test_restart_after_claim_rename_recovers(self):
         self.make_batch()

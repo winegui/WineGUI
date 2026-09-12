@@ -16,24 +16,36 @@ On a disposable local machine, run the contract suite and the real pinned-engine
 ./ops/apt-repository/tests/prove-pinned-reprepro.sh
 ```
 
-Do not install the engine unless the second command proves that both versions are present in `Packages` and visible through `apt-cache policy`. The Dockerfile checks out the exact IONOS multiple-version commit `3afde91f87342b473bb624f3bf3c5cc0341b75e8`; changing that pin requires review and rerunning the proof.
+Do not install the engine unless the second command proves that both versions are present in `Packages` and visible through `apt-cache policy`. The Dockerfile checks out the official upstream tag and exact commit recorded in `ops/apt-repository/reprepro/version.env`; changing any pin requires review and rerunning the proof.
 
-This fork predates `control.tar.zst` support. The proof deliberately builds gzip-member DEBs, matching WineGUI's current CPack artifacts. Keep an `ar t WineGUI-*.deb` check in CI and reject a packaging-tool change that emits zstd members until the engine strategy is reviewed.
+Ubuntu 24.04's packaged `reprepro` is too old for this repository's `Limit: 0` configuration. The pinned upstream engine supports multiple indexed versions and uses libarchive for current Debian compression formats. The proof imports one gzip-member and one zstd-member DEB.
 
 Build a host binary from the already-proven image without trusting the host's ordinary Ubuntu `reprepro` package:
 
 ```sh
-commit=3afde91f87342b473bb624f3bf3c5cc0341b75e8
-docker create --name winegui-reprepro-extract "winegui/reprepro:$commit"
+sudo apt-get update
+sudo apt-get install acl gnupg libarchive13t64 libdb5.3t64 libgpgme11t64 python3
+
+. ops/apt-repository/reprepro/version.env
+image="winegui/reprepro:${REPREPRO_VERSION}-${REPREPRO_COMMIT}"
+docker create --name winegui-reprepro-extract "$image"
 sudo install -d -o root -g root -m 0755 /usr/local/lib/winegui-reprepro/bin
 docker cp winegui-reprepro-extract:/opt/winegui-reprepro/bin/reprepro /tmp/winegui-reprepro
 docker rm winegui-reprepro-extract
 sudo install -o root -g root -m 0755 /tmp/winegui-reprepro /usr/local/lib/winegui-reprepro/bin/reprepro
 rm /tmp/winegui-reprepro
 /usr/local/lib/winegui-reprepro/bin/reprepro --version
+test "$(/usr/local/lib/winegui-reprepro/bin/reprepro --version 2>&1 | sed -n 's/^.*: This is reprepro version //p')" = "$REPREPRO_VERSION"
 ```
 
-Verify runtime library linkage with `ldd` before continuing. If the binary needs libraries not installed on the host, build a versioned `.deb` from the pin or install the named runtime libraries after review; never silently fall back to Ubuntu's single-version build.
+Verify runtime library linkage before continuing:
+
+```sh
+ldd /usr/local/lib/winegui-reprepro/bin/reprepro
+test -z "$(ldd /usr/local/lib/winegui-reprepro/bin/reprepro | grep 'not found')"
+```
+
+If this check reports a missing library, stop and install the named Noble runtime package after review; never silently fall back to Ubuntu's single-version build.
 
 ## 2. Account, paths, and permissions
 
@@ -70,7 +82,6 @@ publisher only traversal on the spool root and permission to claim entries from
 or `state/`.
 
 ```sh
-sudo apt-get install acl
 sudo setfacl -m u:winegui-apt:--x /var/spool/winegui-apt
 sudo setfacl -m u:winegui-apt:rwx /var/spool/winegui-apt/ready
 
