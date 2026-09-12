@@ -107,11 +107,25 @@ sudo install -d -o winegui-apt -g www-data -m 0755 \
 
 sudo setfacl -m u:winegui-apt:--x /var/spool/winegui-apt
 sudo setfacl -m u:winegui-apt:rwx /var/spool/winegui-apt/ready
+
+sudo stat -c '%A %U:%G %u:%g %n' \
+  /var/lib/winegui-apt \
+  /var/lib/winegui-apt/gnupg \
+  /var/spool/winegui-apt \
+  /var/spool/winegui-apt/ready \
+  /var/spool/winegui-apt/publisher-processing \
+  /var/www/apt.winegui.melroy.org/html
+sudo getfacl -p /var/spool/winegui-apt /var/spool/winegui-apt/ready
 ```
 
 Only the deployer owns its five spool directories. Only `winegui-apt` owns
 private state, publisher spool directories, and the public repository. Never
 mount private state, the signing home, or the public web root into the deployer.
+
+The numeric deployer identity may be displayed as `UNKNOWN:UNKNOWN`; the UID
+and GID must match the measured values. The `sudo` on these checks is required
+because the private parent directories deliberately deny traversal to the
+normal login user.
 
 Verify that the publisher can claim a completed batch:
 
