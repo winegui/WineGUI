@@ -504,14 +504,19 @@ subkey: begin at least 180 days before its expiration.
    packages containing the expanded public keyring.
 4. Increment `WINEGUI_APT_KEY_GENERATION` whenever the public keyring embedded
    in packages changes. Never reuse or decrease a generation.
-5. Publish at least two normal releases and maintain at least 180 days of
+5. Update the keyring, SHA-256 digest, and primary-fingerprint allowlist in
+   `scripts/install.sh` from the same public export. Run the installer tests,
+   merge the change, and verify the raw GitHub `main` URL before changing which
+   key signs repository metadata. Fresh installations trust this embedded
+   bootstrap keyring before a DEB is available to install the managed keyring.
+6. Publish at least two normal releases and maintain at least 180 days of
    overlap before switching repository signatures.
-6. Test the new operational subkey without cached agent state before installing
+7. Test the new operational subkey without cached agent state before installing
    it on the server.
-7. Keep the old server signing subkey until a new-signed repository has been
+8. Keep the old server signing subkey until a new-signed repository has been
    published and verified from clean clients. It is the rollback key during the
    switch.
-8. Keep a current DEB and its checksum available independently from APT for
+9. Keep a current DEB and its checksum available independently from APT for
    clients that miss the complete overlap.
 
 The GitLab variables involved are:
@@ -566,8 +571,10 @@ gpg --homedir "$WINEGUI_KEY_HOME" --batch --yes --armor \
 
 Update the GitLab public-key file variable, leave
 `WINEGUI_APT_KEY_FINGERPRINTS` set to the same primary fingerprint, and
-increment `WINEGUI_APT_KEY_GENERATION`. Publish the bridge releases while the
-server still signs with the old subkey.
+increment `WINEGUI_APT_KEY_GENERATION`. Update `scripts/install.sh` with this
+same two-subkey public export and its new SHA-256 digest; its primary-fingerprint
+allowlist remains unchanged. Merge and verify the raw GitHub installer before
+publishing bridge releases while the server still signs with the old subkey.
 
 Prepare a passphrase-free operational copy of only the new signing subkey using
 the isolated workstation procedure from section 5.1. Select only that subkey
@@ -604,7 +611,9 @@ clients trust only keys delivered by packages they already trust.
 2. Create one public-key file containing complete public exports of both the old
    and new primaries. Set `WINEGUI_APT_KEY_FINGERPRINTS` to
    `OLD_PRIMARY_FPR,NEW_PRIMARY_FPR` and increment
-   `WINEGUI_APT_KEY_GENERATION`.
+   `WINEGUI_APT_KEY_GENERATION`. Put that same transition bundle, its SHA-256
+   digest, and both primary fingerprints in `scripts/install.sh`; merge and
+   verify the raw GitHub installer before continuing.
 3. Keep signing the repository with the old signing subkey for at least two
    releases and 180 days. Those bridge packages install both public keys on
    clients.
@@ -616,8 +625,10 @@ clients trust only keys delivered by packages they already trust.
    and verify every suite from clean clients.
 6. Retain the old public key in package builds through the full overlap. After
    retirement, publish a new-primary-only public export and increment the key
-   generation again. Remove the old server secret subkey only after the
-   new-signed repository and client recovery path are verified.
+   generation again. Update and publish the installer with that same
+   new-primary-only export before removing the old key from package builds.
+   Remove the old server secret subkey only after the new-signed repository and
+   client recovery path are verified.
 
 Create the two-primary public bundle on the workstation without secret packets:
 
@@ -634,6 +645,31 @@ cat "$WINEGUI_KEY_EXPORT/old-public.asc" \
 Before using the bundle, run the packaging tests with that file and both
 primary fingerprints. The build rejects secret packets and mismatched
 fingerprints.
+
+For every public export used by the installer, calculate the embedded values on
+the workstation without `sudo`:
+
+```sh
+PUBLIC_KEY="$WINEGUI_KEY_EXPORT/winegui-apt-public.asc"
+gpg --batch --yes --dearmor \
+  --output "$WINEGUI_KEY_EXPORT/winegui-apt-public.gpg" \
+  "$PUBLIC_KEY"
+base64 -w 0 "$WINEGUI_KEY_EXPORT/winegui-apt-public.gpg"
+sha256sum "$WINEGUI_KEY_EXPORT/winegui-apt-public.gpg"
+gpg --batch --show-keys --with-subkey-fingerprints \
+  "$WINEGUI_KEY_EXPORT/winegui-apt-public.gpg"
+```
+
+Copy the base64 output, digest, and complete primary-fingerprint list into the
+three `WINEGUI_KEY_*` constants in `scripts/install.sh`. Then run:
+
+```sh
+bash -n scripts/install.sh
+python3 packaging/debian/tests/test_install_script.py -v
+```
+
+The test decodes the embedded key, verifies its digest, and confirms that its
+primary fingerprints exactly match the installer's allowlist.
 
 ### 8.4 Required client tests and missed-overlap recovery
 

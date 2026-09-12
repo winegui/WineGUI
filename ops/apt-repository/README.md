@@ -60,9 +60,12 @@ dates and start rotation before the documented deadlines:
 Follow the complete [signing-key expiry and rotation
 procedure](RUNBOOK.md#8-signing-key-expiry-and-rotation). It defines the
 old-key-signed bridge releases, minimum overlap, GitLab keyring generations,
-server switch, rollback boundary, client tests, and recovery for installations
-that miss the transition. Do not switch repository signatures without
-completing that procedure.
+installer's embedded bootstrap keyring, server switch, rollback boundary,
+client tests, and recovery for installations that miss the transition. Every
+public-key export change must also be applied to `scripts/install.sh` and
+mirrored to GitHub before the repository relies exclusively on the changed
+keyring. Do not switch repository signatures without completing that
+procedure.
 
 ## Batch contract
 
