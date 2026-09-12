@@ -107,6 +107,9 @@ build:appimage:
 release:
   stage: deploy
   image: serversideup/github-cli:latest
+  before_script:
+    - apt-get update
+    - apt-get install --yes --no-install-recommends jq
   needs:
     - job: build:trixie
       artifacts: true
@@ -129,20 +132,36 @@ release:
     - ./scripts/create-release-links.sh
     - ./scripts/create-latest-release-file.sh
 
-    # GitHub Sync (fallback to only upload if creating a release fails)
-    # Using GH_TOKEN environment variable from GitLab CI/CD variables
+    # GitHub sync. Use the GitLab release description as the single source of
+    # truth for both newly created and already-existing GitHub releases.
+    # GH_TOKEN is provided through the GitLab CI/CD variables.
     - |
-      gh release create "$CI_COMMIT_TAG" \
-        build_prod/WineGUI-* \
-        build_prod/SHA256SUMS \
-        --repo "winegui/WineGUI" \
-        --title "WineGUI $CI_COMMIT_TAG" \
-        --notes "WineGUI Release $CI_COMMIT_TAG" || \
-      gh release upload "$CI_COMMIT_TAG" \
-        build_prod/WineGUI-* \
-        build_prod/SHA256SUMS \
-        --repo "winegui/WineGUI" \
-        --clobber
+      curl --fail --silent --show-error \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --output gitlab-release.json \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/${CI_COMMIT_TAG}"
+      jq --exit-status --raw-output \
+        '.description | strings | select(length > 0)' \
+        gitlab-release.json > release-notes.md
+
+      if gh release view "$CI_COMMIT_TAG" --repo "winegui/WineGUI" >/dev/null 2>&1; then
+        gh release edit "$CI_COMMIT_TAG" \
+          --repo "winegui/WineGUI" \
+          --title "WineGUI $CI_COMMIT_TAG" \
+          --notes-file release-notes.md
+        gh release upload "$CI_COMMIT_TAG" \
+          build_prod/WineGUI-* \
+          build_prod/SHA256SUMS \
+          --repo "winegui/WineGUI" \
+          --clobber
+      else
+        gh release create "$CI_COMMIT_TAG" \
+          build_prod/WineGUI-* \
+          build_prod/SHA256SUMS \
+          --repo "winegui/WineGUI" \
+          --title "WineGUI $CI_COMMIT_TAG" \
+          --notes-file release-notes.md
+      fi
   environment:
     name: production
     url: https://winegui.melroy.org/downloads
