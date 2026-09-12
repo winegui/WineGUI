@@ -464,7 +464,182 @@ remove only the exact package version with the pinned engine under the lock,
 republish all metadata, verify APT clients, and then resume. Do not delete files
 directly from `pool/`, `dists/`, or `by-hash/`.
 
-For key rotation, ship old and new public keys together for at least two
-releases and 180 days, increment `WINEGUI_APT_KEY_GENERATION`, and keep a
-current independently verifiable DEB available for clients that miss the
-overlap period.
+## 8. Signing-key expiry and rotation
+
+Do not wait for a key to expire. The current key schedule is:
+
+| Key | Fingerprint | Expires | Start rotation no later than |
+| --- | --- | --- | --- |
+| Signing subkey | `420A8A144B755A988BCDBF616B093B573BDACEF1` | 2028-09-11 | 2028-03-15 |
+| Certification primary | `DC1522C22AC2908D6AF1D0A54AD49EDC219C57F7` | 2031-09-11 | 2030-09-11 |
+
+Monitor both dates. A normal signing-subkey renewal keeps the same primary
+fingerprint. A primary-key rotation introduces a new trust identity and needs a
+longer overlap. Recalculate the rotation date for every replacement signing
+subkey: begin at least 180 days before its expiration.
+
+### 8.1 Rules shared by every rotation
+
+1. Take and verify a consistent repository backup under the publisher lock.
+2. Restore the protected master keyring from encrypted offline storage onto a
+   disconnected workstation. Never copy the primary secret key to the server or
+   GitLab.
+3. Keep the repository signed by the old operational subkey while distributing
+   packages containing the expanded public keyring.
+4. Increment `WINEGUI_APT_KEY_GENERATION` whenever the public keyring embedded
+   in packages changes. Never reuse or decrease a generation.
+5. Publish at least two normal releases and maintain at least 180 days of
+   overlap before switching repository signatures.
+6. Test the new operational subkey without cached agent state before installing
+   it on the server.
+7. Keep the old server signing subkey until a new-signed repository has been
+   published and verified from clean clients. It is the rollback key during the
+   switch.
+8. Keep a current DEB and its checksum available independently from APT for
+   clients that miss the complete overlap.
+
+The GitLab variables involved are:
+
+- `WINEGUI_APT_PUBLIC_KEY_FILE`: complete public export for the current
+  transition;
+- `WINEGUI_APT_KEY_FINGERPRINTS`: comma-separated primary fingerprints present
+  in that export;
+- `WINEGUI_APT_KEY_GENERATION`: monotonically increasing keyring generation.
+
+The server setting involved is `WINEGUI_APT_SIGNING_KEY` in
+`/etc/winegui-apt-publisher.env`. It always contains one full operational
+signing-subkey fingerprint.
+
+### 8.2 Renew the signing subkey under the current primary
+
+Use this procedure before 2028-03-15. Run as the normal workstation user with
+the restored master keyring; do not use `sudo`:
+
+```sh
+WINEGUI_KEY_HOME="$HOME/.local/share/winegui-apt-master-key"
+WINEGUI_KEY_EXPORT="$HOME/.local/share/winegui-apt-key-export"
+PRIMARY_FPR="DC1522C22AC2908D6AF1D0A54AD49EDC219C57F7"
+OLD_SIGNING_FPR="420A8A144B755A988BCDBF616B093B573BDACEF1"
+
+gpg --homedir "$WINEGUI_KEY_HOME" \
+  --quick-add-key "$PRIMARY_FPR" ed25519 sign 2y
+gpg --homedir "$WINEGUI_KEY_HOME" \
+  --with-subkey-fingerprints --list-secret-keys "$PRIMARY_FPR"
+
+NEW_SIGNING_FPR=$(
+  gpg --homedir "$WINEGUI_KEY_HOME" \
+    --with-colons --list-secret-keys "$PRIMARY_FPR" |
+    awk -F: '$1 == "ssb" { subkey = 1; next }
+      subkey && $1 == "fpr" { newest = $10; subkey = 0 }
+      END { print newest }'
+)
+test -n "$NEW_SIGNING_FPR"
+test "$NEW_SIGNING_FPR" != "$OLD_SIGNING_FPR"
+printf 'New signing fingerprint: %s\n' "$NEW_SIGNING_FPR"
+```
+
+Record the new signing-subkey fingerprint. Export the updated public
+certificate containing both old and new subkeys:
+
+```sh
+gpg --homedir "$WINEGUI_KEY_HOME" --batch --yes --armor \
+  --export-options export-minimal \
+  --output "$WINEGUI_KEY_EXPORT/winegui-apt-public.asc" \
+  --export "$PRIMARY_FPR"
+```
+
+Update the GitLab public-key file variable, leave
+`WINEGUI_APT_KEY_FINGERPRINTS` set to the same primary fingerprint, and
+increment `WINEGUI_APT_KEY_GENERATION`. Publish the bridge releases while the
+server still signs with the old subkey.
+
+Prepare a passphrase-free operational copy of only the new signing subkey using
+the isolated workstation procedure from section 5.1. Select only that subkey
+when making the protected intermediate export:
+
+```sh
+gpg --homedir "$WINEGUI_KEY_HOME" \
+  --output "$WINEGUI_KEY_EXPORT/new-protected-signing-subkey.gpg" \
+  --export-secret-subkeys "${NEW_SIGNING_FPR}!"
+```
+
+After the bridge period, import the tested operational export on the server,
+change `WINEGUI_APT_SIGNING_KEY` to `NEW_SIGNING_FPR`, kill the service account's
+GPG agent, and repeat section 5.4. Start the publisher once manually and verify
+all suites from a clean APT client. Only then remove the old server secret
+subkey with:
+
+```sh
+sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
+  gpg --batch --yes --delete-secret-keys "${OLD_SIGNING_FPR}!"
+```
+
+Back up the updated offline master keyring and its revocation material before
+removing the working copy from the workstation.
+
+### 8.3 Replace the five-year primary key
+
+Start this procedure by 2030-09-11. Do not merely switch to a new primary key:
+clients trust only keys delivered by packages they already trust.
+
+1. Create a separate protected certification-only primary and signing subkey by
+   repeating section 5.1 with a new master-key directory. Record both new
+   fingerprints and make two encrypted offline backups.
+2. Create one public-key file containing complete public exports of both the old
+   and new primaries. Set `WINEGUI_APT_KEY_FINGERPRINTS` to
+   `OLD_PRIMARY_FPR,NEW_PRIMARY_FPR` and increment
+   `WINEGUI_APT_KEY_GENERATION`.
+3. Keep signing the repository with the old signing subkey for at least two
+   releases and 180 days. Those bridge packages install both public keys on
+   clients.
+4. Prepare and test a passphrase-free operational export of only the new
+   primary's signing subkey. Import it on the server without deleting the old
+   signing subkey.
+5. Change `WINEGUI_APT_SIGNING_KEY` to the new signing-subkey fingerprint. Kill
+   the service account's GPG agent, repeat section 5.4, publish once manually,
+   and verify every suite from clean clients.
+6. Retain the old public key in package builds through the full overlap. After
+   retirement, publish a new-primary-only public export and increment the key
+   generation again. Remove the old server secret subkey only after the
+   new-signed repository and client recovery path are verified.
+
+Create the two-primary public bundle on the workstation without secret packets:
+
+```sh
+gpg --homedir "$OLD_KEY_HOME" --armor --export-options export-minimal \
+  --export "$OLD_PRIMARY_FPR" > "$WINEGUI_KEY_EXPORT/old-public.asc"
+gpg --homedir "$NEW_KEY_HOME" --armor --export-options export-minimal \
+  --export "$NEW_PRIMARY_FPR" > "$WINEGUI_KEY_EXPORT/new-public.asc"
+cat "$WINEGUI_KEY_EXPORT/old-public.asc" \
+  "$WINEGUI_KEY_EXPORT/new-public.asc" \
+  > "$WINEGUI_KEY_EXPORT/winegui-apt-public-transition.asc"
+```
+
+Before using the bundle, run the packaging tests with that file and both
+primary fingerprints. The build rejects secret packets and mismatched
+fingerprints.
+
+### 8.4 Required client tests and missed-overlap recovery
+
+Test each rotation with disposable clients before retiring the old key:
+
+- a client with the previous WineGUI package receives the bridge package, then
+  completes `apt update` after the signing switch;
+- a fresh client installs the current package and completes `apt update`;
+- installing a retained old package after a current package does not downgrade
+  the keyring generation;
+- a client that missed the entire overlap initially fails verification, then
+  recovers by installing the current DEB obtained outside APT and verified
+  against its published checksum.
+
+An old retained DEB is not an offline recovery mechanism: a fresh installation
+of it may contain only the retired key. Document recovery as downloading the
+current release DEB from the official HTTPS download or GitLab Release location,
+verifying its checksum independently, installing it with `apt install ./...deb`,
+and then running `apt update` again.
+
+If the old key expires before bridge packages have reached clients, do not
+silently disable signature checking or extend trust on clients. Restore the old
+primary from offline storage only to publish a properly documented emergency
+transition while it is still cryptographically usable; otherwise use the
+independently verified current-DEB recovery path.
