@@ -10,32 +10,19 @@ At last, a user-interface friendly [Wine](https://www.winehq.org/) (A compatibil
 
 ## Download
 
+Two places where you can find the downloads:
+
+1. You can find the latest version on the [Releases page](https://gitlab.melroy.org/melroy/winegui/-/releases) under "Assets" -> "Packages" on my GitLab.
+2. Find the same packages on the [GitHub Release page](https://github.com/winegui/WineGUI/releases).
+
 On supported 64-bit Debian, Ubuntu, and compatible derivative distributions,
-the easiest installation method is the WineGUI APT repository:
+you can install WineGUI directly through its APT repository:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/winegui/WineGUI/main/scripts/install.sh | sudo bash
 ```
 
-The installer detects the compatible Ubuntu or Debian suite, configures
-`apt.winegui.melroy.org`, and installs WineGUI through APT. Future versions are
-then available through the normal system updates. If you prefer to inspect the
-script before running it:
-
-```bash
-curl -fsSLo install.sh https://raw.githubusercontent.com/winegui/WineGUI/main/scripts/install.sh
-less install.sh
-sudo bash install.sh
-rm install.sh
-```
-
-Manual packages remain available for unsupported distributions, offline use,
-or users who prefer not to add the APT repository.
-
-Two places where you can find the downloads:
-
-1. You can find the latest version on the [Releases page](https://gitlab.melroy.org/melroy/winegui/-/releases) under "Assets" -> "Packages" on my GitLab.
-2. Find the same packages on the [GitHub Release page](https://github.com/winegui/WineGUI/releases).
+This also enables future WineGUI updates through the normal system updates.
 
 Download the WineGUI package you require for your Linux distribution. I provide `.AppImage`, `.deb`, `.rpm` and `.tar.gz` files:
 
