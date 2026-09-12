@@ -71,6 +71,12 @@ class PackagingTests(unittest.TestCase):
         )
         return root
 
+    def runtime_os_release(self, name, content):
+        root = self.temporary / f"runtime-{name}"
+        (root / "etc").mkdir(parents=True, exist_ok=True)
+        (root / "etc/os-release").write_text(content)
+        return root
+
     def generate(self, suite="noble", generation=1, enabled=True, output_name=None):
         root = self.os_release(suite)
         output = self.temporary / (output_name or f"control-{suite}-{generation}")
@@ -174,6 +180,71 @@ class PackagingTests(unittest.TestCase):
         self.run_script(output / "postinst", root, "configure")
         source = root / "etc/apt/sources.list.d/winegui.sources"
         self.assertIn("Suites: trixie", source.read_text())
+
+    def test_supported_ubuntu_and_debian_derivatives_use_upstream_suite(self):
+        _, output = self.generate(output_name="derivative-script")
+        fixtures = {
+            "linux-mint": (
+                'ID=linuxmint\nID_LIKE="ubuntu debian"\nVERSION_CODENAME=zena\n'
+                'UBUNTU_CODENAME=noble\n',
+                "noble",
+            ),
+            "anduinos-resolute": (
+                'ID=anduinos\nID_LIKE=debian\nVERSION_CODENAME=anduinos\n'
+                'UBUNTU_CODENAME=resolute\n',
+                "resolute",
+            ),
+            "mx-linux": (
+                'ID=debian\nVERSION_ID="13"\nVERSION_CODENAME=trixie\n',
+                "trixie",
+            ),
+        }
+        for name, (release, expected_suite) in fixtures.items():
+            with self.subTest(name=name):
+                root = self.runtime_os_release(name, release)
+                self.run_script(output / "postinst", root, "configure")
+                source = root / "etc/apt/sources.list.d/winegui.sources"
+                self.assertIn(f"Suites: {expected_suite}", source.read_text())
+
+    def test_derivative_detection_fails_closed(self):
+        _, output = self.generate(output_name="unsupported-derivative-script")
+        fixtures = {
+            "debian-claiming-ubuntu-suite": 'ID=debian\nVERSION_CODENAME=noble\n',
+            "unsupported-ubuntu-base": (
+                'ID=anduinos\nID_LIKE="ubuntu debian"\nVERSION_CODENAME=questing\n'
+                'UBUNTU_CODENAME=questing\n'
+            ),
+            "id-like-substring": 'ID=other\nID_LIKE=notubuntu\nVERSION_CODENAME=noble\n',
+        }
+        for name, release in fixtures.items():
+            with self.subTest(name=name):
+                root = self.runtime_os_release(name, release)
+                result = self.run_script(output / "postinst", root, "configure")
+                self.assertIn("unsupported", result.stderr)
+                self.assertFalse((root / "etc/apt/sources.list.d/winegui.sources").exists())
+
+    def test_derivative_upgrade_recovers_key_only_installation(self):
+        _, output = self.generate(output_name="recovery-script")
+        root = self.runtime_os_release(
+            "recovery",
+            'ID=linuxmint\nID_LIKE="ubuntu debian"\nVERSION_CODENAME=zena\n',
+        )
+        self.run_script(output / "postinst", root, "configure")
+        key = root / "usr/share/keyrings/winegui-archive-keyring.gpg"
+        generation = root / "var/lib/winegui/key.generation"
+        key_hash = hashlib.sha256(key.read_bytes()).hexdigest()
+        self.assertTrue(generation.exists())
+        self.assertFalse((root / "var/lib/winegui/repository.setup").exists())
+
+        (root / "etc/os-release").write_text(
+            'ID=linuxmint\nID_LIKE="ubuntu debian"\nVERSION_CODENAME=zena\n'
+            'UBUNTU_CODENAME=noble\n'
+        )
+        self.run_script(output / "postinst", root, "configure")
+        source = root / "etc/apt/sources.list.d/winegui.sources"
+        self.assertIn("Suites: noble", source.read_text())
+        self.assertEqual(hashlib.sha256(key.read_bytes()).hexdigest(), key_hash)
+        self.assertEqual(generation.read_text(), "1\n")
 
     def test_edited_source_preserves_referenced_key_on_purge(self):
         root, output = self.generate()

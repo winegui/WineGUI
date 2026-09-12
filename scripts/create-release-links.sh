@@ -62,21 +62,21 @@ if [[ "$output" == "[]" ]]; then
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data link_type="package" \
-        --data name="WineGUI - Ubuntu 24.04 (Noble Numbat)/Linux Mint 22/Zorin OS 18/elementary OS 8 (.deb)" \
+        --data name="WineGUI - Ubuntu 24.04/Mint 22/Zorin 18/elementary 8/Pop!_OS 24.04 (.deb)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-noble.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data link_type="package" \
-        --data name="WineGUI - Ubuntu 25.04 (Plucky Puffin) (.deb)" \
+        --data name="WineGUI - Ubuntu 25.04 (Plucky Puffin)/AnduinOS 1.3 (.deb)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-plucky.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 
     curl --request POST \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --data link_type="package" \
-        --data name="WineGUI - Ubuntu 26.04 (Resolute Raccoon) (.deb)" \
+        --data name="WineGUI - Ubuntu 26.04 (Resolute Raccoon)/AnduinOS 2 (.deb)" \
         --data url="${URL_PREFIX_LOCATION}/WineGUI-$APP_VERSION-resolute.deb" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/$APP_VERSION/assets/links"
 

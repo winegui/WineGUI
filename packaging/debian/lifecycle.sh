@@ -111,13 +111,62 @@ winegui_install_package_key() {
     return 0
 }
 
+winegui_os_release_value() {
+    [ -r "$os_release_file" ] || return 1
+    awk -v wanted="$1" '
+        index($0, wanted "=") == 1 {
+            value = substr($0, length(wanted) + 2)
+            first = substr(value, 1, 1)
+            last = substr(value, length(value), 1)
+            if (length(value) >= 2 && ((first == "\"" && last == "\"") || (first == "\047" && last == "\047")))
+                value = substr(value, 2, length(value) - 2)
+            found = value
+        }
+        END { print found }
+    ' "$os_release_file"
+}
+
+winegui_id_like_contains() {
+    printf '%s\n' "$2" | awk -v wanted="$1" '
+        {
+            for (i = 1; i <= NF; i++)
+                if ($i == wanted) found = 1
+        }
+        END { exit(found ? 0 : 1) }
+    '
+}
+
 winegui_suite() {
     [ -r "$os_release_file" ] || return 1
-    suite=$(sed -n 's/^VERSION_CODENAME=["'\'']\{0,1\}\([^"'\'']*\)["'\'']\{0,1\}$/\1/p' "$os_release_file" | head -n 1)
-    case "$suite" in
-        noble|plucky|resolute|trixie|forky) echo "$suite" ;;
-        *) return 1 ;;
-    esac
+    os_id=$(winegui_os_release_value ID)
+    id_like=$(winegui_os_release_value ID_LIKE)
+    version_codename=$(winegui_os_release_value VERSION_CODENAME)
+    ubuntu_codename=$(winegui_os_release_value UBUNTU_CODENAME)
+
+    # Ubuntu derivatives commonly keep their own VERSION_CODENAME and expose
+    # the compatible archive suite separately.
+    if [ -n "$ubuntu_codename" ]; then
+        case "$ubuntu_codename" in
+            noble|plucky|resolute) echo "$ubuntu_codename"; return 0 ;;
+            *) return 1 ;;
+        esac
+    fi
+
+    if [ "$os_id" = ubuntu ] || winegui_id_like_contains ubuntu "$id_like"; then
+        case "$version_codename" in
+            noble|plucky|resolute) echo "$version_codename"; return 0 ;;
+            *) return 1 ;;
+        esac
+    fi
+
+    if [ "$os_id" = debian ] || winegui_id_like_contains debian "$id_like"; then
+        case "$version_codename" in
+            trixie|forky) echo "$version_codename"; return 0 ;;
+            *) return 1 ;;
+        esac
+    fi
+
+    return 1
 }
 
 winegui_source_content() {
