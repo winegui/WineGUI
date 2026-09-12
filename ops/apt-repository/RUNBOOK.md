@@ -392,6 +392,19 @@ sudo rm -r "$sign_test"
 The same commands must work unattended after a server reboot. Do not enable
 automatic publication while GPG still requires interactive input.
 
+After the server passes this test, remove only the passphrase-free operational
+staging copies from the workstation. Keep the protected master keyring and its
+encrypted backups. Keep the public export for GitLab and package verification:
+
+```sh
+rm -r "$HOME/.local/share/winegui-apt-server-key"
+rm "$HOME/.local/share/winegui-apt-key-export/winegui-apt-server-signing.gpg"
+```
+
+The protected `winegui-apt-secret-subkeys.gpg` export is redundant once the
+master keyring is backed up and may also be removed. It can always be recreated
+from the protected master keyring.
+
 ## 6. Enable and verify publication
 
 ```sh
