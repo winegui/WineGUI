@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: $0 BACKUP_DIRECTORY" >&2
+  exit 2
+fi
+
+BACKUP_DIRECTORY=$1
+LOCK_FILE=${WINEGUI_APT_LOCK_FILE:-/run/lock/winegui-apt-publisher.lock}
+STATE_ROOT=${WINEGUI_APT_STATE_ROOT:-/var/lib/winegui-apt}
+SPOOL_ROOT=${WINEGUI_APT_SPOOL_ROOT:-/var/spool/winegui-apt}
+PUBLIC_ROOT=${WINEGUI_APT_PUBLIC_ROOT:-/var/www/apt.winegui.melroy.org/html}
+
+mkdir -p "$BACKUP_DIRECTORY"
+exec flock "$LOCK_FILE" tar \
+  --create \
+  --gzip \
+  --file "$BACKUP_DIRECTORY/winegui-apt-$(date -u +%Y%m%dT%H%M%SZ).tar.gz" \
+  --numeric-owner \
+  --one-file-system \
+  "$STATE_ROOT" "$SPOOL_ROOT" "$PUBLIC_ROOT"

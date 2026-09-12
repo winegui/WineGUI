@@ -36,5 +36,10 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-4.0-0, cabextract, unzip, 7zip, wget,
 # Optional deb packages
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "libvulkan1, libvulkan1:i386, mesa-vulkan-drivers, mesa-vulkan-drivers:i386")
 
+# Generate suite-specific Debian metadata and repository lifecycle scripts. This
+# is deliberately a build-time operation: production public keys are supplied
+# by protected CI variables and are never stored in this repository.
+include("${CMAKE_CURRENT_SOURCE_DIR}/packaging/debian/configure.cmake")
+
 # include CPack model once all variables are set
 include(CPack)

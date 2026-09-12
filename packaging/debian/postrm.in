@@ -1,0 +1,8 @@
+
+case "${1:-}" in
+    purge)
+        winegui_purge_repository
+        ;;
+esac
+
+exit 0

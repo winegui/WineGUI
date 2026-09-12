@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+LOCK_FILE=${WINEGUI_APT_LOCK_FILE:-/run/lock/winegui-apt-publisher.lock}
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+PUBLISHER=${WINEGUI_APT_PUBLISHER:-"$SCRIPT_DIR/../publisher/winegui_apt_publisher.py"}
+
+mkdir -p "$(dirname -- "$LOCK_FILE")"
+exec flock -n "$LOCK_FILE" python3 "$PUBLISHER" run

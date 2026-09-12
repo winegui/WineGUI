@@ -1,0 +1,27 @@
+[Unit]
+Description=Publish validated WineGUI APT batches
+After=local-fs.target
+ConditionPathIsDirectory=/var/spool/winegui-apt
+
+[Service]
+Type=oneshot
+User=winegui-apt
+Group=winegui-apt
+EnvironmentFile=/etc/winegui-apt-publisher.env
+ExecStart=/usr/local/lib/winegui-apt/bin/winegui-apt-publisher
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+ReadWritePaths=/var/lib/winegui-apt /var/spool/winegui-apt /var/www/apt.winegui.melroy.org/html /run/lock
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,44 @@
+Origin: WineGUI
+Label: WineGUI
+Suite: noble
+Codename: noble
+Architectures: amd64
+Components: main
+Description: WineGUI packages for Ubuntu Noble
+Limit: 0
+
+Origin: WineGUI
+Label: WineGUI
+Suite: plucky
+Codename: plucky
+Architectures: amd64
+Components: main
+Description: WineGUI packages for Ubuntu Plucky
+Limit: 0
+
+Origin: WineGUI
+Label: WineGUI
+Suite: resolute
+Codename: resolute
+Architectures: amd64
+Components: main
+Description: WineGUI packages for Ubuntu Resolute
+Limit: 0
+
+Origin: WineGUI
+Label: WineGUI
+Suite: trixie
+Codename: trixie
+Architectures: amd64
+Components: main
+Description: WineGUI packages for Debian Trixie
+Limit: 0
+
+Origin: WineGUI
+Label: WineGUI
+Suite: forky
+Codename: forky
+Architectures: amd64
+Components: main
+Description: WineGUI packages for Debian Forky
+Limit: 0

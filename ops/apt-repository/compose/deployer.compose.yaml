@@ -1,0 +1,19 @@
+services:
+  winegui-apt-artifact-deployer:
+    image: registry.melroy.org/melroy/gitlab-artifact-deployer-go/artifact-deployer:latest
+    container_name: winegui-apt-artifact-deployer
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    env_file:
+      - /home/melroy/docker/.env.deployer.winegui-apt
+    volumes:
+      - /var/spool/winegui-apt:/app/dest
+    ports:
+      # The released deployer currently listens on 3042 inside the container.
+      - 127.0.0.1:3049:3042

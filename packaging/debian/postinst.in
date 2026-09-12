@@ -1,0 +1,8 @@
+
+case "${1:-}" in
+    configure)
+        winegui_configure_repository
+        ;;
+esac
+
+exit 0

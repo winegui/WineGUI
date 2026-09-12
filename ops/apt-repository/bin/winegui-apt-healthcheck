@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+PUBLISHER=${WINEGUI_APT_PUBLISHER:-"$SCRIPT_DIR/../publisher/winegui_apt_publisher.py"}
+exec python3 "$PUBLISHER" health --max-age "${WINEGUI_APT_MAX_BATCH_AGE:-3600}"

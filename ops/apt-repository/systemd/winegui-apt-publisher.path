@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch for completed WineGUI APT batches
+
+[Path]
+PathChanged=/var/spool/winegui-apt/ready
+Unit=winegui-apt-publisher.service
+
+[Install]
+WantedBy=multi-user.target
