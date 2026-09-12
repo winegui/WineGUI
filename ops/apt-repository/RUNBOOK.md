@@ -306,15 +306,31 @@ test -n "$SIGNING_KEYGRIP"
 printf 'Signing fingerprint: %s\nSigning keygrip: %s\n' \
   "$SIGNING_FPR" "$SIGNING_KEYGRIP"
 
+SERVER_TTY=$(tty)
+sudo setfacl -m u:winegui-apt:rw- "$SERVER_TTY"
+remove_tty_acl() {
+  sudo setfacl -x u:winegui-apt "$SERVER_TTY"
+}
+trap remove_tty_acl EXIT HUP INT TERM
+
 sudo -u winegui-apt env \
   GNUPGHOME=/var/lib/winegui-apt/gnupg \
-  GPG_TTY="$(tty)" \
+  GPG_TTY="$SERVER_TTY" \
+  gpg-connect-agent updatestartuptty /bye
+sudo -u winegui-apt env \
+  GNUPGHOME=/var/lib/winegui-apt/gnupg \
+  GPG_TTY="$SERVER_TTY" \
   gpg-connect-agent "PASSWD $SIGNING_KEYGRIP" /bye
+
+remove_tty_acl
+trap - EXIT HUP INT TERM
 ```
 
 Enter the existing master-key passphrase when prompted. For the new passphrase,
 leave both entries empty and confirm the warning. This changes only the signing
-subkey identified by its keygrip.
+subkey identified by its keygrip. The temporary terminal ACL is necessary
+because Pinentry runs as `winegui-apt` while the SSH terminal belongs to the
+login user; the trap removes it on success, failure, or interruption.
 
 ### 5.3 Configure the publisher and GitLab
 
