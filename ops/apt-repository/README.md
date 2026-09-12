@@ -14,9 +14,11 @@ data, certificates, or OpenPGP keys.
 5. Angie serves the resulting static repository from
    `/var/www/apt.winegui.melroy.org/html`.
 
-The deployer can write only its spool. The native publisher owns the private
-repository state, signing home, and public web root. A single host lock covers
-publication, recovery, maintenance, and backups.
+The deployer can write only its spool. A default ACL inherited from the
+deployer-owned `pending/` directory lets the native publisher atomically claim
+only completed batch directories from `ready/`. The native publisher owns the
+private repository state, signing home, and public web root. A single host lock
+covers publication, recovery, maintenance, and backups.
 
 ## Directory contents
 

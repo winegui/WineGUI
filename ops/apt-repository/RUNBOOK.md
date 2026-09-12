@@ -107,6 +107,7 @@ sudo install -d -o winegui-apt -g www-data -m 0755 \
 
 sudo setfacl -m u:winegui-apt:--x /var/spool/winegui-apt
 sudo setfacl -m u:winegui-apt:rwx /var/spool/winegui-apt/ready
+sudo setfacl -m d:u:winegui-apt:rwx /var/spool/winegui-apt/pending
 
 sudo stat -c '%A %U:%G %u:%g %n' \
   /var/lib/winegui-apt \
@@ -115,7 +116,10 @@ sudo stat -c '%A %U:%G %u:%g %n' \
   /var/spool/winegui-apt/ready \
   /var/spool/winegui-apt/publisher-processing \
   /var/www/apt.winegui.melroy.org/html
-sudo getfacl -p /var/spool/winegui-apt /var/spool/winegui-apt/ready
+sudo getfacl -p \
+  /var/spool/winegui-apt \
+  /var/spool/winegui-apt/pending \
+  /var/spool/winegui-apt/ready
 ```
 
 Only the deployer owns its five spool directories. Only `winegui-apt` owns
@@ -123,23 +127,31 @@ private state, publisher spool directories, and the public repository. Never
 mount private state, the signing home, or the public web root into the deployer.
 
 The numeric deployer identity may be displayed as `UNKNOWN:UNKNOWN`; the UID
-and GID must match the measured values. The `sudo` on these checks is required
-because the private parent directories deliberately deny traversal to the
-normal login user.
+and GID must match the measured values. The default ACL on `pending/` is
+inherited by new batch directories but does not grant `winegui-apt` access to
+`pending/` itself. The deployer finalizes each ready batch root as `0770`, which
+makes the inherited ACL writable for the atomic claim. The `sudo` on these
+checks is required because the private parent directories deliberately deny
+traversal to the normal login user.
 
 Verify that the publisher can claim a completed batch:
 
 ```sh
+permission_test=".permission-test-$$"
 docker exec winegui-apt-artifact-deployer \
-  mkdir -m 0755 /app/dest/ready/.permission-test
+  mkdir -m 0755 "/app/dest/pending/$permission_test"
 docker exec winegui-apt-artifact-deployer \
-  sh -c 'printf test > /app/dest/ready/.permission-test/test.txt'
+  chmod 0770 "/app/dest/pending/$permission_test"
+docker exec winegui-apt-artifact-deployer \
+  touch "/app/dest/pending/$permission_test/test.txt"
+docker exec winegui-apt-artifact-deployer \
+  mv "/app/dest/pending/$permission_test" "/app/dest/ready/$permission_test"
 sudo -u winegui-apt test -r \
-  /var/spool/winegui-apt/ready/.permission-test/test.txt
-sudo -u winegui-apt mv /var/spool/winegui-apt/ready/.permission-test \
-  /var/spool/winegui-apt/publisher-processing/.permission-test
+  "/var/spool/winegui-apt/ready/$permission_test/test.txt"
+sudo -u winegui-apt mv "/var/spool/winegui-apt/ready/$permission_test" \
+  "/var/spool/winegui-apt/publisher-processing/$permission_test"
 sudo -u winegui-apt rm -r \
-  /var/spool/winegui-apt/publisher-processing/.permission-test
+  "/var/spool/winegui-apt/publisher-processing/$permission_test"
 ```
 
 ## 4. Install the publisher
