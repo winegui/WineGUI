@@ -43,6 +43,21 @@ The Docker proof verifies the exact pinned engine, gzip and zstd DEBs,
 
 See [RUNBOOK.md](RUNBOOK.md) for production setup and operation.
 
+## Required key lifecycle maintenance
+
+Repository signing is not a one-time setup. Monitor both active key expiry
+dates and start rotation before the documented deadlines:
+
+- signing subkey expires 2028-09-11; start renewal by 2028-03-15;
+- certification primary expires 2031-09-11; start replacement by 2030-09-11.
+
+Follow the complete [signing-key expiry and rotation
+procedure](RUNBOOK.md#8-signing-key-expiry-and-rotation). It defines the
+old-key-signed bridge releases, minimum overlap, GitLab keyring generations,
+server switch, rollback boundary, client tests, and recovery for installations
+that miss the transition. Do not switch repository signatures without
+completing that procedure.
+
 ## Batch contract
 
 Each `ready/<batch-id>/` contains `batch.json` and one
