@@ -4,8 +4,6 @@ services:
     container_name: winegui-apt-artifact-deployer
     restart: unless-stopped
     read_only: true
-    security_opt:
-      - no-new-privileges:true
     cap_drop:
       - ALL
     tmpfs:
