@@ -14,4 +14,4 @@ services:
       - /var/spool/winegui-apt:/app/dest
     ports:
       # The released deployer currently listens on 3042 inside the container.
-      - 127.0.0.1:3049:3042
+      - 127.0.0.1:3063:3042
