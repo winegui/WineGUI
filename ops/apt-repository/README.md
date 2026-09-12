@@ -2,7 +2,20 @@
 
 This tree contains the host-side publisher, static repository configuration, disposable tests, and reviewed examples for `apt.winegui.melroy.org`. It deliberately does not contain a signing key, secret, certificate, generated repository, or production state.
 
+Creating the service account, pinned `reprepro`, signing key, filesystem layout,
+and systemd units is a one-time host setup. After that, ordinary tagged releases
+flow through GitLab, the durable spool, the publisher, and Angie without copying
+the complete repository or running manual publication commands. Repeat host
+setup only after a restore, migration, deliberate key rotation, or reviewed
+publisher/engine upgrade.
+
 The publisher consumes immutable handoff directories from the artifact deployer's `ready/` spool. It atomically claims a batch, copies it outside the container mount, validates all five DEBs before any import, updates the private `reprepro` database with export disabled, generates indexes and SHA-256 by-hash objects in private storage, signs them, and exposes files in APT-safe order. A host-wide `flock` serializes publication, reconciliation, maintenance, and backups.
+
+On the production host Docker uses user-namespace remapping. The container owns
+only `/var/spool/winegui-apt`; its mapped UID/GID must be measured rather than
+assumed. The native `winegui-apt` account owns the private state and public web
+root. Never chown the public APT root to Docker's mapped identity and never mount
+the public root, repository database, or signing home into the deployer.
 
 Start with [RUNBOOK.md](RUNBOOK.md). Run fast local contract tests with:
 

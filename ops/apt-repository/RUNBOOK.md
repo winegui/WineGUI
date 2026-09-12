@@ -2,6 +2,11 @@
 
 Every command in this document is for the server owner to review and run. Codex must never execute these commands on `ubuntu-server`. Replace every `REPLACE_*` value first, retain an authenticated shell for rollback, and take a current backup before changing an existing service.
 
+Account creation, the pinned engine, directory layout, ACLs, signing material,
+and systemd installation are one-time host setup. Normal tagged releases are
+automatic afterward. Repeat these steps only for a restore or host migration;
+key rotation and publisher/engine upgrades use their own reviewed procedures.
+
 ## 1. Pre-production gates
 
 On a disposable local machine, run the contract suite and the real pinned-engine proof:
@@ -32,13 +37,26 @@ Verify runtime library linkage with `ldd` before continuing. If the binary needs
 
 ## 2. Account, paths, and permissions
 
-Create a locked service account. The spool must be writable by the user-remapped deployer container and readable/movable by `winegui-apt`; determine the remapped numeric UID/GID from the existing Docker configuration rather than copying an assumed value.
+Create a locked service account. Docker on the production server uses
+`userns-remap`; container UID/GID values therefore do not equal host values.
+Measure the owner created through the actual APT deployer mount before changing
+permissions. This probe is preferable to calculating an ID from `/etc/subuid`
+because it also verifies the active container and mount.
 
 ```sh
 sudo adduser --system --group --home /var/lib/winegui-apt --no-create-home winegui-apt
+
+docker exec winegui-apt-artifact-deployer mkdir /app/dest/.ownership-probe
+WINEGUI_DEPLOYER_UID=$(stat -c %u /var/spool/winegui-apt/.ownership-probe)
+WINEGUI_DEPLOYER_GID=$(stat -c %g /var/spool/winegui-apt/.ownership-probe)
+docker exec winegui-apt-artifact-deployer rmdir /app/dest/.ownership-probe
+test "$WINEGUI_DEPLOYER_UID" -gt 0
+test "$WINEGUI_DEPLOYER_GID" -gt 0
+printf 'mapped deployer identity: %s:%s\n' "$WINEGUI_DEPLOYER_UID" "$WINEGUI_DEPLOYER_GID"
+
 sudo install -d -o winegui-apt -g winegui-apt -m 0750 \
   /var/lib/winegui-apt /var/lib/winegui-apt/{batches,journal,reprepro,reprepro/conf,reprepro/db,work,gnupg}
-sudo install -d -o REPLACE_DEPLOYER_UID -g REPLACE_DEPLOYER_GID -m 0770 \
+sudo install -d -o "$WINEGUI_DEPLOYER_UID" -g "$WINEGUI_DEPLOYER_GID" -m 0750 \
   /var/spool/winegui-apt /var/spool/winegui-apt/{pending,processing,ready,quarantine,state}
 sudo install -d -o winegui-apt -g winegui-apt -m 0750 \
   /var/spool/winegui-apt/{publisher-processing,publisher-archive,publisher-quarantine}
@@ -46,7 +64,51 @@ sudo install -d -o winegui-apt -g www-data -m 0755 \
   /var/www/apt.winegui.melroy.org /var/www/apt.winegui.melroy.org/html
 ```
 
-Use a shared group or narrowly scoped ACLs so the deployer can rename only within its spool and the publisher can claim `ready/`; verify this under Docker's configured user-namespace remapping. Do not mount `/var/lib/winegui-apt`, the public web root, or GnuPG home into the deployer container.
+The deployer retains ownership of its five spool directories. Give the native
+publisher only traversal on the spool root and permission to claim entries from
+`ready/`; it does not need access to `pending/`, `processing/`, `quarantine/`,
+or `state/`.
+
+```sh
+sudo apt-get install acl
+sudo setfacl -m u:winegui-apt:--x /var/spool/winegui-apt
+sudo setfacl -m u:winegui-apt:rwx /var/spool/winegui-apt/ready
+
+docker exec winegui-apt-artifact-deployer \
+  mkdir -m 0755 /app/dest/ready/.permission-test
+docker exec winegui-apt-artifact-deployer \
+  sh -c 'printf test > /app/dest/ready/.permission-test/test.txt'
+sudo -u winegui-apt test -r /var/spool/winegui-apt/ready/.permission-test/test.txt
+sudo -u winegui-apt mv /var/spool/winegui-apt/ready/.permission-test \
+  /var/spool/winegui-apt/publisher-processing/.permission-test
+sudo -u winegui-apt rm -r \
+  /var/spool/winegui-apt/publisher-processing/.permission-test
+```
+
+The public APT root is deliberately owned by the native `winegui-apt` account,
+not the remapped Docker identity: only the publisher writes repository output.
+Do not mount `/var/lib/winegui-apt`, the public web root, or GnuPG home into the
+deployer container.
+
+The existing direct WineGUI download deployer is a separate case. Historical
+download directories were created by container UID 1000, while the current
+image runs as container UID 0. If `cap_drop: [ALL]` is enabled, normalize only
+its writable bind targets to the measured mapped UID/GID once, after a backup:
+
+```sh
+sudo chown -R "$WINEGUI_DEPLOYER_UID:$WINEGUI_DEPLOYER_GID" \
+  /var/www/winegui.melroy.org/html/downloads
+sudo chown "$WINEGUI_DEPLOYER_UID:$WINEGUI_DEPLOYER_GID" \
+  /var/www/winegui.melroy.org/html/latest_release.txt
+docker exec winegui-artifact-deployer \
+  test -w /app/dest/build_prod
+docker exec winegui-artifact-deployer \
+  test -w /app/dest/release/latest_release.txt
+```
+
+Other container-written `/var/www` trees may intentionally use a different
+mapped container UID. Do not apply this ownership recursively to `/var/www` or
+copy these numeric IDs to another service without measuring that container.
 
 Install this tree's publisher files and unsigned `reprepro` configuration:
 
