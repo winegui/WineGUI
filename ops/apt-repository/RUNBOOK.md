@@ -421,7 +421,9 @@ sudo angie -t
 ```
 
 The first empty run may create publisher health state but publishes no suite.
-Create a tagged WineGUI release, then verify:
+The site root intentionally returns HTTP 404 because the Angie vhost disables
+directory listings and has no index. Suite paths also return 404 until the
+first release is published. Create a tagged WineGUI release, then verify:
 
 ```sh
 curl --fail --silent --show-error --head \

@@ -14,6 +14,12 @@ data, certificates, or OpenPGP keys.
 5. Angie serves the resulting static repository from
    `/var/www/apt.winegui.melroy.org/html`.
 
+The repository root intentionally returns HTTP 404: directory listings and a
+landing index are disabled. Before the first successful release publication,
+suite paths such as `/dists/noble/InRelease` also return 404. APT clients use
+the signed files under `dists/` and packages under `pool/`; they do not use the
+site root.
+
 The deployer can write only its spool. A default ACL inherited from the
 deployer-owned `pending/` directory lets the native publisher atomically claim
 only completed batch directories from `ready/`. The native publisher owns the
