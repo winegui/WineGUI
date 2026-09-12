@@ -246,11 +246,59 @@ existing system password. Store the new passphrase in a password manager. The
 listing must show a certification-only primary key (`[C]`) and a signing subkey
 (`[S]`).
 
-The two export files are:
+The initial two export files are:
 
 - `winegui-apt-secret-subkeys.gpg`: server import containing a disabled primary
   stub and the secret signing subkey;
 - `winegui-apt-public.asc`: public key supplied to package builds.
+
+The initial secret-subkey export retains the primary key's passphrase. Prepare
+a separate operational copy on the workstation, remove the passphrase from only
+that copy's signing subkey, and prove it signs non-interactively. Do not alter
+the master keyring.
+
+```sh
+WINEGUI_SERVER_KEY_HOME="$HOME/.local/share/winegui-apt-server-key"
+install -d -m 0700 "$WINEGUI_SERVER_KEY_HOME"
+gpg --homedir "$WINEGUI_SERVER_KEY_HOME" --batch \
+  --import "$WINEGUI_KEY_EXPORT/winegui-apt-secret-subkeys.gpg"
+
+SERVER_SIGNING_KEYGRIP=$(
+  gpg --homedir "$WINEGUI_SERVER_KEY_HOME" \
+    --with-colons --with-keygrip --list-secret-keys "$SIGNING_FPR" |
+    awk -F: '$1 == "ssb" { subkey = 1; next }
+      subkey && $1 == "grp" { print $10; exit }'
+)
+test -n "$SERVER_SIGNING_KEYGRIP"
+printf 'Server signing keygrip: %s\n' "$SERVER_SIGNING_KEYGRIP"
+
+export GNUPGHOME="$WINEGUI_SERVER_KEY_HOME"
+export GPG_TTY="$(tty)"
+gpg-connect-agent updatestartuptty /bye
+gpg-connect-agent "PASSWD $SERVER_SIGNING_KEYGRIP" /bye
+unset GNUPGHOME GPG_TTY
+```
+
+Enter the existing master-key passphrase. Leave both new-passphrase fields
+empty and confirm the warning. This modifies only the isolated operational
+copy. Verify that it signs without a passphrase or cached agent state:
+
+```sh
+gpgconf --homedir "$WINEGUI_SERVER_KEY_HOME" --kill gpg-agent
+SIGN_TEST=$(mktemp -d)
+printf 'WineGUI signing test\n' > "$SIGN_TEST/Release"
+gpg --homedir "$WINEGUI_SERVER_KEY_HOME" --batch --yes \
+  --local-user "$SIGNING_FPR!" \
+  --output "$SIGN_TEST/Release.gpg" --detach-sign "$SIGN_TEST/Release"
+gpg --homedir "$WINEGUI_SERVER_KEY_HOME" \
+  --verify "$SIGN_TEST/Release.gpg" "$SIGN_TEST/Release"
+rm -r "$SIGN_TEST"
+
+gpg --homedir "$WINEGUI_SERVER_KEY_HOME" --batch --yes \
+  --output "$WINEGUI_KEY_EXPORT/winegui-apt-server-signing.gpg" \
+  --export-secret-subkeys "$PRIMARY_FPR"
+chmod 0600 "$WINEGUI_KEY_EXPORT/winegui-apt-server-signing.gpg"
+```
 
 Copy the complete `$WINEGUI_KEY_HOME` directory to encrypted offline storage
 before deleting the workstation copy. Preserve the printed primary and signing
@@ -259,11 +307,11 @@ fingerprints with that backup. The primary secret key must never be copied to
 
 ### 5.2 Install the signing subkey on the server
 
-First transfer only the signing-subkey export from the workstation as the normal
-workstation user; do not use `sudo`:
+First transfer only the passphrase-free operational export from the workstation
+as the normal workstation user; do not use `sudo`:
 
 ```sh
-scp "$WINEGUI_KEY_EXPORT/winegui-apt-secret-subkeys.gpg" \
+scp "$WINEGUI_KEY_EXPORT/winegui-apt-server-signing.gpg" \
   ubuntu-server:/home/melroy/
 ```
 
@@ -272,65 +320,26 @@ Then run the following commands on `ubuntu-server`. These commands require
 
 ```sh
 sudo install -o winegui-apt -g winegui-apt -m 0600 \
-  /home/melroy/winegui-apt-secret-subkeys.gpg \
+  /home/melroy/winegui-apt-server-signing.gpg \
   /var/lib/winegui-apt/gnupg/import.gpg
+SIGNING_FPR="420A8A144B755A988BCDBF616B093B573BDACEF1"
+if sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
+  gpg --with-colons --list-secret-keys "$SIGNING_FPR" | grep -q '^ssb:'; then
+  sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
+    gpg --batch --yes --delete-secret-keys "$SIGNING_FPR!"
+fi
 sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
   gpg --batch --import /var/lib/winegui-apt/gnupg/import.gpg
 sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
   gpg --with-colons --list-secret-keys --fingerprint --fingerprint
 sudo rm /var/lib/winegui-apt/gnupg/import.gpg
-rm /home/melroy/winegui-apt-secret-subkeys.gpg
+rm /home/melroy/winegui-apt-server-signing.gpg
 ```
 
-The signing subkey export retains the master-key passphrase. The publisher must
-sign unattended after reboot, so remove the passphrase from only the imported
-server-side signing subkey. The server account and mode `0700` GPG home become
-the protection for this operational copy; the offline primary remains
-passphrase-protected.
-
-```sh
-SIGNING_FPR=$(
-  sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
-    gpg --with-colons --list-secret-keys |
-    awk -F: '$1 == "ssb" { subkey = 1; next }
-      subkey && $1 == "fpr" { print $10; exit }'
-)
-SIGNING_KEYGRIP=$(
-  sudo -u winegui-apt env GNUPGHOME=/var/lib/winegui-apt/gnupg \
-    gpg --with-colons --with-keygrip --list-secret-keys "$SIGNING_FPR" |
-    awk -F: '$1 == "ssb" { subkey = 1; next }
-      subkey && $1 == "grp" { print $10; exit }'
-)
-test -n "$SIGNING_FPR"
-test -n "$SIGNING_KEYGRIP"
-printf 'Signing fingerprint: %s\nSigning keygrip: %s\n' \
-  "$SIGNING_FPR" "$SIGNING_KEYGRIP"
-
-SERVER_TTY=$(tty)
-sudo setfacl -m u:winegui-apt:rw- "$SERVER_TTY"
-remove_tty_acl() {
-  sudo setfacl -x u:winegui-apt "$SERVER_TTY"
-}
-trap remove_tty_acl EXIT HUP INT TERM
-
-sudo -u winegui-apt env \
-  GNUPGHOME=/var/lib/winegui-apt/gnupg \
-  GPG_TTY="$SERVER_TTY" \
-  gpg-connect-agent updatestartuptty /bye
-sudo -u winegui-apt env \
-  GNUPGHOME=/var/lib/winegui-apt/gnupg \
-  GPG_TTY="$SERVER_TTY" \
-  gpg-connect-agent "PASSWD $SIGNING_KEYGRIP" /bye
-
-remove_tty_acl
-trap - EXIT HUP INT TERM
-```
-
-Enter the existing master-key passphrase when prompted. For the new passphrase,
-leave both entries empty and confirm the warning. This changes only the signing
-subkey identified by its keygrip. The temporary terminal ACL is necessary
-because Pinentry runs as `winegui-apt` while the SSH terminal belongs to the
-login user; the trap removes it on success, failure, or interruption.
+The `FINGERPRINT!` selector removes only a previously imported copy of that
+secret subkey before replacement; it does not delete the public certificate or
+touch the offline master key. The server account and mode `0700` GPG home
+protect the passphrase-free operational copy.
 
 ### 5.3 Configure the publisher and GitLab
 
