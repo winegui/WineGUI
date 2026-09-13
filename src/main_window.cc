@@ -706,7 +706,12 @@ void MainWindow::on_app_list_search()
 
 void MainWindow::on_application_row_activated(unsigned int position)
 {
-  auto col = app_list_store->get_item(position);
+  auto model = app_list_selection_model->get_model();
+  if (!model)
+    return;
+
+  auto item = model->get_object(position);
+  auto col = std::dynamic_pointer_cast<AppListModelColumns>(item);
   if (!col)
     return;
 
