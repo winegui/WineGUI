@@ -48,6 +48,7 @@ struct UpdateBottleStruct
   bool enable_gallium_hud = false;
   bool enable_mangohud = false;
   bool use_wine64 = false;
+  int cpu_core_limit = 0;
 };
 
 /**
@@ -103,6 +104,10 @@ protected:
   Gtk::CheckButton virtual_desktop_check;             /*!< virtual desktop checkbox */
   Gtk::CheckButton enable_logging_check;              /**!< debug logging checkbox */
   Gtk::CheckButton use_wine64_check;                  /*!< use wine64 binary checkbox (advanced; disables 32-bit support) */
+  Gtk::Label cpu_core_limit_label;                    /*!< CPU affinity setting label */
+  Gtk::CheckButton cpu_core_limit_check;              /*!< enable CPU affinity limiting */
+  Gtk::SpinButton cpu_core_limit_spin;                /*!< requested maximum logical CPUs */
+  Gtk::Box hbox_cpu_core_limit;                       /*!< CPU affinity controls */
   Gtk::Box hbox_hud_checks;                           /*!< box for the HUD overlay checkboxes */
   Gtk::CheckButton dxvk_hud_check;                    /*!< DXVK HUD overlay checkbox */
   Gtk::CheckButton gallium_hud_check;                 /*!< Gallium (Mesa) HUD overlay checkbox */
@@ -125,12 +130,14 @@ private:
   void on_select_wine_bin_path();
   void on_virtual_desktop_toggle();
   void on_debug_logging_toggle();
+  void on_cpu_core_limit_toggle();
 
   // Member functions
   void create_layout();
   void custom_wine_bin_path_sensitive(bool sensitive);
   void virtual_desktop_resolution_sensitive(bool sensitive);
   void log_level_sensitive(bool sensitive);
+  void cpu_core_limit_sensitive(bool sensitive);
 
   BottleItem* active_bottle_; /*!< Current active bottle */
 };

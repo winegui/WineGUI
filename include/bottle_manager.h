@@ -75,7 +75,8 @@ public:
                      bool enable_dxvk_hud,
                      bool enable_gallium_hud,
                      bool enable_mangohud,
-                     bool use_wine64);
+                     bool use_wine64,
+                     int cpu_core_limit);
   void clone_bottle(SignalController* caller,
                     const Glib::ustring& name,
                     const Glib::ustring& folder_name,

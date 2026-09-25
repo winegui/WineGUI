@@ -20,6 +20,7 @@
  */
 #include "bottle_config_file.h"
 #include "helper.h"
+#include <algorithm>
 #include <glibmm.h>
 #include <iostream>
 #include <string>
@@ -60,6 +61,7 @@ bool BottleConfigFile::write_config_file(const std::string& prefix_path,
     keyfile->set_string("General", "Description", bottle_config.description);
     keyfile->set_string("Wine", "BinaryPath", bottle_config.wine_bin_path);
     keyfile->set_boolean("Wine", "UseWine64", bottle_config.use_wine64);
+    keyfile->set_integer("Performance", "CpuCoreLimit", bottle_config.cpu_core_limit);
     keyfile->set_boolean("Logging", "Enabled", bottle_config.logging_enabled);
     keyfile->set_integer("Logging", "DebugLevel", bottle_config.debug_log_level);
     // Iterate over the key/value environment variable pairs (if present)
@@ -124,6 +126,8 @@ std::tuple<BottleConfigData, std::map<int, ApplicationData>> BottleConfigFile::r
       // config file, including the name, description, environment variables and application list
       if (keyfile->has_group("Wine") && keyfile->has_key("Wine", "UseWine64"))
         bottle_config.use_wine64 = keyfile->get_boolean("Wine", "UseWine64");
+      if (keyfile->has_group("Performance") && keyfile->has_key("Performance", "CpuCoreLimit"))
+        bottle_config.cpu_core_limit = std::max(0, keyfile->get_integer("Performance", "CpuCoreLimit"));
       bottle_config.logging_enabled = keyfile->get_boolean("Logging", "Enabled");
       bottle_config.debug_log_level = keyfile->get_integer("Logging", "DebugLevel");
       bottle_config.config_version = CONFIG_VERSION_CURRENT;
@@ -203,6 +207,7 @@ BottleConfigData BottleConfigFile::get_default_config(const std::string& prefix_
   config.description = "";
   config.wine_bin_path = "";
   config.use_wine64 = false;
+  config.cpu_core_limit = 0;
   config.logging_enabled = false;
   config.debug_log_level = 1;
   config.config_version = CONFIG_VERSION_CURRENT;
@@ -237,15 +242,17 @@ bool BottleConfigFile::migrate_config(Glib::RefPtr<Glib::KeyFile>& keyfile, int 
     {
       keyfile->set_boolean("Wine", "UseWine64", false);
     }
-    // cppcheck-suppress unreadVariable
     current_version = 3;
   }
 
-  // Placeholder for future migrations
-  // if (current_version < 4) {
-  //   // Migration logic for version 4
-  //   current_version = 4;
-  // }
+  if (current_version < 4)
+  {
+    std::cout << "Migrating config from version " << current_version << " to version 4..." << std::endl;
+    if (!keyfile->has_group("Performance") || !keyfile->has_key("Performance", "CpuCoreLimit"))
+      keyfile->set_integer("Performance", "CpuCoreLimit", 0);
+    // cppcheck-suppress unreadVariable
+    current_version = 4;
+  }
 
   // Always write version if it doesn't match current
   if (from_version != CONFIG_VERSION_CURRENT)

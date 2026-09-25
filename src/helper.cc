@@ -24,27 +24,39 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <chrono>
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
 #include <giomm/file.h>
+#include <glib.h>
 #include <glibmm/fileutils.h>
+#include <glibmm/keyfile.h>
 #include <glibmm/miscutils.h>
+#include <glibmm/spawn.h>
 #include <iomanip>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <pwd.h>
+#include <sched.h>
+#include <signal.h>
+#include <spawn.h>
 #include <stdexcept>
 #include <stdio.h>
+#include <string_view>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
+#include <thread>
 #include <time.h>
 #include <tuple>
 #include <unistd.h>
+
+extern char** environ;
 
 static const std::vector<std::string> wineGuiDataDirs{Glib::get_user_data_dir(), "winegui"}; /*!< WineGUI data directory path */
 static const string WineGuiDataDir = Glib::build_path(G_DIR_SEPARATOR_S, wineGuiDataDirs);
@@ -81,6 +93,17 @@ struct RegFileCacheEntry
 static std::map<std::string, RegFileCacheEntry> reg_file_cache;
 static std::mutex reg_file_cache_mutex;
 
+static std::optional<string> get_legacy_shortcut_command(const string& exec_line)
+{
+  for (const string marker : {" start /unix \"", " start \""})
+  {
+    const size_t command_start = exec_line.rfind(marker);
+    if (command_start != string::npos && exec_line.ends_with('"'))
+      return exec_line.substr(command_start + marker.size(), exec_line.size() - command_start - marker.size() - 1);
+  }
+  return std::nullopt;
+}
+
 // Reg keys
 static const string RegKeyName9x = "[Software\\\\Microsoft\\\\Windows\\\\CurrentVersion]";
 static const string RegKeyNameNT = "[Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion]";
@@ -110,6 +133,33 @@ static const string RegValueDesktop = "\\Desktop\\";
 
 // Other files
 static const string UpdateTimestamp = ".update-timestamp";
+
+static bool is_wine_background_process(const std::filesystem::path& process_path)
+{
+  std::ifstream command_line(process_path / "cmdline", std::ios::binary);
+  string executable;
+  if (!command_line || !std::getline(command_line, executable, '\0'))
+    return false;
+
+  std::ranges::replace(executable, '\\', '/');
+  string process_name = std::filesystem::path(executable).filename();
+  std::ranges::transform(process_name, process_name.begin(), [](unsigned char character) { return std::tolower(character); });
+  if (process_name.starts_with("wineserver") || process_name == "services.exe" || process_name == "winedevice.exe" ||
+      process_name == "plugplay.exe" || process_name == "rpcss.exe" || process_name == "svchost.exe")
+    return true;
+
+  if (process_name == "explorer.exe")
+  {
+    string argument;
+    while (std::getline(command_line, argument, '\0'))
+    {
+      std::ranges::transform(argument, argument.begin(), [](unsigned char character) { return std::tolower(character); });
+      if (argument.starts_with("/desktop"))
+        return true;
+    }
+  }
+  return false;
+}
 
 /**
  * \brief Windows version table to convert Windows version in registry to BottleType Windows enum value.
@@ -285,7 +335,8 @@ string Helper::run_program_under_wine(bool wine_64_bit,
                                       bool give_error,
                                       bool stderr_output,
                                       const string& wine_bin_path,
-                                      int* exit_code)
+                                      int* exit_code,
+                                      int cpu_core_limit)
 {
   if (is_geproton_runner(wine_bin_path))
   {
@@ -298,7 +349,50 @@ string Helper::run_program_under_wine(bool wine_64_bit,
     runner_program = build_winetricks_command(wine_bin_path, program.substr(string("winetricks ").size()));
   else
     runner_program = build_runner_command(wine_64_bit, wine_bin_path, program);
+  runner_program = apply_cpu_core_limit(runner_program, cpu_core_limit);
   return Helper::run_program(prefix_path, debug_log_level, runner_program, working_directory, env_vars, give_error, stderr_output, exit_code);
+}
+
+/**
+ * \brief Launch a long-running Wine application without capturing pipes owned by Wine descendants.
+ */
+void Helper::launch_program_under_wine(bool wine_64_bit,
+                                       const string& prefix_path,
+                                       int debug_log_level,
+                                       const string& program,
+                                       const string& working_directory,
+                                       const vector<pair<string, string>>& env_vars,
+                                       bool debug_logging,
+                                       bool stderr_output,
+                                       const string& wine_bin_path,
+                                       int cpu_core_limit)
+{
+  if (is_geproton_runner(wine_bin_path))
+  {
+    if (get_windows_bitness(prefix_path) == BottleTypes::Bit::win32)
+      throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");
+    require_umu_available();
+  }
+
+  string runner_program = apply_cpu_core_limit(build_runner_command(wine_64_bit, wine_bin_path, program), cpu_core_limit);
+  string command = (debug_log_level != 1) ? "WINEDEBUG=" + log_level_to_winedebug_string(debug_log_level) + " " : "";
+  command += "WINEPREFIX=" + shell_quote(prefix_path) + " ";
+  for (const auto& [key, value] : env_vars)
+    command += key + "=" + shell_quote(value) + " ";
+  command += runner_program;
+
+  if (debug_logging)
+  {
+    command += " >> " + shell_quote(get_log_file_path(prefix_path));
+    command += stderr_output ? " 2>&1" : " 2>/dev/null";
+  }
+  else
+  {
+    command += " >/dev/null 2>&1";
+  }
+
+  const Glib::SpawnFlags flags = Glib::SpawnFlags::STDOUT_TO_DEV_NULL | Glib::SpawnFlags::STDERR_TO_DEV_NULL | Glib::SpawnFlags::STDIN_FROM_DEV_NULL;
+  Glib::spawn_async(working_directory, {"/bin/sh", "-c", command}, flags);
 }
 
 /**
@@ -336,21 +430,119 @@ string Helper::get_log_file_path(const string& logging_bottle_prefix)
  * \param[in] prefix_path The path to bottle wine directory
  * \param[in] wine_bin_path (Optionally) Path to a custom Wine binary directory; its wineserver is used when present
  */
-void Helper::wait_until_wineserver_is_terminated(const string& prefix_path, const string& wine_bin_path)
+WineServerWaitResult
+Helper::wait_until_wineserver_is_terminated(const string& prefix_path, const string& wine_bin_path, std::chrono::milliseconds timeout)
 {
   // Proton owns wineserver lifecycle inside its managed runtime. Never call the embedded
   // GE-Proton wineserver outside that supported environment.
   if (is_geproton_runner(wine_bin_path))
-    return;
+    return WineServerWaitResult::Exited;
   // Use the wineserver that belongs to the bottle's custom Wine build (if any),
   // the system wineserver might be a different (incompatible) version
-  string wineserver_executable = get_wineserver_executable_location(wine_bin_path);
-  const auto& [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" timeout 60 \"" + wineserver_executable + "\" -w 2>&1");
-  if (exit_code == 124)
+  const string wineserver_executable = get_wineserver_executable_location(wine_bin_path);
+  std::vector<string> environment_storage;
+  for (char** variable = environ; variable != nullptr && *variable != nullptr; ++variable)
   {
-    std::cout << "INFO: Time-out of wineserver wait command triggered (wineserver is still running..)" << std::endl;
-    std::cout << "INFO: Output of wineserver: " << output << std::endl;
+    if (!string(*variable).starts_with("WINEPREFIX="))
+      environment_storage.emplace_back(*variable);
   }
+  environment_storage.emplace_back("WINEPREFIX=" + prefix_path);
+  std::vector<char*> environment;
+  environment.reserve(environment_storage.size() + 1);
+  std::transform(environment_storage.begin(), environment_storage.end(), std::back_inserter(environment),
+                 [](const string& variable) { return const_cast<char*>(variable.c_str()); });
+  environment.push_back(nullptr);
+
+  posix_spawn_file_actions_t file_actions;
+  if (posix_spawn_file_actions_init(&file_actions) != 0)
+    return WineServerWaitResult::LaunchFailed;
+  const int dev_null = open("/dev/null", O_RDWR);
+  if (dev_null < 0)
+  {
+    posix_spawn_file_actions_destroy(&file_actions);
+    return WineServerWaitResult::LaunchFailed;
+  }
+  posix_spawn_file_actions_adddup2(&file_actions, dev_null, STDIN_FILENO);
+  posix_spawn_file_actions_adddup2(&file_actions, dev_null, STDOUT_FILENO);
+  posix_spawn_file_actions_adddup2(&file_actions, dev_null, STDERR_FILENO);
+  posix_spawn_file_actions_addclose(&file_actions, dev_null);
+
+  pid_t child_pid = -1;
+  std::array<char*, 3> arguments{const_cast<char*>(wineserver_executable.c_str()), const_cast<char*>("-w"), nullptr};
+  const int spawn_result = posix_spawn(&child_pid, wineserver_executable.c_str(), &file_actions, nullptr, arguments.data(), environment.data());
+  close(dev_null);
+  posix_spawn_file_actions_destroy(&file_actions);
+  if (spawn_result != 0)
+    return WineServerWaitResult::LaunchFailed;
+
+  const auto deadline = std::chrono::steady_clock::now() + timeout;
+  int status = 0;
+  while (std::chrono::steady_clock::now() < deadline)
+  {
+    const pid_t wait_result = waitpid(child_pid, &status, WNOHANG);
+    if (wait_result == child_pid)
+      return WIFEXITED(status) && WEXITSTATUS(status) == 0 ? WineServerWaitResult::Exited : WineServerWaitResult::LaunchFailed;
+    if (wait_result < 0)
+      return WineServerWaitResult::LaunchFailed;
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+
+  kill(child_pid, SIGTERM);
+  const auto terminate_deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(250);
+  while (std::chrono::steady_clock::now() < terminate_deadline)
+  {
+    const pid_t wait_result = waitpid(child_pid, &status, WNOHANG);
+    if (wait_result == child_pid)
+    {
+      std::cout << "INFO: Time-out of wineserver wait command triggered (wineserver is still running..)" << std::endl;
+      return WineServerWaitResult::TimedOut;
+    }
+    if (wait_result < 0)
+      return WineServerWaitResult::LaunchFailed;
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  kill(child_pid, SIGKILL);
+  if (waitpid(child_pid, &status, 0) < 0)
+    return WineServerWaitResult::LaunchFailed;
+  std::cout << "INFO: Time-out of wineserver wait command triggered (wineserver is still running..)" << std::endl;
+  return WineServerWaitResult::TimedOut;
+}
+
+bool Helper::has_running_wine_application(const string& prefix_path)
+{
+  const string expected = "WINEPREFIX=" + prefix_path;
+  std::error_code error;
+  std::filesystem::directory_iterator entry("/proc", std::filesystem::directory_options::skip_permission_denied, error);
+  const std::filesystem::directory_iterator end;
+  while (!error && entry != end)
+  {
+    const std::filesystem::path process_path = entry->path();
+    entry.increment(error);
+    if (error)
+    {
+      error.clear();
+      continue;
+    }
+    const string pid = process_path.filename();
+    if (pid.empty() || !std::ranges::all_of(pid, [](unsigned char character) { return std::isdigit(character); }))
+      continue;
+    std::ifstream environment(process_path / "environ", std::ios::binary);
+    if (!environment)
+      continue;
+    string variable;
+    bool matching_prefix = false;
+    while (std::getline(environment, variable, '\0'))
+    {
+      if (variable == expected)
+      {
+        matching_prefix = true;
+        break;
+      }
+    }
+    if (matching_prefix && !is_wine_background_process(process_path))
+      return true;
+  }
+  return false;
 }
 
 /**
@@ -538,6 +730,55 @@ string Helper::shell_quote(const string& value)
   return quoted;
 }
 
+string Helper::quote_application_executable(const string& command)
+{
+  if (command.empty() || command.starts_with('\''))
+    return command;
+
+  if (command.starts_with('"'))
+  {
+    const size_t closing_quote = command.find('"', 1);
+    if (closing_quote != string::npos)
+      return shell_quote(command.substr(1, closing_quote - 1)) + command.substr(closing_quote + 1);
+  }
+
+  string lower_command = command;
+  std::transform(lower_command.begin(), lower_command.end(), lower_command.begin(), [](unsigned char character) { return std::tolower(character); });
+
+  // Without quotes, "My Game.exe" and "notepad file.exe" have the same shape.
+  // The extensionless Wine programs shown in WineGUI's application list can take
+  // arguments; other relative names ending in an executable suffix are treated
+  // as one executable. Custom commands can quote the executable to disambiguate.
+  static constexpr std::array<std::string_view, 13> wine_programs{"winecfg",  "uninstaller", "control", "winemine", "notepad",
+                                                                  "winefile", "iexplore",    "taskmgr", "explorer", "wineconsole",
+                                                                  "regedit",  "oleview",     "cmd"};
+  const size_t first_space = command.find_first_of(" \t");
+  if (first_space != string::npos &&
+      std::find(wine_programs.begin(), wine_programs.end(), std::string_view(lower_command).substr(0, first_space)) != wine_programs.end())
+    return shell_quote(command.substr(0, first_space)) + command.substr(first_space);
+
+  size_t executable_end = string::npos;
+  for (const string extension : {".exe", ".com", ".bat", ".cmd", ".lnk"})
+  {
+    size_t extension_position = lower_command.find(extension);
+    while (extension_position != string::npos)
+    {
+      const size_t candidate_end = extension_position + extension.size();
+      if ((candidate_end == command.size() || std::isspace(static_cast<unsigned char>(command[candidate_end]))) &&
+          (executable_end == string::npos || candidate_end < executable_end))
+        executable_end = candidate_end;
+      extension_position = lower_command.find(extension, extension_position + 1);
+    }
+  }
+  if (executable_end != string::npos)
+    return shell_quote(command.substr(0, executable_end)) + command.substr(executable_end);
+
+  const bool unix_path = command.starts_with('/');
+  const bool windows_path =
+      command.size() >= 3 && std::isalpha(static_cast<unsigned char>(command[0])) && command[1] == ':' && (command[2] == '\\' || command[2] == '/');
+  return unix_path || windows_path ? shell_quote(command) : command;
+}
+
 /**
  * \brief Build the runner-specific portion of a Wine/Proton command.
  */
@@ -554,6 +795,17 @@ string Helper::build_runner_command(bool prefer_wine64, const string& wine_bin_p
   return get_wine_executable_location(prefer_wine64, wine_bin_path) + " " + program;
 }
 
+string Helper::build_wine_launch_command(const string& command, bool direct_launch, bool is_msi_file)
+{
+  if (is_msi_file)
+    return "msiexec /i " + shell_quote(command);
+
+  if (!direct_launch)
+    return command.starts_with('/') ? "start /unix \"" + command + "\"" : "start \"" + command + "\"";
+
+  return quote_application_executable(command);
+}
+
 /**
  * \brief Build a winetricks command for the selected runner.
  */
@@ -567,6 +819,78 @@ string Helper::build_winetricks_command(const string& wine_bin_path, const strin
     return "env PROTONPATH=" + shell_quote(proton_root.value()) + " " + shell_quote(get_umu_executable_location()) + " winetricks " + arguments;
   }
   return get_winetricks_location() + " " + arguments;
+}
+
+vector<int> Helper::get_allowed_cpu_ids()
+{
+  cpu_set_t affinity;
+  CPU_ZERO(&affinity);
+  if (sched_getaffinity(0, sizeof(affinity), &affinity) != 0)
+    throw std::runtime_error("WineGUI could not determine the CPUs permitted by the operating system.");
+
+  vector<int> cpu_ids;
+  for (int cpu = 0; cpu < CPU_SETSIZE; ++cpu)
+  {
+    if (CPU_ISSET(cpu, &affinity))
+      cpu_ids.push_back(cpu);
+  }
+  if (cpu_ids.empty())
+    throw std::runtime_error("WineGUI was not permitted to run on any CPU.");
+  return cpu_ids;
+}
+
+string Helper::format_cpu_list(const vector<int>& allowed_cpu_ids, int cpu_core_limit)
+{
+  if (cpu_core_limit <= 0)
+    return "";
+  if (allowed_cpu_ids.empty())
+    throw std::runtime_error("WineGUI was not permitted to run on any CPU.");
+
+  const size_t selected_count = std::min(static_cast<size_t>(cpu_core_limit), allowed_cpu_ids.size());
+  string result;
+  for (size_t index = 0; index < selected_count;)
+  {
+    const int range_start = allowed_cpu_ids.at(index);
+    int range_end = range_start;
+    while (index + 1 < selected_count && allowed_cpu_ids.at(index + 1) == range_end + 1)
+      range_end = allowed_cpu_ids.at(++index);
+    if (!result.empty())
+      result += ',';
+    result += std::to_string(range_start);
+    if (range_end != range_start)
+      result += '-' + std::to_string(range_end);
+    ++index;
+  }
+  return result;
+}
+
+/**
+ * \brief Return the requested CPU limit only when it excludes at least one permitted CPU.
+ * A limit equal to or larger than the permitted CPU count provides no restriction, so it
+ * must not add taskset or select the affinity-specific direct-launch path.
+ */
+int Helper::get_effective_cpu_core_limit(int cpu_core_limit)
+{
+  if (cpu_core_limit <= 0)
+    return 0;
+
+  const size_t allowed_cpu_count = get_allowed_cpu_ids().size();
+  return static_cast<size_t>(cpu_core_limit) < allowed_cpu_count ? cpu_core_limit : 0;
+}
+
+string Helper::apply_cpu_core_limit(const string& command, int cpu_core_limit)
+{
+  const int effective_cpu_core_limit = get_effective_cpu_core_limit(cpu_core_limit);
+  if (effective_cpu_core_limit <= 0)
+    return command;
+
+  const string taskset = Glib::find_program_in_path("taskset");
+  if (taskset.empty())
+    throw std::runtime_error(
+        "CPU limiting is enabled, but the 'taskset' command is unavailable. Install the util-linux package or disable the CPU core limit.");
+
+  const string cpu_list = format_cpu_list(get_allowed_cpu_ids(), effective_cpu_core_limit);
+  return shell_quote(taskset) + " --cpu-list " + shell_quote(cpu_list) + " " + command;
 }
 
 /**
@@ -1867,9 +2191,15 @@ string Helper::string_to_icon(const std::string& filename)
  * \param[in] env_vars Additional environment variables to set for the bottle
  * \return A single command line suitable for a `.desktop` Exec= line
  */
-string Helper::build_desktop_exec_line(
-    bool wine_64_bit, const string& prefix_path, const string& wine_bin_path, const string& command, const vector<pair<string, string>>& env_vars)
+string Helper::build_desktop_exec_line(bool wine_64_bit,
+                                       const string& prefix_path,
+                                       const string& wine_bin_path,
+                                       const string& command,
+                                       const vector<pair<string, string>>& env_vars,
+                                       int cpu_core_limit)
 {
+  const int effective_cpu_core_limit = get_effective_cpu_core_limit(cpu_core_limit);
+
   // Environment prefix (env allows a single runnable command line in the .desktop Exec field)
   string env_prefix = "env WINEPREFIX=\"" + prefix_path + "\" ";
   for (const auto& [key, value] : env_vars)
@@ -1884,27 +2214,19 @@ string Helper::build_desktop_exec_line(
     {
       if (get_windows_bitness(prefix_path) == BottleTypes::Bit::win32)
         throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");
-      return env_prefix + build_winetricks_command(wine_bin_path, "--gui -q");
+      return env_prefix + apply_cpu_core_limit(build_winetricks_command(wine_bin_path, "--gui -q"), effective_cpu_core_limit);
     }
     return env_prefix + command;
   }
 
-  // Wrap the program the same way as at runtime (see BottleManager::run_program)
-  string wrapped_program;
-  if (command.starts_with("/"))
-  {
-    // Unix-style command, like application shortcuts
-    wrapped_program = "start /unix \"" + command + "\"";
-  }
-  else
-  {
-    // Windows-style commands, like 'notepad'
-    wrapped_program = "start \"" + command + "\"";
-  }
+  // `wine start` adds an intermediary Wine process. With a restricted inherited CPU
+  // mask, that startup path can leave the target blocked; direct launch preserves the
+  // same affinity without the intermediary. Keep `start` for unlimited bottles.
+  const string wrapped_program = build_wine_launch_command(command, effective_cpu_core_limit > 0);
 
   if (is_geproton_runner(wine_bin_path) && get_windows_bitness(prefix_path) == BottleTypes::Bit::win32)
     throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");
-  return env_prefix + Helper::build_runner_command(wine_64_bit, wine_bin_path, wrapped_program);
+  return env_prefix + apply_cpu_core_limit(Helper::build_runner_command(wine_64_bit, wine_bin_path, wrapped_program), effective_cpu_core_limit);
 }
 
 /**
@@ -1926,7 +2248,9 @@ bool Helper::create_desktop_file(const string& target_dir,
                                  const string& exec_line,
                                  const string& icon,
                                  const string& bottle_name,
-                                 bool make_executable)
+                                 bool make_executable,
+                                 const string& bottle_path,
+                                 const string& application_command)
 {
   // Ensure the target directory exists
   if (!dir_exists(target_dir))
@@ -1952,6 +2276,14 @@ bool Helper::create_desktop_file(const string& target_dir,
   contents += "Categories=Wine;\n";
   if (!bottle_name.empty())
     contents += "X-WineGUI-Bottle=" + bottle_name + "\n";
+  if (!bottle_path.empty() && !application_command.empty())
+  {
+    gchar* encoded_command = g_base64_encode(reinterpret_cast<const guchar*>(application_command.data()), application_command.size());
+    contents += "X-WineGUI-Managed=true\n";
+    contents += "X-WineGUI-BottlePath=" + bottle_path + "\n";
+    contents += "X-WineGUI-ApplicationCommand=" + string(encoded_command) + "\n";
+    g_free(encoded_command);
+  }
 
   try
   {
@@ -1983,6 +2315,157 @@ bool Helper::create_desktop_file(const string& target_dir,
   }
 
   return true;
+}
+
+vector<string> Helper::refresh_managed_shortcuts(const string& old_bottle_name,
+                                                 const string& old_prefix_path,
+                                                 const BottleConfigData& bottle_config,
+                                                 const std::map<int, ApplicationData>& app_list,
+                                                 const string& new_prefix_path)
+{
+  vector<string> failures;
+  vector<string> directories{Glib::build_filename(Glib::get_user_data_dir(), "applications")};
+  string desktop_dir = Glib::get_user_special_dir(Glib::UserDirectory::DESKTOP);
+  if (desktop_dir.empty())
+    desktop_dir = Glib::build_filename(Glib::get_home_dir(), "Desktop");
+  directories.push_back(desktop_dir);
+
+  for (const string& directory : directories)
+  {
+    if (!dir_exists(directory))
+      continue;
+    Glib::Dir entries(directory);
+    for (const string& filename : entries)
+    {
+      if (!filename.starts_with("winegui-") || !filename.ends_with(".desktop"))
+        continue;
+      const string path = Glib::build_filename(directory, filename);
+      try
+      {
+        auto keyfile = Glib::KeyFile::create();
+        keyfile->load_from_file(path);
+        if (!keyfile->has_group("Desktop Entry"))
+          continue;
+
+        const bool managed = keyfile->has_key("Desktop Entry", "X-WineGUI-Managed") && keyfile->get_boolean("Desktop Entry", "X-WineGUI-Managed");
+        const string marker_name =
+            keyfile->has_key("Desktop Entry", "X-WineGUI-Bottle") ? keyfile->get_string("Desktop Entry", "X-WineGUI-Bottle") : "";
+        const string marker_path =
+            keyfile->has_key("Desktop Entry", "X-WineGUI-BottlePath") ? keyfile->get_string("Desktop Entry", "X-WineGUI-BottlePath") : "";
+        if ((managed && marker_path != old_prefix_path) || (!managed && marker_name != old_bottle_name))
+          continue;
+
+        string command;
+        bool refreshed_legacy_prefix_only = false;
+        if (managed && keyfile->has_key("Desktop Entry", "X-WineGUI-ApplicationCommand"))
+        {
+          gsize decoded_size = 0;
+          guchar* decoded = g_base64_decode(keyfile->get_string("Desktop Entry", "X-WineGUI-ApplicationCommand").c_str(), &decoded_size);
+          command.assign(reinterpret_cast<const char*>(decoded), decoded_size);
+          g_free(decoded);
+        }
+        else
+        {
+          const string app_name = keyfile->get_string("Desktop Entry", "Name");
+          vector<string> matches;
+          for (const auto& [_, app] : app_list)
+          {
+            if (app.name == app_name)
+              matches.push_back(app.command);
+          }
+          if (matches.size() == 1)
+          {
+            command = matches.front();
+          }
+          else if (const std::optional<string> legacy_command = get_legacy_shortcut_command(keyfile->get_string("Desktop Entry", "Exec")))
+          {
+            command = legacy_command.value();
+          }
+          else
+          {
+            string legacy_exec = keyfile->get_string("Desktop Entry", "Exec");
+            if (old_prefix_path == new_prefix_path || old_prefix_path.empty())
+              continue;
+
+            size_t prefix_position = legacy_exec.find(old_prefix_path);
+            if (prefix_position == string::npos)
+              continue;
+            bool replaced_prefix = false;
+            while (prefix_position != string::npos)
+            {
+              const size_t prefix_end = prefix_position + old_prefix_path.size();
+              const bool starts_at_boundary = prefix_position == 0 || std::isspace(static_cast<unsigned char>(legacy_exec[prefix_position - 1])) ||
+                                              legacy_exec[prefix_position - 1] == '=' || legacy_exec[prefix_position - 1] == '\'' ||
+                                              legacy_exec[prefix_position - 1] == '"';
+              const bool ends_at_boundary = prefix_end == legacy_exec.size() || legacy_exec[prefix_end] == '/' ||
+                                            std::isspace(static_cast<unsigned char>(legacy_exec[prefix_end])) || legacy_exec[prefix_end] == '\'' ||
+                                            legacy_exec[prefix_end] == '"';
+              if (starts_at_boundary && ends_at_boundary)
+              {
+                legacy_exec.replace(prefix_position, old_prefix_path.size(), new_prefix_path);
+                replaced_prefix = true;
+                prefix_position = legacy_exec.find(old_prefix_path, prefix_position + new_prefix_path.size());
+              }
+              else
+              {
+                prefix_position = legacy_exec.find(old_prefix_path, prefix_position + old_prefix_path.size());
+              }
+            }
+            if (!replaced_prefix)
+              continue;
+            keyfile->set_string("Desktop Entry", "Exec", legacy_exec);
+            keyfile->set_string("Desktop Entry", "X-WineGUI-Bottle", bottle_config.name);
+            refreshed_legacy_prefix_only = true;
+          }
+        }
+
+        if (!refreshed_legacy_prefix_only)
+        {
+          if (old_prefix_path != new_prefix_path && command.starts_with(old_prefix_path) &&
+              (command.size() == old_prefix_path.size() || command[old_prefix_path.size()] == '/'))
+          {
+            command.replace(0, old_prefix_path.size(), new_prefix_path);
+          }
+
+          const string exec_line = build_desktop_exec_line(bottle_config.use_wine64, new_prefix_path, bottle_config.wine_bin_path, command,
+                                                           bottle_config.env_vars, bottle_config.cpu_core_limit);
+          gchar* encoded_command = g_base64_encode(reinterpret_cast<const guchar*>(command.data()), command.size());
+          keyfile->set_string("Desktop Entry", "Exec", exec_line);
+          keyfile->set_string("Desktop Entry", "X-WineGUI-Bottle", bottle_config.name);
+          keyfile->set_boolean("Desktop Entry", "X-WineGUI-Managed", true);
+          keyfile->set_string("Desktop Entry", "X-WineGUI-BottlePath", new_prefix_path);
+          keyfile->set_string("Desktop Entry", "X-WineGUI-ApplicationCommand", encoded_command);
+          g_free(encoded_command);
+        }
+
+        struct stat file_stat{};
+        const bool has_mode = stat(path.c_str(), &file_stat) == 0;
+        const string temporary_path = path + ".winegui.tmp";
+        keyfile->save_to_file(temporary_path);
+        if (has_mode)
+          chmod(temporary_path.c_str(), file_stat.st_mode);
+
+        const string app_name = keyfile->get_string("Desktop Entry", "Name");
+        const string new_filename = "winegui-" + to_filename_part(bottle_config.name) + "-" + to_filename_part(app_name) + ".desktop";
+        const string new_path = Glib::build_filename(directory, new_filename);
+        if (new_path != path && file_exists(new_path))
+        {
+          unlink(temporary_path.c_str());
+          failures.push_back(path);
+          continue;
+        }
+        if (rename(temporary_path.c_str(), new_path.c_str()) != 0)
+          throw std::runtime_error("Could not replace shortcut: " + path);
+        if (new_path != path)
+          unlink(path.c_str());
+      }
+      catch (const std::exception&)
+      {
+        failures.push_back(path);
+      }
+    }
+  }
+  return failures;
 }
 
 /**

@@ -46,6 +46,9 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
       virtual_desktop_check("Enable Virtual Desktop Window"),
       enable_logging_check("Enable debug logging"),
       use_wine64_check("Prefer the wine64 binary instead of wine (advanced)"),
+      cpu_core_limit_label("CPU Core Limit:"),
+      cpu_core_limit_check("Limit CPU usage"),
+      hbox_cpu_core_limit(Gtk::Orientation::HORIZONTAL, 8),
       hbox_hud_checks(Gtk::Orientation::HORIZONTAL, 12),
       dxvk_hud_check("DXVK HUD"),
       gallium_hud_check("Gallium HUD"),
@@ -80,6 +83,7 @@ BottleEditWindow::BottleEditWindow(Gtk::Window& parent)
   wine_runner_combobox.signal_changed().connect(sigc::mem_fun(*this, &BottleEditWindow::on_wine_runner_changed));
   virtual_desktop_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_virtual_desktop_toggle));
   enable_logging_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_debug_logging_toggle));
+  cpu_core_limit_check.signal_toggled().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cpu_core_limit_toggle));
   cancel_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_cancel_button_clicked));
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &BottleEditWindow::on_save_button_clicked));
   // Hide window instead of destroy
@@ -121,9 +125,10 @@ void BottleEditWindow::create_layout()
   log_level_label.set_halign(Gtk::Align::END);
   environment_variables_label.set_halign(Gtk::Align::END);
   hud_label.set_halign(Gtk::Align::END);
+  cpu_core_limit_label.set_halign(Gtk::Align::END);
   description_label.set_halign(Gtk::Align::START);
   name_label.set_tooltip_text("Change the machine name");
-  folder_name_label.set_tooltip_text("Change the folder. NOTE: This break your shortcuts!");
+  folder_name_label.set_tooltip_text("Change the machine folder; WineGUI-managed shortcuts will be refreshed automatically");
   wine_runner_label.set_tooltip_text("Select the Wine build used by this machine (system Wine, a downloaded Wine runner or a custom path)");
   wine_bin_path_label.set_tooltip_text("Change the path to the 'wine' binary for this machine");
   windows_version_label.set_tooltip_text("Change the Windows version");
@@ -132,6 +137,7 @@ void BottleEditWindow::create_layout()
   log_level_label.set_tooltip_text("Change the Wine debug messages for logging");
   environment_variables_label.set_tooltip_text("Set one or more environment variables");
   hud_label.set_tooltip_text("Show a performance overlay (HUD) on top of your apps/games");
+  cpu_core_limit_label.set_tooltip_text("Restrict Wine and its runner to a maximum number of permitted logical CPUs");
   description_label.set_tooltip_text("Add an additional description text to your machine");
   dxvk_hud_check.set_tooltip_text("Enable the DXVK HUD, showing device info and FPS (sets the DXVK_HUD environment variable).\nOnly for Direct3D "
                                   "applications running via DXVK.");
@@ -177,7 +183,22 @@ void BottleEditWindow::create_layout()
                                     "Leave this off unless you know you need it. The wine64 binary can only run 64-bit "
                                     "applications, so 32-bit applications will no longer work in this machine.\n"
                                     "When no wine64 binary is present, the regular wine binary is used instead.");
-  folder_name_entry.set_tooltip_text("Important: This will break your shortcuts! Consider changing the name instead, see above.");
+  int available_cpu_count = 1;
+  try
+  {
+    available_cpu_count = static_cast<int>(Helper::get_allowed_cpu_ids().size());
+  }
+  catch (const std::runtime_error&)
+  {
+  }
+  cpu_core_limit_spin.set_range(1, std::max(1, available_cpu_count));
+  cpu_core_limit_spin.set_increments(1, 1);
+  cpu_core_limit_spin.set_value(std::max(1, available_cpu_count));
+  cpu_core_limit_spin.set_numeric(true);
+  cpu_core_limit_spin.set_width_chars(4);
+  hbox_cpu_core_limit.append(cpu_core_limit_check);
+  hbox_cpu_core_limit.append(cpu_core_limit_spin);
+  folder_name_entry.set_tooltip_text("WineGUI-managed shortcuts will be refreshed after the folder is renamed.");
 
   description_scrolled_window.set_child(description_text_view);
   description_scrolled_window.set_hexpand(true);
@@ -211,6 +232,8 @@ void BottleEditWindow::create_layout()
   hbox_hud_checks.append(mangohud_check);
   edit_grid.attach(hud_label, 0, row);
   edit_grid.attach(hbox_hud_checks, 1, row++, 2);
+  edit_grid.attach(cpu_core_limit_label, 0, row);
+  edit_grid.attach(hbox_cpu_core_limit, 1, row++, 2);
   // Advanced option: most users should keep the plain wine binary (it supports both 32-bit and 64-bit
   // applications). Switching to wine64 disables 32-bit application support. Placed above the description
   // (last of the settings), so it doesn't get orphaned below the expanding description text area.
@@ -244,6 +267,7 @@ void BottleEditWindow::create_layout()
   custom_wine_bin_path_sensitive(false);
   virtual_desktop_resolution_sensitive(false);
   log_level_sensitive(false);
+  cpu_core_limit_sensitive(false);
 }
 
 /**
@@ -321,7 +345,18 @@ void BottleEditWindow::show()
     enable_logging_check.set_active(active_bottle_->is_debug_logging());
     log_level_combobox.set_active_id(std::to_string((int)active_bottle_->debug_log_level()));
     use_wine64_check.set_active(active_bottle_->use_wine64());
-
+    int available_cpu_count = 1;
+    try
+    {
+      available_cpu_count = static_cast<int>(Helper::get_allowed_cpu_ids().size());
+    }
+    catch (const std::runtime_error&)
+    {
+    }
+    const int saved_cpu_core_limit = active_bottle_->cpu_core_limit();
+    cpu_core_limit_spin.set_range(1, std::max({1, available_cpu_count, saved_cpu_core_limit}));
+    cpu_core_limit_spin.set_value(saved_cpu_core_limit > 0 ? saved_cpu_core_limit : std::max(1, available_cpu_count));
+    cpu_core_limit_check.set_active(saved_cpu_core_limit > 0);
     // Reflect the current HUD environment variables in the checkboxes
     bool has_dxvk_hud = false, has_gallium_hud = false, has_mangohud = false;
     for (const auto& [key, value] : active_bottle_->env_vars())
@@ -460,6 +495,16 @@ void BottleEditWindow::on_debug_logging_toggle()
   log_level_sensitive(enable_logging_check.get_active());
 }
 
+void BottleEditWindow::cpu_core_limit_sensitive(bool sensitive)
+{
+  cpu_core_limit_spin.set_sensitive(sensitive);
+}
+
+void BottleEditWindow::on_cpu_core_limit_toggle()
+{
+  cpu_core_limit_sensitive(cpu_core_limit_check.get_active());
+}
+
 /**
  * \brief Signal handler when the Wine runner selection changed.
  * The 'Wine Binary Path' text and button widgets are only enabled for the 'Custom path...' option.
@@ -533,10 +578,6 @@ void BottleEditWindow::on_save_button_clicked()
   // First disable save button (avoid multiple presses)
   save_button.set_sensitive(false);
 
-  // Show busy dialog
-  busy_dialog.set_message("Updating Windows Machine", "Busy applying all your changes currently.");
-  busy_dialog.present();
-
   std::string::size_type sz;
 
   UpdateBottleStruct update_bottle_struct;
@@ -572,6 +613,7 @@ void BottleEditWindow::on_save_button_clicked()
   update_bottle_struct.enable_gallium_hud = gallium_hud_check.get_active();
   update_bottle_struct.enable_mangohud = mangohud_check.get_active();
   update_bottle_struct.use_wine64 = use_wine64_check.get_active();
+  update_bottle_struct.cpu_core_limit = cpu_core_limit_check.get_active() ? static_cast<int>(cpu_core_limit_spin.get_value_as_int()) : 0;
   try
   {
     update_bottle_struct.debug_log_level = std::stoi(log_level_combobox.get_active_id(), &sz);
@@ -617,6 +659,17 @@ void BottleEditWindow::on_save_button_clicked()
   {
   }
   // Ignore the catches
+
+  const bool prefix_mutation_requested =
+      active_bottle_ != nullptr &&
+      (active_bottle_->windows() != update_bottle_struct.windows_version ||
+       active_bottle_->virtual_desktop() != update_bottle_struct.virtual_desktop_resolution ||
+       active_bottle_->audio_driver() != update_bottle_struct.audio || active_bottle_->folder_name() != update_bottle_struct.folder_name);
+  if (prefix_mutation_requested)
+  {
+    busy_dialog.set_message("Updating Windows Machine", "Busy applying all your changes currently.");
+    busy_dialog.present();
+  }
 
   update_bottle.emit(update_bottle_struct);
 }

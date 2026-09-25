@@ -20,6 +20,7 @@
  */
 #pragma once
 
+#include <chrono>
 #include <glibmm/dispatcher.h>
 #include <map>
 #include <memory>
@@ -29,6 +30,7 @@
 #include <utility>
 #include <vector>
 
+#include "bottle_config_file.h"
 #include "bottle_types.h"
 #include "dll_override_types.h"
 
@@ -36,6 +38,13 @@ using std::endl;
 using std::pair;
 using std::string;
 using std::vector;
+
+enum class WineServerWaitResult
+{
+  Exited,
+  TimedOut,
+  LaunchFailed
+};
 
 /**
  * \class Helper
@@ -68,10 +77,24 @@ public:
                                        bool give_error = true,
                                        bool stderr_output = true,
                                        const string& wine_bin_path = "",
-                                       int* exit_code = nullptr);
+                                       int* exit_code = nullptr,
+                                       int cpu_core_limit = 0);
+  static void launch_program_under_wine(bool wine_64_bit,
+                                        const string& prefix_path,
+                                        int debug_log_level,
+                                        const string& program,
+                                        const string& working_directory = "",
+                                        const vector<pair<string, string>>& env_vars = {},
+                                        bool debug_logging = false,
+                                        bool stderr_output = true,
+                                        const string& wine_bin_path = "",
+                                        int cpu_core_limit = 0);
   static void write_to_log_file(const string& logging_bottle_prefix, const string& logging);
   static string get_log_file_path(const string& logging_bottle_prefix);
-  static void wait_until_wineserver_is_terminated(const string& prefix_path, const string& wine_bin_path = "");
+  static WineServerWaitResult wait_until_wineserver_is_terminated(const string& prefix_path,
+                                                                  const string& wine_bin_path = "",
+                                                                  std::chrono::milliseconds timeout = std::chrono::seconds(60));
+  static bool has_running_wine_application(const string& prefix_path);
   static int determine_wine_executable();
   static string get_wine_executable_location(bool prefer_wine64 = false, const string& wine_bin_path = "");
   static string get_wineserver_executable_location(const string& wine_bin_path = "");
@@ -82,7 +105,12 @@ public:
   static bool is_umu_available();
   static void require_umu_available();
   static string build_runner_command(bool prefer_wine64, const string& wine_bin_path, const string& program);
+  static string build_wine_launch_command(const string& command, bool direct_launch, bool is_msi_file = false);
   static string build_winetricks_command(const string& wine_bin_path, const string& arguments);
+  static vector<int> get_allowed_cpu_ids();
+  static int get_effective_cpu_core_limit(int cpu_core_limit);
+  static string format_cpu_list(const vector<int>& allowed_cpu_ids, int cpu_core_limit);
+  static string apply_cpu_core_limit(const string& command, int cpu_core_limit);
   static string get_runner_entrypoint_description(bool prefer_wine64, const string& wine_bin_path);
   static string get_winetricks_location();
   static string get_wine_version(bool wine_64_bit, const string& prefix_path, const string& wine_bin_path = "");
@@ -131,7 +159,8 @@ public:
                                         const string& prefix_path,
                                         const string& wine_bin_path,
                                         const string& command,
-                                        const vector<pair<string, string>>& env_vars = {});
+                                        const vector<pair<string, string>>& env_vars = {},
+                                        int cpu_core_limit = 0);
   static bool create_desktop_file(const string& target_dir,
                                   const string& file_basename,
                                   const string& app_name,
@@ -139,7 +168,14 @@ public:
                                   const string& exec_line,
                                   const string& icon,
                                   const string& bottle_name = "",
-                                  bool make_executable = false);
+                                  bool make_executable = false,
+                                  const string& bottle_path = "",
+                                  const string& application_command = "");
+  static vector<string> refresh_managed_shortcuts(const string& old_bottle_name,
+                                                  const string& old_prefix_path,
+                                                  const BottleConfigData& bottle_config,
+                                                  const std::map<int, ApplicationData>& app_list,
+                                                  const string& new_prefix_path);
   static string to_filename_part(const string& input);
   static void invalidate_reg_cache();
   static void invalidate_reg_cache(const string& prefix_path);
@@ -181,4 +217,5 @@ private:
   static string string2hex(const string& str, bool capital = false);
   static string hex2string(const string& hexstr);
   static string shell_quote(const string& value);
+  static string quote_application_executable(const string& command);
 };

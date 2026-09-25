@@ -64,6 +64,7 @@ public:
     swap(a.wine_version_, b.wine_version_);
     swap(a.is_wine64_bit_, b.is_wine64_bit_);
     swap(a.use_wine64_, b.use_wine64_);
+    swap(a.cpu_core_limit_, b.cpu_core_limit_);
     swap(a.wine_c_drive_, b.wine_c_drive_);
     swap(a.wine_last_changed_, b.wine_last_changed_);
     swap(a.audio_driver_, b.audio_driver_);
@@ -100,6 +101,7 @@ public:
              bool is_debug_logging,
              int debug_log_level,
              bool use_wine64,
+             int cpu_core_limit,
              std::vector<std::pair<std::string, std::string>>& env_vars,
              std::map<int, ApplicationData>& app_list);
 
@@ -210,6 +212,14 @@ public:
   bool use_wine64() const
   {
     return use_wine64_;
+  };
+  void cpu_core_limit(int cpu_core_limit)
+  {
+    cpu_core_limit_ = cpu_core_limit;
+  };
+  int cpu_core_limit() const
+  {
+    return cpu_core_limit_;
   };
   /// set Wine location
   void wine_location(const Glib::ustring& wine_location)
@@ -324,6 +334,7 @@ private:
   Glib::ustring wine_version_;
   bool is_wine64_bit_ = false;
   bool use_wine64_ = false;
+  int cpu_core_limit_ = 0;
   Glib::ustring wine_location_;
   Glib::ustring wine_c_drive_;
   Glib::ustring wine_last_changed_;
