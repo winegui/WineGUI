@@ -37,6 +37,7 @@ struct BottleConfigData
   std::string description;
   std::string wine_bin_path;
   bool use_wine64 = false; /*!< Use the wine64 binary instead of wine (advanced; disables 32-bit application support) */
+  int cpu_core_limit = 0;  /*!< Maximum logical CPUs for Wine processes; 0 disables affinity limiting */
   bool logging_enabled = false;
   int debug_log_level = 0;
   std::vector<std::pair<std::string, std::string>> env_vars;
@@ -63,7 +64,7 @@ private:
   BottleConfigFile(const BottleConfigFile&) = delete;
   BottleConfigFile& operator=(const BottleConfigFile&) = delete;
 
-  static constexpr int CONFIG_VERSION_CURRENT = 3;
+  static constexpr int CONFIG_VERSION_CURRENT = 4;
   static constexpr int CONFIG_VERSION_LEGACY = 1;
 
   static int detect_config_version(Glib::RefPtr<Glib::KeyFile>& keyfile);

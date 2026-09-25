@@ -21,6 +21,7 @@
 #include "bottle_configure_env_var_window.h"
 #include "bottle_config_file.h"
 #include "bottle_item.h"
+#include "helper.h"
 #include <iostream>
 
 /**
@@ -320,6 +321,17 @@ void BottleConfigureEnvVarWindow::on_save_button_clicked()
     }
     else
     {
+      const auto stale_shortcuts = Helper::refresh_managed_shortcuts(active_bottle_->name(), prefix_path, bottle_config, app_list, prefix_path);
+      if (!stale_shortcuts.empty())
+      {
+        Gtk::MessageDialog dialog(
+            *this,
+            "The environment variables were saved, but one or more WineGUI shortcuts could not be refreshed. Recreate those shortcuts manually.",
+            false, Gtk::MessageType::WARNING, Gtk::ButtonsType::OK);
+        dialog.set_title("Shortcuts need attention");
+        dialog.set_modal(true);
+        dialog.present();
+      }
       set_visible(false); // Hide the window
 
       // Trigger update config signal (so the bottle config file will be re-read)

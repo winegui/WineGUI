@@ -32,7 +32,7 @@ set(CPACK_RPM_PACKAGE_SUGGESTS "vulkan, vulkan-loader")
 # Debian trixie, forky, sid, Ubuntu Noble Numbat, Linux Mint 22 (libgtkmm-4.0-0)
 # If needed we can add multiple minor versions eg. via libgtkmm-4.0-0 | libgtkmm-4.0-1
 # Note: xz-utils is needed to extract the Wine runner tar.xz archives (tar itself is an Essential package)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-4.0-0, cabextract, unzip, 7zip, wget, zenity, xz-utils, python3 (>= 3.10)")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-4.0-0, cabextract, unzip, 7zip, wget, zenity, xz-utils, util-linux, python3 (>= 3.10)")
 # Optional deb packages
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "libvulkan1, libvulkan1:i386, mesa-vulkan-drivers, mesa-vulkan-drivers:i386")
 

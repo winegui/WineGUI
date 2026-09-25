@@ -301,10 +301,12 @@ bool CreateShortcutWindow::create_shortcut(const Glib::ustring& name, const Glib
   // Sanitized, deterministic file name so re-creating overwrites rather than duplicates
   std::string basename = "winegui-" + Helper::to_filename_part(bottle_name) + "-" + Helper::to_filename_part(app_name) + ".desktop";
 
-  std::string exec_line = Helper::build_desktop_exec_line(active_bottle_->use_wine64(), active_bottle_->wine_location(),
-                                                          active_bottle_->wine_bin_path(), command, active_bottle_->env_vars());
+  std::string exec_line =
+      Helper::build_desktop_exec_line(active_bottle_->use_wine64(), active_bottle_->wine_location(), active_bottle_->wine_bin_path(), command,
+                                      active_bottle_->env_vars(), active_bottle_->cpu_core_limit());
 
-  bool success = Helper::create_desktop_file(target_dir, basename, app_name, comment, exec_line, icon, bottle_name, to_desktop);
+  bool success = Helper::create_desktop_file(target_dir, basename, app_name, comment, exec_line, icon, bottle_name, to_desktop,
+                                             active_bottle_->wine_location(), command);
 
   if (!success)
   {
