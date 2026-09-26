@@ -47,7 +47,6 @@
 #include <spawn.h>
 #include <stdexcept>
 #include <stdio.h>
-#include <string_view>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -730,55 +729,6 @@ string Helper::shell_quote(const string& value)
   return quoted;
 }
 
-string Helper::quote_application_executable(const string& command)
-{
-  if (command.empty() || command.starts_with('\''))
-    return command;
-
-  if (command.starts_with('"'))
-  {
-    const size_t closing_quote = command.find('"', 1);
-    if (closing_quote != string::npos)
-      return shell_quote(command.substr(1, closing_quote - 1)) + command.substr(closing_quote + 1);
-  }
-
-  string lower_command = command;
-  std::transform(lower_command.begin(), lower_command.end(), lower_command.begin(), [](unsigned char character) { return std::tolower(character); });
-
-  // Without quotes, "My Game.exe" and "notepad file.exe" have the same shape.
-  // The extensionless Wine programs shown in WineGUI's application list can take
-  // arguments; other relative names ending in an executable suffix are treated
-  // as one executable. Custom commands can quote the executable to disambiguate.
-  static constexpr std::array<std::string_view, 13> wine_programs{"winecfg",  "uninstaller", "control", "winemine", "notepad",
-                                                                  "winefile", "iexplore",    "taskmgr", "explorer", "wineconsole",
-                                                                  "regedit",  "oleview",     "cmd"};
-  const size_t first_space = command.find_first_of(" \t");
-  if (first_space != string::npos &&
-      std::find(wine_programs.begin(), wine_programs.end(), std::string_view(lower_command).substr(0, first_space)) != wine_programs.end())
-    return shell_quote(command.substr(0, first_space)) + command.substr(first_space);
-
-  size_t executable_end = string::npos;
-  for (const string extension : {".exe", ".com", ".bat", ".cmd", ".lnk"})
-  {
-    size_t extension_position = lower_command.find(extension);
-    while (extension_position != string::npos)
-    {
-      const size_t candidate_end = extension_position + extension.size();
-      if ((candidate_end == command.size() || std::isspace(static_cast<unsigned char>(command[candidate_end]))) &&
-          (executable_end == string::npos || candidate_end < executable_end))
-        executable_end = candidate_end;
-      extension_position = lower_command.find(extension, extension_position + 1);
-    }
-  }
-  if (executable_end != string::npos)
-    return shell_quote(command.substr(0, executable_end)) + command.substr(executable_end);
-
-  const bool unix_path = command.starts_with('/');
-  const bool windows_path =
-      command.size() >= 3 && std::isalpha(static_cast<unsigned char>(command[0])) && command[1] == ':' && (command[2] == '\\' || command[2] == '/');
-  return unix_path || windows_path ? shell_quote(command) : command;
-}
-
 /**
  * \brief Build the runner-specific portion of a Wine/Proton command.
  */
@@ -795,15 +745,12 @@ string Helper::build_runner_command(bool prefer_wine64, const string& wine_bin_p
   return get_wine_executable_location(prefer_wine64, wine_bin_path) + " " + program;
 }
 
-string Helper::build_wine_launch_command(const string& command, bool direct_launch, bool is_msi_file)
+string Helper::build_wine_launch_command(const string& command, bool is_msi_file)
 {
   if (is_msi_file)
     return "msiexec /i " + shell_quote(command);
 
-  if (!direct_launch)
-    return command.starts_with('/') ? "start /unix \"" + command + "\"" : "start \"" + command + "\"";
-
-  return quote_application_executable(command);
+  return command.starts_with('/') ? "start /unix \"" + command + "\"" : "start \"" + command + "\"";
 }
 
 /**
@@ -867,7 +814,7 @@ string Helper::format_cpu_list(const vector<int>& allowed_cpu_ids, int cpu_core_
 /**
  * \brief Return the requested CPU limit only when it excludes at least one permitted CPU.
  * A limit equal to or larger than the permitted CPU count provides no restriction, so it
- * must not add taskset or select the affinity-specific direct-launch path.
+ * must not add a taskset wrapper.
  */
 int Helper::get_effective_cpu_core_limit(int cpu_core_limit)
 {
@@ -2219,10 +2166,7 @@ string Helper::build_desktop_exec_line(bool wine_64_bit,
     return env_prefix + command;
   }
 
-  // `wine start` adds an intermediary Wine process. With a restricted inherited CPU
-  // mask, that startup path can leave the target blocked; direct launch preserves the
-  // same affinity without the intermediary. Keep `start` for unlimited bottles.
-  const string wrapped_program = build_wine_launch_command(command, effective_cpu_core_limit > 0);
+  const string wrapped_program = build_wine_launch_command(command);
 
   if (is_geproton_runner(wine_bin_path) && get_windows_bitness(prefix_path) == BottleTypes::Bit::win32)
     throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");

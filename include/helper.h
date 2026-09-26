@@ -105,7 +105,7 @@ public:
   static bool is_umu_available();
   static void require_umu_available();
   static string build_runner_command(bool prefer_wine64, const string& wine_bin_path, const string& program);
-  static string build_wine_launch_command(const string& command, bool direct_launch, bool is_msi_file = false);
+  static string build_wine_launch_command(const string& command, bool is_msi_file = false);
   static string build_winetricks_command(const string& wine_bin_path, const string& arguments);
   static vector<int> get_allowed_cpu_ids();
   static int get_effective_cpu_core_limit(int cpu_core_limit);
@@ -217,5 +217,4 @@ private:
   static string string2hex(const string& str, bool capital = false);
   static string hex2string(const string& hexstr);
   static string shell_quote(const string& value);
-  static string quote_application_executable(const string& command);
 };

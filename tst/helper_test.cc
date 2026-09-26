@@ -552,51 +552,31 @@ TEST_F(HelperTest, GetImageLocationExistingFile)
 
 TEST_F(HelperTest, BuildDesktopExecLineUnixPath)
 {
-  // Without an affinity limit, preserve Wine's established start /unix behavior
+  // Unix executables use Wine start /unix.
   std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "/home/user/.wine/drive_c/game.exe");
   EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" wine start /unix \"/home/user/.wine/drive_c/game.exe\"");
 }
 
 TEST_F(HelperTest, BuildDesktopExecLineWindowsCommand)
 {
-  // Without an affinity limit, preserve Wine's established start behavior
+  // Windows commands use Wine start.
   std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "notepad");
   EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" wine start \"notepad\"");
 }
 
-TEST_F(HelperTest, BuildWineLaunchCommandBypassesStartOnlyWhenRequested)
+TEST_F(HelperTest, BuildWineLaunchCommandUsesStartForApplications)
 {
-  const std::string shortcut = "C:\\ProgramData\\Game Menu\\game.lnk";
-  EXPECT_EQ(Helper::build_wine_launch_command(shortcut, false), "start \"" + shortcut + "\"");
-  EXPECT_EQ(Helper::build_wine_launch_command(shortcut, true), "'" + shortcut + "'");
-}
-
-TEST_F(HelperTest, BuildWineLaunchCommandQuotesRelativeExecutableAndPreservesArguments)
-{
-  EXPECT_EQ(Helper::build_wine_launch_command("My Game.exe", true), "'My Game.exe'");
-  EXPECT_EQ(Helper::build_wine_launch_command("My Game.exe --fullscreen", true), "'My Game.exe' --fullscreen");
-  EXPECT_EQ(Helper::build_wine_launch_command("\"My Game.exe\" --fullscreen", true), "'My Game.exe' --fullscreen");
-}
-
-TEST_F(HelperTest, BuildWineLaunchCommandQuotesExtensionlessAbsolutePaths)
-{
-  EXPECT_EQ(Helper::build_wine_launch_command("/opt/My Game/launcher", true), "'/opt/My Game/launcher'");
-  EXPECT_EQ(Helper::build_wine_launch_command("C:\\Games\\My Game\\launcher", true), "'C:\\Games\\My Game\\launcher'");
-}
-
-TEST_F(HelperTest, BuildWineLaunchCommandDoesNotConsumeExeArgumentForExtensionlessCommand)
-{
-  EXPECT_EQ(Helper::build_wine_launch_command("notepad file.exe", true), "'notepad' file.exe");
-  EXPECT_EQ(Helper::build_wine_launch_command("notepad file.exe --readonly", true), "'notepad' file.exe --readonly");
-  EXPECT_EQ(Helper::build_wine_launch_command("wineconsole cmd.exe", true), "'wineconsole' cmd.exe");
-  EXPECT_EQ(Helper::build_wine_launch_command("\"launcher\" file.exe", true), "'launcher' file.exe");
+  const std::string unix_path = "/home/user/Games/My Game.exe";
+  const std::string windows_shortcut = "C:\\ProgramData\\Game Menu\\game.lnk";
+  EXPECT_EQ(Helper::build_wine_launch_command(unix_path), "start /unix \"" + unix_path + "\"");
+  EXPECT_EQ(Helper::build_wine_launch_command(windows_shortcut), "start \"" + windows_shortcut + "\"");
+  EXPECT_EQ(Helper::build_wine_launch_command("notepad"), "start \"notepad\"");
 }
 
 TEST_F(HelperTest, BuildWineLaunchCommandAlwaysUsesMsiExecForInstallers)
 {
   const std::string installer = "/home/user/Downloads/game setup.msi";
-  EXPECT_EQ(Helper::build_wine_launch_command(installer, false, true), "msiexec /i '" + installer + "'");
-  EXPECT_EQ(Helper::build_wine_launch_command(installer, true, true), "msiexec /i '" + installer + "'");
+  EXPECT_EQ(Helper::build_wine_launch_command(installer, true), "msiexec /i '" + installer + "'");
 }
 
 TEST_F(HelperTest, BuildDesktopExecLineWithEnvVars)
@@ -717,7 +697,10 @@ TEST_F(HelperTest, BuildDesktopExecLineAppliesCpuLimitBeforeRegularWine)
 {
   const std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "notepad", {}, 1);
   EXPECT_NE(result.find("taskset' --cpu-list '"), std::string::npos);
-  EXPECT_LT(result.find("taskset' --cpu-list"), result.find(" wine notepad"));
+  EXPECT_LT(result.find("taskset' --cpu-list"), result.find(" wine start \"notepad\""));
+
+  const std::string unix_result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "/home/user/Games/game.exe", {}, 1);
+  EXPECT_LT(unix_result.find("taskset' --cpu-list"), unix_result.find(" wine start /unix \"/home/user/Games/game.exe\""));
 }
 
 TEST_F(HelperTest, RunProgramUnderWineAppliesExplicitCpuLimit)
@@ -884,8 +867,8 @@ TEST_F(HelperTest, BuildDesktopExecLineUsesUmuForGEProton)
 
   result = Helper::build_desktop_exec_line(false, prefix, bin_dir, prefix + "/game.exe", {}, 1);
   EXPECT_NE(result.find("taskset' --cpu-list '"), std::string::npos);
-  EXPECT_EQ(result.find("start /unix"), std::string::npos);
-  EXPECT_TRUE(result.ends_with("'" + prefix + "/game.exe'"));
+  EXPECT_NE(result.find("start /unix"), std::string::npos);
+  EXPECT_TRUE(result.ends_with("start /unix \"" + prefix + "/game.exe\""));
 }
 
 TEST_F(HelperTest, RunProgramUnderWineUsesUmuEnvironmentForGEProton)
@@ -910,7 +893,7 @@ TEST_F(HelperTest, RunProgramUnderWineUsesUmuEnvironmentForGEProton)
   fs::permissions(fake_umu, fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write);
 
   int exit_code = -1;
-  const std::string game_command = Helper::build_wine_launch_command("C:\\Games\\game.exe", true);
+  const std::string game_command = Helper::build_wine_launch_command("C:\\Games\\game.exe");
   std::string output = Helper::run_program_under_wine(false, prefix, 1, game_command, "", {{"GAMEID", "umu-example"}, {"STORE", "gog"}}, false, true,
                                                       bin_dir, &exit_code);
   EXPECT_EQ(exit_code, 0);
@@ -919,7 +902,7 @@ TEST_F(HelperTest, RunProgramUnderWineUsesUmuEnvironmentForGEProton)
   EXPECT_TRUE(output.contains("GAMEID=umu-example"));
   EXPECT_TRUE(output.contains("STORE=gog"));
   EXPECT_TRUE(output.contains("PROTON_VERB=run"));
-  EXPECT_TRUE(output.contains("ARGS=C:\\Games\\game.exe"));
+  EXPECT_TRUE(output.contains("ARGS=start C:\\Games\\game.exe"));
 
   output = Helper::run_program_under_wine(false, prefix, 1, "winetricks corefonts", "", {}, false, true, bin_dir, &exit_code);
   EXPECT_EQ(exit_code, 0);

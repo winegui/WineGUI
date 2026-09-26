@@ -990,7 +990,7 @@ void BottleManager::run_executable(string program, bool is_msi_file = false)
     int debug_log_level = active_bottle_->debug_log_level();
     int cpu_core_limit = Helper::get_effective_cpu_core_limit(active_bottle_->cpu_core_limit());
     string working_directory = Glib::path_get_dirname(program);
-    program = Helper::build_wine_launch_command(program, cpu_core_limit > 0, is_msi_file);
+    program = Helper::build_wine_launch_command(program, is_msi_file);
     auto& env_vars = active_bottle_->env_vars();
     bool preparing_geproton = !geproton_runtime_is_prepared(wine_prefix, wine_bin_path);
     if (preparing_geproton)
@@ -1108,12 +1108,7 @@ void BottleManager::run_program(string program)
     else if (!program.ends_with("winetricks --gui -q"))
     {
       string working_directory = "";
-      // `wine start` adds an intermediary Wine process. With a restricted inherited CPU
-      // mask, that startup path can leave the target blocked; direct launch preserves the
-      // same affinity without the intermediary. Keep `start` for unlimited bottles.
-      if (cpu_core_limit > 0 && program.starts_with('/'))
-        working_directory = Glib::path_get_dirname(program);
-      program = Helper::build_wine_launch_command(program, cpu_core_limit > 0);
+      program = Helper::build_wine_launch_command(program);
       auto& env_vars = active_bottle_->env_vars();
 
       std::thread t(
