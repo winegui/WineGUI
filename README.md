@@ -283,6 +283,6 @@ _Note:_ Only a `release tag` on the `main` branch will trigger the publish task.
 
 ### CI/CD
 
-For continuous integration & delivery we use [our Dockerfile](https://gitlab.melroy.org/melroy/docker-images/-/blob/main/gtk3-cmake-ninja/Dockerfile?ref_type=heads). Also hosted, build and deployed on this GitLab server.
+For continuous integration & delivery we use [our Dockerfile](https://gitlab.melroy.org/melroy/docker-images/-/blob/main/gtk-cmake-ninja/Dockerfile). Also hosted, build and deployed on this GitLab server.
 
-However, the same image (`gtk3-docker-cmake-ninja`) is also shared on [Dockerhub](https://hub.docker.com/r/danger89/gtk3-docker-cmake-ninja).
+However, the same image (`gtk-cmake-ninja`) is also shared on [Dockerhub](https://hub.docker.com/r/danger89/gtk-cmake-ninja).
