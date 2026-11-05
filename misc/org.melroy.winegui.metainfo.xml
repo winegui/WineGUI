@@ -19,6 +19,16 @@
   <url type="homepage">https://winegui.melroy.org</url>
   <url type="bugtracker">https://github.com/winegui/WineGUI/issues</url>
   <releases>
+    <release version="4.5.2" date="2026-11-05">
+      <description>
+        <ul>
+          <li>Use the selected Wine runner and matching wineserver consistently when creating, configuring and launching bottles, running Winetricks and opening generated shortcuts.</li>
+          <li>Report incomplete custom Wine installations instead of silently falling back to system Wine.</li>
+          <li>Automatically repair WineGUI-managed shortcuts to use the bottle's current runner settings.</li>
+          <li>Preserve literal paths and arguments in desktop shortcuts and improve runner-selection regression coverage.</li>
+        </ul>
+      </description>
+    </release>
     <release version="4.0.0" date="2026-07-15">
       <description>
         <ul>
