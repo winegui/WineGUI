@@ -1265,10 +1265,10 @@ TEST_F(HelperTest, BottleConfigurationAlwaysUsesSelectedWineAndServer)
   Helper::disable_virtual_desktop(prefix, false, bin);
   Helper::set_audio_driver(prefix, BottleTypes::AudioDriver::pulseaudio, false, bin);
   const std::string trace = Glib::file_get_contents(prefix + "/trace");
+  std::string expected;
   for (const std::string verb : {"wineboot", "win95", "vd=1024x768", "vd=off", "sound=pulse"})
-    EXPECT_TRUE(trace.contains(verb)) << trace;
-  EXPECT_TRUE(trace.contains(bin + "/wine|" + bin + "/wineserver|" + bin + "/wine"));
-  EXPECT_EQ(std::count(trace.begin(), trace.end(), '\n'), 10);
+    expected += bin + "/wine|" + bin + "/wineserver|" + bin + "/wine|" + verb + "\nselected-server\n";
+  EXPECT_EQ(trace, expected);
 }
 
 TEST_F(HelperTest, RunnerEnvironmentOverridesConflictingOperationVariables)
@@ -1371,4 +1371,115 @@ TEST_F(HelperTest, DesktopEntryActuallyLaunchesSelectedWineWithLiteralArguments)
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   ASSERT_TRUE(fs::exists(trace_path));
   EXPECT_EQ(Glib::file_get_contents(trace_path), bin + "/wine\n" + bin + "/wineserver\nstart\n" + application + "\n");
+}
+
+TEST_F(HelperTest, SystemRunnerCannotBeReplacedByBottlePathOverride)
+{
+  const std::string system_bin = test_dir + "/system/bin";
+  const std::string other_bin = test_dir + "/other/bin";
+  make_runner(other_bin);
+  write_executable(other_bin + "/wine", "#!/bin/sh\necho wrong-wine\nexit 91\n");
+  write_executable(other_bin + "/wineserver", "#!/bin/sh\necho wrong-server\nexit 92\n");
+  write_executable(system_bin + "/wine", "#!/bin/sh\nprintf '%s\\n' \"$WINE\" \"$WINELOADER\" \"$WINESERVER\"\n\"$WINESERVER\"\n");
+  write_executable(system_bin + "/wineserver", "#!/bin/sh\necho selected-server\n");
+  write_executable(Helper::get_winetricks_location(), "#!/bin/sh\nexec \"$WINE\" \"$@\"\n");
+  for (const std::string command : {"cmd.exe", "winetricks --gui -q"})
+  {
+    SCOPED_TRACE(command);
+    EXPECT_EQ(Helper::run_program_under_wine(false, test_dir, 1, command, "", {{"PATH", other_bin + ":/usr/bin:/bin"}}, true, true),
+              system_bin + "/wine\n" + system_bin + "/wine\n" + system_bin + "/wineserver\nselected-server\n");
+  }
+}
+
+TEST_F(HelperTest, BottleConfigurationPropagatesWinetricksFailures)
+{
+  const std::string bin = test_dir + "/selected/bin";
+  make_runner(bin);
+  write_executable(Helper::get_winetricks_location(), "#!/bin/sh\necho configuration-failed >&2\nexit 23\n");
+  EXPECT_THROW(Helper::set_windows_version(test_dir, BottleTypes::Windows::Windows95, false, bin), std::runtime_error);
+  EXPECT_THROW(Helper::set_virtual_desktop(test_dir, "1024x768", false, bin), std::runtime_error);
+  EXPECT_THROW(Helper::disable_virtual_desktop(test_dir, false, bin), std::runtime_error);
+  EXPECT_THROW(Helper::set_audio_driver(test_dir, BottleTypes::AudioDriver::pulseaudio, false, bin), std::runtime_error);
+}
+
+TEST_F(HelperTest, MissingWinetricksDoesNotSilentlySkipBottleConfiguration)
+{
+  const std::string bin = test_dir + "/selected/bin";
+  make_runner(bin);
+  fs::remove(Helper::get_winetricks_location());
+  EXPECT_THROW(Helper::set_windows_version(test_dir, BottleTypes::Windows::Windows95, false, bin), std::runtime_error);
+  EXPECT_THROW(Helper::set_virtual_desktop(test_dir, "1024x768", false, bin), std::runtime_error);
+  EXPECT_THROW(Helper::disable_virtual_desktop(test_dir, false, bin), std::runtime_error);
+  EXPECT_THROW(Helper::set_audio_driver(test_dir, BottleTypes::AudioDriver::pulseaudio, false, bin), std::runtime_error);
+}
+
+TEST_F(HelperTest, DetachedLaunchUsesSelectedWine64AndServerDespiteOverrides)
+{
+  const std::string bin = test_dir + "/selected runner's/bin";
+  make_runner(bin);
+  write_executable(bin + "/wine", "#!/bin/sh\necho wrong-wine > \"$WINEPREFIX/trace\"\n");
+  write_executable(bin + "/wine64", "#!/bin/sh\nprintf '%s\\n' \"$WINE\" \"$WINELOADER\" \"$WINESERVER\" \"$@\" > \"$WINEPREFIX/trace.tmp\"\n"
+                                    "\"$WINESERVER\" >> \"$WINEPREFIX/trace.tmp\"\nmv \"$WINEPREFIX/trace.tmp\" \"$WINEPREFIX/trace\"\n");
+  write_executable(bin + "/wineserver", "#!/bin/sh\necho selected-server\n");
+  Helper::launch_program_under_wine(true, test_dir, 1, "start notepad", "",
+                                    {{"WINE", "/wrong/wine"}, {"WINELOADER", "/wrong/loader"}, {"WINESERVER", "/wrong/server"}}, false, false, bin);
+  const std::string trace = test_dir + "/trace";
+  for (int attempt = 0; attempt < 100 && !fs::exists(trace); ++attempt)
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  ASSERT_TRUE(fs::exists(trace));
+  EXPECT_EQ(Glib::file_get_contents(trace), bin + "/wine64\n" + bin + "/wine64\n" + bin + "/wineserver\nstart\nnotepad\nselected-server\n");
+}
+
+TEST_F(HelperTest, DesktopWinetricksActuallyLaunchesSelectedWineAndServer)
+{
+  const std::string bin = test_dir + "/runner's $literal 100%/bin";
+  make_runner(bin);
+  write_executable(Helper::get_winetricks_location(), "#!/bin/sh\nexec \"$WINE\" \"$@\"\n");
+  write_executable(bin + "/wine", "#!/bin/sh\nprintf '%s\\n' \"$WINE\" \"$WINELOADER\" \"$WINESERVER\" \"$@\" > \"$WINEPREFIX/trace.tmp\"\n"
+                                  "\"$WINESERVER\" >> \"$WINEPREFIX/trace.tmp\"\nmv \"$WINEPREFIX/trace.tmp\" \"$WINEPREFIX/trace\"\n");
+  write_executable(bin + "/wineserver", "#!/bin/sh\necho selected-server\n");
+  const auto line = Helper::build_desktop_exec_line(false, test_dir, bin, Helper::get_winetricks_location() + " --gui -q",
+                                                    {{"WINE", "/wrong/wine"}, {"WINESERVER", "/wrong/server"}});
+  ASSERT_TRUE(Helper::create_desktop_file(test_dir, "winetricks.desktop", "Winetricks test", "", line, "", ""));
+  GDesktopAppInfo* info = g_desktop_app_info_new_from_filename((test_dir + "/winetricks.desktop").c_str());
+  ASSERT_NE(info, nullptr);
+  GError* error = nullptr;
+  EXPECT_TRUE(g_app_info_launch(G_APP_INFO(info), nullptr, nullptr, &error)) << (error ? error->message : "");
+  g_clear_error(&error);
+  g_object_unref(info);
+  const std::string trace = test_dir + "/trace";
+  for (int attempt = 0; attempt < 100 && !fs::exists(trace); ++attempt)
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  ASSERT_TRUE(fs::exists(trace));
+  EXPECT_EQ(Glib::file_get_contents(trace), bin + "/wine\n" + bin + "/wine\n" + bin + "/wineserver\n--gui\n-q\nselected-server\n");
+}
+
+TEST_F(HelperTest, BottleCreationPassesRequestedArchitectureToSelectedRunner)
+{
+  const std::string bin = test_dir + "/selected/bin";
+  make_runner(bin);
+  write_executable(bin + "/wine",
+                   "#!/bin/sh\nprintf '%s\\n' \"$WINEARCH\" \"$WINEDLLOVERRIDES\" \"$WINE\" \"$WINESERVER\" \"$@\" > \"$WINEPREFIX/trace\"\n");
+  for (const auto bit : {BottleTypes::Bit::win32, BottleTypes::Bit::win64})
+  {
+    const std::string arch = bit == BottleTypes::Bit::win32 ? "win32" : "win64";
+    SCOPED_TRACE(arch);
+    Helper::create_wine_bottle(false, test_dir, bit, true, bin);
+    EXPECT_EQ(Glib::file_get_contents(test_dir + "/trace"), arch + "\nmscoree=d;mshtml=d\n" + bin + "/wine\n" + bin + "/wineserver\nwineboot\n");
+  }
+}
+
+TEST_F(HelperTest, NonExecutableSelectedServerPreventsAllLaunchPaths)
+{
+  const std::string bin = test_dir + "/broken/bin";
+  make_runner(bin);
+  write_executable(bin + "/wine", "#!/bin/sh\necho unexpected-launch > \"$WINEPREFIX/trace\"\n");
+  fs::permissions(bin + "/wineserver", fs::perms::owner_read);
+  EXPECT_THROW(Helper::create_wine_bottle(false, test_dir, BottleTypes::Bit::win32, true, bin), std::runtime_error);
+  EXPECT_THROW(Helper::set_windows_version(test_dir, BottleTypes::Windows::Windows95, false, bin), std::runtime_error);
+  EXPECT_THROW(Helper::run_program_under_wine(false, test_dir, 1, "notepad", "", {}, true, true, bin), std::runtime_error);
+  EXPECT_THROW(Helper::launch_program_under_wine(false, test_dir, 1, "notepad", "", {}, false, false, bin), std::runtime_error);
+  EXPECT_THROW(Helper::build_desktop_exec_line(false, test_dir, bin, "notepad"), std::runtime_error);
+  EXPECT_EQ(Helper::wait_until_wineserver_is_terminated(test_dir, bin), WineServerWaitResult::LaunchFailed);
+  EXPECT_FALSE(fs::exists(test_dir + "/trace"));
 }
