@@ -29,6 +29,97 @@
         </ul>
       </description>
     </release>
+    <release version="4.5.1" date="2026-09-26">
+      <description>
+        <ul>
+          <li>Restore standard Wine start launching for applications with CPU core limits while retaining taskset integration.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.5.0" date="2026-09-25">
+      <description>
+        <ul>
+          <li>Add per-bottle CPU core limits for Wine and GE-Proton/UMU launches and managed shortcuts.</li>
+          <li>Improve launch argument handling, shortcut updates and bottle editing while applications are running.</li>
+          <li>Bound wineserver waits and reap launch helper processes.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.4.0" date="2026-09-13">
+      <description>
+        <ul>
+          <li>Add an installer for the signed WineGUI APT repository on supported Debian, Ubuntu and compatible derivatives.</li>
+          <li>Fix launching the wrong application when the application list is filtered.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.3.4" date="2026-09-12">
+      <description>
+        <ul>
+          <li>Improve automatic APT repository setup for supported Debian and Ubuntu derivatives, including Linux Mint.</li>
+          <li>Repair repository sources skipped by version 4.3.3 while preserving administrator changes.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.3.3" date="2026-09-12">
+      <description>
+        <ul>
+          <li>Add the official signed WineGUI APT repository for supported Debian and Ubuntu releases.</li>
+          <li>Add distribution-specific package versions and protect repository trust and administrator configuration during upgrades.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.3.2" date="2026-09-02">
+      <description>
+        <ul>
+          <li>Fix AppImage desktop actions by bundling and selecting the matching GLib desktop launcher helper.</li>
+          <li>Add packaging checks for the desktop launcher helper and startup hook.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.3.1" date="2026-09-01">
+      <description>
+        <ul>
+          <li>Fix RPM dependencies and shared-directory ownership for Fedora and openSUSE.</li>
+          <li>Use the current 7zip dependency in RPM and Debian packages.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.3.0" date="2026-08-22">
+      <description>
+        <ul>
+          <li>Integrate GE-Proton through a WineGUI-managed UMU launcher with automatic installation and updates.</li>
+          <li>Initialize Proton prefixes and runtime environments without requiring Steam.</li>
+          <li>Improve runner discovery, download recovery, architecture validation and error reporting.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.2.1" date="2026-08-05">
+      <description>
+        <ul>
+          <li>Make subsequent WineGUI launches activate the existing window without restarting bottle preparation or duplicating signals.</li>
+          <li>Report bottle worker failures instead of terminating WineGUI.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.2.0" date="2026-08-02">
+      <description>
+        <ul>
+          <li>Expose additional Wine build variants, including NTSync, FSync and release candidates.</li>
+          <li>Fix runner download concurrency, cancellation, cleanup and failure handling.</li>
+          <li>Preserve bottle configuration when UseWine64 is absent and cache runner versions for faster bottle selection.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.1.0" date="2026-07-19">
+      <description>
+        <ul>
+          <li>Download and manage alternative Wine and GE-Proton runner builds directly from WineGUI.</li>
+          <li>Reorder bottle creation around runner selection with WoW64 awareness.</li>
+          <li>Add Gallium Nine Standalone and expand Visual C++ runtime installers.</li>
+        </ul>
+      </description>
+    </release>
     <release version="4.0.0" date="2026-07-15">
       <description>
         <ul>
