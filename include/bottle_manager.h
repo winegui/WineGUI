@@ -63,6 +63,7 @@ public:
                   BottleTypes::AudioDriver audio,
                   const Glib::ustring& wine_bin_path = "");
   void update_bottle(SignalController* caller,
+                     const Glib::ustring& prefix_path,
                      const Glib::ustring& name,
                      const Glib::ustring& folder_name,
                      const Glib::ustring& wine_bin_path,
@@ -149,7 +150,6 @@ private:
   void install_or_update_winetricks_thread(bool install);
   GeneralConfigData load_and_save_general_config();
   bool is_bottle_not_null();
-  std::vector<std::pair<string, string>> get_winetricks_env_vars();
   string get_deinstall_mono_command();
   string get_wine_version(const string& prefix_path, const string& wine_bin_path = "", bool use_wine64 = false);
   std::vector<string> get_bottle_paths();

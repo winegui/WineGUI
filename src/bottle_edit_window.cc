@@ -581,6 +581,7 @@ void BottleEditWindow::on_save_button_clicked()
   std::string::size_type sz;
 
   UpdateBottleStruct update_bottle_struct;
+  update_bottle_struct.prefix_path = active_bottle_->wine_location();
   update_bottle_struct.windows_version = WineDefaults::WindowsOs; // Fallback
   update_bottle_struct.audio = WineDefaults::AudioDriver;         // Fallback
   update_bottle_struct.virtual_desktop_resolution = "";           // Empty string default (= disabled windowed mode)

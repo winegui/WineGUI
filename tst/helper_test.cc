@@ -3,9 +3,11 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <gio/gdesktopappinfo.h>
 #include <giomm/init.h>
 #include <glibmm/fileutils.h>
 #include <glibmm/miscutils.h>
+#include <glibmm/shell.h>
 #include <gtest/gtest.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -44,6 +46,25 @@ class HelperTest : public ::testing::Test
 {
 protected:
   std::string test_dir;
+  std::unique_ptr<ScopedPath> test_path;
+
+  static void write_executable(const std::string& path, const std::string& script = "#!/bin/sh\nexit 0\n")
+  {
+    fs::create_directories(fs::path(path).parent_path());
+    std::ofstream(path) << script;
+    fs::permissions(path, fs::perms::owner_all);
+  }
+
+  static void make_runner(const std::string& bin_dir)
+  {
+    write_executable(bin_dir + "/wine");
+    write_executable(bin_dir + "/wineserver");
+  }
+
+  static std::vector<std::string> desktop_arguments(const std::string& line)
+  {
+    return Glib::shell_parse_argv(line);
+  }
 
   static void SetUpTestSuite()
   {
@@ -55,11 +76,15 @@ protected:
   {
     test_dir = fs::temp_directory_path() / "winegui_helper_test";
     fs::create_directories(test_dir);
+    make_runner(test_dir + "/system/bin");
+    test_path = std::make_unique<ScopedPath>(test_dir + "/system/bin:" + (std::getenv("PATH") ? std::getenv("PATH") : ""));
+    write_executable(Glib::build_filename(Glib::get_user_data_dir(), "winegui", "winetricks"));
     fs::remove_all(fs::path(Helper::get_umu_executable_location()).parent_path());
   }
 
   void TearDown() override
   {
+    test_path.reset();
     if (fs::exists(test_dir))
     {
       fs::remove_all(test_dir);
@@ -489,16 +514,17 @@ TEST_F(HelperTest, GetWineserverExecutableLocationCustomPath)
   std::ofstream wineserver_file(bin_dir + "/wineserver");
   wineserver_file << "fake";
   wineserver_file.close();
+  fs::permissions(bin_dir + "/wineserver", fs::perms::owner_all);
 
   EXPECT_EQ(Helper::get_wineserver_executable_location(bin_dir), bin_dir + "/wineserver");
 }
 
 TEST_F(HelperTest, GetWineserverExecutableLocationCustomPathWithoutWineserver)
 {
-  // Fall back to the global wineserver when the custom directory has none
+  // A broken custom installation must never select the system wineserver
   std::string bin_dir = test_dir + "/runner-no-server/bin";
   fs::create_directories(bin_dir);
-  EXPECT_EQ(Helper::get_wineserver_executable_location(bin_dir), "wineserver");
+  EXPECT_THROW(Helper::get_wineserver_executable_location(bin_dir), std::runtime_error);
 }
 
 // Test get_c_letter_drive function
@@ -550,78 +576,45 @@ TEST_F(HelperTest, GetImageLocationExistingFile)
 
 // Test build_desktop_exec_line function
 
-TEST_F(HelperTest, BuildDesktopExecLineUnixPath)
+TEST_F(HelperTest, DesktopLaunchPreservesSelectedInstallationAndArguments)
 {
-  // Unix executables use Wine start /unix.
-  std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "/home/user/.wine/drive_c/game.exe");
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" wine start /unix \"/home/user/.wine/drive_c/game.exe\"");
-}
-
-TEST_F(HelperTest, BuildDesktopExecLineWindowsCommand)
-{
-  // Windows commands use Wine start.
-  std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "notepad");
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" wine start \"notepad\"");
+  const std::string bin = test_dir + "/runner with spaces/bin";
+  make_runner(bin);
+  write_executable(bin + "/wine64");
+  for (bool prefer64 : {false, true})
+  {
+    for (const std::string command : {"notepad", "/some path/game.exe", "C:\\Games\\game.exe"})
+    {
+      auto args = desktop_arguments(Helper::build_desktop_exec_line(prefer64, "/a prefix", bin, command, {{"TEST", "value with spaces"}}));
+      EXPECT_NE(std::find(args.begin(), args.end(), "WINE=" + bin + (prefer64 ? "/wine64" : "/wine")), args.end());
+      EXPECT_NE(std::find(args.begin(), args.end(), "WINESERVER=" + bin + "/wineserver"), args.end());
+      EXPECT_NE(std::find(args.begin(), args.end(), "WINEPREFIX=/a prefix"), args.end());
+      EXPECT_NE(std::find(args.begin(), args.end(), "TEST=value with spaces"), args.end());
+      EXPECT_EQ(args.back(), command);
+    }
+  }
 }
 
 TEST_F(HelperTest, BuildWineLaunchCommandUsesStartForApplications)
 {
-  const std::string unix_path = "/home/user/Games/My Game.exe";
-  const std::string windows_shortcut = "C:\\ProgramData\\Game Menu\\game.lnk";
-  EXPECT_EQ(Helper::build_wine_launch_command(unix_path), "start /unix \"" + unix_path + "\"");
-  EXPECT_EQ(Helper::build_wine_launch_command(windows_shortcut), "start \"" + windows_shortcut + "\"");
-  EXPECT_EQ(Helper::build_wine_launch_command("notepad"), "start \"notepad\"");
+  EXPECT_EQ(Glib::shell_parse_argv(Helper::build_wine_launch_command("/a path/game.exe")),
+            (std::vector<std::string>{"start", "/unix", "/a path/game.exe"}));
+  EXPECT_EQ(Glib::shell_parse_argv(Helper::build_wine_launch_command("notepad")), (std::vector<std::string>{"start", "notepad"}));
 }
 
 TEST_F(HelperTest, BuildWineLaunchCommandAlwaysUsesMsiExecForInstallers)
 {
-  const std::string installer = "/home/user/Downloads/game setup.msi";
-  EXPECT_EQ(Helper::build_wine_launch_command(installer, true), "msiexec /i '" + installer + "'");
-}
-
-TEST_F(HelperTest, BuildDesktopExecLineWithEnvVars)
-{
-  // Environment variables should be added to the env prefix
-  std::vector<std::pair<std::string, std::string>> env_vars = {{"DXVK_HUD", "fps"}};
-  std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "notepad", env_vars);
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" DXVK_HUD=\"fps\" wine start \"notepad\"");
-}
-
-TEST_F(HelperTest, BuildDesktopExecLineCustomWineBinPath)
-{
-  // A custom Wine binary path should be used instead of the global 'wine64'
-  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", "/opt/wine/bin", "notepad");
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" /opt/wine/bin/wine64 start \"notepad\"");
+  EXPECT_EQ(Glib::shell_parse_argv(Helper::build_wine_launch_command("/a path/setup.msi", true)),
+            (std::vector<std::string>{"msiexec", "/i", "/a path/setup.msi"}));
 }
 
 TEST_F(HelperTest, BuildDesktopExecLineWinetricks)
 {
-  // Winetricks is a special case and does not run through the Wine binary
-  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", "", "/some/path/winetricks --gui -q");
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" /some/path/winetricks --gui -q");
-}
-
-TEST_F(HelperTest, BuildDesktopExecLineRunnerHonorsWine64OptIn)
-{
-  // With the wine64 opt-in and a runner that actually ships a wine64 binary, the exec line uses wine64
-  std::string bin_dir = test_dir + "/runner/bin";
-  fs::create_directories(bin_dir);
-  std::ofstream(bin_dir + "/wine") << "fake";
-  std::ofstream(bin_dir + "/wine64") << "fake";
-
-  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", bin_dir, "notepad");
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" " + bin_dir + "/wine64 start \"notepad\"");
-}
-
-TEST_F(HelperTest, BuildDesktopExecLineRunnerWine64OptInFallsBackToWine)
-{
-  // With the wine64 opt-in but a runner that ships no wine64 binary, the exec line falls back to wine
-  std::string bin_dir = test_dir + "/runner-nowine64/bin";
-  fs::create_directories(bin_dir);
-  std::ofstream(bin_dir + "/wine") << "fake";
-
-  std::string result = Helper::build_desktop_exec_line(true, "/home/user/.wine", bin_dir, "notepad");
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" " + bin_dir + "/wine start \"notepad\"");
+  auto args = desktop_arguments(Helper::build_desktop_exec_line(false, "/a prefix", "", Helper::get_winetricks_location() + " --gui -q"));
+  EXPECT_EQ(args.back(), "-q");
+  EXPECT_NE(std::find(args.begin(), args.end(), Helper::get_winetricks_location()), args.end());
+  EXPECT_NE(std::find(args.begin(), args.end(), "WINE=" + test_dir + "/system/bin/wine"), args.end());
+  EXPECT_NE(std::find(args.begin(), args.end(), "WINESERVER=" + test_dir + "/system/bin/wineserver"), args.end());
 }
 
 TEST_F(HelperTest, BuildRunnerCommandUsesUmuForGEProton)
@@ -635,10 +628,11 @@ TEST_F(HelperTest, BuildRunnerCommandUsesUmuForGEProton)
 
   std::string managed_launcher = Helper::get_umu_executable_location();
   EXPECT_TRUE(Helper::is_geproton_runner(bin_dir));
-  EXPECT_EQ(Helper::build_runner_command(false, bin_dir, "start /unix \"game.exe\""),
-            "env PROTONPATH='" + runner_dir + "' PROTON_VERB=run '" + managed_launcher + "' start /unix \"game.exe\"");
+  EXPECT_EQ(Helper::build_runner_command(false, bin_dir, "start /unix \"game.exe\""), "env -u WINE -u WINESERVER -u WINELOADER PROTONPATH='" +
+                                                                                          runner_dir + "' PROTON_VERB=run '" + managed_launcher +
+                                                                                          "' start /unix \"game.exe\"");
   EXPECT_EQ(Helper::build_winetricks_command(bin_dir, "corefonts"),
-            "env PROTONPATH='" + runner_dir + "' '" + managed_launcher + "' winetricks corefonts");
+            "env -u WINE -u WINESERVER -u WINELOADER PROTONPATH='" + runner_dir + "' '" + managed_launcher + "' winetricks corefonts");
   EXPECT_THROW(Helper::get_wine_executable_location(false, bin_dir), std::runtime_error);
   EXPECT_THROW(Helper::get_wineserver_executable_location(bin_dir), std::runtime_error);
 }
@@ -682,7 +676,7 @@ TEST_F(HelperTest, DesktopLaunchUsesStartWhenCpuLimitIncludesEveryPermittedCpu)
   const int allowed_cpu_count = static_cast<int>(Helper::get_allowed_cpu_ids().size());
   ASSERT_GT(allowed_cpu_count, 0);
   const std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "notepad", {}, allowed_cpu_count);
-  EXPECT_EQ(result, "env WINEPREFIX=\"/home/user/.wine\" wine start \"notepad\"");
+  EXPECT_EQ(desktop_arguments(result).back(), "notepad");
   EXPECT_EQ(result.find("taskset"), std::string::npos);
 }
 
@@ -696,11 +690,11 @@ TEST_F(HelperTest, ApplyCpuCoreLimitFailsClosedWithoutTaskset)
 TEST_F(HelperTest, BuildDesktopExecLineAppliesCpuLimitBeforeRegularWine)
 {
   const std::string result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "notepad", {}, 1);
-  EXPECT_NE(result.find("taskset' --cpu-list '"), std::string::npos);
-  EXPECT_LT(result.find("taskset' --cpu-list"), result.find(" wine start \"notepad\""));
+  EXPECT_NE(result.find("taskset\" \"--cpu-list\" \""), std::string::npos);
+  EXPECT_LT(result.find("taskset\" \"--cpu-list"), result.find("\"start\" \"notepad\""));
 
   const std::string unix_result = Helper::build_desktop_exec_line(false, "/home/user/.wine", "", "/home/user/Games/game.exe", {}, 1);
-  EXPECT_LT(unix_result.find("taskset' --cpu-list"), unix_result.find(" wine start /unix \"/home/user/Games/game.exe\""));
+  EXPECT_LT(unix_result.find("taskset\" \"--cpu-list"), unix_result.find("\"start\" \"/unix\" \"/home/user/Games/game.exe\""));
 }
 
 TEST_F(HelperTest, RunProgramUnderWineAppliesExplicitCpuLimit)
@@ -708,7 +702,7 @@ TEST_F(HelperTest, RunProgramUnderWineAppliesExplicitCpuLimit)
   const std::string prefix = test_dir + "/limited-prefix";
   const std::string bin_dir = test_dir + "/limited-runner/bin";
   fs::create_directories(prefix);
-  fs::create_directories(bin_dir);
+  make_runner(bin_dir);
   std::ofstream(bin_dir + "/wine") << "#!/bin/sh\ntaskset -pc $$\n";
   fs::permissions(bin_dir + "/wine", fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write);
 
@@ -725,7 +719,7 @@ TEST_F(HelperTest, DetachedWineLaunchDoesNotWaitForDescendantPipes)
   const std::string prefix = test_dir + "/detached-prefix";
   const std::string bin_dir = test_dir + "/detached-runner/bin";
   fs::create_directories(prefix);
-  fs::create_directories(bin_dir);
+  make_runner(bin_dir);
   std::ofstream(bin_dir + "/wine") << "#!/bin/sh\nsleep 2 &\nexit 0\n";
   fs::permissions(bin_dir + "/wine", fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write);
 
@@ -746,7 +740,7 @@ TEST_F(HelperTest, DetachedWineLaunchWritesDirectlyToBottleLogAndAppliesCpuLimit
   const std::string prefix = test_dir + "/logging-prefix";
   const std::string bin_dir = test_dir + "/logging-runner/bin";
   fs::create_directories(prefix);
-  fs::create_directories(bin_dir);
+  make_runner(bin_dir);
   std::ofstream(bin_dir + "/wine") << "#!/bin/sh\ntaskset -pc $$\necho standard-output\necho standard-error >&2\n";
   fs::permissions(bin_dir + "/wine", fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write);
 
@@ -862,13 +856,13 @@ TEST_F(HelperTest, BuildDesktopExecLineUsesUmuForGEProton)
   std::ofstream(prefix + "/user.reg") << "WINE REGISTRY Version 2\n#arch=win64\n";
 
   std::string result = Helper::build_desktop_exec_line(false, prefix, bin_dir, prefix + "/game.exe");
-  EXPECT_EQ(result, "env WINEPREFIX=\"" + prefix + "\" env PROTONPATH='" + runner_dir + "' PROTON_VERB=run '" +
-                        Helper::get_umu_executable_location() + "' start /unix \"" + prefix + "/game.exe\"");
-
+  auto args = desktop_arguments(result);
+  EXPECT_NE(std::find(args.begin(), args.end(), "PROTONPATH=" + runner_dir), args.end());
+  EXPECT_NE(std::find(args.begin(), args.end(), Helper::get_umu_executable_location()), args.end());
+  EXPECT_EQ(args.back(), prefix + "/game.exe");
   result = Helper::build_desktop_exec_line(false, prefix, bin_dir, prefix + "/game.exe", {}, 1);
-  EXPECT_NE(result.find("taskset' --cpu-list '"), std::string::npos);
-  EXPECT_NE(result.find("start /unix"), std::string::npos);
-  EXPECT_TRUE(result.ends_with("start /unix \"" + prefix + "/game.exe\""));
+  EXPECT_NE(result.find("taskset"), std::string::npos);
+  EXPECT_EQ(desktop_arguments(result).back(), prefix + "/game.exe");
 }
 
 TEST_F(HelperTest, RunProgramUnderWineUsesUmuEnvironmentForGEProton)
@@ -1205,12 +1199,12 @@ TEST_F(HelperTest, RefreshManagedShortcutUpdatesUnmappableLegacyExecWhenPrefixMo
   fs::remove(new_file);
   fs::create_directories(target_dir);
   std::ofstream(old_file) << "[Desktop Entry]\n"
-                            "Type=Application\n"
-                            "Name=Unknown\n"
-                            "Exec=env WINEPREFIX=\""
-                         << old_path << "\" custom-launcher --prefix \"" << old_path << "\" --cache \"" << old_path
-                         << "-backup\"\n"
-                            "X-WineGUI-Bottle=Old Legacy\n";
+                             "Type=Application\n"
+                             "Name=Unknown\n"
+                             "Exec=env WINEPREFIX=\""
+                          << old_path << "\" custom-launcher --prefix \"" << old_path << "\" --cache \"" << old_path
+                          << "-backup\"\n"
+                             "X-WineGUI-Bottle=Old Legacy\n";
 
   BottleConfigData config;
   config.name = "Renamed Legacy";
@@ -1249,4 +1243,132 @@ TEST_F(HelperTest, ToFilenamePartKeepsDashAndUnderscore)
 TEST_F(HelperTest, ToFilenamePartEmptyFallback)
 {
   EXPECT_EQ(Helper::to_filename_part("***"), "shortcut");
+}
+
+TEST_F(HelperTest, BottleConfigurationAlwaysUsesSelectedWineAndServer)
+{
+  const std::string bin = test_dir + "/runner's files/bin";
+  const std::string prefix = test_dir + "/new bottle";
+  fs::create_directories(prefix);
+  make_runner(bin);
+  write_executable(
+      bin + "/wine",
+      "#!/bin/sh\nprintf '%s|%s|%s|%s\\n' \"$WINE\" \"$WINESERVER\" \"$WINELOADER\" \"$*\" >> \"$WINEPREFIX/trace\"\n\"$WINESERVER\" --probe\n");
+  write_executable(bin + "/wineserver", "#!/bin/sh\necho selected-server >> \"$WINEPREFIX/trace\"\n");
+  write_executable(test_dir + "/system/bin/wine", "#!/bin/sh\nexit 91\n");
+  write_executable(test_dir + "/system/bin/wineserver", "#!/bin/sh\nexit 92\n");
+  write_executable(Helper::get_winetricks_location(), "#!/bin/sh\nexec \"$WINE\" \"$@\"\n");
+
+  Helper::create_wine_bottle(false, prefix, BottleTypes::Bit::win32, true, bin);
+  Helper::set_windows_version(prefix, BottleTypes::Windows::Windows95, false, bin);
+  Helper::set_virtual_desktop(prefix, "1024x768", false, bin);
+  Helper::disable_virtual_desktop(prefix, false, bin);
+  Helper::set_audio_driver(prefix, BottleTypes::AudioDriver::pulseaudio, false, bin);
+  const std::string trace = Glib::file_get_contents(prefix + "/trace");
+  for (const std::string verb : {"wineboot", "win95", "vd=1024x768", "vd=off", "sound=pulse"})
+    EXPECT_TRUE(trace.contains(verb)) << trace;
+  EXPECT_TRUE(trace.contains(bin + "/wine|" + bin + "/wineserver|" + bin + "/wine"));
+  EXPECT_EQ(std::count(trace.begin(), trace.end(), '\n'), 10);
+}
+
+TEST_F(HelperTest, RunnerEnvironmentOverridesConflictingOperationVariables)
+{
+  const std::string bin = test_dir + "/selected/bin";
+  make_runner(bin);
+  const std::string prefix = test_dir + "/prefix";
+  fs::create_directories(prefix);
+  write_executable(bin + "/wine", "#!/bin/sh\nprintf '%s\\n' \"$WINE\" \"$WINESERVER\" \"$WINELOADER\" \"$KEEP_ME\"\n");
+  const auto output = Helper::run_program_under_wine(
+      false, prefix, 1, "cmd.exe", "",
+      {{"WINE", "/wrong/wine"}, {"WINESERVER", "/wrong/server"}, {"WINELOADER", "/wrong/loader"}, {"KEEP_ME", "value's $literal"}}, true, true, bin);
+  EXPECT_EQ(output, bin + "/wine\n" + bin + "/wineserver\n" + bin + "/wine\nvalue's $literal\n");
+}
+
+TEST_F(HelperTest, MissingSelectedExecutablesNeverFallBackToSystemWine)
+{
+  const std::string bin = test_dir + "/broken/bin";
+  make_runner(bin);
+  fs::remove(bin + "/wineserver");
+  EXPECT_THROW(Helper::build_runner_command(false, bin, "wineboot"), std::runtime_error);
+  EXPECT_THROW(Helper::build_winetricks_command(bin, "win95"), std::runtime_error);
+  EXPECT_EQ(Helper::wait_until_wineserver_is_terminated(test_dir, bin), WineServerWaitResult::LaunchFailed);
+  make_runner(bin);
+  fs::remove(bin + "/wine");
+  EXPECT_THROW(Helper::build_runner_command(false, bin, "wineboot"), std::runtime_error);
+  make_runner(bin);
+  fs::permissions(bin + "/wine", fs::perms::owner_read);
+  EXPECT_THROW(Helper::build_runner_command(false, bin, "wineboot"), std::runtime_error);
+}
+
+TEST_F(HelperTest, SystemWineserverWaitSearchesPath)
+{
+  write_executable(test_dir + "/system/bin/wineserver", "#!/bin/sh\necho waited > \"$WINEPREFIX/waited\"\n");
+  EXPECT_EQ(Helper::wait_until_wineserver_is_terminated(test_dir), WineServerWaitResult::Exited);
+  EXPECT_EQ(Glib::file_get_contents(test_dir + "/waited"), "waited\n");
+  write_executable(test_dir + "/system/bin/wineserver", "#!/bin/sh\nexit 9\n");
+  EXPECT_EQ(Helper::wait_until_wineserver_is_terminated(test_dir), WineServerWaitResult::LaunchFailed);
+}
+
+TEST_F(HelperTest, WinetricksHonorsWine64PreferenceAndFallback)
+{
+  const std::string bin = test_dir + "/runner/bin";
+  make_runner(bin);
+  write_executable(bin + "/wine", "#!/bin/sh\necho wine\n");
+  write_executable(bin + "/wine64", "#!/bin/sh\necho wine64\n");
+  write_executable(Helper::get_winetricks_location(), "#!/bin/sh\nexec \"$WINE\" \"$@\"\n");
+  EXPECT_EQ(Helper::run_program_under_wine(true, test_dir, 1, "winetricks --gui -q", "", {}, true, true, bin), "wine64\n");
+  fs::remove(bin + "/wine64");
+  EXPECT_EQ(Helper::run_program_under_wine(true, test_dir, 1, "winetricks --gui -q", "", {}, true, true, bin), "wine\n");
+}
+
+TEST_F(HelperTest, AutomaticShortcutRepairIsIdempotentAndLeavesUnmanagedFilesAlone)
+{
+  const std::string target = Glib::build_filename(Glib::get_user_data_dir(), "applications");
+  const std::string filename = "winegui-repair-test-repair.desktop";
+  const std::string bin = test_dir + "/selected/bin";
+  make_runner(bin);
+  const std::string command = Helper::get_winetricks_location() + " --gui -q";
+  ASSERT_TRUE(
+      Helper::create_desktop_file(target, filename, "Repair", "keep comment", "old-command", "keep-icon", "Repair Test", false, test_dir, command));
+  const std::string unmanaged = target + "/winegui-repair-test-unmanaged.desktop";
+  std::ofstream(unmanaged) << "[Desktop Entry]\nType=Application\nName=Unmanaged\nX-WineGUI-Bottle=Repair Test\nExec=leave-me\n";
+  const auto original_unmanaged = Glib::file_get_contents(unmanaged);
+  BottleConfigData config;
+  config.name = "Repair Test";
+  config.wine_bin_path = bin;
+  EXPECT_TRUE(Helper::refresh_managed_shortcuts(config.name, test_dir, config, {}, test_dir, true).empty());
+  auto keyfile = Glib::KeyFile::create();
+  keyfile->load_from_file(target + "/" + filename);
+  const auto args = desktop_arguments(keyfile->get_string("Desktop Entry", "Exec"));
+  EXPECT_NE(std::find(args.begin(), args.end(), "WINE=" + bin + "/wine"), args.end());
+  EXPECT_NE(std::find(args.begin(), args.end(), "WINESERVER=" + bin + "/wineserver"), args.end());
+  EXPECT_EQ(keyfile->get_string("Desktop Entry", "Comment"), "keep comment");
+  EXPECT_EQ(keyfile->get_string("Desktop Entry", "Icon"), "keep-icon");
+  const auto timestamp = fs::last_write_time(target + "/" + filename);
+  EXPECT_TRUE(Helper::refresh_managed_shortcuts(config.name, test_dir, config, {}, test_dir, true).empty());
+  EXPECT_EQ(timestamp, fs::last_write_time(target + "/" + filename));
+  EXPECT_EQ(Glib::file_get_contents(unmanaged), original_unmanaged);
+  fs::remove(target + "/" + filename);
+  fs::remove(unmanaged);
+}
+
+TEST_F(HelperTest, DesktopEntryActuallyLaunchesSelectedWineWithLiteralArguments)
+{
+  const std::string bin = test_dir + "/runner's files/bin";
+  make_runner(bin);
+  write_executable(bin + "/wine", "#!/bin/sh\nprintf '%s\\n' \"$WINE\" \"$WINESERVER\" \"$@\" > \"$WINEPREFIX/desktop-trace\"\n");
+  const std::string application = "game's $cash `literal` 100%.exe";
+  const std::string line = Helper::build_desktop_exec_line(false, test_dir, bin, application, {{"WINESERVER", "/wrong/server"}});
+  ASSERT_TRUE(Helper::create_desktop_file(test_dir, "launch.desktop", "Launch test", "", line, "", ""));
+  GDesktopAppInfo* info = g_desktop_app_info_new_from_filename((test_dir + "/launch.desktop").c_str());
+  ASSERT_NE(info, nullptr);
+  GError* error = nullptr;
+  EXPECT_TRUE(g_app_info_launch(G_APP_INFO(info), nullptr, nullptr, &error)) << (error ? error->message : "");
+  g_clear_error(&error);
+  g_object_unref(info);
+  const std::string trace_path = test_dir + "/desktop-trace";
+  for (int attempt = 0; attempt < 100 && !fs::exists(trace_path); ++attempt)
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  ASSERT_TRUE(fs::exists(trace_path));
+  EXPECT_EQ(Glib::file_get_contents(trace_path), bin + "/wine\n" + bin + "/wineserver\nstart\n" + application + "\n");
 }

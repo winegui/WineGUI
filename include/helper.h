@@ -94,7 +94,7 @@ public:
   static WineServerWaitResult wait_until_wineserver_is_terminated(const string& prefix_path,
                                                                   const string& wine_bin_path = "",
                                                                   std::chrono::milliseconds timeout = std::chrono::seconds(60));
-  static bool has_running_wine_application(const string& prefix_path);
+  static bool has_running_wine_application(const string& prefix_path, bool include_background = false);
   static int determine_wine_executable();
   static string get_wine_executable_location(bool prefer_wine64 = false, const string& wine_bin_path = "");
   static string get_wineserver_executable_location(const string& wine_bin_path = "");
@@ -104,9 +104,10 @@ public:
   static string get_umu_executable_location();
   static bool is_umu_available();
   static void require_umu_available();
+  static string build_runner_environment(bool prefer_wine64, const string& wine_bin_path);
   static string build_runner_command(bool prefer_wine64, const string& wine_bin_path, const string& program);
   static string build_wine_launch_command(const string& command, bool is_msi_file = false);
-  static string build_winetricks_command(const string& wine_bin_path, const string& arguments);
+  static string build_winetricks_command(const string& wine_bin_path, const string& arguments, bool prefer_wine64 = false);
   static vector<int> get_allowed_cpu_ids();
   static int get_effective_cpu_core_limit(int cpu_core_limit);
   static string format_cpu_list(const vector<int>& allowed_cpu_ids, int cpu_core_limit);
@@ -136,10 +137,10 @@ public:
   static bool file_exists(const string& filer_path);
   static void install_or_update_winetricks();
   static void self_update_winetricks();
-  static void set_windows_version(const string& prefix_path, BottleTypes::Windows windows);
-  static void set_virtual_desktop(const string& prefix_path, string resolution);
-  static void disable_virtual_desktop(const string& prefix_path);
-  static void set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver);
+  static void set_windows_version(const string& prefix_path, BottleTypes::Windows windows, bool prefer_wine64, const string& wine_bin_path);
+  static void set_virtual_desktop(const string& prefix_path, string resolution, bool prefer_wine64, const string& wine_bin_path);
+  static void disable_virtual_desktop(const string& prefix_path, bool prefer_wine64, const string& wine_bin_path);
+  static void set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver, bool prefer_wine64, const string& wine_bin_path);
   static vector<string> get_menu_items(const string& prefix_path);
   static vector<pair<string, string>> get_desktop_items(const string& prefix_path);
   static string log_level_to_winedebug_string(int log_level);
@@ -175,7 +176,8 @@ public:
                                                   const string& old_prefix_path,
                                                   const BottleConfigData& bottle_config,
                                                   const std::map<int, ApplicationData>& app_list,
-                                                  const string& new_prefix_path);
+                                                  const string& new_prefix_path,
+                                                  bool managed_only = false);
   static string to_filename_part(const string& input);
   static void invalidate_reg_cache();
   static void invalidate_reg_cache(const string& prefix_path);

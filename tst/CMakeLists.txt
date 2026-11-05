@@ -23,6 +23,8 @@ target_link_libraries(bottle_config_migration_test PRIVATE
 )
 add_test(NAME bottle_config_migration_test COMMAND bottle_config_migration_test)
 
+pkg_check_modules(GIO_UNIX REQUIRED IMPORTED_TARGET gio-unix-2.0)
+
 add_executable(helper_test
   helper_test.cc
 )
@@ -33,6 +35,7 @@ target_include_directories(helper_test PRIVATE
   ${CMAKE_BINARY_DIR}
 )
 target_link_libraries(helper_test PRIVATE
+  PkgConfig::GIO_UNIX
   ${PROJECT_TEST_TARGET_LIB}-bottle-config
   gtest_main
 )
