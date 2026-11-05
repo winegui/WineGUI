@@ -35,6 +35,7 @@
 #include <glibmm/fileutils.h>
 #include <glibmm/keyfile.h>
 #include <glibmm/miscutils.h>
+#include <glibmm/shell.h>
 #include <glibmm/spawn.h>
 #include <iomanip>
 #include <iostream>
@@ -282,12 +283,12 @@ string Helper::run_program(const string& prefix_path,
   string debug = (debug_log_level != 1) ? "WINEDEBUG=" + Helper::log_level_to_winedebug_string(debug_log_level) + " " : "";
   string exec_program = (stderr_output) ? program + " 2>&1" : program;
   string change_directory = working_directory.empty() ? "" : "cd \"" + working_directory + "\" && ";
-  string env_vars_str(debug + "WINEPREFIX=\"" + prefix_path + "\" ");
+  string env_vars_str(debug + "WINEPREFIX=" + shell_quote(prefix_path) + " ");
 
   // Convert key/value pair to string, append to env_vars_str
   for (const auto& [key, value] : env_vars)
   {
-    env_vars_str += key + "=\"" + value + "\" ";
+    env_vars_str += key + "=" + shell_quote(value) + " ";
   }
 
   string command = change_directory + env_vars_str + exec_program;
@@ -345,7 +346,7 @@ string Helper::run_program_under_wine(bool wine_64_bit,
   }
   string runner_program;
   if (program.starts_with("winetricks "))
-    runner_program = build_winetricks_command(wine_bin_path, program.substr(string("winetricks ").size()));
+    runner_program = build_winetricks_command(wine_bin_path, program.substr(string("winetricks ").size()), wine_64_bit);
   else
     runner_program = build_runner_command(wine_64_bit, wine_bin_path, program);
   runner_program = apply_cpu_core_limit(runner_program, cpu_core_limit);
@@ -438,7 +439,15 @@ Helper::wait_until_wineserver_is_terminated(const string& prefix_path, const str
     return WineServerWaitResult::Exited;
   // Use the wineserver that belongs to the bottle's custom Wine build (if any),
   // the system wineserver might be a different (incompatible) version
-  const string wineserver_executable = get_wineserver_executable_location(wine_bin_path);
+  string wineserver_executable;
+  try
+  {
+    wineserver_executable = get_wineserver_executable_location(wine_bin_path);
+  }
+  catch (const std::runtime_error&)
+  {
+    return WineServerWaitResult::LaunchFailed;
+  }
   std::vector<string> environment_storage;
   for (char** variable = environ; variable != nullptr && *variable != nullptr; ++variable)
   {
@@ -468,7 +477,7 @@ Helper::wait_until_wineserver_is_terminated(const string& prefix_path, const str
 
   pid_t child_pid = -1;
   std::array<char*, 3> arguments{const_cast<char*>(wineserver_executable.c_str()), const_cast<char*>("-w"), nullptr};
-  const int spawn_result = posix_spawn(&child_pid, wineserver_executable.c_str(), &file_actions, nullptr, arguments.data(), environment.data());
+  const int spawn_result = posix_spawnp(&child_pid, wineserver_executable.c_str(), &file_actions, nullptr, arguments.data(), environment.data());
   close(dev_null);
   posix_spawn_file_actions_destroy(&file_actions);
   if (spawn_result != 0)
@@ -507,7 +516,7 @@ Helper::wait_until_wineserver_is_terminated(const string& prefix_path, const str
   return WineServerWaitResult::TimedOut;
 }
 
-bool Helper::has_running_wine_application(const string& prefix_path)
+bool Helper::has_running_wine_application(const string& prefix_path, bool include_background)
 {
   const string expected = "WINEPREFIX=" + prefix_path;
   std::error_code error;
@@ -538,7 +547,7 @@ bool Helper::has_running_wine_application(const string& prefix_path)
         break;
       }
     }
-    if (matching_prefix && !is_wine_background_process(process_path))
+    if (matching_prefix && (include_background || !is_wine_background_process(process_path)))
       return true;
   }
   return false;
@@ -638,10 +647,10 @@ string Helper::get_wineserver_executable_location(const string& wine_bin_path)
     if (is_geproton_runner(wine_bin_path))
       throw std::runtime_error("GE-Proton wineserver lifecycle is managed by umu-run.");
     string wineserver_path = Glib::build_path(G_DIR_SEPARATOR_S, {wine_bin_path, WineServerExecutable});
-    if (file_exists(wineserver_path))
-    {
+    if (file_exists(wineserver_path) && access(wineserver_path.c_str(), X_OK) == 0)
       return wineserver_path;
-    }
+    throw std::runtime_error("The selected Wine installation has no executable wineserver: " + wineserver_path +
+                             "\nReinstall this runner or select another Wine installation.");
   }
   return WineServerExecutable;
 }
@@ -732,6 +741,25 @@ string Helper::shell_quote(const string& value)
 /**
  * \brief Build the runner-specific portion of a Wine/Proton command.
  */
+string Helper::build_runner_environment(bool prefer_wine64, const string& wine_bin_path)
+{
+  const string clean_environment = "env -u WINE -u WINESERVER -u WINELOADER ";
+  if (is_geproton_runner(wine_bin_path))
+    return clean_environment;
+
+  auto resolve_executable = [](const string& executable)
+  {
+    const string resolved = executable.find('/') == string::npos ? Glib::find_program_in_path(executable) : executable;
+    if (resolved.empty() || !file_exists(resolved) || access(resolved.c_str(), X_OK) != 0)
+      throw std::runtime_error("Could not execute the selected Wine installation: " + executable +
+                               "\nInstall or repair this Wine installation, or select another runner.");
+    return resolved;
+  };
+  const string wine = resolve_executable(get_wine_executable_location(prefer_wine64, wine_bin_path));
+  const string wineserver = resolve_executable(get_wineserver_executable_location(wine_bin_path));
+  return clean_environment + "WINE=" + shell_quote(wine) + " WINELOADER=" + shell_quote(wine) + " WINESERVER=" + shell_quote(wineserver) + " ";
+}
+
 string Helper::build_runner_command(bool prefer_wine64, const string& wine_bin_path, const string& program)
 {
   if (const std::optional<string> proton_root = find_geproton_root(wine_bin_path))
@@ -740,9 +768,12 @@ string Helper::build_runner_command(bool prefer_wine64, const string& wine_bin_p
     // existing bottle environment-variable configuration does not provide an override.
     // `run` preserves WineGUI's ability to launch multiple processes in one bottle. UMU's
     // waitforexitandrun default blocks each subsequent launch until wineserver exits.
-    return "env PROTONPATH=" + shell_quote(proton_root.value()) + " PROTON_VERB=run " + shell_quote(get_umu_executable_location()) + " " + program;
+    return build_runner_environment(false, wine_bin_path) + "PROTONPATH=" + shell_quote(proton_root.value()) + " PROTON_VERB=run " +
+           shell_quote(get_umu_executable_location()) + " " + program;
   }
-  return get_wine_executable_location(prefer_wine64, wine_bin_path) + " " + program;
+  const string executable = get_wine_executable_location(prefer_wine64, wine_bin_path);
+  const string executable_path = executable.find('/') == string::npos ? Glib::find_program_in_path(executable) : executable;
+  return build_runner_environment(prefer_wine64, wine_bin_path) + shell_quote(executable_path) + " " + program;
 }
 
 string Helper::build_wine_launch_command(const string& command, bool is_msi_file)
@@ -750,22 +781,23 @@ string Helper::build_wine_launch_command(const string& command, bool is_msi_file
   if (is_msi_file)
     return "msiexec /i " + shell_quote(command);
 
-  return command.starts_with('/') ? "start /unix \"" + command + "\"" : "start \"" + command + "\"";
+  return command.starts_with('/') ? "start /unix " + shell_quote(command) : "start " + shell_quote(command);
 }
 
 /**
  * \brief Build a winetricks command for the selected runner.
  */
-string Helper::build_winetricks_command(const string& wine_bin_path, const string& arguments)
+string Helper::build_winetricks_command(const string& wine_bin_path, const string& arguments, bool prefer_wine64)
 {
   if (const std::optional<string> proton_root = find_geproton_root(wine_bin_path))
   {
     // UMU recognizes `winetricks` as a special native tool and chooses the correct Proton
     // verb itself. Forcing runinprefix makes Proton treat the shell script as a Windows
     // executable on a fresh invocation. UMU will still re-enter an active prefix container.
-    return "env PROTONPATH=" + shell_quote(proton_root.value()) + " " + shell_quote(get_umu_executable_location()) + " winetricks " + arguments;
+    return build_runner_environment(false, wine_bin_path) + "PROTONPATH=" + shell_quote(proton_root.value()) + " " +
+           shell_quote(get_umu_executable_location()) + " winetricks " + arguments;
   }
-  return get_winetricks_location() + " " + arguments;
+  return build_runner_environment(prefer_wine64, wine_bin_path) + shell_quote(get_winetricks_location()) + " " + arguments;
 }
 
 vector<int> Helper::get_allowed_cpu_ids()
@@ -885,7 +917,7 @@ string Helper::get_wine_version(bool wine_64_bit, const string& prefix_path, con
       version.erase(0, string("GE-Proton").size());
     return version;
   }
-  const auto& [exit_code, output] = exec(Helper::get_wine_executable_location(wine_64_bit, wine_bin_path) + " --version 2>&1");
+  const auto& [exit_code, output] = exec(shell_quote(Helper::get_wine_executable_location(wine_64_bit, wine_bin_path)) + " --version 2>&1");
   if (exit_code == 0 && !output.empty())
   {
     vector<string> results = split(output, '-');
@@ -1524,18 +1556,28 @@ void Helper::self_update_winetricks()
   }
 }
 
+namespace
+{
+  std::pair<int, string> run_bottle_configuration(const string& prefix_path, bool prefer_wine64, const string& wine_bin_path, const string& command)
+  {
+    int exit_code = 0;
+    string output = Helper::run_program_under_wine(prefer_wine64, prefix_path, 1, command, "", {}, false, true, wine_bin_path, &exit_code);
+    return {exit_code, output};
+  }
+}
+
 /**
  * \brief Set Windows OS version by using Winetricks
  * \param[in] prefix_path Bottle prefix
  * \param[in] windows Windows version (enum)
  * \throws runtime_error when we could not set the Windows OS version
  */
-void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows windows)
+void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows windows, bool prefer_wine64, const string& wine_bin_path)
 {
-  if (file_exists(WinetricksExecutable))
+  if (file_exists(WinetricksExecutable) || is_geproton_runner(wine_bin_path))
   {
     string win = BottleTypes::get_winetricks_string(windows);
-    const auto& [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " " + win + " 2>&1");
+    const auto& [exit_code, output] = run_bottle_configuration(prefix_path, prefer_wine64, wine_bin_path, "winetricks " + win);
     if (exit_code != 0)
     {
       std::cerr << "Error: Couldn't set Windows OS version. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
@@ -1548,6 +1590,8 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
   {
     std::cerr << "Error: Couldn't set Windows OS version, no Winetricks executable found. Winetricks path: " << WinetricksExecutable << std::endl;
   }
+  if (!file_exists(WinetricksExecutable) && !is_geproton_runner(wine_bin_path))
+    throw std::runtime_error("Could not configure this bottle: Winetricks is missing.");
   // Registry files just changed on disk, drop any cached copy for this bottle
   invalidate_reg_cache(prefix_path);
 }
@@ -1558,9 +1602,9 @@ void Helper::set_windows_version(const string& prefix_path, BottleTypes::Windows
  * \param[in] resolution New screen resolution (eg. 1920x1080)
  * \throws runtime_error when we could not set the virtual desktop resolution
  */
-void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
+void Helper::set_virtual_desktop(const string& prefix_path, string resolution, bool prefer_wine64, const string& wine_bin_path)
 {
-  if (file_exists(WinetricksExecutable))
+  if (file_exists(WinetricksExecutable) || is_geproton_runner(wine_bin_path))
   {
     vector<string> res = split(resolution, 'x');
     if (res.size() >= 2)
@@ -1584,7 +1628,7 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
         resolution = "640x480";
       }
 
-      const auto [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=" + resolution + " 2>&1");
+      const auto [exit_code, output] = run_bottle_configuration(prefix_path, prefer_wine64, wine_bin_path, "winetricks vd=" + resolution);
       if (exit_code != 0)
       {
         std::cerr << "Error: Couldn't set virtual desktop resolution. Wine prefix path: " << prefix_path
@@ -1604,6 +1648,8 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
     std::cerr << "Error:Couldn't set virtual desktop resolution, no Winetricks executable found. Wine prefix path: " << prefix_path
               << ", Winetricks path: " << WinetricksExecutable << std::endl;
   }
+  if (!file_exists(WinetricksExecutable) && !is_geproton_runner(wine_bin_path))
+    throw std::runtime_error("Could not configure this bottle: Winetricks is missing.");
   // Registry files just changed on disk, drop any cached copy for this bottle
   invalidate_reg_cache(prefix_path);
 }
@@ -1613,11 +1659,11 @@ void Helper::set_virtual_desktop(const string& prefix_path, string resolution)
  * \param[in] prefix_path Bottle prefix
  * \throws runtime_error when we could not disable the virtual desktop
  */
-void Helper::disable_virtual_desktop(const string& prefix_path)
+void Helper::disable_virtual_desktop(const string& prefix_path, bool prefer_wine64, const string& wine_bin_path)
 {
-  if (file_exists(WinetricksExecutable))
+  if (file_exists(WinetricksExecutable) || is_geproton_runner(wine_bin_path))
   {
-    const auto& [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " vd=off 2>&1");
+    const auto& [exit_code, output] = run_bottle_configuration(prefix_path, prefer_wine64, wine_bin_path, "winetricks vd=off");
     if (exit_code != 0)
     {
       std::cerr << "Error: Couldn't disable desktop, Winetricks path: " << WinetricksExecutable << ", output: " << output << std::endl;
@@ -1628,6 +1674,8 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
   {
     std::cerr << "Error:Couldn't disable desktop, no Winetricks executable found. Winetricks path: " << WinetricksExecutable << std::endl;
   }
+  if (!file_exists(WinetricksExecutable) && !is_geproton_runner(wine_bin_path))
+    throw std::runtime_error("Could not configure this bottle: Winetricks is missing.");
   // Registry files just changed on disk, drop any cached copy for this bottle
   invalidate_reg_cache(prefix_path);
 }
@@ -1638,12 +1686,12 @@ void Helper::disable_virtual_desktop(const string& prefix_path)
  * \param[in] audio_driver Audio driver to be set
  * \throws runtime_error when we could not set the auditor driver
  */
-void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver)
+void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDriver audio_driver, bool prefer_wine64, const string& wine_bin_path)
 {
-  if (file_exists(WinetricksExecutable))
+  if (file_exists(WinetricksExecutable) || is_geproton_runner(wine_bin_path))
   {
     string audio = BottleTypes::get_winetricks_string(audio_driver);
-    const auto& [exit_code, output] = exec("WINEPREFIX=\"" + prefix_path + "\" " + WinetricksExecutable + " sound=" + audio + " 2>&1");
+    const auto& [exit_code, output] = run_bottle_configuration(prefix_path, prefer_wine64, wine_bin_path, "winetricks sound=" + audio);
     if (exit_code != 0)
     {
       std::cerr << "Error: Couldn't set audio driver. Wine prefix path: " << prefix_path << ", Winetricks path: " << WinetricksExecutable
@@ -1657,6 +1705,8 @@ void Helper::set_audio_driver(const string& prefix_path, BottleTypes::AudioDrive
     std::cerr << "Error:Couldn't set audio driver, no Winetricks executable found. Wine prefix path: " << prefix_path
               << ", Winetricks path: " << WinetricksExecutable << std::endl;
   }
+  if (!file_exists(WinetricksExecutable) && !is_geproton_runner(wine_bin_path))
+    throw std::runtime_error("Could not configure this bottle: Winetricks is missing.");
   // Registry files just changed on disk, drop any cached copy for this bottle
   invalidate_reg_cache(prefix_path);
 }
@@ -2147,30 +2197,37 @@ string Helper::build_desktop_exec_line(bool wine_64_bit,
 {
   const int effective_cpu_core_limit = get_effective_cpu_core_limit(cpu_core_limit);
 
-  // Environment prefix (env allows a single runnable command line in the .desktop Exec field)
-  string env_prefix = "env WINEPREFIX=\"" + prefix_path + "\" ";
+  string shell_command = "env WINEPREFIX=" + shell_quote(prefix_path) + " ";
   for (const auto& [key, value] : env_vars)
-  {
-    env_prefix += key + "=\"" + value + "\" ";
-  }
-
-  // Winetricks is a special case: it doesn't run through the Wine binary (see BottleManager::run_program)
-  if (command.ends_with("winetricks --gui -q"))
-  {
-    if (is_geproton_runner(wine_bin_path))
-    {
-      if (get_windows_bitness(prefix_path) == BottleTypes::Bit::win32)
-        throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");
-      return env_prefix + apply_cpu_core_limit(build_winetricks_command(wine_bin_path, "--gui -q"), effective_cpu_core_limit);
-    }
-    return env_prefix + command;
-  }
-
-  const string wrapped_program = build_wine_launch_command(command);
+    shell_command += key + "=" + shell_quote(value) + " ";
 
   if (is_geproton_runner(wine_bin_path) && get_windows_bitness(prefix_path) == BottleTypes::Bit::win32)
     throw std::runtime_error("GE-Proton supports only 64-bit WineGUI bottles. Use a regular Wine runner for a true 32-bit bottle.");
-  return env_prefix + apply_cpu_core_limit(Helper::build_runner_command(wine_64_bit, wine_bin_path, wrapped_program), effective_cpu_core_limit);
+
+  const string runner_command = command.ends_with("winetricks --gui -q")
+                                    ? build_winetricks_command(wine_bin_path, "--gui -q", wine_64_bit)
+                                    : build_runner_command(wine_64_bit, wine_bin_path, build_wine_launch_command(command));
+  shell_command += apply_cpu_core_limit(runner_command, effective_cpu_core_limit);
+
+  // Desktop Exec is an argument vector, not a shell command. Decode our shell quoting,
+  // then encode each argument using desktop-entry quoting and literal percent escaping.
+  string desktop_command;
+  for (const auto& argument : Glib::shell_parse_argv(shell_command))
+  {
+    if (!desktop_command.empty())
+      desktop_command += ' ';
+    desktop_command += '"';
+    for (const char character : argument)
+    {
+      if (character == '%')
+        desktop_command += '%';
+      if (character == '"' || character == '\\' || character == '$' || character == '`')
+        desktop_command += '\\';
+      desktop_command += character;
+    }
+    desktop_command += '"';
+  }
+  return desktop_command;
 }
 
 /**
@@ -2213,7 +2270,7 @@ bool Helper::create_desktop_file(const string& target_dir,
   contents += "Name=" + app_name + "\n";
   if (!comment.empty())
     contents += "Comment=" + comment + "\n";
-  contents += "Exec=" + exec_line + "\n";
+
   if (!icon.empty())
     contents += "Icon=" + icon + "\n";
   contents += "Terminal=false\n";
@@ -2231,7 +2288,10 @@ bool Helper::create_desktop_file(const string& target_dir,
 
   try
   {
-    Helper::write_file(file_path, contents);
+    auto desktop_entry = Glib::KeyFile::create();
+    desktop_entry->load_from_data(contents);
+    desktop_entry->set_string("Desktop Entry", "Exec", exec_line);
+    Helper::write_file(file_path, desktop_entry->to_data());
   }
   catch (const Glib::Error& error)
   {
@@ -2265,7 +2325,8 @@ vector<string> Helper::refresh_managed_shortcuts(const string& old_bottle_name,
                                                  const string& old_prefix_path,
                                                  const BottleConfigData& bottle_config,
                                                  const std::map<int, ApplicationData>& app_list,
-                                                 const string& new_prefix_path)
+                                                 const string& new_prefix_path,
+                                                 bool managed_only)
 {
   vector<string> failures;
   vector<string> directories{Glib::build_filename(Glib::get_user_data_dir(), "applications")};
@@ -2288,10 +2349,13 @@ vector<string> Helper::refresh_managed_shortcuts(const string& old_bottle_name,
       {
         auto keyfile = Glib::KeyFile::create();
         keyfile->load_from_file(path);
+        const string original_contents = keyfile->to_data();
         if (!keyfile->has_group("Desktop Entry"))
           continue;
 
         const bool managed = keyfile->has_key("Desktop Entry", "X-WineGUI-Managed") && keyfile->get_boolean("Desktop Entry", "X-WineGUI-Managed");
+        if (managed_only && !managed)
+          continue;
         const string marker_name =
             keyfile->has_key("Desktop Entry", "X-WineGUI-Bottle") ? keyfile->get_string("Desktop Entry", "X-WineGUI-Bottle") : "";
         const string marker_path =
@@ -2381,6 +2445,9 @@ vector<string> Helper::refresh_managed_shortcuts(const string& old_bottle_name,
           keyfile->set_string("Desktop Entry", "X-WineGUI-ApplicationCommand", encoded_command);
           g_free(encoded_command);
         }
+
+        if (keyfile->to_data().raw() == original_contents)
+          continue;
 
         struct stat file_stat{};
         const bool has_mode = stat(path.c_str(), &file_stat) == 0;
