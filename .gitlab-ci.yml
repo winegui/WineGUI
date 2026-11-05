@@ -32,6 +32,9 @@ unit_test:
   script:
     - ./scripts/run-tests.sh
     - python3 -m unittest discover -s packaging/debian/tests -v
+    - appstreamcli validate --no-net misc/org.melroy.winegui.metainfo.xml
+    - python3 -m unittest discover -s ops/apt-repository/tests -v
+    - python3 -m unittest discover -s scripts/tests -v
 
 static_code_analysis:
   stage: test
