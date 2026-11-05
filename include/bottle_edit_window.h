@@ -35,6 +35,7 @@ class BottleItem;
  */
 struct UpdateBottleStruct
 {
+  Glib::ustring prefix_path;
   Glib::ustring name;
   Glib::ustring folder_name;
   Glib::ustring wine_bin_path;
