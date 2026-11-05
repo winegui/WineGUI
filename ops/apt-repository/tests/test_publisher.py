@@ -25,8 +25,11 @@ class PublisherTest(unittest.TestCase):
         self.state = self.root / "state"
         self.spool = self.root / "spool"
         self.public = self.root / "public"
-        self.bin = self.root / "bin"
-        self.bin.mkdir()
+        # CI stores repository fixtures in tmpfs, which may be mounted noexec.
+        # Keep the fake executables in the ordinary executable temporary area.
+        binaries = tempfile.TemporaryDirectory(prefix="winegui-publisher-bin-", dir="/tmp")
+        self.addCleanup(binaries.cleanup)
+        self.bin = Path(binaries.name)
         self.reprepro = self.bin / "reprepro"
         self.gpg = self.bin / "gpg"
         self._write_fakes()
